@@ -1,4 +1,5 @@
 # Tech Stack Options Report
+
 ## Backend
 
 - Firebase: Pros - Excellent real-time sync, offline support, quick prototyping. Cons - Vendor lock-in, limited queries, scalability costs.
@@ -13,7 +14,6 @@
   - Fabric.js: Pros - Intuitive object editing, filters/serialization. Cons - Slower (200 elements max without lag).
   - PixiJS: Pros - GPU-accelerated, fast for graphics. Cons - Single canvas limit, overkill for simple shapes.
   - Vanilla JS/HTML5 Canvas: Pros - Lightweight, no dependencies. Cons - Manual implementation, less features.
-
 
 ## AI Integration
 
@@ -31,4 +31,3 @@
 - Firebase + React/Konva + GPT-4 + Firebase Hosting: Pros - Seamless real-time/mobile, quick setup. Cons - Lock-in, query limits.
 - Supabase + Next.js/Fabric + Claude + Vercel: Pros - Open-source flexibility, strong reasoning. Cons - Maturity gaps, potential dev friction.
 - AWS + Vue/Pixi + Custom AI + Render: Pros - Scalable for high load, custom control. Cons - Complex, higher costs.
-- 

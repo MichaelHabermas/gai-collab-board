@@ -140,7 +140,7 @@ File Structure (Monorepo):
 - Naming:
   - camelCase for vars/functions, and internal object properties
   - PascalCase for classes/components, Types and Enums
-  - snake_case for interlayer contract object properties
+  - snake_case for inter-layer contract object properties
   - IPascalCase for interfaces (ex. IProps {}, ISaveOptions {})
   - CAPITAL_CASE for global constants
 - Tooling:
