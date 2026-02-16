@@ -289,13 +289,13 @@ Firestore is used for **persistent board data** (objects, boards, user profiles)
 
 ### Data Schema
 
-```
+```text
 /boards/{boardId}
   - name: string
   - ownerId: string
   - createdAt: timestamp
   - updatedAt: timestamp
-  - members: { [userId]: 'owner' | 'editor' | 'viewer' }
+  - members: { [userId]: UserRole }
 
 /boards/{boardId}/objects/{objectId}
   - type: 'sticky' | 'rectangle' | 'circle' | 'line' | 'text' | 'frame' | 'connector'
@@ -453,21 +453,21 @@ Realtime Database is used for **ephemeral/fast-changing data** (cursors, presenc
 ### Database Data Schema
 
 ```bash
-/boards/{boardId}/cursors/{odId}
-  - odId: string
+/boards/{boardId}/cursors/{uid}
+  - uid: string
   - x: number
   - y: number
   - displayName: string
   - color: string
   - lastUpdated: number (timestamp)
 
-/boards/{boardId}/presence/{odId}
-  - odId: string
+/boards/{boardId}/presence/{uid}
+  - uid: string
   - displayName: string
   - online: boolean
   - lastSeen: number (timestamp)
 
-/status/{odId}
+/status/{uid}
   - state: 'online' | 'offline'
   - last_changed: number (timestamp)
 ```
@@ -492,7 +492,7 @@ import { realtimeDb } from "@/lib/firebase";
 
 // Types
 export interface ICursorData {
-  odId: string;
+  uid: string;
   x: number;
   y: number;
   displayName: string;
@@ -501,7 +501,7 @@ export interface ICursorData {
 }
 
 export interface IPresenceData {
-  odId: string;
+  uid: string;
   displayName: string;
   online: boolean;
   lastSeen: number;
@@ -510,15 +510,15 @@ export interface IPresenceData {
 // Cursor Operations
 export const updateCursor = async (
   boardId: string,
-  odId: string,
+  uid: string,
   x: number,
   y: number,
   displayName: string,
   color: string
 ): Promise<void> => {
-  const cursorRef = ref(realtimeDb, `boards/${boardId}/cursors/${odId}`);
+  const cursorRef = ref(realtimeDb, `boards/${boardId}/cursors/${uid}`);
   await set(cursorRef, {
-    odId,
+    uid,
     x,
     y,
     displayName,
@@ -540,24 +540,24 @@ export const subscribeToCursors = (
 
 export const removeCursor = async (
   boardId: string,
-  odId: string
+  uid: string
 ): Promise<void> => {
-  const cursorRef = ref(realtimeDb, `boards/${boardId}/cursors/${odId}`);
+  const cursorRef = ref(realtimeDb, `boards/${boardId}/cursors/${uid}`);
   await remove(cursorRef);
 };
 
 // Presence Operations
 export const setPresence = async (
   boardId: string,
-  odId: string,
+  uid: string,
   displayName: string
 ): Promise<void> => {
-  const presenceRef = ref(realtimeDb, `boards/${boardId}/presence/${odId}`);
-  const cursorRef = ref(realtimeDb, `boards/${boardId}/cursors/${odId}`);
+  const presenceRef = ref(realtimeDb, `boards/${boardId}/presence/${uid}`);
+  const cursorRef = ref(realtimeDb, `boards/${boardId}/cursors/${uid}`);
 
   // Set current presence
   await set(presenceRef, {
-    odId,
+    uid,
     displayName,
     online: true,
     lastSeen: Date.now(),
@@ -565,7 +565,7 @@ export const setPresence = async (
 
   // Setup disconnect handlers
   onDisconnect(presenceRef).set({
-    odId,
+    uid,
     displayName,
     online: false,
     lastSeen: serverTimestamp(),
@@ -603,7 +603,7 @@ import { ref, onValue, onDisconnect, set, serverTimestamp } from "firebase/datab
 import { realtimeDb } from "@/lib/firebase";
 
 interface IPresenceUser {
-  odId: string;
+  uid: string;
   displayName: string;
   online: boolean;
   lastSeen: number;
@@ -617,14 +617,14 @@ interface IUsePresenceReturn {
 
 export const usePresence = (
   boardId: string,
-  odId: string,
+  uid: string,
   displayName: string
 ): IUsePresenceReturn => {
   const [onlineUsers, setOnlineUsers] = useState<IPresenceUser[]>([]);
   const presenceRef = useRef<ReturnType<typeof ref> | null>(null);
 
   useEffect(() => {
-    if (!boardId || !odId) return;
+    if (!boardId || !uid) return;
 
     // Subscribe to presence changes
     const presenceListRef = ref(realtimeDb, `boards/${boardId}/presence`);
@@ -635,7 +635,7 @@ export const usePresence = (
     });
 
     // Set up own presence
-    presenceRef.current = ref(realtimeDb, `boards/${boardId}/presence/${odId}`);
+    presenceRef.current = ref(realtimeDb, `boards/${boardId}/presence/${uid}`);
     
     // Monitor connection state
     const connectedRef = ref(realtimeDb, ".info/connected");
@@ -643,14 +643,14 @@ export const usePresence = (
       if (snapshot.val() === true && presenceRef.current) {
         // We're connected (or reconnected)
         onDisconnect(presenceRef.current).set({
-          odId,
+          uid,
           displayName,
           online: false,
           lastSeen: serverTimestamp(),
         });
 
         set(presenceRef.current, {
-          odId,
+          uid,
           displayName,
           online: true,
           lastSeen: Date.now(),
@@ -662,29 +662,29 @@ export const usePresence = (
       unsubscribe();
       connectedUnsubscribe();
     };
-  }, [boardId, odId, displayName]);
+  }, [boardId, uid, displayName]);
 
   const setOnline = useCallback(async () => {
     if (presenceRef.current) {
       await set(presenceRef.current, {
-        odId,
+        uid,
         displayName,
         online: true,
         lastSeen: Date.now(),
       });
     }
-  }, [odId, displayName]);
+  }, [uid, displayName]);
 
   const setOffline = useCallback(async () => {
     if (presenceRef.current) {
       await set(presenceRef.current, {
-        odId,
+        uid,
         displayName,
         online: false,
         lastSeen: Date.now(),
       });
     }
-  }, [odId, displayName]);
+  }, [uid, displayName]);
 
   return { onlineUsers, setOnline, setOffline };
 };
@@ -750,15 +750,15 @@ service cloud.firestore {
         "cursors": {
           ".read": "auth != null",
           ".write": "auth != null",
-          "$odId": {
+          "$uid": {
             ".validate": "newData.hasChildren(['x', 'y', 'displayName'])"
           }
         },
         "presence": {
           ".read": "auth != null",
           ".write": "auth != null",
-          "$odId": {
-            ".validate": "newData.hasChildren(['odId', 'displayName', 'online'])"
+          "$uid": {
+            ".validate": "newData.hasChildren(['uid', 'displayName', 'online'])"
           }
         }
       }

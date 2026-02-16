@@ -532,7 +532,7 @@ visitorId: string;
 }
 
 export interface CursorData {
-  odId: string;
+  uid: string;
   x: number;
   y: number;
   displayName: string;
