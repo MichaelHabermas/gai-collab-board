@@ -4,3 +4,4 @@ export { CircleShape } from './CircleShape';
 export { LineShape } from './LineShape';
 export { Connector } from './Connector';
 export { TextElement } from './TextElement';
+export { Frame } from './Frame';
