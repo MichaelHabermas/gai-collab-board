@@ -5,6 +5,10 @@ import type {
 import { aiClient, AI_CONFIG } from '@/lib/ai';
 import { boardTools, type IToolCall } from './tools';
 import type { IBoardObject } from '@/types';
+import { AIError, isRetryableError } from './errors';
+
+const MAX_RETRIES = 3;
+const INITIAL_BACKOFF_MS = 1000;
 
 const SYSTEM_PROMPT = `You are an AI assistant for CollabBoard, a collaborative whiteboard application.
 Your role is to help users manipulate the board through natural language commands.
@@ -35,6 +39,8 @@ export class AIService {
     boardState: [],
   };
 
+  private requestQueue: Promise<void> = Promise.resolve();
+
   constructor(private onToolExecute: (tool: IToolCall) => Promise<unknown>) {}
 
   updateBoardState(objects: IBoardObject[]): void {
@@ -45,6 +51,7 @@ export class AIService {
     this.context.messages = [];
   }
 
+  /** Multi-step commands (e.g. SWOT template) are supported: the model may return multiple tool_calls in one response; we execute them sequentially and send results back for a final reply. */
   async processCommand(userMessage: string): Promise<string> {
     const messages: ChatCompletionMessageParam[] = [
       { role: 'system', content: SYSTEM_PROMPT },
@@ -67,15 +74,19 @@ export class AIService {
       { role: 'user', content: userMessage },
     ];
 
-    const response = await aiClient.chat.completions.create({
-      model: AI_CONFIG.model,
-      messages,
-      tools: boardTools,
-      tool_choice: 'auto',
-      max_tokens: AI_CONFIG.maxTokens,
-      temperature: AI_CONFIG.temperature,
-      top_p: AI_CONFIG.topP,
-    });
+    const response = await this.throttledRequest(() =>
+      this.withRetry(() =>
+        aiClient.chat.completions.create({
+          model: AI_CONFIG.model,
+          messages,
+          tools: boardTools,
+          tool_choice: 'auto',
+          max_tokens: AI_CONFIG.maxTokens,
+          temperature: AI_CONFIG.temperature,
+          top_p: AI_CONFIG.topP,
+        })
+      )
+    );
 
     const assistantMessage = response.choices[0]?.message;
 
@@ -136,12 +147,16 @@ export class AIService {
       ...toolResults,
     ];
 
-    const followUpResponse = await aiClient.chat.completions.create({
-      model: AI_CONFIG.model,
-      messages: followUpMessages,
-      max_tokens: AI_CONFIG.maxTokens,
-      temperature: AI_CONFIG.temperature,
-    });
+    const followUpResponse = await this.throttledRequest(() =>
+      this.withRetry(() =>
+        aiClient.chat.completions.create({
+          model: AI_CONFIG.model,
+          messages: followUpMessages,
+          max_tokens: AI_CONFIG.maxTokens,
+          temperature: AI_CONFIG.temperature,
+        })
+      )
+    );
 
     const finalMessage = followUpResponse.choices[0]?.message?.content ?? '';
 
@@ -157,5 +172,42 @@ export class AIService {
     );
 
     return finalMessage;
+  }
+
+  private async throttledRequest<T>(fn: () => Promise<T>): Promise<T> {
+    const prev = this.requestQueue;
+    let resolve: () => void;
+    this.requestQueue = new Promise((r) => {
+      resolve = r;
+    });
+    await prev;
+    try {
+      return await fn();
+    } finally {
+      resolve!();
+    }
+  }
+
+  private async withRetry<T>(fn: () => Promise<T>): Promise<T> {
+    let lastError: unknown;
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        return await fn();
+      } catch (error) {
+        lastError = error;
+        const status =
+          error != null && typeof error === 'object' && 'status' in error
+            ? (error as { status?: number }).status
+            : undefined;
+        if (!isRetryableError(error) || attempt === MAX_RETRIES) {
+          throw error instanceof Error
+            ? new AIError(error.message, undefined, status)
+            : new AIError(String(error), undefined, status);
+        }
+        const delayMs = INITIAL_BACKOFF_MS * Math.pow(2, attempt);
+        await new Promise((r) => setTimeout(r, delayMs));
+      }
+    }
+    throw lastError;
   }
 }

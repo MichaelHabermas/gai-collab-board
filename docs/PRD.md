@@ -2344,8 +2344,8 @@ sequenceDiagram
 - [x] Story 4.2: Tool Schema Definition – `src/modules/ai/tools.ts` with board tools
 - [x] Story 4.3: AI Service Implementation – `src/modules/ai/aiService.ts` with command processing
 - [x] Story 4.4: Tool Executor – `src/modules/ai/toolExecutor.ts` wiring tools to board
-- [ ] Story 4.5: Complex Commands – multi-step planning (e.g. SWOT template)
-- [ ] Story 4.6: AI Performance and Reliability – rate limiting, retry, AIError handling
+- [x] Story 4.5: Complex Commands – multi-step planning (e.g. SWOT template)
+- [x] Story 4.6: AI Performance and Reliability – rate limiting, retry, AIError handling
 - [ ] Story 4.7: Shared AI State – AI changes routed through sync, real-time for all users
 
 ### Epic 4: Test
