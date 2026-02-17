@@ -27,9 +27,10 @@ export const usePresence = ({ boardId, user }: IUsePresenceParams): IUsePresence
   const [presenceMap, setPresenceMap] = useState<Record<string, IPresenceData>>({});
 
   // Generate consistent color for user
+  const userId = user?.uid;
   const currentUserColor = useMemo(() => {
-    return user?.uid ? getUserColor(user.uid) : '#6b7280';
-  }, [user?.uid]);
+    return userId ? getUserColor(userId) : '#6b7280';
+  }, [userId]);
 
   // Subscribe to presence updates and set up own presence
   useEffect(() => {
