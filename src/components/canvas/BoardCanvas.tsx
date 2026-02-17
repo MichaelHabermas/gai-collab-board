@@ -161,14 +161,27 @@ export const BoardCanvas = memo(
       [handleMouseMove, drawingState.isDrawing, isSelecting, getCanvasCoords]
     );
 
+    // Check if click is on empty area (not on a shape)
+    const isEmptyAreaClick = useCallback((e: Konva.KonvaEventObject<MouseEvent>): boolean => {
+      const stage = e.target.getStage();
+      if (!stage) return false;
+
+      const targetName = e.target.name?.() || '';
+      // Shapes have 'shape' in their name, background rect has 'background'
+      const clickedOnShape = targetName.includes('shape');
+      const clickedOnBackground = targetName === 'background';
+      const clickedOnStageOrLayer = e.target === stage || e.target.getClassName() === 'Layer';
+
+      return !clickedOnShape && (clickedOnBackground || clickedOnStageOrLayer);
+    }, []);
+
     // Handle mouse down for drawing start or selection start
     const handleStageMouseDown = useCallback(
       (e: Konva.KonvaEventObject<MouseEvent>) => {
         const stage = e.target.getStage();
         if (!stage) return;
 
-        const clickedOnEmpty = e.target === stage;
-        if (!clickedOnEmpty) return;
+        if (!isEmptyAreaClick(e)) return;
 
         const pointer = stage.getPointerPosition();
         if (!pointer) return;
@@ -199,7 +212,7 @@ export const BoardCanvas = memo(
           });
         }
       },
-      [activeTool, canEdit, isDrawingTool, getCanvasCoords]
+      [activeTool, canEdit, isDrawingTool, getCanvasCoords, isEmptyAreaClick]
     );
 
     // Handle mouse up for drawing end and selection completion
@@ -349,14 +362,7 @@ export const BoardCanvas = memo(
         const stage = e.target.getStage();
         if (!stage) return;
 
-        // Check if clicked on empty area (stage or layer, not a shape)
-        // Shapes have a 'name' attribute containing 'shape', layers and stage don't
-        const targetName = e.target.name?.() || '';
-        const clickedOnShape = targetName.includes('shape');
-        const clickedOnEmpty =
-          !clickedOnShape && (e.target === stage || e.target.getClassName() === 'Layer');
-
-        if (clickedOnEmpty) {
+        if (isEmptyAreaClick(e)) {
           // Get click position in canvas coordinates
           const pointer = stage.getPointerPosition();
           if (!pointer) return;
@@ -395,7 +401,7 @@ export const BoardCanvas = memo(
           }
         }
       },
-      [activeTool, activeColor, canEdit, onObjectCreate, getCanvasCoords]
+      [activeTool, activeColor, canEdit, onObjectCreate, getCanvasCoords, isEmptyAreaClick]
     );
 
     // Handle object selection
@@ -790,6 +796,16 @@ export const BoardCanvas = memo(
 
           {/* Objects layer - main content (viewport culled) */}
           <Layer ref={objectsLayerRef} name='objects'>
+            {/* Background rect to catch clicks on empty areas */}
+            <Rect
+              x={-10000}
+              y={-10000}
+              width={20000}
+              height={20000}
+              fill='transparent'
+              name='background'
+              listening={true}
+            />
             {visibleObjects.map(renderShape)}
           </Layer>
 

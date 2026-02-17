@@ -1275,7 +1275,9 @@ describe("Click-to-Create Operations", () => {
         isStage: boolean
       ): boolean => {
         const clickedOnShape = targetName.includes("shape");
-        return !clickedOnShape && (isStage || targetClassName === "Layer");
+        const clickedOnBackground = targetName === "background";
+        const clickedOnStageOrLayer = isStage || targetClassName === "Layer";
+        return !clickedOnShape && (clickedOnBackground || clickedOnStageOrLayer);
       };
 
       // Click on stage - should be empty area
@@ -1284,14 +1286,19 @@ describe("Click-to-Create Operations", () => {
       // Click on layer - should be empty area
       expect(isEmptyAreaClick("", "Layer", false)).toBe(true);
 
+      // Click on background rect - should be empty area
+      expect(isEmptyAreaClick("background", "Rect", false)).toBe(true);
+
       // Click on shape - should NOT be empty area
       expect(isEmptyAreaClick("shape sticky", "Group", false)).toBe(false);
       expect(isEmptyAreaClick("shape rectangle", "Rect", false)).toBe(false);
 
-      // Click on other elements without 'shape' in name - should be empty area if on Layer
+      // Click on other elements without 'shape' or 'background' in name
+      // Should be empty area only if on Layer
       expect(isEmptyAreaClick("grid", "Layer", false)).toBe(true);
-      // But not if it's a regular Rect (which would have listening=false anyway)
+      // But not if it's a regular Rect without background name
       expect(isEmptyAreaClick("", "Rect", false)).toBe(false);
+      expect(isEmptyAreaClick("grid", "Rect", false)).toBe(false);
     });
   });
 
