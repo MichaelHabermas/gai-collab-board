@@ -6,6 +6,7 @@ import { ShareDialog } from '@/components/board/ShareDialog';
 import { LogOut, Loader2, Share2 } from 'lucide-react';
 import { BoardCanvas } from '@/components/canvas/BoardCanvas';
 import { useObjects } from '@/hooks/useObjects';
+import { useAI } from '@/hooks/useAI';
 import {
   createBoard,
   subscribeToBoard,
@@ -15,6 +16,7 @@ import {
 import { ConnectionStatus } from '@/components/ui/ConnectionStatus';
 import { PresenceAvatars } from '@/components/presence/PresenceAvatars';
 import { usePresence } from '@/hooks/usePresence';
+import { AIChatPanel } from '@/components/ai/AIChatPanel';
 import type { IBoard } from '@/types';
 
 // Temporary board ID for development - will be replaced with board selection UI
@@ -40,6 +42,12 @@ const BoardView = ({ boardId }: { boardId: string }): ReactElement => {
   const { onlineUsers } = usePresence({
     boardId,
     user,
+  });
+
+  const ai = useAI({
+    boardId,
+    user,
+    objects,
   });
 
   // Subscribe to board data
@@ -142,17 +150,31 @@ const BoardView = ({ boardId }: { boardId: string }): ReactElement => {
         </div>
       </header>
 
-      {/* Canvas area */}
-      <main className='flex-1 relative'>
-        <BoardCanvas
-          boardId={boardId}
-          user={user}
-          objects={objects}
-          canEdit={canEdit}
-          onObjectUpdate={updateObject}
-          onObjectCreate={createObject}
-          onObjectDelete={deleteObject}
-        />
+      {/* Canvas area and AI panel */}
+      <main className='flex-1 flex relative min-w-0'>
+        <div className='flex-1 relative min-w-0'>
+          <BoardCanvas
+            boardId={boardId}
+            user={user}
+            objects={objects}
+            canEdit={canEdit}
+            onObjectUpdate={updateObject}
+            onObjectCreate={createObject}
+            onObjectDelete={deleteObject}
+          />
+        </div>
+        {canEdit && (
+          <aside className='shrink-0 w-80 border-l border-slate-700 bg-slate-800/50 p-2 flex flex-col'>
+            <AIChatPanel
+              messages={ai.messages}
+              loading={ai.loading}
+              error={ai.error}
+              onSend={ai.processCommand}
+              onClearError={ai.clearError}
+              onClearMessages={ai.clearMessages}
+            />
+          </aside>
+        )}
       </main>
     </div>
   );

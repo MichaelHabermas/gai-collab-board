@@ -2346,7 +2346,7 @@ sequenceDiagram
 - [x] Story 4.4: Tool Executor – `src/modules/ai/toolExecutor.ts` wiring tools to board
 - [x] Story 4.5: Complex Commands – multi-step planning (e.g. SWOT template)
 - [x] Story 4.6: AI Performance and Reliability – rate limiting, retry, AIError handling
-- [ ] Story 4.7: Shared AI State – AI changes routed through sync, real-time for all users
+- [x] Story 4.7: Shared AI State – AI changes routed through sync, real-time for all users
 
 ### Epic 4: Test
 
