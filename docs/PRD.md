@@ -898,11 +898,11 @@ collaboration is secure.
 
 **Acceptance Criteria**:
 
-- [ ] Owner can invite users with viewer/editor roles
-- [ ] Viewers can only view, not edit
-- [ ] Editors can create/edit/delete objects
-- [ ] Owners can manage roles and delete board
-- [ ] Role badges displayed in presence list
+- [x] Owner can invite users with viewer/editor roles
+- [x] Viewers can only view, not edit
+- [x] Editors can create/edit/delete objects
+- [x] Owners can manage roles and delete board
+- [x] Role badges displayed in presence list
 
 **Branch**: `feature/auth-rbac`
 

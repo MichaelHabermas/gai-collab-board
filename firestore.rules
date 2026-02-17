@@ -49,10 +49,10 @@ service cloud.firestore {
       // Only owners can delete
       allow delete: if isAuthenticated() && isOwner(boardId);
       
-      // Board objects subcollection - any board member can create/update/delete objects
+      // Board objects subcollection - only editors and owners can write
       match /objects/{objectId} {
         allow read: if isAuthenticated() && isBoardMember(boardId);
-        allow write: if isAuthenticated() && isBoardMember(boardId);
+        allow write: if isAuthenticated() && canEdit(boardId);
       }
     }
     

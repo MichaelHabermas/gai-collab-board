@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, type ReactElement } from 'react';
 import { useAuth } from '@/modules/auth';
 import { AuthPage } from '@/components/auth/AuthPage';
 import { Button } from '@/components/ui/button';
-import { LogOut, Loader2 } from 'lucide-react';
+import { ShareDialog } from '@/components/board/ShareDialog';
+import { LogOut, Loader2, Share2 } from 'lucide-react';
 import { BoardCanvas } from '@/components/canvas/BoardCanvas';
 import { useObjects } from '@/hooks/useObjects';
 import {
@@ -108,9 +109,25 @@ const BoardView = ({ boardId }: { boardId: string }): ReactElement => {
             <h1 className='text-lg font-bold text-white'>CollabBoard</h1>
             <span className='text-sm text-slate-400'>{board?.name || 'Untitled Board'}</span>
             <ConnectionStatus />
+            {board && (
+              <ShareDialog board={board} currentUserId={user.uid}>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className='border-slate-600 text-slate-300 hover:bg-slate-700'
+                >
+                  <Share2 className='h-4 w-4 mr-2' />
+                  Share
+                </Button>
+              </ShareDialog>
+            )}
           </div>
           <div className='flex items-center gap-4'>
-            <PresenceAvatars users={onlineUsers} currentUid={user.uid} />
+            <PresenceAvatars
+              users={onlineUsers}
+              currentUid={user.uid}
+              roles={board?.members ?? {}}
+            />
             <span className='text-sm text-slate-400'>{user.email}</span>
             <Button
               variant='ghost'

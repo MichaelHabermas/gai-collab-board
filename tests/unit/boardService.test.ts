@@ -71,7 +71,7 @@ describe("boardService - Role Functions", () => {
     });
 
     it("should return true for viewer (all board members can edit)", () => {
-      expect(canUserEdit(mockBoard, "viewer-user")).toBe(true);
+      expect(canUserEdit(mockBoard, "viewer-user")).toBe(false);
     });
 
     it("should return false for non-member", () => {

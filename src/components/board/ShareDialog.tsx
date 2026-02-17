@@ -19,8 +19,8 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { IBoard, UserRole } from '@/types';
-import { addBoardMember, removeBoardMember, updateMemberRole } from '@/modules/sync';
-import { Copy, Check, UserPlus, Trash2, Crown, Edit, Eye } from 'lucide-react';
+import { addBoardMember, removeBoardMember, updateMemberRole, deleteBoard } from '@/modules/sync';
+import { Copy, Check, UserPlus, Trash2, Crown, Edit, Eye, Trash } from 'lucide-react';
 
 interface ShareDialogProps {
   board: IBoard;
@@ -52,6 +52,7 @@ export const ShareDialog = ({ board, currentUserId, children }: ShareDialogProps
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
+  const [deleteInProgress, setDeleteInProgress] = useState<boolean>(false);
 
   const isOwner = board.ownerId === currentUserId;
   const shareLink = `${window.location.origin}/board/${board.id}`;
@@ -103,6 +104,26 @@ export const ShareDialog = ({ board, currentUserId, children }: ShareDialogProps
       setError((err as Error).message);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDeleteBoard = async (): Promise<void> => {
+    if (
+      !confirm(
+        'Are you sure you want to delete this board? All board content will be removed. This cannot be undone.'
+      )
+    ) {
+      return;
+    }
+    setDeleteInProgress(true);
+    setError('');
+    try {
+      await deleteBoard(board.id);
+      window.location.href = window.location.origin;
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setDeleteInProgress(false);
     }
   };
 
@@ -242,6 +263,22 @@ export const ShareDialog = ({ board, currentUserId, children }: ShareDialogProps
               ))}
             </div>
           </div>
+
+          {/* Delete board (owners only) */}
+          {isOwner && (
+            <div className='pt-4 border-t border-slate-600'>
+              <Button
+                type='button'
+                variant='destructive'
+                onClick={handleDeleteBoard}
+                disabled={isLoading || deleteInProgress}
+                className='w-full'
+              >
+                <Trash className='h-4 w-4 mr-2' />
+                Delete board
+              </Button>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

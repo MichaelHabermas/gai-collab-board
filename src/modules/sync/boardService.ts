@@ -153,7 +153,8 @@ export const getUserRole = (board: IBoard, userId: string): UserRole | null => {
 };
 
 export const canUserEdit = (board: IBoard, userId: string): boolean => {
-  return getUserRole(board, userId) !== null;
+  const role = getUserRole(board, userId);
+  return role === 'owner' || role === 'editor';
 };
 
 export const canUserManage = (board: IBoard, userId: string): boolean => {
