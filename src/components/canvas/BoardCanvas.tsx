@@ -171,7 +171,6 @@ export const BoardCanvas = memo(
     const isEmptyAreaClick = useCallback((e: Konva.KonvaEventObject<MouseEvent>): boolean => {
       const stage = e.target.getStage();
       if (!stage) {
-        console.warn('[DEBUG] isEmptyAreaClick: No stage');
         return false;
       }
 
@@ -189,29 +188,19 @@ export const BoardCanvas = memo(
       const targetName = e.target.name?.() || '';
       const targetClassName = e.target.getClassName();
 
-      console.warn('[DEBUG] isEmptyAreaClick:', {
-        targetName,
-        targetClassName,
-        isStage: e.target === stage,
-        includesShape: targetName.includes('shape'),
-      });
-
       // Check if we clicked on a shape (including child elements)
       if (checkIfShape(e.target)) {
-        console.warn('[DEBUG] isEmptyAreaClick: Clicked on shape, returning false');
         return false;
       }
 
       // Allow clicks on: background rect, Stage, or Layer (empty areas)
       // Background rect has name 'background', Layers have className 'Layer', Stage is the stage itself
-      const isEmpty =
+      return (
         targetName === 'background' ||
         e.target === stage ||
         targetClassName === 'Layer' ||
-        (targetClassName === 'Rect' && targetName === 'background');
-
-      console.warn('[DEBUG] isEmptyAreaClick result:', isEmpty);
-      return isEmpty;
+        (targetClassName === 'Rect' && targetName === 'background')
+      );
     }, []);
 
     // Handle mouse down for drawing start or selection start
@@ -405,39 +394,21 @@ export const BoardCanvas = memo(
       (e: Konva.KonvaEventObject<MouseEvent>) => {
         const stage = e.target.getStage();
         if (!stage) {
-          console.warn('[DEBUG] handleStageClick: No stage');
           return;
         }
 
         const isEmpty = isEmptyAreaClick(e);
-        console.warn('[DEBUG] handleStageClick:', {
-          isEmpty,
-          activeTool,
-          canEdit,
-          hasOnObjectCreate: !!onObjectCreate,
-          targetName: e.target.name?.(),
-          targetClassName: e.target.getClassName(),
-        });
 
         if (isEmpty) {
           // Get click position in canvas coordinates
           const pointer = stage.getPointerPosition();
           if (!pointer) {
-            console.warn('[DEBUG] handleStageClick: No pointer position');
             return;
           }
 
           const { x: canvasX, y: canvasY } = getCanvasCoords(stage, pointer);
-          console.warn('[DEBUG] handleStageClick: Click position:', { canvasX, canvasY });
-
           // Use ref to get the tool at the time of click (avoids stale closure issues)
           const toolAtClick = activeToolRef.current;
-          console.warn(
-            '[DEBUG] handleStageClick: Tool at click time:',
-            toolAtClick,
-            'activeTool state:',
-            activeTool
-          );
 
           // Create new object based on active tool (for click-to-create tools)
           if ((toolAtClick === 'sticky' || activeTool === 'sticky') && canEdit && onObjectCreate) {
@@ -451,12 +422,10 @@ export const BoardCanvas = memo(
               text: '',
               rotation: 0,
             };
-            console.warn('[DEBUG] Creating sticky note with params:', params);
 
             // Call async function but handle it properly
             onObjectCreate(params)
-              .then((result) => {
-                console.warn('[DEBUG] Sticky note creation result:', result);
+              .then(() => {
                 // Switch back to select tool after creation attempt
                 // (regardless of success/failure to allow user to try again)
                 setActiveTool('select');
@@ -484,11 +453,9 @@ export const BoardCanvas = memo(
               fontSize: 16,
               rotation: 0,
             };
-            console.warn('[DEBUG] Creating text element with params:', params);
 
             onObjectCreate(params)
-              .then((result) => {
-                console.warn('[DEBUG] Text element creation result:', result);
+              .then(() => {
                 // Switch back to select tool after creation attempt
                 setActiveTool('select');
                 activeToolRef.current = 'select';
@@ -499,20 +466,10 @@ export const BoardCanvas = memo(
                 setActiveTool('select');
                 activeToolRef.current = 'select';
               });
-          } else {
-            console.warn('[DEBUG] handleStageClick: Conditions not met:', {
-              activeTool,
-              canEdit,
-              hasOnObjectCreate: !!onObjectCreate,
-              isSelect: activeTool === 'select',
-            });
-            if (activeTool === 'select') {
-              // Deselect all
-              setSelectedIds([]);
-            }
+          } else if (activeTool === 'select') {
+            // Deselect all
+            setSelectedIds([]);
           }
-        } else {
-          console.warn('[DEBUG] handleStageClick: Not an empty area click');
         }
       },
       [activeTool, activeColor, canEdit, onObjectCreate, getCanvasCoords, isEmptyAreaClick]
@@ -940,13 +897,13 @@ export const BoardCanvas = memo(
               // Prevent clicks on Transformer (anchors, borders, or Transformer itself) from propagating to stage
               const target = e.target;
               const className = target.getClassName();
-              
+
               // If clicking directly on Transformer, prevent propagation
               if (className === 'Transformer') {
                 e.cancelBubble = true;
                 return;
               }
-              
+
               // Transformer creates Circle nodes for anchors and Line nodes for borders
               // Check if the click is on a Transformer element
               if (className === 'Circle' || className === 'Line') {
