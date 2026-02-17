@@ -4,7 +4,14 @@ import Konva from 'konva';
 import { useCanvasViewport } from '@/hooks/useCanvasViewport';
 import { CursorLayer } from './CursorLayer';
 import { Toolbar, type ToolMode } from './Toolbar';
-import { StickyNote, STICKY_COLORS, RectangleShape, CircleShape, LineShape } from './shapes';
+import {
+  StickyNote,
+  STICKY_COLORS,
+  RectangleShape,
+  CircleShape,
+  LineShape,
+  Connector,
+} from './shapes';
 import { useCursors } from '@/hooks/useCursors';
 import type { User } from 'firebase/auth';
 import type { IBoardObject } from '@/types';
@@ -82,7 +89,7 @@ export const BoardCanvas = memo(
 
     // Check if tool is a drawing tool
     const isDrawingTool = useCallback((tool: ToolMode) => {
-      return ['rectangle', 'circle', 'line'].includes(tool);
+      return ['rectangle', 'circle', 'line', 'connector'].includes(tool);
     }, []);
 
     // Handle mouse move for cursor sync and drawing
@@ -188,6 +195,19 @@ export const BoardCanvas = memo(
             fill: 'transparent',
             stroke: activeColor,
             strokeWidth: 3,
+            rotation: 0,
+          });
+        } else if (activeTool === 'connector') {
+          onObjectCreate({
+            type: 'connector',
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0,
+            points: [startX, startY, currentX, currentY],
+            fill: 'transparent',
+            stroke: activeColor,
+            strokeWidth: 2,
             rotation: 0,
           });
         }
@@ -408,6 +428,25 @@ export const BoardCanvas = memo(
               />
             );
 
+          case 'connector':
+            return (
+              <Connector
+                key={obj.id}
+                id={obj.id}
+                x={obj.x}
+                y={obj.y}
+                points={obj.points || [0, 0, 100, 100]}
+                stroke={obj.stroke || obj.fill}
+                strokeWidth={obj.strokeWidth}
+                rotation={obj.rotation}
+                isSelected={isSelected}
+                draggable={canEdit}
+                hasArrow={true}
+                onSelect={() => handleObjectSelect(obj.id)}
+                onDragEnd={(x, y) => handleObjectDragEnd(obj.id, x, y)}
+              />
+            );
+
           // Default fallback for other shapes
           default:
             return (
@@ -483,6 +522,18 @@ export const BoardCanvas = memo(
             points={[startX, startY, currentX, currentY]}
             stroke={activeColor}
             strokeWidth={3}
+            dash={[5, 5]}
+            listening={false}
+          />
+        );
+      }
+
+      if (activeTool === 'connector') {
+        return (
+          <Line
+            points={[startX, startY, currentX, currentY]}
+            stroke={activeColor}
+            strokeWidth={2}
             dash={[5, 5]}
             listening={false}
           />
