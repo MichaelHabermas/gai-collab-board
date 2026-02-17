@@ -13,13 +13,19 @@ const waitForPageReady = async (page: Page): Promise<void> => {
 // Helper to check if we're on the auth page
 const isOnAuthPage = async (page: Page): Promise<boolean> => {
   const authForm = page.locator("form");
-  return authForm.isVisible().catch(() => false);
+  return authForm.isVisible().catch((error) => {
+    console.error('Error checking auth page:', error);
+    return false;
+  });
 };
 
 // Helper to check if we're on the board page
 const isOnBoardPage = async (page: Page): Promise<boolean> => {
   const canvas = page.locator('[data-testid="board-canvas"]');
-  return canvas.isVisible().catch(() => false);
+  return canvas.isVisible().catch((error) => {
+    console.error('Error checking board page:', error);
+    return false;
+  });
 };
 
 // ============================================================================

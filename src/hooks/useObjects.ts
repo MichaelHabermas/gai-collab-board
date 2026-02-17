@@ -79,20 +79,31 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
   // Create object with optimistic update
   const handleCreateObject = useCallback(
     async (params: Omit<ICreateObjectParams, 'createdBy'>): Promise<IBoardObject | null> => {
+      console.warn('[DEBUG] handleCreateObject called with params:', params);
+      console.warn('[DEBUG] handleCreateObject - boardId:', boardId, 'user:', user?.uid);
+      
       if (!boardId || !user) {
-        setError('Cannot create object: not connected to board');
+        const errorMsg = 'Cannot create object: not connected to board';
+        console.error('[DEBUG] handleCreateObject failed:', errorMsg);
+        setError(errorMsg);
         return null;
       }
 
       try {
         setError('');
-        const newObject = await createObject(boardId, {
+        const createParams = {
           ...params,
           createdBy: user.uid,
-        });
+        };
+        console.warn('[DEBUG] handleCreateObject calling createObject with:', createParams);
+        
+        const newObject = await createObject(boardId, createParams);
+        console.warn('[DEBUG] handleCreateObject - createObject returned:', newObject);
+        
         return newObject;
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to create object';
+        console.error('[DEBUG] handleCreateObject error:', err, errorMessage);
         setError(errorMessage);
         return null;
       }
