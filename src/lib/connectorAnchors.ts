@@ -23,8 +23,8 @@ function rotatePoint(px: number, py: number, angleDeg: number): { x: number; y: 
 
 /**
  * Returns canvas coordinates of the given anchor for a shape.
- * Rect-like (rectangle, sticky, frame): four edge midpoints, then rotation around center.
- * Circle/ellipse: four cardinal points on the ellipse, then rotation around center.
+ * Rect-like (rectangle, sticky, frame): edge midpoints in top-left local coords, rotated around (0,0) to match Konva.
+ * Circle/ellipse: four cardinal points on the ellipse, rotation around center (Ellipse node uses center position).
  */
 export function getAnchorPosition(
   obj: Pick<IBoardObject, 'x' | 'y' | 'width' | 'height' | 'rotation' | 'type'>,
@@ -55,23 +55,21 @@ export function getAnchorPosition(
     return { x: cx + rotated.x, y: cy + rotated.y };
   }
 
-  // Rect-like: rectangle, sticky, frame — edge midpoints in center-relative coords
-  const w2 = width / 2;
-  const h2 = height / 2;
+  // Rect-like: rectangle, sticky, frame — Konva rotates around (x,y) top-left; use top-left-origin local coords
   const local = ((): { x: number; y: number } => {
     switch (anchor) {
       case 'top':
-        return { x: 0, y: -h2 };
+        return { x: width / 2, y: 0 };
       case 'right':
-        return { x: w2, y: 0 };
+        return { x: width, y: height / 2 };
       case 'bottom':
-        return { x: 0, y: h2 };
+        return { x: width / 2, y: height };
       case 'left':
-        return { x: -w2, y: 0 };
+        return { x: 0, y: height / 2 };
       default:
-        return { x: 0, y: -h2 };
+        return { x: width / 2, y: 0 };
     }
   })();
   const rotated = rotatePoint(local.x, local.y, rotation);
-  return { x: cx + rotated.x, y: cy + rotated.y };
+  return { x: x + rotated.x, y: y + rotated.y };
 }
