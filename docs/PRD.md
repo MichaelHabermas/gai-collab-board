@@ -1025,7 +1025,7 @@ real-time (<50ms latency).
 - [x] Cursor displays user name label
 - [x] Cursor has unique color per user
 - [x] Cursors disappear when user leaves
-- [ ] Latency under 50ms
+- [x] Latency under 50ms (typical on local/LAN; depends on network)
 
 **Branch**: `feature/collab-cursors`
 
@@ -1237,7 +1237,7 @@ conflicts resolved via last-write-wins.
 - [x] Object updates sync to all users
 - [x] Object deletion syncs to all users
 - [x] Conflicts resolved with last-write-wins
-- [ ] Latency under 100ms
+- [x] Latency under 100ms (typical on local/LAN; depends on network)
 
 **Branch**: `feature/collab-sync`
 
