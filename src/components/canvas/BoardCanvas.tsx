@@ -1,5 +1,6 @@
 import { Stage, Layer, Rect, Line } from 'react-konva';
 import { TransformHandler } from './TransformHandler';
+import { SelectionLayer, type ISelectionRect } from './SelectionLayer';
 import { useRef, useCallback, useState, memo, type ReactElement } from 'react';
 import Konva from 'konva';
 import { useCanvasViewport } from '@/hooks/useCanvasViewport';
@@ -72,6 +73,14 @@ export const BoardCanvas = memo(
       currentX: 0,
       currentY: 0,
     });
+    const [selectionRect, setSelectionRect] = useState<ISelectionRect>({
+      visible: false,
+      x1: 0,
+      y1: 0,
+      x2: 0,
+      y2: 0,
+    });
+    const [isSelecting, setIsSelecting] = useState(false);
 
     const { viewport, handleWheel, handleDragEnd, handleTouchMove, handleTouchEnd } =
       useCanvasViewport();
@@ -118,32 +127,56 @@ export const BoardCanvas = memo(
             currentY: canvasY,
           }));
         }
+
+        // Update selection rectangle
+        if (isSelecting) {
+          setSelectionRect((prev) => ({
+            ...prev,
+            x2: canvasX,
+            y2: canvasY,
+          }));
+        }
       },
-      [handleMouseMove, drawingState.isDrawing, getCanvasCoords]
+      [handleMouseMove, drawingState.isDrawing, isSelecting, getCanvasCoords]
     );
 
-    // Handle mouse down for drawing start
+    // Handle mouse down for drawing start or selection start
     const handleStageMouseDown = useCallback(
       (e: Konva.KonvaEventObject<MouseEvent>) => {
         const stage = e.target.getStage();
         if (!stage) return;
 
-        // Only start drawing on empty stage with drawing tools
         const clickedOnEmpty = e.target === stage;
-        if (!clickedOnEmpty || !isDrawingTool(activeTool) || !canEdit) return;
+        if (!clickedOnEmpty) return;
 
         const pointer = stage.getPointerPosition();
         if (!pointer) return;
 
         const { x: canvasX, y: canvasY } = getCanvasCoords(stage, pointer);
 
-        setDrawingState({
-          isDrawing: true,
-          startX: canvasX,
-          startY: canvasY,
-          currentX: canvasX,
-          currentY: canvasY,
-        });
+        // Start drawing if using a drawing tool
+        if (isDrawingTool(activeTool) && canEdit) {
+          setDrawingState({
+            isDrawing: true,
+            startX: canvasX,
+            startY: canvasY,
+            currentX: canvasX,
+            currentY: canvasY,
+          });
+          return;
+        }
+
+        // Start drag-to-select if using select tool
+        if (activeTool === 'select') {
+          setIsSelecting(true);
+          setSelectionRect({
+            visible: true,
+            x1: canvasX,
+            y1: canvasY,
+            x2: canvasX,
+            y2: canvasY,
+          });
+        }
       },
       [activeTool, canEdit, isDrawingTool, getCanvasCoords]
     );
@@ -241,7 +274,52 @@ export const BoardCanvas = memo(
         currentX: 0,
         currentY: 0,
       });
-    }, [drawingState, activeTool, activeColor, onObjectCreate]);
+
+      // Handle selection rectangle completion
+      if (isSelecting && selectionRect.visible) {
+        // Find objects within selection rectangle
+        const selX1 = Math.min(selectionRect.x1, selectionRect.x2);
+        const selY1 = Math.min(selectionRect.y1, selectionRect.y2);
+        const selX2 = Math.max(selectionRect.x1, selectionRect.x2);
+        const selY2 = Math.max(selectionRect.y1, selectionRect.y2);
+
+        // Only select if the rectangle has meaningful size
+        if (Math.abs(selX2 - selX1) > 5 && Math.abs(selY2 - selY1) > 5) {
+          const selectedObjectIds = objects
+            .filter((obj) => {
+              // Check if object is within selection rectangle
+              const objX1 = obj.x;
+              const objY1 = obj.y;
+              const objX2 = obj.x + obj.width;
+              const objY2 = obj.y + obj.height;
+
+              // Check for intersection
+              return objX1 < selX2 && objX2 > selX1 && objY1 < selY2 && objY2 > selY1;
+            })
+            .map((obj) => obj.id);
+
+          setSelectedIds(selectedObjectIds);
+        }
+      }
+
+      // Reset selection state
+      setIsSelecting(false);
+      setSelectionRect({
+        visible: false,
+        x1: 0,
+        y1: 0,
+        x2: 0,
+        y2: 0,
+      });
+    }, [
+      drawingState,
+      activeTool,
+      activeColor,
+      onObjectCreate,
+      isSelecting,
+      selectionRect,
+      objects,
+    ]);
 
     // Handle stage click for object creation or deselection
     const handleStageClick = useCallback(
@@ -644,7 +722,7 @@ export const BoardCanvas = memo(
 
     // Determine if stage should be draggable
     const isDraggable =
-      activeTool === 'pan' || (activeTool === 'select' && !drawingState.isDrawing);
+      activeTool === 'pan' || (activeTool === 'select' && !drawingState.isDrawing && !isSelecting);
 
     return (
       <div className='w-full h-full overflow-hidden bg-white relative'>
@@ -693,6 +771,7 @@ export const BoardCanvas = memo(
           {/* Drawing preview layer */}
           <Layer name='drawing' listening={false}>
             {renderDrawingPreview()}
+            <SelectionLayer selectionRect={selectionRect} />
           </Layer>
 
           {/* Cursor layer - other users' cursors */}
