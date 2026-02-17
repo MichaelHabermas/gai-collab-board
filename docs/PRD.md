@@ -4,15 +4,19 @@
 
 ### Project Overview
 
-CollabBoard is a production-scale, real-time collaborative whiteboard application inspired by Miro. It enables multiple users to brainstorm, map ideas, and run workshops simultaneously on an infinite canvas. The application features AI-powered board manipulation through natural language commands, making it a showcase of AI-first development methodology.
+CollabBoard is a production-scale, real-time collaborative whiteboard
+application inspired by Miro. It enables multiple users to brainstorm, map
+ideas, and run workshops simultaneously on an infinite canvas. The application
+features AI-powered board manipulation through natural language commands, making
+it a showcase of AI-first development methodology.
 
 **Project Deadline**: 1-week sprint with three checkpoints:
 
-| Checkpoint | Deadline | Focus |
-| ---------- | -------- | ----- |
-| MVP | Tuesday (24 hours) | Collaborative infrastructure |
-| Early Submission | Friday (4 days) | Full feature set |
-| Final | Sunday (7 days) | Polish, documentation, deployment |
+| Checkpoint       | Deadline           | Focus                             |
+| ---------------- | ------------------ | --------------------------------- |
+| MVP              | Tuesday (24 hours) | Collaborative infrastructure      |
+| Early Submission | Friday (4 days)    | Full feature set                  |
+| Final            | Sunday (7 days)    | Polish, documentation, deployment |
 
 ### MVP Requirements (24-Hour Gate)
 
@@ -26,22 +30,23 @@ All items required to pass:
 - [x] Multiplayer cursors with name labels
 - [x] Presence awareness (who's online)
 - [x] User authentication
-- [ ] Deployed and publicly accessible
+- [x] Deployed and publicly accessible
 
-> **Critical**: A simple whiteboard with bulletproof multiplayer beats a feature-rich board with broken sync.
+> **Critical**: A simple whiteboard with bulletproof multiplayer beats a
+> feature-rich board with broken sync.
 
 ### Success Metrics
 
-| Metric | Target |
-| ------ | ------ |
-| Frame Rate | 60 FPS during pan, zoom, object manipulation |
-| Object Sync Latency | <100ms |
-| Cursor Sync Latency | <50ms |
-| Object Capacity | 500+ objects without performance drops |
-| Concurrent Users | 5+ without degradation |
-| AI Response Time | <2s for single-step commands |
-| AI Command Types | 6+ distinct command categories |
-| Test Coverage | 80% for MVP |
+| Metric              | Target                                       |
+| ------------------- | -------------------------------------------- |
+| Frame Rate          | 60 FPS during pan, zoom, object manipulation |
+| Object Sync Latency | <100ms                                       |
+| Cursor Sync Latency | <50ms                                        |
+| Object Capacity     | 500+ objects without performance drops       |
+| Concurrent Users    | 5+ without degradation                       |
+| AI Response Time    | <2s for single-step commands                 |
+| AI Command Types    | 6+ distinct command categories               |
+| Test Coverage       | 80% for MVP                                  |
 
 ---
 
@@ -54,14 +59,14 @@ graph TB
     subgraph Deployment[Deployment]
         Netlify[Netlify CDN + Functions]
     end
-    
+
     subgraph Frontend[Frontend Layer]
         React[React 19 + TypeScript]
         Vite[Vite 5 + Bun]
         Konva[Konva.js Canvas]
         Shadcn[Shadcn/ui + Tailwind v4]
     end
-    
+
     subgraph Modules[Feature Modules]
         AuthMod[auth Module]
         SyncMod[sync Module]
@@ -69,17 +74,17 @@ graph TB
         AIMod[ai Module]
         UIMod[ui Module]
     end
-    
+
     subgraph Backend[Backend Services]
         FireAuth[Firebase Auth]
         Firestore[Firestore - Persistence]
         RealtimeDB[Realtime DB - Sync/Cursors]
     end
-    
+
     subgraph External[External APIs]
         Kimi[Kimi 2.5 via Nvidia API]
     end
-    
+
     Netlify --> Frontend
     Frontend --> Modules
     AuthMod --> FireAuth
@@ -91,14 +96,14 @@ graph TB
 
 ### Stack Rationale
 
-| Layer | Technology | Rationale |
-| ----- | ---------- | --------- |
-| **Backend** | Firebase | Mature real-time sync, offline support, Google integration, quick prototyping |
-| **Frontend** | React 19 + Vite + Bun | Fast dev (Vite HMR, Bun speed), type safety (TS), modern React features |
-| **Canvas** | Konva.js | High performance (60fps with 1000+ objects), layered structure, React integration |
-| **UI** | Shadcn/ui + Tailwind v4 | Customizable components, CSS-first approach, accessible by default |
-| **AI** | Kimi 2.5 | 256K context, OpenAI-compatible, function calling, 10x cheaper than GPT-4 |
-| **Deployment** | Netlify | Easy Git deploys, serverless functions, global CDN, free tier |
+| Layer          | Technology              | Rationale                                                                         |
+| -------------- | ----------------------- | --------------------------------------------------------------------------------- |
+| **Backend**    | Firebase                | Mature real-time sync, offline support, Google integration, quick prototyping     |
+| **Frontend**   | React 19 + Vite + Bun   | Fast dev (Vite HMR, Bun speed), type safety (TS), modern React features           |
+| **Canvas**     | Konva.js                | High performance (60fps with 1000+ objects), layered structure, React integration |
+| **UI**         | Shadcn/ui + Tailwind v4 | Customizable components, CSS-first approach, accessible by default                |
+| **AI**         | Kimi 2.5                | 256K context, OpenAI-compatible, function calling, 10x cheaper than GPT-4         |
+| **Deployment** | Netlify                 | Easy Git deploys, serverless functions, global CDN, free tier                     |
 
 ### SOLID Principles Application
 
@@ -132,9 +137,15 @@ interface IShape {
 }
 
 // New shapes extend without modifying existing code
-class StickyNote implements IShape { /* ... */ }
-class Rectangle implements IShape { /* ... */ }
-class Circle implements IShape { /* ... */ }
+class StickyNote implements IShape {
+  /* ... */
+}
+class Rectangle implements IShape {
+  /* ... */
+}
+class Circle implements IShape {
+  /* ... */
+}
 ```
 
 #### Liskov Substitution Principle (LSP)
@@ -174,8 +185,12 @@ interface IEditable {
 }
 
 // Shapes implement only what they need
-class StickyNote implements ITransformable, ISelectable, IEditable { /* ... */ }
-class Line implements ITransformable, ISelectable { /* no IEditable */ }
+class StickyNote implements ITransformable, ISelectable, IEditable {
+  /* ... */
+}
+class Line implements ITransformable, ISelectable {
+  /* no IEditable */
+}
 ```
 
 #### Dependency Inversion Principle (DIP)
@@ -185,12 +200,21 @@ Depend on abstractions, inject dependencies:
 ```typescript
 // Abstract service interface
 interface ISyncService {
-  subscribe(boardId: string, callback: (objects: IBoardObject[]) => void): Unsubscribe;
-  updateObject(boardId: string, objectId: string, data: Partial<IBoardObject>): Promise<void>;
+  subscribe(
+    boardId: string,
+    callback: (objects: IBoardObject[]) => void
+  ): Unsubscribe;
+  updateObject(
+    boardId: string,
+    objectId: string,
+    data: Partial<IBoardObject>
+  ): Promise<void>;
 }
 
 // Concrete implementation
-class FirestoreSyncService implements ISyncService { /* ... */ }
+class FirestoreSyncService implements ISyncService {
+  /* ... */
+}
 
 // AI Service depends on abstraction
 class AIService {
@@ -267,15 +291,15 @@ CollabBoard/
 
 ### Naming Conventions
 
-| Type | Convention | Example |
-| ---- | ---------- | ------- |
-| Variables/Functions | camelCase | `boardState`, `updateObject` |
-| Classes/Components | PascalCase | `StickyNote`, `BoardCanvas` |
-| Types/Enums | PascalCase | `ShapeType`, `UserRole` |
-| Interfaces | IPascalCase | `IBoardObject`, `IAuthResult` |
-| Constants | UPPER_SNAKE_CASE | `MAX_OBJECTS`, `API_BASE_URL` |
-| Files (components) | PascalCase | `StickyNote.tsx` |
-| Files (modules) | camelCase | `authService.ts` |
+| Type                | Convention       | Example                       |
+| ------------------- | ---------------- | ----------------------------- |
+| Variables/Functions | camelCase        | `boardState`, `updateObject`  |
+| Classes/Components  | PascalCase       | `StickyNote`, `BoardCanvas`   |
+| Types/Enums         | PascalCase       | `ShapeType`, `UserRole`       |
+| Interfaces          | IPascalCase      | `IBoardObject`, `IAuthResult` |
+| Constants           | UPPER_SNAKE_CASE | `MAX_OBJECTS`, `API_BASE_URL` |
+| Files (components)  | PascalCase       | `StickyNote.tsx`              |
+| Files (modules)     | camelCase        | `authService.ts`              |
 
 ---
 
@@ -307,12 +331,12 @@ gitGraph
 
 ### Branch Naming
 
-| Type | Pattern | Example |
-| ---- | ------- | ------- |
+| Type    | Pattern                        | Example                     |
+| ------- | ------------------------------ | --------------------------- |
 | Feature | `feature/<epic>-<description>` | `feature/auth-signup-login` |
-| Bugfix | `bugfix/<issue>-<description>` | `bugfix/123-cursor-flicker` |
-| Hotfix | `hotfix/<description>` | `hotfix/auth-token-refresh` |
-| Release | `release/<version>` | `release/1.0.0` |
+| Bugfix  | `bugfix/<issue>-<description>` | `bugfix/123-cursor-flicker` |
+| Hotfix  | `hotfix/<description>`         | `hotfix/auth-token-refresh` |
+| Release | `release/<version>`            | `release/1.0.0`             |
 
 ### Commit Message Format
 
@@ -386,7 +410,7 @@ test(canvas): add sticky note creation tests
 gantt
     title CollabBoard Development Timeline
     dateFormat YYYY-MM-DD
-    
+
     section MVP (24h)
     Project Setup :a1, 2026-02-05, 4h
     Authentication :a2, after a1, 4h
@@ -394,14 +418,14 @@ gantt
     Object Sync :a4, after a3, 4h
     Basic Canvas :a5, after a4, 4h
     Deploy MVP :a6, after a5, 4h
-    
+
     section Full Features (4d)
     All Shapes :b1, after a6, 1d
     Transforms :b2, after b1, 1d
     Selection System :b3, after b2, 8h
     AI Basic Commands :b4, after b3, 1d
     AI Complex Commands :b5, after b4, 8h
-    
+
     section Polish (2d)
     UI Polish :c1, after b5, 8h
     Performance Opt :c2, after c1, 8h
@@ -416,11 +440,21 @@ gantt
 
 ### Intent
 
-Standardize the development environment, establish coding rules for AI-first development (Cursor, Context7 MCP for docs), configure linting, and set up environment variables.
+Standardize the development environment, establish coding rules for AI-first
+development (Cursor, Context7 MCP for docs), configure linting, and set up
+environment variables.
+
+**Epic 0 completion**:
+
+- [x] Directory structure (modules, components, lib, types, hooks, tests)
+- [x] Build and tooling config (Vite, TypeScript, ESLint, Prettier)
+- [x] Environment template (.env.example)
+- [x] Testing setup (Vitest, Playwright, tests/setup.ts)
 
 ### Story 0.1: Repository and Rules Setup
 
-**Features**: Repository initialization, dependencies, testing framework, .cursor/rules for AI-first development.
+**Features**: Repository initialization, dependencies, testing framework,
+.cursor/rules for AI-first development.
 
 **Branch**: `feature/setup-repo-rules`
 
@@ -446,30 +480,30 @@ Standardize the development environment, establish coding rules for AI-first dev
   ```gitignore
   # Dependencies
   node_modules/
-  
+
   # Build outputs
   dist/
-  
+
   # Environment files
   .env
   .env.local
   .env.*.local
-  
+
   # IDE
   .idea/
   .vscode/*
   !.vscode/extensions.json
   !.vscode/settings.json
-  
+
   # Logs
   *.log
-  
+
   # Testing
   coverage/
-  
+
   # Bun
   bun.lockb
-  
+
   # Playwright
   /test-results/
   /playwright-report/
@@ -535,7 +569,12 @@ Standardize the development environment, establish coding rules for AI-first dev
         output: {
           manualChunks: {
             vendor: ['react', 'react-dom'],
-            firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/database'],
+            firebase: [
+              'firebase/app',
+              'firebase/auth',
+              'firebase/firestore',
+              'firebase/database',
+            ],
             konva: ['konva', 'react-konva'],
           },
         },
@@ -642,20 +681,23 @@ flowchart TD
 
 ### Intent for Epic 1
 
-Implement secure authentication with Firebase Auth supporting email/password and Google OAuth. Add role-based access control (RBAC) for board collaboration with viewer/editor/owner roles.
+Implement secure authentication with Firebase Auth supporting email/password and
+Google OAuth. Add role-based access control (RBAC) for board collaboration with
+viewer/editor/owner roles.
 
 ### Story 1.1: Sign Up and Login
 
-**As a user**, I can sign up and login with email or Google, so I can access my boards securely.
+**As a user**, I can sign up and login with email or Google, so I can access my
+boards securely.
 
 **Acceptance Criteria**:
 
-- [ ] Email/password registration with validation
-- [ ] Email/password login
-- [ ] Google OAuth sign-in
-- [ ] Session persistence across page refreshes
-- [ ] Logout functionality
-- [ ] Error handling with user feedback
+- [x] Email/password registration with validation
+- [x] Email/password login
+- [x] Google OAuth sign-in
+- [x] Session persistence across page refreshes
+- [x] Logout functionality
+- [x] Error handling with user feedback
 
 **Branch**: `feature/auth-signup-login`
 
@@ -666,10 +708,10 @@ Implement secure authentication with Firebase Auth supporting email/password and
 - **Subtask 3**: Create `src/lib/firebase.ts`
 
   ```typescript
-  import { initializeApp, FirebaseApp } from "firebase/app";
-  import { getAuth, Auth } from "firebase/auth";
-  import { getFirestore, Firestore } from "firebase/firestore";
-  import { getDatabase, Database } from "firebase/database";
+  import { initializeApp, FirebaseApp } from 'firebase/app';
+  import { getAuth, Auth } from 'firebase/auth';
+  import { getFirestore, Firestore } from 'firebase/firestore';
+  import { getDatabase, Database } from 'firebase/database';
 
   interface IFirebaseConfig {
     apiKey: string;
@@ -714,8 +756,8 @@ Implement secure authentication with Firebase Auth supporting email/password and
     onAuthStateChanged,
     User,
     UserCredential,
-  } from "firebase/auth";
-  import { auth } from "@/lib/firebase";
+  } from 'firebase/auth';
+  import { auth } from '@/lib/firebase';
 
   export interface IAuthResult {
     user: User | null;
@@ -788,8 +830,8 @@ Implement secure authentication with Firebase Auth supporting email/password and
 - **Subtask 1**: Create `src/modules/auth/useAuth.ts`
 
   ```typescript
-  import { useState, useEffect, useCallback } from "react";
-  import { User } from "firebase/auth";
+  import { useState, useEffect, useCallback } from 'react';
+  import { User } from 'firebase/auth';
   import {
     subscribeToAuthChanges,
     signUpWithEmail,
@@ -797,7 +839,7 @@ Implement secure authentication with Firebase Auth supporting email/password and
     signInWithGoogle,
     logOut,
     IAuthResult,
-  } from "./authService";
+  } from './authService';
 
   interface IUseAuthReturn {
     user: User | null;
@@ -837,7 +879,7 @@ sequenceDiagram
     participant User
     participant App
     participant Firebase
-    
+
     User->>App: Enter credentials
     App->>Firebase: signInWithEmailAndPassword()
     Firebase-->>App: UserCredential / Error
@@ -851,7 +893,8 @@ sequenceDiagram
 
 ### Story 1.2: Role-Based Access Control
 
-**As a user**, I can share boards with specific roles (viewer/editor/owner), so collaboration is secure.
+**As a user**, I can share boards with specific roles (viewer/editor/owner), so
+collaboration is secure.
 
 **Acceptance Criteria**:
 
@@ -909,23 +952,23 @@ sequenceDiagram
       function isAuthenticated() {
         return request.auth != null;
       }
-      
+
       function isBoardMember(boardId) {
         let board = get(/databases/$(database)/documents/boards/$(boardId));
         return board != null && request.auth.uid in board.data.members;
       }
-      
+
       function canEdit(boardId) {
         let board = get(/databases/$(database)/documents/boards/$(boardId));
         let role = board.data.members[request.auth.uid];
         return role == 'owner' || role == 'editor';
       }
-      
+
       match /boards/{boardId} {
         allow read: if isAuthenticated() && isBoardMember(boardId);
         allow create: if isAuthenticated();
         allow update, delete: if isAuthenticated() && canEdit(boardId);
-        
+
         match /objects/{objectId} {
           allow read: if isAuthenticated() && isBoardMember(boardId);
           allow write: if isAuthenticated() && canEdit(boardId);
@@ -967,11 +1010,14 @@ sequenceDiagram
 
 ### Intent for Epic 2
 
-Implement bulletproof real-time synchronization with cursor tracking (<50ms), object sync (<100ms), presence awareness, and graceful offline handling. This is the hardest part - start here.
+Implement bulletproof real-time synchronization with cursor tracking (<50ms),
+object sync (<100ms), presence awareness, and graceful offline handling. This is
+the hardest part - start here.
 
 ### Story 2.1: Real-Time Cursors
 
-**As a user**, I can see other users' cursor positions with their names in real-time (<50ms latency).
+**As a user**, I can see other users' cursor positions with their names in
+real-time (<50ms latency).
 
 **Acceptance Criteria**:
 
@@ -1012,8 +1058,8 @@ Implement bulletproof real-time synchronization with cursor tracking (<50ms), ob
     remove,
     DatabaseReference,
     Unsubscribe,
-  } from "firebase/database";
-  import { realtimeDb } from "@/lib/firebase";
+  } from 'firebase/database';
+  import { realtimeDb } from '@/lib/firebase';
 
   export interface ICursorData {
     uid: string;
@@ -1135,12 +1181,12 @@ sequenceDiagram
     participant UserA as User A
     participant RTDB as Realtime DB
     participant UserB as User B
-    
+
     UserA->>UserA: Mouse Move
     UserA->>RTDB: updateCursor(x, y)
     RTDB-->>UserB: onValue callback
     UserB->>UserB: Render cursor at (x, y)
-    
+
     Note over UserA,UserB: Latency target: <50ms
 ```
 
@@ -1182,7 +1228,8 @@ sequenceDiagram
 
 ### Story 2.3: Object Sync
 
-**As a user**, I can see changes made by other users instantly (<100ms), with conflicts resolved via last-write-wins.
+**As a user**, I can see changes made by other users instantly (<100ms), with
+conflicts resolved via last-write-wins.
 
 **Acceptance Criteria**:
 
@@ -1251,9 +1298,7 @@ sequenceDiagram
   ) => {
     // 1. Optimistic local update
     setObjects((prev) =>
-      prev.map((obj) =>
-        obj.id === objectId ? { ...obj, ...updates } : obj
-      )
+      prev.map((obj) => (obj.id === objectId ? { ...obj, ...updates } : obj))
     );
 
     // 2. Sync to Firebase
@@ -1305,7 +1350,8 @@ flowchart LR
 
 ### Story 2.4: Disconnect/Reconnect Handling
 
-**As a user**, the board handles network issues gracefully, with offline work syncing on reconnection.
+**As a user**, the board handles network issues gracefully, with offline work
+syncing on reconnection.
 
 **Acceptance Criteria**:
 
@@ -1321,14 +1367,14 @@ flowchart LR
 - **Subtask 1**: Enable Firestore persistence
 
   ```typescript
-  import { enableIndexedDbPersistence } from "firebase/firestore";
+  import { enableIndexedDbPersistence } from 'firebase/firestore';
 
   export const enableOfflineSupport = async (db: Firestore): Promise<void> => {
     try {
       await enableIndexedDbPersistence(db);
     } catch (err) {
-      if ((err as { code: string }).code === "failed-precondition") {
-        console.warn("Offline persistence unavailable: multiple tabs open");
+      if ((err as { code: string }).code === 'failed-precondition') {
+        console.warn('Offline persistence unavailable: multiple tabs open');
       }
     }
   };
@@ -1341,7 +1387,7 @@ flowchart LR
 - **Subtask 1**: Monitor connection state
 
   ```typescript
-  const connectedRef = ref(realtimeDb, ".info/connected");
+  const connectedRef = ref(realtimeDb, '.info/connected');
   onValue(connectedRef, (snapshot) => {
     if (snapshot.val() === true) {
       // Connected - sync queued changes
@@ -1386,7 +1432,8 @@ flowchart LR
 
 ### Intent for Epic 3
 
-Build an infinite canvas with all required shapes, transforms, and operations while maintaining 60 FPS with 500+ objects.
+Build an infinite canvas with all required shapes, transforms, and operations
+while maintaining 60 FPS with 500+ objects.
 
 ### Story 3.1: Pan and Zoom
 
@@ -1842,7 +1889,9 @@ Build an infinite canvas with all required shapes, transforms, and operations wh
 
 ### Intent for Epic 4
 
-Implement an AI agent using Kimi 2.5 that can manipulate the board through natural language commands. Support 6+ command types, multi-step operations, and shared real-time results.
+Implement an AI agent using Kimi 2.5 that can manipulate the board through
+natural language commands. Support 6+ command types, multi-step operations, and
+shared real-time results.
 
 ### Story 4.1: AI Service Setup
 
@@ -1911,7 +1960,14 @@ Implement an AI agent using Kimi 2.5 that can manipulate the board through natur
             y: { type: 'number', description: 'Y coordinate' },
             color: {
               type: 'string',
-              enum: ['#fef08a', '#fda4af', '#93c5fd', '#86efac', '#c4b5fd', '#fed7aa'],
+              enum: [
+                '#fef08a',
+                '#fda4af',
+                '#93c5fd',
+                '#86efac',
+                '#c4b5fd',
+                '#fed7aa',
+              ],
             },
           },
           required: ['text', 'x', 'y'],
@@ -2023,7 +2079,10 @@ Implement an AI agent using Kimi 2.5 that can manipulate the board through natur
         parameters: {
           type: 'object',
           properties: {
-            type: { type: 'string', enum: ['sticky', 'rectangle', 'circle', 'line', 'text', 'frame'] },
+            type: {
+              type: 'string',
+              enum: ['sticky', 'rectangle', 'circle', 'line', 'text', 'frame'],
+            },
             color: { type: 'string' },
             textContains: { type: 'string' },
           },
@@ -2056,7 +2115,10 @@ Implement an AI agent using Kimi 2.5 that can manipulate the board through natur
           type: 'object',
           properties: {
             objectIds: { type: 'array', items: { type: 'string' } },
-            alignment: { type: 'string', enum: ['left', 'center', 'right', 'top', 'middle', 'bottom'] },
+            alignment: {
+              type: 'string',
+              enum: ['left', 'center', 'right', 'top', 'middle', 'bottom'],
+            },
           },
           required: ['objectIds', 'alignment'],
         },
@@ -2084,13 +2146,13 @@ Implement an AI agent using Kimi 2.5 that can manipulate the board through natur
 
   const SYSTEM_PROMPT = `You are an AI assistant for CollabBoard, a collaborative whiteboard.
   Your role is to help users manipulate the board through natural language commands.
-
+  
   You can:
   - Create sticky notes, shapes, frames, connectors, and text
   - Move, resize, and modify existing objects
   - Arrange objects in grids or align them
   - Query the board state
-
+  
   Guidelines:
   1. Place objects at reasonable positions (avoid edges, overlap)
   2. Query board state if needed to find objects
@@ -2156,7 +2218,11 @@ Implement an AI agent using Kimi 2.5 that can manipulate the board through natur
       assistantMessage: OpenAI.Chat.Completions.ChatCompletionMessage
     ): Promise<string> {
       const toolCalls = assistantMessage.tool_calls!;
-      const toolResults: Array<{ tool_call_id: string; role: 'tool'; content: string }> = [];
+      const toolResults: Array<{
+        tool_call_id: string;
+        role: 'tool';
+        content: string;
+      }> = [];
 
       for (const toolCall of toolCalls) {
         try {
@@ -2191,17 +2257,20 @@ Implement an AI agent using Kimi 2.5 that can manipulate the board through natur
 
 ### Story 4.4: Tool Executor
 
-**As a developer**, I have a tool executor that applies AI commands to the board.
+**As a developer**, I have a tool executor that applies AI commands to the
+board.
 
 **Branch**: `feature/ai-executor`
 
 #### Commit 1: Tool Executor
 
-- **Subtask 1**: Create `src/modules/ai/toolExecutor.ts` (implementation per AI-INTEGRATION-GUIDE.md)
+- **Subtask 1**: Create `src/modules/ai/toolExecutor.ts` (implementation per
+  AI-INTEGRATION-GUIDE.md)
 
 ### Story 4.5: Complex Commands
 
-**As a user**, I can issue complex commands like "Create a SWOT analysis template".
+**As a user**, I can issue complex commands like "Create a SWOT analysis
+template".
 
 **Branch**: `feature/ai-complex`
 
@@ -2257,7 +2326,7 @@ sequenceDiagram
     participant ToolExecutor
     participant SyncService
     participant OtherUsers
-    
+
     User->>AIService: "Create SWOT template"
     AIService->>Kimi: Process command
     Kimi-->>AIService: Tool calls (4 frames)
@@ -2275,7 +2344,8 @@ sequenceDiagram
 
 ### Intent for Epic 5
 
-Create a responsive, modern UI with Shadcn/ui components, deploy to Netlify, and document the AI development process.
+Create a responsive, modern UI with Shadcn/ui components, deploy to Netlify, and
+document the AI development process.
 
 ### Story 5.1: UI Components
 
@@ -2346,27 +2416,33 @@ Template:
 # AI Development Log
 
 ## Tools & Workflow
+
 - Cursor with Context7 MCP
 - Claude/GPT for code generation
 
 ## MCP Usage
+
 - Context7 for Konva.js documentation
 - Firebase documentation queries
 
 ## Effective Prompts
+
 1. "Implement Konva real-time sync with Firebase"
 2. "Create optimistic update pattern for object sync"
 3. ...
 
 ## Code Analysis
+
 - AI-generated: ~70%
 - Hand-written: ~30%
 
 ## Strengths & Limitations
+
 - Strengths: Boilerplate, patterns, documentation
 - Limitations: Complex state management, edge cases
 
 ## Key Learnings
+
 - ...
 ```
 
@@ -2378,20 +2454,22 @@ Template:
 # AI Cost Analysis
 
 ## Development Costs
+
 - LLM API costs: $X.XX
 - Total tokens: XXX,XXX
 - API calls: XXX
 
 ## Production Projections
 
-| Users | Commands/User/Month | Est. Monthly Cost |
-|-------|---------------------|-------------------|
-| 100 | 10 | $0.50 - $2.00 |
-| 1,000 | 10 | $5.00 - $20.00 |
-| 10,000 | 10 | $50.00 - $200.00 |
-| 100,000 | 10 | $500.00 - $2,000.00 |
+| Users   | Commands/User/Month | Est. Monthly Cost   |
+| ------- | ------------------- | ------------------- |
+| 100     | 10                  | $0.50 - $2.00       |
+| 1,000   | 10                  | $5.00 - $20.00      |
+| 10,000  | 10                  | $50.00 - $200.00    |
+| 100,000 | 10                  | $500.00 - $2,000.00 |
 
 ## Assumptions
+
 - Average 1,000 input tokens per command
 - Average 300 output tokens per command
 - Mix: 60% simple, 30% medium, 10% complex
@@ -2417,12 +2495,12 @@ Template:
 
 ### Test Categories
 
-| Category | Tool | Focus | Target |
-| ---------- | ------ | ------- | --------- |
-| Unit | Vitest | Pure functions, utilities | 50+ tests |
-| Component | Vitest + Testing Library | React components | 30+ tests |
-| Integration | Vitest | Module interactions | 20+ tests |
-| E2E | Playwright | User flows | 10+ tests |
+| Category    | Tool                     | Focus                     | Target    |
+| ----------- | ------------------------ | ------------------------- | --------- |
+| Unit        | Vitest                   | Pure functions, utilities | 50+ tests |
+| Component   | Vitest + Testing Library | React components          | 30+ tests |
+| Integration | Vitest                   | Module interactions       | 20+ tests |
+| E2E         | Playwright               | User flows                | 10+ tests |
 
 ### Critical E2E Scenarios
 
@@ -2434,12 +2512,12 @@ Template:
 
 ### Coverage Targets
 
-| Metric | MVP Target | Full Target |
-| ------ | ---------- | ----------- |
-| Statements | 80% | 90% |
-| Branches | 80% | 85% |
-| Functions | 80% | 90% |
-| Lines | 80% | 90% |
+| Metric     | MVP Target | Full Target |
+| ---------- | ---------- | ----------- |
+| Statements | 80%        | 90%         |
+| Branches   | 80%        | 85%         |
+| Functions  | 80%        | 90%         |
+| Lines      | 80%        | 90%         |
 
 ### Vitest Configuration
 
@@ -2525,7 +2603,14 @@ interface IBoard {
 // /boards/{boardId}/objects/{objectId}
 interface IBoardObject {
   id: string;
-  type: 'sticky' | 'rectangle' | 'circle' | 'line' | 'text' | 'frame' | 'connector';
+  type:
+    | 'sticky'
+    | 'rectangle'
+    | 'circle'
+    | 'line'
+    | 'text'
+    | 'frame'
+    | 'connector';
   x: number;
   y: number;
   width: number;
@@ -2562,36 +2647,36 @@ interface IPresenceData {
 
 ### Appendix B: AI Tool Functions
 
-| Function | Category | Parameters |
-| ---------- | ---------- | ------------ |
-| `createStickyNote` | Creation | text, x, y, color |
-| `createShape` | Creation | type, x, y, width, height, color |
-| `createFrame` | Creation | title, x, y, width, height |
-| `createConnector` | Creation | fromId, toId, style |
-| `createText` | Creation | text, x, y, fontSize, color |
-| `moveObject` | Manipulation | objectId, x, y |
-| `resizeObject` | Manipulation | objectId, width, height |
-| `updateText` | Manipulation | objectId, newText |
-| `changeColor` | Manipulation | objectId, color |
-| `deleteObject` | Manipulation | objectId |
-| `getBoardState` | Query | includeDetails |
-| `findObjects` | Query | type, color, textContains |
-| `arrangeInGrid` | Layout | objectIds, columns, spacing |
-| `alignObjects` | Layout | objectIds, alignment |
-| `distributeObjects` | Layout | objectIds, direction |
+| Function            | Category     | Parameters                       |
+| ------------------- | ------------ | -------------------------------- |
+| `createStickyNote`  | Creation     | text, x, y, color                |
+| `createShape`       | Creation     | type, x, y, width, height, color |
+| `createFrame`       | Creation     | title, x, y, width, height       |
+| `createConnector`   | Creation     | fromId, toId, style              |
+| `createText`        | Creation     | text, x, y, fontSize, color      |
+| `moveObject`        | Manipulation | objectId, x, y                   |
+| `resizeObject`      | Manipulation | objectId, width, height          |
+| `updateText`        | Manipulation | objectId, newText                |
+| `changeColor`       | Manipulation | objectId, color                  |
+| `deleteObject`      | Manipulation | objectId                         |
+| `getBoardState`     | Query        | includeDetails                   |
+| `findObjects`       | Query        | type, color, textContains        |
+| `arrangeInGrid`     | Layout       | objectIds, columns, spacing      |
+| `alignObjects`      | Layout       | objectIds, alignment             |
+| `distributeObjects` | Layout       | objectIds, direction             |
 
 ### Appendix C: Environment Variables
 
-| Variable | Required | Description |
-| ---------- | ---------- | ------------- |
-| `VITE_FIREBASE_API_KEY` | Yes | Firebase API key |
-| `VITE_FIREBASE_AUTH_DOMAIN` | Yes | Firebase auth domain |
-| `VITE_FIREBASE_PROJECT_ID` | Yes | Firebase project ID |
-| `VITE_FIREBASE_STORAGE_BUCKET` | Yes | Firebase storage bucket |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Yes | Firebase messaging sender ID |
-| `VITE_FIREBASE_APP_ID` | Yes | Firebase app ID |
-| `VITE_FIREBASE_DATABASE_URL` | Yes | Realtime Database URL |
-| `VITE_NVIDIA_API_KEY` | Yes | Nvidia API key for Kimi 2.5 |
+| Variable                            | Required | Description                  |
+| ----------------------------------- | -------- | ---------------------------- |
+| `VITE_FIREBASE_API_KEY`             | Yes      | Firebase API key             |
+| `VITE_FIREBASE_AUTH_DOMAIN`         | Yes      | Firebase auth domain         |
+| `VITE_FIREBASE_PROJECT_ID`          | Yes      | Firebase project ID          |
+| `VITE_FIREBASE_STORAGE_BUCKET`      | Yes      | Firebase storage bucket      |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Yes      | Firebase messaging sender ID |
+| `VITE_FIREBASE_APP_ID`              | Yes      | Firebase app ID              |
+| `VITE_FIREBASE_DATABASE_URL`        | Yes      | Realtime Database URL        |
+| `VITE_NVIDIA_API_KEY`               | Yes      | Nvidia API key for Kimi 2.5  |
 
 ### Appendix D: Deployment Checklist
 
@@ -2622,12 +2707,12 @@ interface IPresenceData {
 
 **Monthly Projections** (10 commands/user/month):
 
-| Users | Simple (60%) | Medium (30%) | Complex (10%) | Total |
-| ----- | ------------ | ------------ | ------------- | ----- |
-| 100 | $0.54 | $0.54 | $0.36 | $1.44 |
-| 1,000 | $5.40 | $5.40 | $3.60 | $14.40 |
-| 10,000 | $54.00 | $54.00 | $36.00 | $144.00 |
-| 100,000 | $540.00 | $540.00 | $360.00 | $1,440.00 |
+| Users   | Simple (60%) | Medium (30%) | Complex (10%) | Total     |
+| ------- | ------------ | ------------ | ------------- | --------- |
+| 100     | $0.54        | $0.54        | $0.36         | $1.44     |
+| 1,000   | $5.40        | $5.40        | $3.60         | $14.40    |
+| 10,000  | $54.00       | $54.00       | $36.00        | $144.00   |
+| 100,000 | $540.00      | $540.00      | $360.00       | $1,440.00 |
 
 ---
 
@@ -2645,6 +2730,5 @@ interface IPresenceData {
 
 ---
 
-*Document Version: 1.0.0*
-*Last Updated: February 2026*
-*Author: CollabBoard Team*
+_Document Version: 1.0.0_ _Last Updated: February 2026_ _Author: CollabBoard
+Team_
