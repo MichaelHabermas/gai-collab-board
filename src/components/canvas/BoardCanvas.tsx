@@ -11,6 +11,7 @@ import {
   CircleShape,
   LineShape,
   Connector,
+  TextElement,
 } from './shapes';
 import { useCursors } from '@/hooks/useCursors';
 import type { User } from 'firebase/auth';
@@ -255,6 +256,19 @@ export const BoardCanvas = memo(
               rotation: 0,
             });
             setActiveTool('select');
+          } else if (activeTool === 'text' && canEdit && onObjectCreate) {
+            onObjectCreate({
+              type: 'text',
+              x: canvasX,
+              y: canvasY,
+              width: 200,
+              height: 30,
+              fill: activeColor === STICKY_COLORS.yellow ? '#1f2937' : activeColor,
+              text: '',
+              fontSize: 16,
+              rotation: 0,
+            });
+            setActiveTool('select');
           } else if (activeTool === 'select') {
             // Deselect all
             setSelectedIds([]);
@@ -444,6 +458,25 @@ export const BoardCanvas = memo(
                 hasArrow={true}
                 onSelect={() => handleObjectSelect(obj.id)}
                 onDragEnd={(x, y) => handleObjectDragEnd(obj.id, x, y)}
+              />
+            );
+
+          case 'text':
+            return (
+              <TextElement
+                key={obj.id}
+                id={obj.id}
+                x={obj.x}
+                y={obj.y}
+                text={obj.text || ''}
+                fontSize={obj.fontSize}
+                fill={obj.fill}
+                rotation={obj.rotation}
+                isSelected={isSelected}
+                draggable={canEdit}
+                onSelect={() => handleObjectSelect(obj.id)}
+                onDragEnd={(x, y) => handleObjectDragEnd(obj.id, x, y)}
+                onTextChange={canEdit ? (text) => handleTextChange(obj.id, text) : undefined}
               />
             );
 
