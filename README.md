@@ -112,6 +112,10 @@ bun run dev
 
 The app will be available at `http://localhost:5173`
 
+## Deployment
+
+To deploy to Netlify, link the GitHub repository in Netlify (Site settings → Build & deploy → Repository) and configure environment variables (Site settings → Environment variables). See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for details.
+
 ## Usage
 
 ### Getting Started
