@@ -20,8 +20,10 @@ import { useCursors } from '@/hooks/useCursors';
 import { useCanvasOperations } from '@/hooks/useCanvasOperations';
 import { useVisibleShapes } from '@/hooks/useVisibleShapes';
 import type { User } from 'firebase/auth';
-import type { IBoardObject } from '@/types';
+import type { IBoardObject, ConnectorAnchor } from '@/types';
 import type { ICreateObjectParams } from '@/modules/sync/objectService';
+import { getAnchorPosition } from '@/lib/connectorAnchors';
+import { ConnectionNodesLayer } from './ConnectionNodesLayer';
 
 interface IBoardCanvasProps {
   boardId: string;
@@ -85,6 +87,10 @@ export const BoardCanvas = memo(
       y2: 0,
     });
     const [isSelecting, setIsSelecting] = useState(false);
+    const [connectorFrom, setConnectorFrom] = useState<{
+      shapeId: string;
+      anchor: ConnectorAnchor;
+    } | null>(null);
 
     const { viewport, handleWheel, handleDragEnd, handleTouchMove, handleTouchEnd } =
       useCanvasViewport();
@@ -216,8 +222,8 @@ export const BoardCanvas = memo(
 
         const { x: canvasX, y: canvasY } = getCanvasCoords(stage, pointer);
 
-        // Start drawing if using a drawing tool
-        if (isDrawingTool(activeTool) && canEdit) {
+        // Start drawing if using a drawing tool (connector uses node clicks, not drag)
+        if (isDrawingTool(activeTool) && activeTool !== 'connector' && canEdit) {
           setDrawingState({
             isDrawing: true,
             startX: canvasX,
@@ -294,19 +300,6 @@ export const BoardCanvas = memo(
               fill: 'transparent',
               stroke: activeColor,
               strokeWidth: 3,
-              rotation: 0,
-            });
-          } else if (activeTool === 'connector') {
-            result = await onObjectCreate({
-              type: 'connector',
-              x: 0,
-              y: 0,
-              width: 0,
-              height: 0,
-              points: [startX, startY, currentX, currentY],
-              fill: 'transparent',
-              stroke: activeColor,
-              strokeWidth: 2,
               rotation: 0,
             });
           } else if (activeTool === 'frame') {
@@ -469,10 +462,60 @@ export const BoardCanvas = memo(
           } else if (activeTool === 'select') {
             // Deselect all
             setSelectedIds([]);
+          } else if (activeTool === 'connector') {
+            // Cancel connector flow on empty area click
+            setConnectorFrom(null);
           }
         }
       },
       [activeTool, activeColor, canEdit, onObjectCreate, getCanvasCoords, isEmptyAreaClick]
+    );
+
+    // Handle connector node click (two-click flow: first node = from, second = to; same shape cancels)
+    const handleConnectorNodeClick = useCallback(
+      (shapeId: string, anchor: ConnectorAnchor) => {
+        if (!connectorFrom) {
+          setConnectorFrom({ shapeId, anchor });
+          return;
+        }
+        if (connectorFrom.shapeId === shapeId) {
+          setConnectorFrom(null);
+          return;
+        }
+        const fromObj = objects.find((o) => o.id === connectorFrom.shapeId);
+        const toObj = objects.find((o) => o.id === shapeId);
+        if (!fromObj || !toObj || !onObjectCreate) {
+          setConnectorFrom(null);
+          return;
+        }
+        const fromPos = getAnchorPosition(fromObj, connectorFrom.anchor);
+        const toPos = getAnchorPosition(toObj, anchor);
+        onObjectCreate({
+          type: 'connector',
+          x: fromPos.x,
+          y: fromPos.y,
+          width: 0,
+          height: 0,
+          points: [0, 0, toPos.x - fromPos.x, toPos.y - fromPos.y],
+          fill: 'transparent',
+          stroke: activeColor,
+          strokeWidth: 2,
+          rotation: 0,
+          fromObjectId: connectorFrom.shapeId,
+          toObjectId: shapeId,
+          fromAnchor: connectorFrom.anchor,
+          toAnchor: anchor,
+        })
+          .then(() => {
+            setConnectorFrom(null);
+            setActiveTool('select');
+            activeToolRef.current = 'select';
+          })
+          .catch(() => {
+            setConnectorFrom(null);
+          });
+      },
+      [connectorFrom, objects, onObjectCreate, activeColor]
     );
 
     // Handle object selection
@@ -647,24 +690,47 @@ export const BoardCanvas = memo(
               />
             );
 
-          case 'connector':
+          case 'connector': {
+            const fromObj =
+              obj.fromObjectId != null
+                ? objects.find((o) => o.id === obj.fromObjectId)
+                : undefined;
+            const toObj =
+              obj.toObjectId != null ? objects.find((o) => o.id === obj.toObjectId) : undefined;
+            const isLinked =
+              Boolean(fromObj && toObj && obj.fromAnchor != null && obj.toAnchor != null);
+            const x = isLinked
+              ? getAnchorPosition(fromObj!, obj.fromAnchor!).x
+              : obj.x;
+            const y = isLinked
+              ? getAnchorPosition(fromObj!, obj.fromAnchor!).y
+              : obj.y;
+            const points = isLinked
+              ? [
+                  0,
+                  0,
+                  getAnchorPosition(toObj!, obj.toAnchor!).x - x,
+                  getAnchorPosition(toObj!, obj.toAnchor!).y - y,
+                ]
+              : (obj.points || [0, 0, 100, 100]);
             return (
               <Connector
                 key={obj.id}
                 id={obj.id}
-                x={obj.x}
-                y={obj.y}
-                points={obj.points || [0, 0, 100, 100]}
+                x={x}
+                y={y}
+                points={points}
                 stroke={obj.stroke || obj.fill}
                 strokeWidth={obj.strokeWidth}
                 rotation={obj.rotation}
                 isSelected={isSelected}
-                draggable={canEdit}
+                draggable={isLinked ? false : canEdit}
                 hasArrow={true}
                 onSelect={() => handleObjectSelect(obj.id)}
-                onDragEnd={(x, y) => handleObjectDragEnd(obj.id, x, y)}
+                onDragEnd={(dx, dy) => handleObjectDragEnd(obj.id, dx, dy)}
               />
             );
+          }
 
           case 'text':
             return (
@@ -730,7 +796,7 @@ export const BoardCanvas = memo(
             );
         }
       },
-      [selectedIds, canEdit, handleObjectSelect, handleObjectDragEnd, handleTextChange]
+      [selectedIds, canEdit, objects, handleObjectSelect, handleObjectDragEnd, handleTextChange]
     );
 
     // Render drawing preview
@@ -782,18 +848,6 @@ export const BoardCanvas = memo(
             points={[startX, startY, currentX, currentY]}
             stroke={activeColor}
             strokeWidth={3}
-            dash={[5, 5]}
-            listening={false}
-          />
-        );
-      }
-
-      if (activeTool === 'connector') {
-        return (
-          <Line
-            points={[startX, startY, currentX, currentY]}
-            stroke={activeColor}
-            strokeWidth={2}
             dash={[5, 5]}
             listening={false}
           />
@@ -879,6 +933,16 @@ export const BoardCanvas = memo(
             />
             {visibleObjects.map(renderShape)}
           </Layer>
+
+          {/* Connection nodes (when connector tool active) - above objects so node clicks are hit first */}
+          {activeTool === 'connector' && (
+            <Layer name='connector-nodes' listening={true}>
+              <ConnectionNodesLayer
+                shapes={visibleObjects}
+                onNodeClick={handleConnectorNodeClick}
+              />
+            </Layer>
+          )}
 
           {/* Drawing preview layer */}
           <Layer name='drawing' listening={false}>

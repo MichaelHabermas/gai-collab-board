@@ -3,6 +3,8 @@ import { UserRole } from './user';
 
 export type ShapeType = 'sticky' | 'rectangle' | 'circle' | 'line' | 'text' | 'frame' | 'connector';
 
+export type ConnectorAnchor = 'top' | 'right' | 'bottom' | 'left';
+
 export interface IBoardObject {
   id: string;
   type: ShapeType;
@@ -18,9 +20,11 @@ export interface IBoardObject {
   fontSize?: number;
   // For lines and connectors
   points?: number[];
-  // For connectors - object IDs to connect
+  // For connectors - object IDs and anchors to connect
   fromObjectId?: string;
   toObjectId?: string;
+  fromAnchor?: ConnectorAnchor;
+  toAnchor?: ConnectorAnchor;
   // For circles
   radius?: number;
   createdBy: string;

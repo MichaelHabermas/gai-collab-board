@@ -30,13 +30,30 @@ export const useVisibleShapes = ({ objects, viewport }: IUseVisibleShapesProps):
 
     // Filter objects that intersect with the viewport
     return objects.filter((obj) => {
-      // Get object bounds
-      const objLeft = obj.x;
-      const objRight = obj.x + obj.width;
-      const objTop = obj.y;
-      const objBottom = obj.y + obj.height;
+      let objLeft: number;
+      let objRight: number;
+      let objTop: number;
+      let objBottom: number;
 
-      // Check for intersection with viewport
+      if (
+        (obj.type === 'line' || obj.type === 'connector') &&
+        obj.points &&
+        obj.points.length >= 2
+      ) {
+        // Line/connector: bounds from points (relative to obj.x, obj.y)
+        const xs = obj.points.filter((_, i) => i % 2 === 0).map((p) => obj.x + p);
+        const ys = obj.points.filter((_, i) => i % 2 === 1).map((p) => obj.y + p);
+        objLeft = Math.min(...xs);
+        objRight = Math.max(...xs);
+        objTop = Math.min(...ys);
+        objBottom = Math.max(...ys);
+      } else {
+        objLeft = obj.x;
+        objRight = obj.x + obj.width;
+        objTop = obj.y;
+        objBottom = obj.y + obj.height;
+      }
+
       const isVisible =
         objRight >= viewLeft &&
         objLeft <= viewRight &&

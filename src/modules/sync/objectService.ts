@@ -12,7 +12,7 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { firestore } from '@/lib/firebase';
-import type { IBoardObject, ShapeType } from '@/types';
+import type { IBoardObject, ShapeType, ConnectorAnchor } from '@/types';
 
 const OBJECTS_SUBCOLLECTION = 'objects';
 
@@ -47,6 +47,10 @@ export interface ICreateObjectParams {
   fontSize?: number;
   rotation?: number;
   points?: number[];
+  fromObjectId?: string;
+  toObjectId?: string;
+  fromAnchor?: ConnectorAnchor;
+  toAnchor?: ConnectorAnchor;
   createdBy: string;
 }
 
@@ -92,6 +96,18 @@ export const createObject = async (
   }
   if (params.points !== undefined) {
     object.points = params.points;
+  }
+  if (params.fromObjectId !== undefined) {
+    object.fromObjectId = params.fromObjectId;
+  }
+  if (params.toObjectId !== undefined) {
+    object.toObjectId = params.toObjectId;
+  }
+  if (params.fromAnchor !== undefined) {
+    object.fromAnchor = params.fromAnchor;
+  }
+  if (params.toAnchor !== undefined) {
+    object.toAnchor = params.toAnchor;
   }
 
   await setDoc(objectRef, object);
