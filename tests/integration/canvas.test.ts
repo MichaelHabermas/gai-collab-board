@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { Timestamp } from "firebase/firestore";
-import type { IBoardObject } from "@/types";
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { Timestamp } from 'firebase/firestore';
+import type { IBoardObject, IPosition } from '@/types';
 
 // Mock Firebase services
 const mockFirestoreOnSnapshot = vi.fn();
@@ -11,9 +11,9 @@ const mockFirestoreDeleteDoc = vi.fn();
 const mockRealtimeSet = vi.fn();
 const mockRealtimeRemove = vi.fn();
 
-vi.mock("firebase/firestore", () => ({
-  collection: vi.fn(() => ({ path: "boards/test-board/objects" })),
-  doc: vi.fn(() => ({ id: "test-object-id" })),
+vi.mock('firebase/firestore', () => ({
+  collection: vi.fn(() => ({ path: 'boards/test-board/objects' })),
+  doc: vi.fn(() => ({ id: 'test-object-id' })),
   setDoc: (ref: unknown, data: unknown) => mockFirestoreSetDoc(ref, data),
   updateDoc: (ref: unknown, data: unknown) => mockFirestoreUpdateDoc(ref, data),
   deleteDoc: (ref: unknown) => mockFirestoreDeleteDoc(ref),
@@ -38,8 +38,8 @@ vi.mock("firebase/firestore", () => ({
   },
 }));
 
-vi.mock("firebase/database", () => ({
-  ref: vi.fn(() => ({ path: "test-path" })),
+vi.mock('firebase/database', () => ({
+  ref: vi.fn(() => ({ path: 'test-path' })),
   set: (ref: unknown, data: unknown) => mockRealtimeSet(ref, data),
   remove: (ref: unknown) => mockRealtimeRemove(ref),
   onValue: (ref: unknown, callback: (snapshot: unknown) => void) => {
@@ -49,12 +49,12 @@ vi.mock("firebase/database", () => ({
   onDisconnect: vi.fn(() => ({ remove: vi.fn() })),
 }));
 
-vi.mock("@/lib/firebase", () => ({
+vi.mock('@/lib/firebase', () => ({
   firestore: {},
   realtimeDb: {},
 }));
 
-describe("Canvas Operations Integration Tests", () => {
+describe('Canvas Operations Integration Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -63,20 +63,20 @@ describe("Canvas Operations Integration Tests", () => {
     vi.resetAllMocks();
   });
 
-  describe("Object Persistence - Sticky Notes", () => {
-    it("should persist sticky note after creation and return it with an ID", async () => {
-      const { createObject } = await import("@/modules/sync/objectService");
+  describe('Object Persistence - Sticky Notes', () => {
+    it('should persist sticky note after creation and return it with an ID', async () => {
+      const { createObject } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
+      const boardId = 'test-board';
       const stickyParams = {
-        type: "sticky" as const,
+        type: 'sticky' as const,
         x: 100,
         y: 100,
         width: 200,
         height: 200,
-        fill: "#fef08a",
-        text: "My persistent sticky note",
-        createdBy: "user-1",
+        fill: '#fef08a',
+        text: 'My persistent sticky note',
+        createdBy: 'user-1',
       };
 
       const createdSticky = await createObject(boardId, stickyParams);
@@ -87,14 +87,14 @@ describe("Canvas Operations Integration Tests", () => {
       // Verify the returned object has all required fields
       expect(createdSticky).toMatchObject({
         id: expect.any(String),
-        type: "sticky",
+        type: 'sticky',
         x: 100,
         y: 100,
         width: 200,
         height: 200,
-        fill: "#fef08a",
-        text: "My persistent sticky note",
-        createdBy: "user-1",
+        fill: '#fef08a',
+        text: 'My persistent sticky note',
+        createdBy: 'user-1',
         rotation: 0,
         createdAt: expect.anything(),
         updatedAt: expect.anything(),
@@ -105,19 +105,19 @@ describe("Canvas Operations Integration Tests", () => {
       expect(createdSticky.id.length).toBeGreaterThan(0);
     });
 
-    it("should persist sticky note with empty text for later editing", async () => {
-      const { createObject } = await import("@/modules/sync/objectService");
+    it('should persist sticky note with empty text for later editing', async () => {
+      const { createObject } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
+      const boardId = 'test-board';
       const stickyParams = {
-        type: "sticky" as const,
+        type: 'sticky' as const,
         x: 250,
         y: 150,
         width: 200,
         height: 200,
-        fill: "#fda4af", // Pink sticky
-        text: "", // Empty text - user will edit later
-        createdBy: "user-1",
+        fill: '#fda4af', // Pink sticky
+        text: '', // Empty text - user will edit later
+        createdBy: 'user-1',
       };
 
       const createdSticky = await createObject(boardId, stickyParams);
@@ -125,40 +125,38 @@ describe("Canvas Operations Integration Tests", () => {
       expect(mockFirestoreSetDoc).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
-          type: "sticky",
-          text: "",
-          fill: "#fda4af",
+          type: 'sticky',
+          text: '',
+          fill: '#fda4af',
         })
       );
 
-      expect(createdSticky.text).toBe("");
+      expect(createdSticky.text).toBe('');
       expect(createdSticky.id).toBeTruthy();
     });
 
-    it("should allow updating sticky note text after creation", async () => {
-      const { createObject, updateObject } = await import(
-        "@/modules/sync/objectService"
-      );
+    it('should allow updating sticky note text after creation', async () => {
+      const { createObject, updateObject } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
+      const boardId = 'test-board';
 
       // First create a sticky note
       const stickyParams = {
-        type: "sticky" as const,
+        type: 'sticky' as const,
         x: 100,
         y: 100,
         width: 200,
         height: 200,
-        fill: "#fef08a",
-        text: "",
-        createdBy: "user-1",
+        fill: '#fef08a',
+        text: '',
+        createdBy: 'user-1',
       };
 
       const createdSticky = await createObject(boardId, stickyParams);
 
       // Then update its text
       await updateObject(boardId, createdSticky.id, {
-        text: "Updated sticky note content!",
+        text: 'Updated sticky note content!',
       });
 
       // Verify both operations were called
@@ -166,27 +164,27 @@ describe("Canvas Operations Integration Tests", () => {
       expect(mockFirestoreUpdateDoc).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
-          text: "Updated sticky note content!",
+          text: 'Updated sticky note content!',
         })
       );
     });
   });
 
-  describe("Object Persistence - Shapes", () => {
-    it("should persist rectangle shape after creation", async () => {
-      const { createObject } = await import("@/modules/sync/objectService");
+  describe('Object Persistence - Shapes', () => {
+    it('should persist rectangle shape after creation', async () => {
+      const { createObject } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
+      const boardId = 'test-board';
       const rectParams = {
-        type: "rectangle" as const,
+        type: 'rectangle' as const,
         x: 50,
         y: 50,
         width: 150,
         height: 100,
-        fill: "#93c5fd",
-        stroke: "#1e293b",
+        fill: '#93c5fd',
+        stroke: '#1e293b',
         strokeWidth: 2,
-        createdBy: "user-1",
+        createdBy: 'user-1',
       };
 
       const createdRect = await createObject(boardId, rectParams);
@@ -197,33 +195,33 @@ describe("Canvas Operations Integration Tests", () => {
       // Verify returned object
       expect(createdRect).toMatchObject({
         id: expect.any(String),
-        type: "rectangle",
+        type: 'rectangle',
         x: 50,
         y: 50,
         width: 150,
         height: 100,
-        fill: "#93c5fd",
-        stroke: "#1e293b",
+        fill: '#93c5fd',
+        stroke: '#1e293b',
         strokeWidth: 2,
       });
 
       expect(createdRect.id).toBeTruthy();
     });
 
-    it("should persist circle shape after creation", async () => {
-      const { createObject } = await import("@/modules/sync/objectService");
+    it('should persist circle shape after creation', async () => {
+      const { createObject } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
+      const boardId = 'test-board';
       const circleParams = {
-        type: "circle" as const,
+        type: 'circle' as const,
         x: 200,
         y: 200,
         width: 80,
         height: 80,
-        fill: "#86efac",
-        stroke: "#1e293b",
+        fill: '#86efac',
+        stroke: '#1e293b',
         strokeWidth: 2,
-        createdBy: "user-1",
+        createdBy: 'user-1',
       };
 
       const createdCircle = await createObject(boardId, circleParams);
@@ -231,28 +229,28 @@ describe("Canvas Operations Integration Tests", () => {
       expect(mockFirestoreSetDoc).toHaveBeenCalledTimes(1);
       expect(createdCircle).toMatchObject({
         id: expect.any(String),
-        type: "circle",
+        type: 'circle',
         width: 80,
         height: 80,
       });
       expect(createdCircle.id).toBeTruthy();
     });
 
-    it("should persist line shape with points after creation", async () => {
-      const { createObject } = await import("@/modules/sync/objectService");
+    it('should persist line shape with points after creation', async () => {
+      const { createObject } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
+      const boardId = 'test-board';
       const lineParams = {
-        type: "line" as const,
+        type: 'line' as const,
         x: 0,
         y: 0,
         width: 0,
         height: 0,
-        fill: "transparent",
-        stroke: "#ef4444",
+        fill: 'transparent',
+        stroke: '#ef4444',
         strokeWidth: 3,
         points: [100, 100, 300, 200],
-        createdBy: "user-1",
+        createdBy: 'user-1',
       };
 
       const createdLine = await createObject(boardId, lineParams);
@@ -260,33 +258,31 @@ describe("Canvas Operations Integration Tests", () => {
       expect(mockFirestoreSetDoc).toHaveBeenCalledTimes(1);
       expect(createdLine).toMatchObject({
         id: expect.any(String),
-        type: "line",
+        type: 'line',
         points: [100, 100, 300, 200],
-        stroke: "#ef4444",
+        stroke: '#ef4444',
         strokeWidth: 3,
       });
       expect(createdLine.id).toBeTruthy();
     });
   });
 
-  describe("Object Persistence - Visibility on Board", () => {
-    it("should make created objects available via subscription", async () => {
-      const { createObject, subscribeToObjects } = await import(
-        "@/modules/sync/objectService"
-      );
+  describe('Object Persistence - Visibility on Board', () => {
+    it('should make created objects available via subscription', async () => {
+      const { createObject, subscribeToObjects } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
+      const boardId = 'test-board';
 
       // Create a sticky note
       const stickyParams = {
-        type: "sticky" as const,
+        type: 'sticky' as const,
         x: 100,
         y: 100,
         width: 200,
         height: 200,
-        fill: "#fef08a",
-        text: "Visible sticky",
-        createdBy: "user-1",
+        fill: '#fef08a',
+        text: 'Visible sticky',
+        createdBy: 'user-1',
       };
 
       const createdSticky = await createObject(boardId, stickyParams);
@@ -314,47 +310,45 @@ describe("Canvas Operations Integration Tests", () => {
       expect(objectsCallback).toHaveBeenCalledWith([createdSticky]);
     });
 
-    it("should show multiple objects on board after creation", async () => {
-      const { createObject, subscribeToObjects } = await import(
-        "@/modules/sync/objectService"
-      );
+    it('should show multiple objects on board after creation', async () => {
+      const { createObject, subscribeToObjects } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
+      const boardId = 'test-board';
 
       // Create multiple objects
       const sticky = await createObject(boardId, {
-        type: "sticky" as const,
+        type: 'sticky' as const,
         x: 100,
         y: 100,
         width: 200,
         height: 200,
-        fill: "#fef08a",
-        text: "Sticky 1",
-        createdBy: "user-1",
+        fill: '#fef08a',
+        text: 'Sticky 1',
+        createdBy: 'user-1',
       });
 
       const rect = await createObject(boardId, {
-        type: "rectangle" as const,
+        type: 'rectangle' as const,
         x: 350,
         y: 100,
         width: 100,
         height: 80,
-        fill: "#93c5fd",
-        stroke: "#1e293b",
+        fill: '#93c5fd',
+        stroke: '#1e293b',
         strokeWidth: 2,
-        createdBy: "user-1",
+        createdBy: 'user-1',
       });
 
       const circle = await createObject(boardId, {
-        type: "circle" as const,
+        type: 'circle' as const,
         x: 500,
         y: 100,
         width: 60,
         height: 60,
-        fill: "#86efac",
-        stroke: "#1e293b",
+        fill: '#86efac',
+        stroke: '#1e293b',
         strokeWidth: 2,
-        createdBy: "user-1",
+        createdBy: 'user-1',
       });
 
       // All three objects were persisted
@@ -382,23 +376,22 @@ describe("Canvas Operations Integration Tests", () => {
       expect(objectsCallback).toHaveBeenCalledWith([sticky, rect, circle]);
     });
 
-    it("should persist object movement and reflect in subscription", async () => {
-      const { createObject, updateObject, subscribeToObjects } = await import(
-        "@/modules/sync/objectService"
-      );
+    it('should persist object movement and reflect in subscription', async () => {
+      const { createObject, updateObject, subscribeToObjects } =
+        await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
+      const boardId = 'test-board';
 
       // Create a sticky note
       const sticky = await createObject(boardId, {
-        type: "sticky" as const,
+        type: 'sticky' as const,
         x: 100,
         y: 100,
         width: 200,
         height: 200,
-        fill: "#fef08a",
-        text: "Movable sticky",
-        createdBy: "user-1",
+        fill: '#fef08a',
+        text: 'Movable sticky',
+        createdBy: 'user-1',
       });
 
       // Move it
@@ -428,19 +421,15 @@ describe("Canvas Operations Integration Tests", () => {
       };
       snapshotCallback!(mockSnapshot);
 
-      expect(objectsCallback).toHaveBeenCalledWith([
-        expect.objectContaining({ x: 300, y: 250 }),
-      ]);
+      expect(objectsCallback).toHaveBeenCalledWith([expect.objectContaining({ x: 300, y: 250 })]);
     });
   });
 
-  describe("Object Persistence - Real-time Sync", () => {
-    it("should sync created object to other users via subscription", async () => {
-      const { createObject, subscribeToObjects } = await import(
-        "@/modules/sync/objectService"
-      );
+  describe('Object Persistence - Real-time Sync', () => {
+    it('should sync created object to other users via subscription', async () => {
+      const { createObject, subscribeToObjects } = await import('@/modules/sync/objectService');
 
-      const boardId = "shared-board";
+      const boardId = 'shared-board';
 
       // User 1 subscribes to objects
       const user1Callback = vi.fn();
@@ -452,14 +441,14 @@ describe("Canvas Operations Integration Tests", () => {
 
       // User 1 creates a sticky note
       const sticky = await createObject(boardId, {
-        type: "sticky" as const,
+        type: 'sticky' as const,
         x: 100,
         y: 100,
         width: 200,
         height: 200,
-        fill: "#fef08a",
-        text: "Shared sticky",
-        createdBy: "user-1",
+        fill: '#fef08a',
+        text: 'Shared sticky',
+        createdBy: 'user-1',
       });
 
       // Simulate Firestore broadcasting to both subscribers
@@ -488,20 +477,20 @@ describe("Canvas Operations Integration Tests", () => {
     });
   });
 
-  describe("Object CRUD Operations", () => {
-    it("should create objects with all required fields", async () => {
-      const { createObject } = await import("@/modules/sync/objectService");
+  describe('Object CRUD Operations', () => {
+    it('should create objects with all required fields', async () => {
+      const { createObject } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
+      const boardId = 'test-board';
       const objectParams = {
-        type: "sticky" as const,
+        type: 'sticky' as const,
         x: 100,
         y: 100,
         width: 200,
         height: 200,
-        fill: "#fef08a",
-        text: "Test sticky note",
-        createdBy: "user-1",
+        fill: '#fef08a',
+        text: 'Test sticky note',
+        createdBy: 'user-1',
       };
 
       await createObject(boardId, objectParams);
@@ -509,34 +498,34 @@ describe("Canvas Operations Integration Tests", () => {
       expect(mockFirestoreSetDoc).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
-          type: "sticky",
+          type: 'sticky',
           x: 100,
           y: 100,
           width: 200,
           height: 200,
-          fill: "#fef08a",
-          text: "Test sticky note",
-          createdBy: "user-1",
+          fill: '#fef08a',
+          text: 'Test sticky note',
+          createdBy: 'user-1',
           rotation: 0,
         })
       );
     });
 
-    it("should create line objects with points field", async () => {
-      const { createObject } = await import("@/modules/sync/objectService");
+    it('should create line objects with points field', async () => {
+      const { createObject } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
+      const boardId = 'test-board';
       const lineParams = {
-        type: "line" as const,
+        type: 'line' as const,
         x: 0,
         y: 0,
         width: 0,
         height: 0,
-        fill: "transparent",
-        stroke: "#000000",
+        fill: 'transparent',
+        stroke: '#000000',
         strokeWidth: 2,
         points: [0, 0, 100, 100],
-        createdBy: "user-1",
+        createdBy: 'user-1',
       };
 
       await createObject(boardId, lineParams);
@@ -544,29 +533,29 @@ describe("Canvas Operations Integration Tests", () => {
       expect(mockFirestoreSetDoc).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
-          type: "line",
+          type: 'line',
           points: [0, 0, 100, 100],
-          stroke: "#000000",
+          stroke: '#000000',
           strokeWidth: 2,
         })
       );
     });
 
-    it("should create connector objects with points field", async () => {
-      const { createObject } = await import("@/modules/sync/objectService");
+    it('should create connector objects with points field', async () => {
+      const { createObject } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
+      const boardId = 'test-board';
       const connectorParams = {
-        type: "connector" as const,
+        type: 'connector' as const,
         x: 0,
         y: 0,
         width: 0,
         height: 0,
-        fill: "transparent",
-        stroke: "#3b82f6",
+        fill: 'transparent',
+        stroke: '#3b82f6',
         strokeWidth: 2,
         points: [50, 50, 150, 150],
-        createdBy: "user-1",
+        createdBy: 'user-1',
       };
 
       await createObject(boardId, connectorParams);
@@ -574,26 +563,26 @@ describe("Canvas Operations Integration Tests", () => {
       expect(mockFirestoreSetDoc).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
-          type: "connector",
+          type: 'connector',
           points: [50, 50, 150, 150],
         })
       );
     });
 
-    it("should create rectangle objects", async () => {
-      const { createObject } = await import("@/modules/sync/objectService");
+    it('should create rectangle objects', async () => {
+      const { createObject } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
+      const boardId = 'test-board';
       const rectParams = {
-        type: "rectangle" as const,
+        type: 'rectangle' as const,
         x: 50,
         y: 50,
         width: 100,
         height: 80,
-        fill: "#93c5fd",
-        stroke: "#1e293b",
+        fill: '#93c5fd',
+        stroke: '#1e293b',
         strokeWidth: 2,
-        createdBy: "user-1",
+        createdBy: 'user-1',
       };
 
       await createObject(boardId, rectParams);
@@ -601,30 +590,30 @@ describe("Canvas Operations Integration Tests", () => {
       expect(mockFirestoreSetDoc).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
-          type: "rectangle",
+          type: 'rectangle',
           x: 50,
           y: 50,
           width: 100,
           height: 80,
-          fill: "#93c5fd",
+          fill: '#93c5fd',
         })
       );
     });
 
-    it("should create circle objects", async () => {
-      const { createObject } = await import("@/modules/sync/objectService");
+    it('should create circle objects', async () => {
+      const { createObject } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
+      const boardId = 'test-board';
       const circleParams = {
-        type: "circle" as const,
+        type: 'circle' as const,
         x: 200,
         y: 200,
         width: 60,
         height: 60,
-        fill: "#86efac",
-        stroke: "#1e293b",
+        fill: '#86efac',
+        stroke: '#1e293b',
         strokeWidth: 2,
-        createdBy: "user-1",
+        createdBy: 'user-1',
       };
 
       await createObject(boardId, circleParams);
@@ -632,27 +621,27 @@ describe("Canvas Operations Integration Tests", () => {
       expect(mockFirestoreSetDoc).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
-          type: "circle",
+          type: 'circle',
           width: 60,
           height: 60,
         })
       );
     });
 
-    it("should create text objects with fontSize", async () => {
-      const { createObject } = await import("@/modules/sync/objectService");
+    it('should create text objects with fontSize', async () => {
+      const { createObject } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
+      const boardId = 'test-board';
       const textParams = {
-        type: "text" as const,
+        type: 'text' as const,
         x: 100,
         y: 100,
         width: 200,
         height: 30,
-        fill: "#1f2937",
-        text: "Hello World",
+        fill: '#1f2937',
+        text: 'Hello World',
         fontSize: 16,
-        createdBy: "user-1",
+        createdBy: 'user-1',
       };
 
       await createObject(boardId, textParams);
@@ -660,28 +649,28 @@ describe("Canvas Operations Integration Tests", () => {
       expect(mockFirestoreSetDoc).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
-          type: "text",
-          text: "Hello World",
+          type: 'text',
+          text: 'Hello World',
           fontSize: 16,
         })
       );
     });
 
-    it("should create frame objects", async () => {
-      const { createObject } = await import("@/modules/sync/objectService");
+    it('should create frame objects', async () => {
+      const { createObject } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
+      const boardId = 'test-board';
       const frameParams = {
-        type: "frame" as const,
+        type: 'frame' as const,
         x: 0,
         y: 0,
         width: 400,
         height: 300,
-        fill: "rgba(241, 245, 249, 0.5)",
-        stroke: "#94a3b8",
+        fill: 'rgba(241, 245, 249, 0.5)',
+        stroke: '#94a3b8',
         strokeWidth: 2,
-        text: "My Frame",
-        createdBy: "user-1",
+        text: 'My Frame',
+        createdBy: 'user-1',
       };
 
       await createObject(boardId, frameParams);
@@ -689,17 +678,17 @@ describe("Canvas Operations Integration Tests", () => {
       expect(mockFirestoreSetDoc).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
-          type: "frame",
-          text: "My Frame",
+          type: 'frame',
+          text: 'My Frame',
         })
       );
     });
 
-    it("should update object position", async () => {
-      const { updateObject } = await import("@/modules/sync/objectService");
+    it('should update object position', async () => {
+      const { updateObject } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
-      const objectId = "object-1";
+      const boardId = 'test-board';
+      const objectId = 'object-1';
       const updates = {
         x: 150,
         y: 150,
@@ -716,13 +705,13 @@ describe("Canvas Operations Integration Tests", () => {
       );
     });
 
-    it("should update object text content", async () => {
-      const { updateObject } = await import("@/modules/sync/objectService");
+    it('should update object text content', async () => {
+      const { updateObject } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
-      const objectId = "sticky-1";
+      const boardId = 'test-board';
+      const objectId = 'sticky-1';
       const updates = {
-        text: "Updated sticky note content",
+        text: 'Updated sticky note content',
       };
 
       await updateObject(boardId, objectId, updates);
@@ -730,16 +719,16 @@ describe("Canvas Operations Integration Tests", () => {
       expect(mockFirestoreUpdateDoc).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
-          text: "Updated sticky note content",
+          text: 'Updated sticky note content',
         })
       );
     });
 
-    it("should update object dimensions", async () => {
-      const { updateObject } = await import("@/modules/sync/objectService");
+    it('should update object dimensions', async () => {
+      const { updateObject } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
-      const objectId = "rect-1";
+      const boardId = 'test-board';
+      const objectId = 'rect-1';
       const updates = {
         width: 250,
         height: 150,
@@ -758,11 +747,11 @@ describe("Canvas Operations Integration Tests", () => {
       );
     });
 
-    it("should delete object", async () => {
-      const { deleteObject } = await import("@/modules/sync/objectService");
+    it('should delete object', async () => {
+      const { deleteObject } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
-      const objectId = "object-to-delete";
+      const boardId = 'test-board';
+      const objectId = 'object-to-delete';
 
       await deleteObject(boardId, objectId);
 
@@ -770,38 +759,36 @@ describe("Canvas Operations Integration Tests", () => {
     });
   });
 
-  describe("Conflict Resolution", () => {
-    it("should resolve conflicts using last-write-wins", async () => {
-      const { mergeObjectUpdates } = await import(
-        "@/modules/sync/objectService"
-      );
+  describe('Conflict Resolution', () => {
+    it('should resolve conflicts using last-write-wins', async () => {
+      const { mergeObjectUpdates } = await import('@/modules/sync/objectService');
 
       const localObject: IBoardObject = {
-        id: "obj-1",
-        type: "sticky",
+        id: 'obj-1',
+        type: 'sticky',
         x: 100,
         y: 100,
         width: 200,
         height: 200,
         rotation: 0,
-        fill: "#fef08a",
-        text: "Local version",
-        createdBy: "user-1",
+        fill: '#fef08a',
+        text: 'Local version',
+        createdBy: 'user-1',
         createdAt: { toMillis: () => 1000 } as Timestamp,
         updatedAt: { toMillis: () => 2000 } as Timestamp,
       };
 
       const remoteObject: IBoardObject = {
-        id: "obj-1",
-        type: "sticky",
+        id: 'obj-1',
+        type: 'sticky',
         x: 150,
         y: 150,
         width: 200,
         height: 200,
         rotation: 0,
-        fill: "#fef08a",
-        text: "Remote version",
-        createdBy: "user-1",
+        fill: '#fef08a',
+        text: 'Remote version',
+        createdBy: 'user-1',
         createdAt: { toMillis: () => 1000 } as Timestamp,
         updatedAt: { toMillis: () => 3000 } as Timestamp, // Newer
       };
@@ -809,41 +796,39 @@ describe("Canvas Operations Integration Tests", () => {
       const merged = mergeObjectUpdates(localObject, remoteObject);
 
       // Remote should win because it has a newer timestamp
-      expect(merged.text).toBe("Remote version");
+      expect(merged.text).toBe('Remote version');
       expect(merged.x).toBe(150);
     });
 
-    it("should keep local when local is newer", async () => {
-      const { mergeObjectUpdates } = await import(
-        "@/modules/sync/objectService"
-      );
+    it('should keep local when local is newer', async () => {
+      const { mergeObjectUpdates } = await import('@/modules/sync/objectService');
 
       const localObject: IBoardObject = {
-        id: "obj-1",
-        type: "sticky",
+        id: 'obj-1',
+        type: 'sticky',
         x: 200,
         y: 200,
         width: 200,
         height: 200,
         rotation: 0,
-        fill: "#fef08a",
-        text: "Local newer version",
-        createdBy: "user-1",
+        fill: '#fef08a',
+        text: 'Local newer version',
+        createdBy: 'user-1',
         createdAt: { toMillis: () => 1000 } as Timestamp,
         updatedAt: { toMillis: () => 5000 } as Timestamp, // Newer
       };
 
       const remoteObject: IBoardObject = {
-        id: "obj-1",
-        type: "sticky",
+        id: 'obj-1',
+        type: 'sticky',
         x: 150,
         y: 150,
         width: 200,
         height: 200,
         rotation: 0,
-        fill: "#fef08a",
-        text: "Remote older version",
-        createdBy: "user-1",
+        fill: '#fef08a',
+        text: 'Remote older version',
+        createdBy: 'user-1',
         createdAt: { toMillis: () => 1000 } as Timestamp,
         updatedAt: { toMillis: () => 3000 } as Timestamp,
       };
@@ -851,21 +836,21 @@ describe("Canvas Operations Integration Tests", () => {
       const merged = mergeObjectUpdates(localObject, remoteObject);
 
       // Local should win because it has a newer timestamp
-      expect(merged.text).toBe("Local newer version");
+      expect(merged.text).toBe('Local newer version');
       expect(merged.x).toBe(200);
     });
   });
 
-  describe("Real-time Cursor Operations", () => {
-    it("should update cursor position", async () => {
-      const { updateCursor } = await import("@/modules/sync/realtimeService");
+  describe('Real-time Cursor Operations', () => {
+    it('should update cursor position', async () => {
+      const { updateCursor } = await import('@/modules/sync/realtimeService');
 
-      const boardId = "test-board";
-      const uid = "user-1";
+      const boardId = 'test-board';
+      const uid = 'user-1';
       const x = 100;
       const y = 200;
-      const displayName = "Test User";
-      const color = "#ff0000";
+      const displayName = 'Test User';
+      const color = '#ff0000';
 
       await updateCursor(boardId, uid, x, y, displayName, color);
 
@@ -881,11 +866,11 @@ describe("Canvas Operations Integration Tests", () => {
       );
     });
 
-    it("should remove cursor on disconnect", async () => {
-      const { removeCursor } = await import("@/modules/sync/realtimeService");
+    it('should remove cursor on disconnect', async () => {
+      const { removeCursor } = await import('@/modules/sync/realtimeService');
 
-      const boardId = "test-board";
-      const uid = "user-1";
+      const boardId = 'test-board';
+      const uid = 'user-1';
 
       await removeCursor(boardId, uid);
 
@@ -893,15 +878,15 @@ describe("Canvas Operations Integration Tests", () => {
     });
   });
 
-  describe("Real-time Presence Operations", () => {
-    it("should update presence status", async () => {
-      const { updatePresence } = await import("@/modules/sync/realtimeService");
+  describe('Real-time Presence Operations', () => {
+    it('should update presence status', async () => {
+      const { updatePresence } = await import('@/modules/sync/realtimeService');
 
-      const boardId = "test-board";
-      const uid = "user-1";
-      const displayName = "Test User";
-      const photoURL = "https://example.com/photo.jpg";
-      const color = "#3b82f6";
+      const boardId = 'test-board';
+      const uid = 'user-1';
+      const displayName = 'Test User';
+      const photoURL = 'https://example.com/photo.jpg';
+      const color = '#3b82f6';
 
       await updatePresence(boardId, uid, displayName, photoURL, color);
 
@@ -917,11 +902,11 @@ describe("Canvas Operations Integration Tests", () => {
       );
     });
 
-    it("should remove presence on leave", async () => {
-      const { removePresence } = await import("@/modules/sync/realtimeService");
+    it('should remove presence on leave', async () => {
+      const { removePresence } = await import('@/modules/sync/realtimeService');
 
-      const boardId = "test-board";
-      const uid = "user-1";
+      const boardId = 'test-board';
+      const uid = 'user-1';
 
       await removePresence(boardId, uid);
 
@@ -929,47 +914,47 @@ describe("Canvas Operations Integration Tests", () => {
     });
   });
 
-  describe("User Color Assignment", () => {
-    it("should generate consistent colors for same user", async () => {
-      const { getUserColor } = await import("@/modules/sync/realtimeService");
+  describe('User Color Assignment', () => {
+    it('should generate consistent colors for same user', async () => {
+      const { getUserColor } = await import('@/modules/sync/realtimeService');
 
-      const uid = "user-123";
+      const uid = 'user-123';
       const color1 = getUserColor(uid);
       const color2 = getUserColor(uid);
 
       expect(color1).toBe(color2);
     });
 
-    it("should generate valid hex colors", async () => {
-      const { getUserColor } = await import("@/modules/sync/realtimeService");
+    it('should generate valid hex colors', async () => {
+      const { getUserColor } = await import('@/modules/sync/realtimeService');
 
-      const color = getUserColor("test-user");
+      const color = getUserColor('test-user');
 
       expect(color).toMatch(/^#[0-9a-f]{6}$/i);
     });
   });
 
-  describe("Batch Operations", () => {
-    it("should handle multiple cursor updates simultaneously", async () => {
-      const { updateCursor } = await import("@/modules/sync/realtimeService");
+  describe('Batch Operations', () => {
+    it('should handle multiple cursor updates simultaneously', async () => {
+      const { updateCursor } = await import('@/modules/sync/realtimeService');
 
-      const boardId = "test-board";
+      const boardId = 'test-board';
 
       // Simulate multiple users updating cursors
       await Promise.all([
-        updateCursor(boardId, "user-1", 100, 100, "User 1", "#ff0000"),
-        updateCursor(boardId, "user-2", 200, 200, "User 2", "#00ff00"),
-        updateCursor(boardId, "user-3", 300, 300, "User 3", "#0000ff"),
+        updateCursor(boardId, 'user-1', 100, 100, 'User 1', '#ff0000'),
+        updateCursor(boardId, 'user-2', 200, 200, 'User 2', '#00ff00'),
+        updateCursor(boardId, 'user-3', 300, 300, 'User 3', '#0000ff'),
       ]);
 
       expect(mockRealtimeSet).toHaveBeenCalledTimes(3);
     });
 
-    it("should handle rapid position updates", async () => {
-      const { updateObject } = await import("@/modules/sync/objectService");
+    it('should handle rapid position updates', async () => {
+      const { updateObject } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
-      const objectId = "dragging-object";
+      const boardId = 'test-board';
+      const objectId = 'dragging-object';
 
       // Simulate rapid drag updates
       const updates = Array.from({ length: 5 }, (_, i) => ({
@@ -977,19 +962,15 @@ describe("Canvas Operations Integration Tests", () => {
         y: i * 20,
       }));
 
-      await Promise.all(
-        updates.map((update) => updateObject(boardId, objectId, update))
-      );
+      await Promise.all(updates.map((update) => updateObject(boardId, objectId, update)));
 
       expect(mockFirestoreUpdateDoc).toHaveBeenCalledTimes(5);
     });
   });
 
-  describe("Connection Status", () => {
-    it("should subscribe to connection status", async () => {
-      const { subscribeToConnectionStatus } = await import(
-        "@/modules/sync/realtimeService"
-      );
+  describe('Connection Status', () => {
+    it('should subscribe to connection status', async () => {
+      const { subscribeToConnectionStatus } = await import('@/modules/sync/realtimeService');
 
       const callback = vi.fn();
       subscribeToConnectionStatus(callback);
@@ -999,8 +980,8 @@ describe("Canvas Operations Integration Tests", () => {
   });
 });
 
-describe("Viewport Operations", () => {
-  it("should clamp zoom within valid range", () => {
+describe('Viewport Operations', () => {
+  it('should clamp zoom within valid range', () => {
     const MIN_SCALE = 0.1;
     const MAX_SCALE = 10;
 
@@ -1015,12 +996,8 @@ describe("Viewport Operations", () => {
     expect(clampScale(5)).toBe(5);
   });
 
-  it("should calculate zoom center correctly", () => {
-    const calculateZoomCenter = (
-      pointer: { x: number; y: number },
-      stagePosition: { x: number; y: number },
-      scale: number
-    ) => {
+  it('should calculate zoom center correctly', () => {
+    const calculateZoomCenter = (pointer: IPosition, stagePosition: IPosition, scale: number) => {
       return {
         x: (pointer.x - stagePosition.x) / scale,
         y: (pointer.y - stagePosition.y) / scale,
@@ -1038,14 +1015,9 @@ describe("Viewport Operations", () => {
   });
 });
 
-describe("Selection Operations", () => {
-  it("should calculate selection rectangle bounds", () => {
-    const calculateSelectionBounds = (
-      x1: number,
-      y1: number,
-      x2: number,
-      y2: number
-    ) => {
+describe('Selection Operations', () => {
+  it('should calculate selection rectangle bounds', () => {
+    const calculateSelectionBounds = (x1: number, y1: number, x2: number, y2: number) => {
       return {
         left: Math.min(x1, x2),
         top: Math.min(y1, y2),
@@ -1069,7 +1041,7 @@ describe("Selection Operations", () => {
     expect(bounds2.bottom).toBe(200);
   });
 
-  it("should detect object intersection with selection", () => {
+  it('should detect object intersection with selection', () => {
     const isIntersecting = (
       objBounds: { x1: number; y1: number; x2: number; y2: number },
       selBounds: { x1: number; y1: number; x2: number; y2: number }
@@ -1084,40 +1056,31 @@ describe("Selection Operations", () => {
 
     // Object fully inside selection
     expect(
-      isIntersecting(
-        { x1: 120, y1: 120, x2: 180, y2: 180 },
-        { x1: 100, y1: 100, x2: 200, y2: 200 }
-      )
+      isIntersecting({ x1: 120, y1: 120, x2: 180, y2: 180 }, { x1: 100, y1: 100, x2: 200, y2: 200 })
     ).toBe(true);
 
     // Object partially inside selection
     expect(
-      isIntersecting(
-        { x1: 150, y1: 150, x2: 250, y2: 250 },
-        { x1: 100, y1: 100, x2: 200, y2: 200 }
-      )
+      isIntersecting({ x1: 150, y1: 150, x2: 250, y2: 250 }, { x1: 100, y1: 100, x2: 200, y2: 200 })
     ).toBe(true);
 
     // Object completely outside selection
     expect(
-      isIntersecting(
-        { x1: 300, y1: 300, x2: 400, y2: 400 },
-        { x1: 100, y1: 100, x2: 200, y2: 200 }
-      )
+      isIntersecting({ x1: 300, y1: 300, x2: 400, y2: 400 }, { x1: 100, y1: 100, x2: 200, y2: 200 })
     ).toBe(false);
   });
 
-  it("should make stage draggable only when pan tool is active", () => {
+  it('should make stage draggable only when pan tool is active', () => {
     // BoardCanvas uses isDraggable = activeTool === 'pan' so marquee is not stolen by pan
-    const isStageDraggable = (activeTool: string): boolean => activeTool === "pan";
+    const isStageDraggable = (activeTool: string): boolean => activeTool === 'pan';
 
-    expect(isStageDraggable("select")).toBe(false);
-    expect(isStageDraggable("pan")).toBe(true);
-    expect(isStageDraggable("sticky")).toBe(false);
-    expect(isStageDraggable("rectangle")).toBe(false);
+    expect(isStageDraggable('select')).toBe(false);
+    expect(isStageDraggable('pan')).toBe(true);
+    expect(isStageDraggable('sticky')).toBe(false);
+    expect(isStageDraggable('rectangle')).toBe(false);
   });
 
-  it("should return rect bounds for rectangular shapes", () => {
+  it('should return rect bounds for rectangular shapes', () => {
     // Mirror getObjectBounds for non-line/connector: x1,y1 = x,y; x2,y2 = x+width, y+height
     const getObjectBoundsRect = (obj: {
       x: number;
@@ -1140,13 +1103,13 @@ describe("Selection Operations", () => {
     expect(bounds.y2).toBe(300);
   });
 
-  it("should return bounds from points for line and connector", () => {
+  it('should return bounds from points for line and connector', () => {
     const MIN_POINTS_BOUND_SIZE = 2;
     const getObjectBoundsFromPoints = (
       obj: { x: number; y: number; points: number[] },
       type: string
     ): { x1: number; y1: number; x2: number; y2: number } => {
-      if ((type !== "line" && type !== "connector") || !obj.points || obj.points.length < 4) {
+      if ((type !== 'line' && type !== 'connector') || !obj.points || obj.points.length < 4) {
         return { x1: obj.x, y1: obj.y, x2: obj.x, y2: obj.y };
       }
       const pts = obj.points;
@@ -1176,21 +1139,21 @@ describe("Selection Operations", () => {
     };
 
     const line = { x: 0, y: 0, points: [100, 100, 300, 200] };
-    const lineBounds = getObjectBoundsFromPoints(line, "line");
+    const lineBounds = getObjectBoundsFromPoints(line, 'line');
     expect(lineBounds.x1).toBe(100);
     expect(lineBounds.y1).toBe(100);
     expect(lineBounds.x2).toBe(300);
     expect(lineBounds.y2).toBe(200);
 
     const connector = { x: 10, y: 20, points: [0, 0, 50, 80] };
-    const connBounds = getObjectBoundsFromPoints(connector, "connector");
+    const connBounds = getObjectBoundsFromPoints(connector, 'connector');
     expect(connBounds.x1).toBe(10);
     expect(connBounds.y1).toBe(20);
     expect(connBounds.x2).toBe(60);
     expect(connBounds.y2).toBe(100);
   });
 
-  it("should include line/connector in marquee when selection rect intersects their bounds", () => {
+  it('should include line/connector in marquee when selection rect intersects their bounds', () => {
     const MIN_POINTS_BOUND_SIZE = 2;
     const getObjectBounds = (
       obj: {
@@ -1203,7 +1166,7 @@ describe("Selection Operations", () => {
       },
       type: string
     ): { x1: number; y1: number; x2: number; y2: number } => {
-      if ((type === "line" || type === "connector") && obj.points && obj.points.length >= 4) {
+      if ((type === 'line' || type === 'connector') && obj.points && obj.points.length >= 4) {
         const pts = obj.points;
         const p0 = pts[0] ?? 0;
         const p1 = pts[1] ?? 0;
@@ -1247,37 +1210,37 @@ describe("Selection Operations", () => {
 
     const selectionRect = { x1: 50, y1: 50, x2: 250, y2: 250 };
     const lineObj = { x: 0, y: 0, width: 0, height: 0, points: [100, 100, 300, 200] };
-    const lineBounds = getObjectBounds(lineObj, "line");
+    const lineBounds = getObjectBounds(lineObj, 'line');
     expect(isIntersecting(lineBounds, selectionRect)).toBe(true);
 
     const lineOutside = { x: 0, y: 0, width: 0, height: 0, points: [400, 400, 500, 500] };
-    const lineOutsideBounds = getObjectBounds(lineOutside, "line");
+    const lineOutsideBounds = getObjectBounds(lineOutside, 'line');
     expect(isIntersecting(lineOutsideBounds, selectionRect)).toBe(false);
   });
 });
 
-describe("Click-to-Create Operations", () => {
-  describe("Sticky Note Creation via Click", () => {
-    it("should create sticky note with correct parameters when clicking with sticky tool", async () => {
-      const { createObject } = await import("@/modules/sync/objectService");
+describe('Click-to-Create Operations', () => {
+  describe('Sticky Note Creation via Click', () => {
+    it('should create sticky note with correct parameters when clicking with sticky tool', async () => {
+      const { createObject } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
+      const boardId = 'test-board';
       const clickX = 500;
       const clickY = 300;
       const defaultStickySize = { width: 200, height: 200 };
-      const activeColor = "#fef08a";
+      const activeColor = '#fef08a';
 
       // Simulate the parameters that would be passed from handleStageClick
       const stickyParams = {
-        type: "sticky" as const,
+        type: 'sticky' as const,
         x: clickX - defaultStickySize.width / 2,
         y: clickY - defaultStickySize.height / 2,
         width: defaultStickySize.width,
         height: defaultStickySize.height,
         fill: activeColor,
-        text: "",
+        text: '',
         rotation: 0,
-        createdBy: "user-1",
+        createdBy: 'user-1',
       };
 
       const createdSticky = await createObject(boardId, stickyParams);
@@ -1287,32 +1250,32 @@ describe("Click-to-Create Operations", () => {
       expect(createdSticky.y).toBe(200); // 300 - 100
       expect(createdSticky.width).toBe(200);
       expect(createdSticky.height).toBe(200);
-      expect(createdSticky.type).toBe("sticky");
-      expect(createdSticky.text).toBe("");
-      expect(createdSticky.fill).toBe("#fef08a");
+      expect(createdSticky.type).toBe('sticky');
+      expect(createdSticky.text).toBe('');
+      expect(createdSticky.fill).toBe('#fef08a');
       expect(createdSticky.rotation).toBe(0);
       expect(createdSticky.id).toBeTruthy();
     });
 
-    it("should create sticky note with different colors", async () => {
-      const { createObject } = await import("@/modules/sync/objectService");
+    it('should create sticky note with different colors', async () => {
+      const { createObject } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
-      const colors = ["#fef08a", "#fda4af", "#93c5fd", "#86efac", "#c4b5fd"];
+      const boardId = 'test-board';
+      const colors = ['#fef08a', '#fda4af', '#93c5fd', '#86efac', '#c4b5fd'];
 
       for (const color of colors) {
         vi.clearAllMocks();
 
         const stickyParams = {
-          type: "sticky" as const,
+          type: 'sticky' as const,
           x: 100,
           y: 100,
           width: 200,
           height: 200,
           fill: color,
-          text: "",
+          text: '',
           rotation: 0,
-          createdBy: "user-1",
+          createdBy: 'user-1',
         };
 
         const createdSticky = await createObject(boardId, stickyParams);
@@ -1327,22 +1290,22 @@ describe("Click-to-Create Operations", () => {
       }
     });
 
-    it("should create sticky note at edge of canvas", async () => {
-      const { createObject } = await import("@/modules/sync/objectService");
+    it('should create sticky note at edge of canvas', async () => {
+      const { createObject } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
+      const boardId = 'test-board';
 
       // Test creation at canvas origin
       const stickyParams = {
-        type: "sticky" as const,
+        type: 'sticky' as const,
         x: 0 - 100, // Centered at origin
         y: 0 - 100,
         width: 200,
         height: 200,
-        fill: "#fef08a",
-        text: "",
+        fill: '#fef08a',
+        text: '',
         rotation: 0,
-        createdBy: "user-1",
+        createdBy: 'user-1',
       };
 
       const createdSticky = await createObject(boardId, stickyParams);
@@ -1353,26 +1316,26 @@ describe("Click-to-Create Operations", () => {
     });
   });
 
-  describe("Text Element Creation via Click", () => {
-    it("should create text element with correct parameters when clicking with text tool", async () => {
-      const { createObject } = await import("@/modules/sync/objectService");
+  describe('Text Element Creation via Click', () => {
+    it('should create text element with correct parameters when clicking with text tool', async () => {
+      const { createObject } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
+      const boardId = 'test-board';
       const clickX = 400;
       const clickY = 250;
 
       // Simulate the parameters that would be passed from handleStageClick
       const textParams = {
-        type: "text" as const,
+        type: 'text' as const,
         x: clickX,
         y: clickY,
         width: 200,
         height: 30,
-        fill: "#1f2937", // Default text color when sticky color is active
-        text: "",
+        fill: '#1f2937', // Default text color when sticky color is active
+        text: '',
         fontSize: 16,
         rotation: 0,
-        createdBy: "user-1",
+        createdBy: 'user-1',
       };
 
       const createdText = await createObject(boardId, textParams);
@@ -1382,30 +1345,30 @@ describe("Click-to-Create Operations", () => {
       expect(createdText.y).toBe(250);
       expect(createdText.width).toBe(200);
       expect(createdText.height).toBe(30);
-      expect(createdText.type).toBe("text");
-      expect(createdText.text).toBe("");
+      expect(createdText.type).toBe('text');
+      expect(createdText.text).toBe('');
       expect(createdText.fontSize).toBe(16);
-      expect(createdText.fill).toBe("#1f2937");
+      expect(createdText.fill).toBe('#1f2937');
       expect(createdText.id).toBeTruthy();
     });
 
-    it("should create text element with custom color when non-yellow color is active", async () => {
-      const { createObject } = await import("@/modules/sync/objectService");
+    it('should create text element with custom color when non-yellow color is active', async () => {
+      const { createObject } = await import('@/modules/sync/objectService');
 
-      const boardId = "test-board";
-      const customColor = "#3b82f6"; // Blue
+      const boardId = 'test-board';
+      const customColor = '#3b82f6'; // Blue
 
       const textParams = {
-        type: "text" as const,
+        type: 'text' as const,
         x: 100,
         y: 100,
         width: 200,
         height: 30,
         fill: customColor,
-        text: "",
+        text: '',
         fontSize: 16,
         rotation: 0,
-        createdBy: "user-1",
+        createdBy: 'user-1',
       };
 
       const createdText = await createObject(boardId, textParams);
@@ -1414,8 +1377,8 @@ describe("Click-to-Create Operations", () => {
     });
   });
 
-  describe("Empty Area Click Detection", () => {
-    it("should correctly identify empty area clicks", () => {
+  describe('Empty Area Click Detection', () => {
+    it('should correctly identify empty area clicks', () => {
       // Simulate the improved click detection logic from BoardCanvas that traverses node tree
       interface MockNode {
         name: () => string;
@@ -1423,11 +1386,7 @@ describe("Click-to-Create Operations", () => {
         getParent: () => MockNode | null;
       }
 
-      const createNode = (
-        name: string,
-        className: string,
-        parent?: MockNode | null
-      ): MockNode => ({
+      const createNode = (name: string, className: string, parent?: MockNode | null): MockNode => ({
         name: () => name,
         getClassName: () => className,
         getParent: () => parent || null,
@@ -1436,14 +1395,11 @@ describe("Click-to-Create Operations", () => {
       const checkIfShape = (node: MockNode | null): boolean => {
         if (!node) return false;
         const name = node.name();
-        if (name.includes("shape")) return true;
+        if (name.includes('shape')) return true;
         return checkIfShape(node.getParent());
       };
 
-      const isEmptyAreaClick = (
-        target: MockNode,
-        isStage: boolean
-      ): boolean => {
+      const isEmptyAreaClick = (target: MockNode, isStage: boolean): boolean => {
         const targetName = target.name();
         const targetClassName = target.getClassName();
 
@@ -1454,41 +1410,41 @@ describe("Click-to-Create Operations", () => {
 
         // Allow clicks on: background rect, Stage, or Layer (empty areas)
         return (
-          targetName === "background" ||
+          targetName === 'background' ||
           isStage ||
-          targetClassName === "Layer" ||
-          (targetClassName === "Rect" && targetName === "background")
+          targetClassName === 'Layer' ||
+          (targetClassName === 'Rect' && targetName === 'background')
         );
       };
 
       // Click on stage - should be empty area
-      const stageNode = createNode("", "Stage", null);
+      const stageNode = createNode('', 'Stage', null);
       expect(isEmptyAreaClick(stageNode, true)).toBe(true);
 
       // Click on layer - should be empty area
-      const layerNode = createNode("", "Layer", null);
+      const layerNode = createNode('', 'Layer', null);
       expect(isEmptyAreaClick(layerNode, false)).toBe(true);
 
       // Click on background rect - should be empty area
-      const backgroundNode = createNode("background", "Rect", null);
+      const backgroundNode = createNode('background', 'Rect', null);
       expect(isEmptyAreaClick(backgroundNode, false)).toBe(true);
 
       // Click on shape Group - should NOT be empty area
-      const shapeGroup = createNode("shape sticky", "Group", null);
+      const shapeGroup = createNode('shape sticky', 'Group', null);
       expect(isEmptyAreaClick(shapeGroup, false)).toBe(false);
 
       // Click on child Rect inside shape Group - should NOT be empty area (traverses up)
-      const childRect = createNode("", "Rect", shapeGroup);
+      const childRect = createNode('', 'Rect', shapeGroup);
       expect(isEmptyAreaClick(childRect, false)).toBe(false);
 
       // Click on shape rectangle - should NOT be empty area
-      const shapeRect = createNode("shape rectangle", "Rect", null);
+      const shapeRect = createNode('shape rectangle', 'Rect', null);
       expect(isEmptyAreaClick(shapeRect, false)).toBe(false);
     });
   });
 
-  describe("Selection State Reset", () => {
-    it("should reset selection state after mouse up regardless of drawing state", () => {
+  describe('Selection State Reset', () => {
+    it('should reset selection state after mouse up regardless of drawing state', () => {
       // Simulate selection state management
       interface ISelectionState {
         isSelecting: boolean;
@@ -1513,10 +1469,7 @@ describe("Click-to-Create Operations", () => {
       };
 
       // Simulate handleStageMouseUp behavior (fixed version)
-      const handleMouseUp = (
-        state: ISelectionState,
-        _isDrawing: boolean
-      ): ISelectionState => {
+      const handleMouseUp = (state: ISelectionState, _isDrawing: boolean): ISelectionState => {
         // The fix ensures selection state is always reset regardless of _isDrawing
         if (state.isSelecting) {
           return {
@@ -1545,26 +1498,26 @@ describe("Click-to-Create Operations", () => {
     });
   });
 
-  describe("Single-Click Selection", () => {
-    it("should detect clicks on shape parent nodes", () => {
+  describe('Single-Click Selection', () => {
+    it('should detect clicks on shape parent nodes', () => {
       // Simulate the improved isEmptyAreaClick that traverses node tree
       const checkIfShape = (nodeName: string, parentName?: string): boolean => {
-        if (nodeName.includes("shape")) return true;
-        if (parentName?.includes("shape")) return true;
+        if (nodeName.includes('shape')) return true;
+        if (parentName?.includes('shape')) return true;
         return false;
       };
 
       // Click on shape Group - should detect as shape
-      expect(checkIfShape("shape sticky", undefined)).toBe(true);
+      expect(checkIfShape('shape sticky', undefined)).toBe(true);
 
       // Click on child Rect inside shape Group - should detect via parent
-      expect(checkIfShape("", "shape sticky")).toBe(true);
+      expect(checkIfShape('', 'shape sticky')).toBe(true);
 
       // Click on empty area - should not detect as shape
-      expect(checkIfShape("background", undefined)).toBe(false);
+      expect(checkIfShape('background', undefined)).toBe(false);
     });
 
-    it("should select object when clicking on child elements", () => {
+    it('should select object when clicking on child elements', () => {
       // Simulate selection logic where child element click selects parent shape
       interface MockNode {
         name: () => string;
@@ -1577,13 +1530,13 @@ describe("Click-to-Create Operations", () => {
       });
 
       // Create a shape Group with a child Rect
-      const shapeGroup = createNode("shape sticky");
-      const childRect = createNode("", shapeGroup);
+      const shapeGroup = createNode('shape sticky');
+      const childRect = createNode('', shapeGroup);
 
       // Check if shape (traverses up tree)
       const checkIfShape = (node: MockNode): boolean => {
         const name = node.name();
-        if (name.includes("shape")) return true;
+        if (name.includes('shape')) return true;
         const parent = node.getParent();
         if (parent) return checkIfShape(parent);
         return false;
@@ -1595,8 +1548,8 @@ describe("Click-to-Create Operations", () => {
     });
   });
 
-  describe("Resize Functionality", () => {
-    it("should calculate new dimensions after resize", () => {
+  describe('Resize Functionality', () => {
+    it('should calculate new dimensions after resize', () => {
       // Simulate TransformHandler resize logic
       const MIN_SIZE = 10;
 
@@ -1628,7 +1581,7 @@ describe("Click-to-Create Operations", () => {
       expect(result3.height).toBe(MIN_SIZE);
     });
 
-    it("should handle resize with rotation", () => {
+    it('should handle resize with rotation', () => {
       // Simulate transform end with rotation
       const handleTransformEnd = (
         x: number,
@@ -1659,10 +1612,10 @@ describe("Click-to-Create Operations", () => {
     });
   });
 
-  describe("Transform end per shape type", () => {
+  describe('Transform end per shape type', () => {
     const MIN_SIZE = 10;
 
-    it("should produce rect-like attrs for Rectangle (x, y, width, height, rotation)", () => {
+    it('should produce rect-like attrs for Rectangle (x, y, width, height, rotation)', () => {
       const nodeWidth = 100;
       const nodeHeight = 80;
       const scaleX = 1.5;
@@ -1681,7 +1634,7 @@ describe("Click-to-Create Operations", () => {
       expect(rotation).toBe(15);
     });
 
-    it("should produce rect-like attrs for Group (StickyNote) from getClientRect + scale", () => {
+    it('should produce rect-like attrs for Group (StickyNote) from getClientRect + scale', () => {
       const rect = { x: 0, y: 0, width: 200, height: 200 };
       const scaleX = 0.5;
       const scaleY = 1.5;
@@ -1699,7 +1652,7 @@ describe("Click-to-Create Operations", () => {
       expect(rotation).toBe(0);
     });
 
-    it("should produce top-left and size for Ellipse (Oval) from center and radii", () => {
+    it('should produce top-left and size for Ellipse (Oval) from center and radii', () => {
       const centerX = 100;
       const centerY = 100;
       const radiusX = 40;
@@ -1724,7 +1677,7 @@ describe("Click-to-Create Operations", () => {
       expect(rotation).toBe(45);
     });
 
-    it("should produce points and position for Line (no width/height)", () => {
+    it('should produce points and position for Line (no width/height)', () => {
       const currentPoints = [0, 0, 100, 50];
       const scaleX = 2;
       const scaleY = 2;
@@ -1732,26 +1685,24 @@ describe("Click-to-Create Operations", () => {
       const nodeY = 20;
       const rotation = 0;
 
-      const scaledPoints = currentPoints.map((p, i) =>
-        i % 2 === 0 ? p * scaleX : p * scaleY
-      );
+      const scaledPoints = currentPoints.map((p, i) => (i % 2 === 0 ? p * scaleX : p * scaleY));
 
       expect(scaledPoints).toEqual([0, 0, 200, 100]);
       expect(nodeX).toBe(10);
       expect(nodeY).toBe(20);
       expect(rotation).toBe(0);
-      expect(Object.keys({ nodeX, nodeY, points: scaledPoints, rotation })).not.toContain("width");
-      expect(Object.keys({ nodeX, nodeY, points: scaledPoints, rotation })).not.toContain("height");
+      expect(Object.keys({ nodeX, nodeY, points: scaledPoints, rotation })).not.toContain('width');
+      expect(Object.keys({ nodeX, nodeY, points: scaledPoints, rotation })).not.toContain('height');
     });
   });
 
-  describe("Textarea Positioning", () => {
-    it("should calculate textarea position accounting for stage pan offset", () => {
+  describe('Textarea Positioning', () => {
+    it('should calculate textarea position accounting for stage pan offset', () => {
       // Simulate textarea position calculation with stage pan/zoom
       const calculateTextareaPosition = (
-        textPosition: { x: number; y: number },
+        textPosition: IPosition,
         stageBox: { left: number; top: number },
-        stagePos: { x: number; y: number },
+        stagePos: IPosition,
         scale: number
       ) => {
         return {
@@ -1801,7 +1752,7 @@ describe("Click-to-Create Operations", () => {
       expect(pos4.y).toBe(100 + (100 + 50) * 1.5);
     });
 
-    it("should position textarea correctly when canvas is panned", () => {
+    it('should position textarea correctly when canvas is panned', () => {
       // Test that textarea appears in correct position relative to note
       // even when canvas has been panned
       const stageBox = { left: 100, top: 100 };
@@ -1819,7 +1770,7 @@ describe("Click-to-Create Operations", () => {
       expect(areaPosition.y).toBe(100 + (200 - 100));
     });
 
-    it("should position textarea correctly when canvas is zoomed", () => {
+    it('should position textarea correctly when canvas is zoomed', () => {
       // Test that textarea scales correctly with zoom
       const stageBox = { left: 0, top: 0 };
       const textPosition = { x: 100, y: 100 };

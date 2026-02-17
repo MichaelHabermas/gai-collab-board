@@ -20,7 +20,7 @@ import { useCursors } from '@/hooks/useCursors';
 import { useCanvasOperations } from '@/hooks/useCanvasOperations';
 import { useVisibleShapes } from '@/hooks/useVisibleShapes';
 import type { User } from 'firebase/auth';
-import type { IBoardObject, ConnectorAnchor } from '@/types';
+import type { IBoardObject, ConnectorAnchor, IPosition } from '@/types';
 import type { ICreateObjectParams } from '@/modules/sync/objectService';
 import { getAnchorPosition } from '@/lib/connectorAnchors';
 import { ConnectionNodesLayer } from './ConnectionNodesLayer';
@@ -184,7 +184,7 @@ export const BoardCanvas = memo(
     });
 
     // Convert screen coordinates to canvas coordinates
-    const getCanvasCoords = useCallback((stage: Konva.Stage, pointer: { x: number; y: number }) => {
+    const getCanvasCoords = useCallback((stage: Konva.Stage, pointer: IPosition) => {
       const scale = stage.scaleX();
       return {
         x: (pointer.x - stage.x()) / scale,

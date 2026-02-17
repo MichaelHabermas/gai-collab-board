@@ -1,4 +1,4 @@
-import type { IBoardObject, ConnectorAnchor } from '@/types';
+import type { IBoardObject, ConnectorAnchor, IPosition } from '@/types';
 
 const CONNECTABLE_SHAPE_TYPES = ['rectangle', 'circle', 'sticky', 'frame'] as const;
 
@@ -11,7 +11,7 @@ export function isConnectableShapeType(type: IBoardObject['type']): type is Conn
 /**
  * Rotate a point (px, py) around origin by angle degrees.
  */
-function rotatePoint(px: number, py: number, angleDeg: number): { x: number; y: number } {
+function rotatePoint(px: number, py: number, angleDeg: number): IPosition {
   const rad = (angleDeg * Math.PI) / 180;
   const cos = Math.cos(rad);
   const sin = Math.sin(rad);
@@ -29,7 +29,7 @@ function rotatePoint(px: number, py: number, angleDeg: number): { x: number; y: 
 export function getAnchorPosition(
   obj: Pick<IBoardObject, 'x' | 'y' | 'width' | 'height' | 'rotation' | 'type'>,
   anchor: ConnectorAnchor
-): { x: number; y: number } {
+): IPosition {
   const { x, y, width, height, rotation = 0 } = obj;
   const cx = x + width / 2;
   const cy = y + height / 2;
@@ -37,7 +37,7 @@ export function getAnchorPosition(
   if (obj.type === 'circle') {
     const radiusX = width / 2;
     const radiusY = height / 2;
-    const local = ((): { x: number; y: number } => {
+    const local = ((): IPosition => {
       switch (anchor) {
         case 'top':
           return { x: 0, y: -radiusY };
@@ -56,16 +56,15 @@ export function getAnchorPosition(
   }
 
   // Rect-like: rectangle, sticky, frame — Konva rotates around (x,y) top-left; use top-left-origin local coords
-  const local = ((): { x: number; y: number } => {
+  const local = ((): IPosition => {
     switch (anchor) {
-      case 'top':
-        return { x: width / 2, y: 0 };
       case 'right':
         return { x: width, y: height / 2 };
       case 'bottom':
         return { x: width / 2, y: height };
       case 'left':
         return { x: 0, y: height / 2 };
+      case 'top':
       default:
         return { x: width / 2, y: 0 };
     }

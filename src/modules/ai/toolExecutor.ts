@@ -1,9 +1,6 @@
 import type { IToolCall } from './tools';
 import type { IBoardObject, ShapeType, ConnectorAnchor } from '@/types';
-import type {
-  ICreateObjectParams,
-  IUpdateObjectParams,
-} from '@/modules/sync/objectService';
+import type { ICreateObjectParams, IUpdateObjectParams } from '@/modules/sync/objectService';
 import { getAnchorPosition } from '@/lib/connectorAnchors';
 
 const DEFAULT_STICKY_WIDTH = 200;
@@ -342,15 +339,23 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
         const objects = getObjects()
           .filter((o) => objectIds.includes(o.id))
           .sort((a, b) => (direction === 'horizontal' ? a.x - b.x : a.y - b.y));
-        if (objects.length < 3)
+
+        if (objects.length < 3) {
           return { success: false, message: 'Need at least 3 objects to distribute' };
+        }
+
         const first = objects[0];
         const last = objects[objects.length - 1];
+        if (!first || !last) {
+          return { success: false, message: 'No objects found' };
+        }
+
         if (direction === 'horizontal') {
           const totalWidth = last.x + last.width - first.x;
           const objectsWidth = objects.reduce((s, o) => s + o.width, 0);
           const spacing = (totalWidth - objectsWidth) / (objects.length - 1);
           let currentX = first.x;
+
           for (const obj of objects) {
             await ctx.updateObject(boardId, obj.id, { x: currentX });
             currentX += obj.width + spacing;
@@ -360,6 +365,7 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           const objectsHeight = objects.reduce((s, o) => s + o.height, 0);
           const spacing = (totalHeight - objectsHeight) / (objects.length - 1);
           let currentY = first.y;
+
           for (const obj of objects) {
             await ctx.updateObject(boardId, obj.id, { y: currentY });
             currentY += obj.height + spacing;
@@ -369,7 +375,7 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
       }
 
       default: {
-        throw new Error(`Unknown tool: ${String(tool.name)}`);
+        return { success: false, message: `Unknown tool: ${String(tool.name)}` };
       }
     }
   };

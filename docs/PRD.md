@@ -126,13 +126,9 @@ Extend via interfaces without modifying core:
 
 ```typescript
 // Base shape interface - open for extension
-interface IShape {
+interface IShape extends ISize {
   id: string;
   type: ShapeType;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
   render(): ReactElement;
 }
 
@@ -1463,8 +1459,8 @@ while maintaining 60 FPS with 500+ objects.
   const MAX_SCALE = 10;
 
   export const BoardCanvas = (): ReactElement => {
-    const [stagePosition, setStagePosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-    const [stageScale, setStageScale] = useState<{ x: number; y: number }>({ x: 1, y: 1 });
+    const [stagePosition, setStagePosition] = useState<IPosition>({ x: 0, y: 0 });
+    const [stageScale, setStageScale] = useState<IPosition>({ x: 1, y: 1 });
 
     const handleWheel = useCallback(
       (e: Konva.KonvaEventObject<WheelEvent>) => {
@@ -2341,12 +2337,17 @@ sequenceDiagram
 ### Epic 4: Tasks to complete
 
 - [x] Story 4.1: AI Service Setup – API client (`src/lib/ai.ts`) and config
-- [x] Story 4.2: Tool Schema Definition – `src/modules/ai/tools.ts` with board tools
-- [x] Story 4.3: AI Service Implementation – `src/modules/ai/aiService.ts` with command processing
-- [x] Story 4.4: Tool Executor – `src/modules/ai/toolExecutor.ts` wiring tools to board
+- [x] Story 4.2: Tool Schema Definition – `src/modules/ai/tools.ts` with board
+      tools
+- [x] Story 4.3: AI Service Implementation – `src/modules/ai/aiService.ts` with
+      command processing
+- [x] Story 4.4: Tool Executor – `src/modules/ai/toolExecutor.ts` wiring tools
+      to board
 - [x] Story 4.5: Complex Commands – multi-step planning (e.g. SWOT template)
-- [x] Story 4.6: AI Performance and Reliability – rate limiting, retry, AIError handling
-- [x] Story 4.7: Shared AI State – AI changes routed through sync, real-time for all users
+- [x] Story 4.6: AI Performance and Reliability – rate limiting, retry, AIError
+      handling
+- [x] Story 4.7: Shared AI State – AI changes routed through sync, real-time for
+      all users
 
 ### Epic 4: Test
 
@@ -2497,7 +2498,8 @@ Template:
 
 ### Epic 5: Tasks to complete
 
-- [ ] Story 5.1: UI Components – toolbar, sidebar (board list, AI chat), theme/dark mode
+- [ ] Story 5.1: UI Components – toolbar, sidebar (board list, AI chat),
+      theme/dark mode
 - [ ] Story 5.2: Netlify Deployment – netlify.toml, GitHub link, env vars
 - [ ] Story 5.3: Documentation – AI development log, cost analysis
 

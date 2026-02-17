@@ -2,7 +2,10 @@
 
 ## Overview
 
-This guide covers the development environment setup for CollabBoard, including Vite (build tool), Bun (JavaScript runtime & package manager), and TypeScript configuration. Together, these tools provide a fast, type-safe development experience.
+This guide covers the development environment setup for CollabBoard, including
+Vite (build tool), Bun (JavaScript runtime & package manager), and TypeScript
+configuration. Together, these tools provide a fast, type-safe development
+experience.
 
 **Official Documentation**:
 
@@ -165,14 +168,14 @@ bun run src/scripts/seed.ts
 
 ### Bun vs npm/yarn Commands
 
-| Action | npm | Bun |
-| ------- | ------- | ------- |
-| Install all | `npm install` | `bun install` |
-| Add package | `npm install pkg` | `bun add pkg` |
-| Add dev | `npm install -D pkg` | `bun add -d pkg` |
-| Remove | `npm uninstall pkg` | `bun remove pkg` |
-| Run script | `npm run dev` | `bun run dev` |
-| Execute | `npx cmd` | `bunx cmd` |
+| Action      | npm                  | Bun              |
+| ----------- | -------------------- | ---------------- |
+| Install all | `npm install`        | `bun install`    |
+| Add package | `npm install pkg`    | `bun add pkg`    |
+| Add dev     | `npm install -D pkg` | `bun add -d pkg` |
+| Remove      | `npm uninstall pkg`  | `bun remove pkg` |
+| Run script  | `npm run dev`        | `bun run dev`    |
+| Execute     | `npx cmd`            | `bunx cmd`       |
 
 ### Bun Configuration
 
@@ -245,7 +248,12 @@ export default defineConfig({
         manualChunks: {
           // Vendor chunk splitting
           vendor: ['react', 'react-dom'],
-          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/database'],
+          firebase: [
+            'firebase/app',
+            'firebase/auth',
+            'firebase/firestore',
+            'firebase/database',
+          ],
           konva: ['konva', 'react-konva'],
         },
       },
@@ -360,7 +368,7 @@ Create `tsconfig.json`:
     // Path Aliases
     "baseUrl": ".",
     "paths": {
-      '@/*': ['./src/*']
+      "@/*": ["./src/*"]
     },
 
     // Type Checking
@@ -492,12 +500,12 @@ export interface IBoardObject {
   updatedAt: Timestamp;
 }
 
-export interface Point {
+export interface IPosition {
   x: number;
   y: number;
 }
 
-export interface Size {
+export interface ISize {
   width: number;
   height: number;
 }
@@ -524,7 +532,7 @@ export interface User {
 }
 
 export interface PresenceData {
-visitorId: string;
+  visitorId: string;
   displayName: string;
   online: boolean;
   lastSeen: number;
@@ -868,7 +876,12 @@ Create `.vscode/settings.json`:
   ],
 
   // ESLint
-  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
 
   // Prettier
   "[typescript]": {
@@ -958,7 +971,7 @@ Create `.vscode/launch.json`:
 ```json
 {
   "version": "0.2.0",
-  'configurations': [
+  "configurations": [
     {
       "name": "Debug Vite App",
       "type": "chrome",

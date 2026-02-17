@@ -2,7 +2,10 @@
 
 ## Overview
 
-Konva.js is an HTML5 Canvas JavaScript framework that enables high-performance 2D graphics with support for animations, transitions, node nesting, layering, filtering, and event handling. Combined with `react-konva`, it provides a declarative way to build interactive canvas applications in React.
+Konva.js is an HTML5 Canvas JavaScript framework that enables high-performance
+2D graphics with support for animations, transitions, node nesting, layering,
+filtering, and event handling. Combined with `react-konva`, it provides a
+declarative way to build interactive canvas applications in React.
 
 **Official Documentation**: [Konva.js Docs](https://konvajs.org/docs)
 
@@ -98,8 +101,8 @@ import Konva from 'konva';
 interface StageConfig {
   width: number;
   height: number;
-  scale: { x: number; y: number };
-  position: { x: number; y: number };
+  scale: IPosition;
+  position: IPosition;
 }
 
 export const ConfigurableStage = (): ReactElement => {
@@ -239,7 +242,7 @@ export const StickyNote = ({
 
 ```typescript
 // Types for board objects
-export type ShapeType = 
+export type ShapeType =
   | 'sticky'
   | 'rectangle'
   | 'circle'
@@ -1185,7 +1188,7 @@ if (typeof window !== 'undefined') {
 }
 
 interface TouchState {
-  lastCenter: { x: number; y: number } | null;
+  lastCenter: IPosition | null;
   lastDist: number;
 }
 
@@ -1202,10 +1205,7 @@ export const usePinchZoom = () => {
     );
   };
 
-  const getCenter = (
-    p1: Touch,
-    p2: Touch
-  ): { x: number; y: number } => {
+  const getCenter = (p1: Touch, p2: Touch): IPosition => {
     return {
       x: (p1.clientX + p2.clientX) / 2,
       y: (p1.clientY + p2.clientY) / 2,
@@ -1215,10 +1215,10 @@ export const usePinchZoom = () => {
   const handleTouchMove = useCallback(
     (
       e: Konva.KonvaEventObject<TouchEvent>,
-      stagePos: { x: number; y: number },
-      stageScale: { x: number; y: number },
-      setStagePos: (pos: { x: number; y: number }) => void,
-      setStageScale: (scale: { x: number; y: number }) => void
+      stagePos: IPosition,
+      stageScale: IPosition,
+      setStagePos: (pos: IPosition) => void,
+      setStageScale: (scale: IPosition) => void
     ) => {
       e.evt.preventDefault();
       const touch1 = e.evt.touches[0];

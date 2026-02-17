@@ -2,7 +2,9 @@
 
 ## Overview
 
-Firebase provides the backend infrastructure for CollabBoard, handling authentication, real-time data synchronization, and persistence. This guide covers the key Firebase services used in the project.
+Firebase provides the backend infrastructure for CollabBoard, handling
+authentication, real-time data synchronization, and persistence. This guide
+covers the key Firebase services used in the project.
 
 **Official Documentation**: [Firebase Docs](https://firebase.google.com/docs)
 
@@ -46,10 +48,10 @@ bun add firebase
 Create `src/lib/firebase.ts`:
 
 ```typescript
-import { initializeApp, FirebaseApp } from "firebase/app";
-import { getAuth, Auth } from "firebase/auth";
-import { getFirestore, Firestore } from "firebase/firestore";
-import { getDatabase, Database } from "firebase/database";
+import { initializeApp, FirebaseApp } from 'firebase/app';
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
+import { getDatabase, Database } from 'firebase/database';
 
 interface IFirebaseConfig {
   apiKey: string;
@@ -120,8 +122,8 @@ import {
   onAuthStateChanged,
   User,
   UserCredential,
-} from "firebase/auth";
-import { auth } from "@/lib/firebase";
+} from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 // Types
 export interface IAuthResult {
@@ -197,8 +199,8 @@ export const getCurrentUser = (): User | null => {
 Create `src/modules/auth/useAuth.ts`:
 
 ```typescript
-import { useState, useEffect, useCallback } from "react";
-import { User } from "firebase/auth";
+import { useState, useEffect, useCallback } from 'react';
+import { User } from 'firebase/auth';
 import {
   subscribeToAuthChanges,
   signUpWithEmail,
@@ -206,7 +208,7 @@ import {
   signInWithGoogle,
   logOut,
   IAuthResult,
-} from "./authService";
+} from './authService';
 
 interface IUseAuthReturn {
   user: User | null;
@@ -285,7 +287,8 @@ export const useAuth = (): IUseAuthReturn => {
 
 ## Firestore Database
 
-Firestore is used for **persistent board data** (objects, boards, user profiles).
+Firestore is used for **persistent board data** (objects, boards, user
+profiles).
 
 ### Data Schema
 
@@ -339,13 +342,20 @@ import {
   DocumentReference,
   QuerySnapshot,
   Unsubscribe,
-} from "firebase/firestore";
-import { firestore } from "@/lib/firebase";
+} from 'firebase/firestore';
+import { firestore } from '@/lib/firebase';
 
 // Types
 export interface IBoardObject {
   id: string;
-  type: "sticky" | "rectangle" | "circle" | "line" | "text" | "frame" | "connector";
+  type:
+    | 'sticky'
+    | 'rectangle'
+    | 'circle'
+    | 'line'
+    | 'text'
+    | 'frame'
+    | 'connector';
   x: number;
   y: number;
   width: number;
@@ -362,7 +372,7 @@ export interface IBoard {
   id: string;
   name: string;
   ownerId: string;
-  members: Record<string, "owner" | "editor" | "viewer">;
+  members: Record<string, 'owner' | 'editor' | 'viewer'>;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -373,18 +383,18 @@ export const createBoard = async (
   name: string,
   ownerId: string
 ): Promise<void> => {
-  const boardRef = doc(firestore, "boards", boardId);
+  const boardRef = doc(firestore, 'boards', boardId);
   await setDoc(boardRef, {
     name,
     ownerId,
-    members: { [ownerId]: "owner" },
+    members: { [ownerId]: 'owner' },
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
 };
 
 export const getBoard = async (boardId: string): Promise<IBoard | null> => {
-  const boardRef = doc(firestore, "boards", boardId);
+  const boardRef = doc(firestore, 'boards', boardId);
   const snapshot = await getDoc(boardRef);
   if (snapshot.exists()) {
     return { id: snapshot.id, ...snapshot.data() } as IBoard;
@@ -396,9 +406,9 @@ export const getBoard = async (boardId: string): Promise<IBoard | null> => {
 export const createObject = async (
   boardId: string,
   objectId: string,
-  data: Omit<IBoardObject, "id" | "createdAt" | "updatedAt">
+  data: Omit<IBoardObject, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<void> => {
-  const objectRef = doc(firestore, "boards", boardId, "objects", objectId);
+  const objectRef = doc(firestore, 'boards', boardId, 'objects', objectId);
   await setDoc(objectRef, {
     ...data,
     createdAt: serverTimestamp(),
@@ -411,7 +421,7 @@ export const updateObject = async (
   objectId: string,
   data: Partial<IBoardObject>
 ): Promise<void> => {
-  const objectRef = doc(firestore, "boards", boardId, "objects", objectId);
+  const objectRef = doc(firestore, 'boards', boardId, 'objects', objectId);
   await updateDoc(objectRef, {
     ...data,
     updatedAt: serverTimestamp(),
@@ -422,7 +432,7 @@ export const deleteObject = async (
   boardId: string,
   objectId: string
 ): Promise<void> => {
-  const objectRef = doc(firestore, "boards", boardId, "objects", objectId);
+  const objectRef = doc(firestore, 'boards', boardId, 'objects', objectId);
   await deleteDoc(objectRef);
 };
 
@@ -431,8 +441,8 @@ export const subscribeToObjects = (
   boardId: string,
   callback: (objects: IBoardObject[]) => void
 ): Unsubscribe => {
-  const objectsRef = collection(firestore, "boards", boardId, "objects");
-  const objectsQuery = query(objectsRef, orderBy("createdAt", "asc"));
+  const objectsRef = collection(firestore, 'boards', boardId, 'objects');
+  const objectsQuery = query(objectsRef, orderBy('createdAt', 'asc'));
 
   return onSnapshot(objectsQuery, (snapshot: QuerySnapshot) => {
     const objects: IBoardObject[] = [];
@@ -448,7 +458,8 @@ export const subscribeToObjects = (
 
 ## Realtime Database
 
-Realtime Database is used for **ephemeral/fast-changing data** (cursors, presence).
+Realtime Database is used for **ephemeral/fast-changing data** (cursors,
+presence).
 
 ### Database Data Schema
 
@@ -487,8 +498,8 @@ import {
   Unsubscribe,
   DataSnapshot,
   remove,
-} from "firebase/database";
-import { realtimeDb } from "@/lib/firebase";
+} from 'firebase/database';
+import { realtimeDb } from '@/lib/firebase';
 
 // Types
 export interface ICursorData {
@@ -598,9 +609,15 @@ The presence system tracks which users are online and their cursor positions.
 Create `src/modules/sync/usePresence.ts`:
 
 ```typescript
-import { useState, useEffect, useCallback, useRef } from "react";
-import { ref, onValue, onDisconnect, set, serverTimestamp } from "firebase/database";
-import { realtimeDb } from "@/lib/firebase";
+import { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  ref,
+  onValue,
+  onDisconnect,
+  set,
+  serverTimestamp,
+} from 'firebase/database';
+import { realtimeDb } from '@/lib/firebase';
 
 interface IPresenceUser {
   uid: string;
@@ -636,9 +653,9 @@ export const usePresence = (
 
     // Set up own presence
     presenceRef.current = ref(realtimeDb, `boards/${boardId}/presence/${uid}`);
-    
+
     // Monitor connection state
-    const connectedRef = ref(realtimeDb, ".info/connected");
+    const connectedRef = ref(realtimeDb, '.info/connected');
     const connectedUnsubscribe = onValue(connectedRef, (snapshot) => {
       if (snapshot.val() === true && presenceRef.current) {
         // We're connected (or reconnected)
@@ -704,32 +721,32 @@ service cloud.firestore {
     function isAuthenticated() {
       return request.auth != null;
     }
-    
+
     // Helper function to check board membership
     function isBoardMember(boardId) {
       let board = get(/databases/$(database)/documents/boards/$(boardId));
       return board != null && request.auth.uid in board.data.members;
     }
-    
+
     // Helper function to check edit permission
     function canEdit(boardId) {
       let board = get(/databases/$(database)/documents/boards/$(boardId));
       let role = board.data.members[request.auth.uid];
       return role == 'owner' || role == 'editor';
     }
-    
+
     // Users collection
     match /users/{userId} {
       allow read: if isAuthenticated();
       allow write: if request.auth.uid == userId;
     }
-    
+
     // Boards collection
     match /boards/{boardId} {
       allow read: if isAuthenticated() && isBoardMember(boardId);
       allow create: if isAuthenticated();
       allow update, delete: if isAuthenticated() && canEdit(boardId);
-      
+
       // Objects subcollection
       match /objects/{objectId} {
         allow read: if isAuthenticated() && isBoardMember(boardId);
@@ -780,18 +797,18 @@ service cloud.firestore {
 ### Enable Firestore Persistence
 
 ```typescript
-import { enableIndexedDbPersistence, Firestore } from "firebase/firestore";
+import { enableIndexedDbPersistence, Firestore } from 'firebase/firestore';
 
 export const enableOfflineSupport = async (db: Firestore): Promise<void> => {
   try {
     await enableIndexedDbPersistence(db);
   } catch (err) {
-    if ((err as { code: string }).code === "failed-precondition") {
+    if ((err as { code: string }).code === 'failed-precondition') {
       // Multiple tabs open, persistence can only be enabled in one tab at a time
-      console.warn("Offline persistence unavailable: multiple tabs open");
-    } else if ((err as { code: string }).code === "unimplemented") {
+      console.warn('Offline persistence unavailable: multiple tabs open');
+    } else if ((err as { code: string }).code === 'unimplemented') {
       // Current browser doesn't support persistence
-      console.warn("Offline persistence unavailable: browser not supported");
+      console.warn('Offline persistence unavailable: browser not supported');
     }
   }
 };
@@ -800,8 +817,8 @@ export const enableOfflineSupport = async (db: Firestore): Promise<void> => {
 ### Optimistic Updates Pattern
 
 ```typescript
-import { useState, useCallback } from "react";
-import { updateObject } from "@/modules/firestore/firestoreService";
+import { useState, useCallback } from 'react';
+import { updateObject } from '@/modules/firestore/firestoreService';
 
 interface IOptimisticUpdate<T> {
   localState: T;
@@ -816,15 +833,22 @@ export const useOptimisticUpdate = <T extends object>(
   const [localState, setLocalState] = useState<T>(initialState);
   const [previousState, setPreviousState] = useState<T>(initialState);
 
-  const updateLocally = useCallback((update: Partial<T>) => {
-    setPreviousState(localState);
-    setLocalState((prev) => ({ ...prev, ...update }));
-  }, [localState]);
+  const updateLocally = useCallback(
+    (update: Partial<T>) => {
+      setPreviousState(localState);
+      setLocalState((prev) => ({ ...prev, ...update }));
+    },
+    [localState]
+  );
 
   const syncToServer = useCallback(
     async (boardId: string, objectId: string) => {
       try {
-        await updateObject(boardId, objectId, localState as Partial<IBoardObject>);
+        await updateObject(
+          boardId,
+          objectId,
+          localState as Partial<IBoardObject>
+        );
       } catch (error) {
         // Rollback on failure
         setLocalState(previousState);
@@ -849,14 +873,14 @@ export const useOptimisticUpdate = <T extends object>(
 ### Debounce Cursor Updates
 
 ```typescript
-import { useCallback, useRef } from "react";
+import { useCallback, useRef } from 'react';
 
 export const useDebouncedCursorUpdate = (
   updateFn: (x: number, y: number) => void,
   delay: number = 16 // ~60fps
 ): ((x: number, y: number) => void) => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastUpdateRef = useRef<{ x: number; y: number } | null>(null);
+  const lastUpdateRef = useRef<IPosition | null>(null);
 
   const debouncedUpdate = useCallback(
     (x: number, y: number) => {
@@ -883,8 +907,8 @@ export const useDebouncedCursorUpdate = (
 ### Batch Firestore Writes
 
 ```typescript
-import { writeBatch, doc } from "firebase/firestore";
-import { firestore } from "@/lib/firebase";
+import { writeBatch, doc } from 'firebase/firestore';
+import { firestore } from '@/lib/firebase';
 
 export const batchUpdateObjects = async (
   boardId: string,
@@ -893,7 +917,7 @@ export const batchUpdateObjects = async (
   const batch = writeBatch(firestore);
 
   updates.forEach(({ objectId, data }) => {
-    const objectRef = doc(firestore, "boards", boardId, "objects", objectId);
+    const objectRef = doc(firestore, 'boards', boardId, 'objects', objectId);
     batch.update(objectRef, {
       ...data,
       updatedAt: serverTimestamp(),
