@@ -14,7 +14,7 @@ interface IUseCanEditReturn {
 
 export const useCanEdit = (boardId: string | null): IUseCanEditReturn => {
   const { user } = useAuth();
-  
+
   const [board, setBoard] = useState<IBoard | null>(null);
   const [loading, setLoading] = useState<boolean>(!!boardId);
   const isFirstCallbackRef = useRef<boolean>(true);
