@@ -216,7 +216,7 @@ export const BoardCanvas = memo(
     );
 
     // Handle mouse up for drawing end and selection completion
-    const handleStageMouseUp = useCallback(() => {
+    const handleStageMouseUp = useCallback(async () => {
       // Handle drawing completion if we were drawing
       if (drawingState.isDrawing && onObjectCreate) {
         const { startX, startY, currentX, currentY } = drawingState;
@@ -229,8 +229,10 @@ export const BoardCanvas = memo(
 
         // Only create if size is significant
         if (width > 5 || height > 5) {
+          let result: IBoardObject | null = null;
+
           if (activeTool === 'rectangle') {
-            onObjectCreate({
+            result = await onObjectCreate({
               type: 'rectangle',
               x,
               y,
@@ -242,7 +244,7 @@ export const BoardCanvas = memo(
               rotation: 0,
             });
           } else if (activeTool === 'circle') {
-            onObjectCreate({
+            result = await onObjectCreate({
               type: 'circle',
               x,
               y,
@@ -254,7 +256,7 @@ export const BoardCanvas = memo(
               rotation: 0,
             });
           } else if (activeTool === 'line') {
-            onObjectCreate({
+            result = await onObjectCreate({
               type: 'line',
               x: 0,
               y: 0,
@@ -267,7 +269,7 @@ export const BoardCanvas = memo(
               rotation: 0,
             });
           } else if (activeTool === 'connector') {
-            onObjectCreate({
+            result = await onObjectCreate({
               type: 'connector',
               x: 0,
               y: 0,
@@ -280,7 +282,7 @@ export const BoardCanvas = memo(
               rotation: 0,
             });
           } else if (activeTool === 'frame') {
-            onObjectCreate({
+            result = await onObjectCreate({
               type: 'frame',
               x,
               y,
@@ -294,8 +296,10 @@ export const BoardCanvas = memo(
             });
           }
 
-          // Switch back to select tool
-          setActiveTool('select');
+          // Only switch back to select tool if object was successfully created
+          if (result) {
+            setActiveTool('select');
+          }
         }
 
         // Reset drawing state
@@ -358,7 +362,7 @@ export const BoardCanvas = memo(
 
     // Handle stage click for object creation or deselection
     const handleStageClick = useCallback(
-      (e: Konva.KonvaEventObject<MouseEvent>) => {
+      async (e: Konva.KonvaEventObject<MouseEvent>) => {
         const stage = e.target.getStage();
         if (!stage) return;
 
@@ -371,7 +375,7 @@ export const BoardCanvas = memo(
 
           // Create new object based on active tool (for click-to-create tools)
           if (activeTool === 'sticky' && canEdit && onObjectCreate) {
-            onObjectCreate({
+            const result = await onObjectCreate({
               type: 'sticky',
               x: canvasX - DEFAULT_STICKY_SIZE.width / 2,
               y: canvasY - DEFAULT_STICKY_SIZE.height / 2,
@@ -381,9 +385,12 @@ export const BoardCanvas = memo(
               text: '',
               rotation: 0,
             });
-            setActiveTool('select');
+            // Only switch back to select if object was successfully created
+            if (result) {
+              setActiveTool('select');
+            }
           } else if (activeTool === 'text' && canEdit && onObjectCreate) {
-            onObjectCreate({
+            const result = await onObjectCreate({
               type: 'text',
               x: canvasX,
               y: canvasY,
@@ -394,7 +401,10 @@ export const BoardCanvas = memo(
               fontSize: 16,
               rotation: 0,
             });
-            setActiveTool('select');
+            // Only switch back to select if object was successfully created
+            if (result) {
+              setActiveTool('select');
+            }
           } else if (activeTool === 'select') {
             // Deselect all
             setSelectedIds([]);
