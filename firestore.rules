@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isBoardMember(boardId) {
+      let board = get(/databases/$(database)/documents/boards/$(boardId));
+      return board != null && request.auth.uid in board.data.members;
+    }
+    
+    function canEdit(boardId) {
+      let board = get(/databases/$(database)/documents/boards/$(boardId));
+      let role = board.data.members[request.auth.uid];
+      return role == 'owner' || role == 'editor';
+    }
+    
+    function isOwner(boardId) {
+      let board = get(/databases/$(database)/documents/boards/$(boardId));
+      return board.data.ownerId == request.auth.uid;
+    }
+    
+    // Board rules
+    match /boards/{boardId} {
+      // Anyone authenticated can read boards they're a member of
+      allow read: if isAuthenticated() && isBoardMember(boardId);
+      
+      // Anyone authenticated can create a board
+      allow create: if isAuthenticated() 
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.members[request.auth.uid] == 'owner';
+      
+      // Only owners and editors can update
+      allow update: if isAuthenticated() && canEdit(boardId);
+      
+      // Only owners can delete
+      allow delete: if isAuthenticated() && isOwner(boardId);
+      
+      // Board objects subcollection
+      match /objects/{objectId} {
+        allow read: if isAuthenticated() && isBoardMember(boardId);
+        allow write: if isAuthenticated() && canEdit(boardId);
+      }
+    }
+    
+    // User profiles (optional, for user lookup)
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+  }
+}
