@@ -2340,7 +2340,7 @@ sequenceDiagram
 
 ### Epic 4: Tasks to complete
 
-- [ ] Story 4.1: AI Service Setup – API client (`src/lib/ai.ts`) and config
+- [x] Story 4.1: AI Service Setup – API client (`src/lib/ai.ts`) and config
 - [ ] Story 4.2: Tool Schema Definition – `src/modules/ai/tools.ts` with board tools
 - [ ] Story 4.3: AI Service Implementation – `src/modules/ai/aiService.ts` with command processing
 - [ ] Story 4.4: Tool Executor – `src/modules/ai/toolExecutor.ts` wiring tools to board
