@@ -18,14 +18,14 @@ CollabBoard is a production-scale, real-time collaborative whiteboard applicatio
 
 All items required to pass:
 
-- [ ] Infinite board with pan/zoom
-- [ ] Sticky notes with editable text
-- [ ] At least one shape type (rectangle, circle, or line)
-- [ ] Create, move, and edit objects
-- [ ] Real-time sync between 2+ users
-- [ ] Multiplayer cursors with name labels
-- [ ] Presence awareness (who's online)
-- [ ] User authentication
+- [x] Infinite board with pan/zoom
+- [x] Sticky notes with editable text
+- [x] At least one shape type (rectangle, circle, or line)
+- [x] Create, move, and edit objects
+- [x] Real-time sync between 2+ users
+- [x] Multiplayer cursors with name labels
+- [x] Presence awareness (who's online)
+- [x] User authentication
 - [ ] Deployed and publicly accessible
 
 > **Critical**: A simple whiteboard with bulletproof multiplayer beats a feature-rich board with broken sync.
@@ -1394,11 +1394,11 @@ Build an infinite canvas with all required shapes, transforms, and operations wh
 
 **Acceptance Criteria**:
 
-- [ ] Mouse wheel zoom centered on cursor
-- [ ] Drag to pan (middle mouse or spacebar+drag)
-- [ ] Pinch-to-zoom on touch devices
-- [ ] Zoom limits (0.1x to 10x)
-- [ ] 60 FPS maintained
+- [x] Mouse wheel zoom centered on cursor
+- [x] Drag to pan (middle mouse or spacebar+drag)
+- [x] Pinch-to-zoom on touch devices
+- [x] Zoom limits (0.1x to 10x)
+- [x] 60 FPS maintained
 
 **Branch**: `feature/canvas-pan-zoom`
 
@@ -1487,11 +1487,11 @@ Build an infinite canvas with all required shapes, transforms, and operations wh
 
 **Acceptance Criteria**:
 
-- [ ] Create sticky note from toolbar
-- [ ] Double-click to edit text
-- [ ] Change background color
-- [ ] Drag to move
-- [ ] Resize with handles
+- [x] Create sticky note from toolbar
+- [x] Double-click to edit text
+- [x] Change background color
+- [x] Drag to move
+- [x] Resize with handles
 
 **Branch**: `feature/canvas-sticky-notes`
 
