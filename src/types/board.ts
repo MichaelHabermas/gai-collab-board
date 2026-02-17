@@ -16,6 +16,13 @@ export interface IBoardObject {
   strokeWidth?: number;
   text?: string;
   fontSize?: number;
+  // For lines and connectors
+  points?: number[];
+  // For connectors - object IDs to connect
+  fromObjectId?: string;
+  toObjectId?: string;
+  // For circles
+  radius?: number;
   createdBy: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;

@@ -1,10 +1,10 @@
-import { Stage, Layer, Rect } from 'react-konva';
+import { Stage, Layer, Rect, Line } from 'react-konva';
 import { useRef, useCallback, useState, memo, type ReactElement } from 'react';
 import Konva from 'konva';
 import { useCanvasViewport } from '@/hooks/useCanvasViewport';
 import { CursorLayer } from './CursorLayer';
 import { Toolbar, type ToolMode } from './Toolbar';
-import { StickyNote, STICKY_COLORS } from './shapes/StickyNote';
+import { StickyNote, STICKY_COLORS, RectangleShape, CircleShape, LineShape } from './shapes';
 import { useCursors } from '@/hooks/useCursors';
 import type { User } from 'firebase/auth';
 import type { IBoardObject } from '@/types';
@@ -26,6 +26,16 @@ const GRID_STROKE_WIDTH = 1;
 
 // Default sizes for new objects
 const DEFAULT_STICKY_SIZE = { width: 200, height: 200 };
+const DEFAULT_SHAPE_SIZE = { width: 100, height: 100 };
+
+// Drawing state for shapes
+interface IDrawingState {
+  isDrawing: boolean;
+  startX: number;
+  startY: number;
+  currentX: number;
+  currentY: number;
+}
 
 /**
  * Main canvas component with pan/zoom, grid background, and cursor sync.
@@ -39,12 +49,18 @@ export const BoardCanvas = memo(
     canEdit = true,
     onObjectUpdate,
     onObjectCreate,
-    onObjectDelete,
   }: IBoardCanvasProps): ReactElement => {
     const stageRef = useRef<Konva.Stage>(null);
     const [activeTool, setActiveTool] = useState<ToolMode>('select');
     const [activeColor, setActiveColor] = useState<string>(STICKY_COLORS.yellow);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [drawingState, setDrawingState] = useState<IDrawingState>({
+      isDrawing: false,
+      startX: 0,
+      startY: 0,
+      currentX: 0,
+      currentY: 0,
+    });
 
     const { viewport, handleWheel, handleDragEnd, handleTouchMove, handleTouchEnd } =
       useCanvasViewport();
@@ -55,7 +71,21 @@ export const BoardCanvas = memo(
       user,
     });
 
-    // Handle mouse move for cursor sync
+    // Convert screen coordinates to canvas coordinates
+    const getCanvasCoords = useCallback((stage: Konva.Stage, pointer: { x: number; y: number }) => {
+      const scale = stage.scaleX();
+      return {
+        x: (pointer.x - stage.x()) / scale,
+        y: (pointer.y - stage.y()) / scale,
+      };
+    }, []);
+
+    // Check if tool is a drawing tool
+    const isDrawingTool = useCallback((tool: ToolMode) => {
+      return ['rectangle', 'circle', 'line'].includes(tool);
+    }, []);
+
+    // Handle mouse move for cursor sync and drawing
     const handleStageMouseMove = useCallback(
       (e: Konva.KonvaEventObject<MouseEvent>) => {
         const stage = e.target.getStage();
@@ -64,15 +94,117 @@ export const BoardCanvas = memo(
         const pointer = stage.getPointerPosition();
         if (!pointer) return;
 
-        // Convert screen coordinates to canvas coordinates
-        const scale = stage.scaleX();
-        const canvasX = (pointer.x - stage.x()) / scale;
-        const canvasY = (pointer.y - stage.y()) / scale;
+        const { x: canvasX, y: canvasY } = getCanvasCoords(stage, pointer);
 
+        // Update cursor position for multiplayer
         handleMouseMove(canvasX, canvasY);
+
+        // Update drawing preview
+        if (drawingState.isDrawing) {
+          setDrawingState((prev) => ({
+            ...prev,
+            currentX: canvasX,
+            currentY: canvasY,
+          }));
+        }
       },
-      [handleMouseMove]
+      [handleMouseMove, drawingState.isDrawing, getCanvasCoords]
     );
+
+    // Handle mouse down for drawing start
+    const handleStageMouseDown = useCallback(
+      (e: Konva.KonvaEventObject<MouseEvent>) => {
+        const stage = e.target.getStage();
+        if (!stage) return;
+
+        // Only start drawing on empty stage with drawing tools
+        const clickedOnEmpty = e.target === stage;
+        if (!clickedOnEmpty || !isDrawingTool(activeTool) || !canEdit) return;
+
+        const pointer = stage.getPointerPosition();
+        if (!pointer) return;
+
+        const { x: canvasX, y: canvasY } = getCanvasCoords(stage, pointer);
+
+        setDrawingState({
+          isDrawing: true,
+          startX: canvasX,
+          startY: canvasY,
+          currentX: canvasX,
+          currentY: canvasY,
+        });
+      },
+      [activeTool, canEdit, isDrawingTool, getCanvasCoords]
+    );
+
+    // Handle mouse up for drawing end
+    const handleStageMouseUp = useCallback(() => {
+      if (!drawingState.isDrawing || !onObjectCreate) {
+        return;
+      }
+
+      const { startX, startY, currentX, currentY } = drawingState;
+
+      // Calculate dimensions
+      const x = Math.min(startX, currentX);
+      const y = Math.min(startY, currentY);
+      const width = Math.abs(currentX - startX);
+      const height = Math.abs(currentY - startY);
+
+      // Only create if size is significant
+      if (width > 5 || height > 5) {
+        if (activeTool === 'rectangle') {
+          onObjectCreate({
+            type: 'rectangle',
+            x,
+            y,
+            width: Math.max(width, 20),
+            height: Math.max(height, 20),
+            fill: activeColor,
+            stroke: '#1e293b',
+            strokeWidth: 2,
+            rotation: 0,
+          });
+        } else if (activeTool === 'circle') {
+          onObjectCreate({
+            type: 'circle',
+            x,
+            y,
+            width: Math.max(width, 20),
+            height: Math.max(height, 20),
+            fill: activeColor,
+            stroke: '#1e293b',
+            strokeWidth: 2,
+            rotation: 0,
+          });
+        } else if (activeTool === 'line') {
+          onObjectCreate({
+            type: 'line',
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0,
+            points: [startX, startY, currentX, currentY],
+            fill: 'transparent',
+            stroke: activeColor,
+            strokeWidth: 3,
+            rotation: 0,
+          });
+        }
+
+        // Switch back to select tool
+        setActiveTool('select');
+      }
+
+      // Reset drawing state
+      setDrawingState({
+        isDrawing: false,
+        startX: 0,
+        startY: 0,
+        currentX: 0,
+        currentY: 0,
+      });
+    }, [drawingState, activeTool, activeColor, onObjectCreate]);
 
     // Handle stage click for object creation or deselection
     const handleStageClick = useCallback(
@@ -88,11 +220,9 @@ export const BoardCanvas = memo(
           const pointer = stage.getPointerPosition();
           if (!pointer) return;
 
-          const scale = stage.scaleX();
-          const canvasX = (pointer.x - stage.x()) / scale;
-          const canvasY = (pointer.y - stage.y()) / scale;
+          const { x: canvasX, y: canvasY } = getCanvasCoords(stage, pointer);
 
-          // Create new object based on active tool
+          // Create new object based on active tool (for click-to-create tools)
           if (activeTool === 'sticky' && canEdit && onObjectCreate) {
             onObjectCreate({
               type: 'sticky',
@@ -104,7 +234,6 @@ export const BoardCanvas = memo(
               text: '',
               rotation: 0,
             });
-            // Switch back to select tool after creating
             setActiveTool('select');
           } else if (activeTool === 'select') {
             // Deselect all
@@ -112,7 +241,7 @@ export const BoardCanvas = memo(
           }
         }
       },
-      [activeTool, activeColor, canEdit, onObjectCreate]
+      [activeTool, activeColor, canEdit, onObjectCreate, getCanvasCoords]
     );
 
     // Handle object selection
@@ -221,7 +350,65 @@ export const BoardCanvas = memo(
               />
             );
 
-          // Default rectangle for other shapes (will be replaced in later stories)
+          case 'rectangle':
+            return (
+              <RectangleShape
+                key={obj.id}
+                id={obj.id}
+                x={obj.x}
+                y={obj.y}
+                width={obj.width}
+                height={obj.height}
+                fill={obj.fill}
+                stroke={obj.stroke}
+                strokeWidth={obj.strokeWidth}
+                rotation={obj.rotation}
+                isSelected={isSelected}
+                draggable={canEdit}
+                onSelect={() => handleObjectSelect(obj.id)}
+                onDragEnd={(x, y) => handleObjectDragEnd(obj.id, x, y)}
+              />
+            );
+
+          case 'circle':
+            return (
+              <CircleShape
+                key={obj.id}
+                id={obj.id}
+                x={obj.x}
+                y={obj.y}
+                width={obj.width}
+                height={obj.height}
+                fill={obj.fill}
+                stroke={obj.stroke}
+                strokeWidth={obj.strokeWidth}
+                rotation={obj.rotation}
+                isSelected={isSelected}
+                draggable={canEdit}
+                onSelect={() => handleObjectSelect(obj.id)}
+                onDragEnd={(x, y) => handleObjectDragEnd(obj.id, x, y)}
+              />
+            );
+
+          case 'line':
+            return (
+              <LineShape
+                key={obj.id}
+                id={obj.id}
+                x={obj.x}
+                y={obj.y}
+                points={obj.points || [0, 0, 100, 100]}
+                stroke={obj.stroke || obj.fill}
+                strokeWidth={obj.strokeWidth}
+                rotation={obj.rotation}
+                isSelected={isSelected}
+                draggable={canEdit}
+                onSelect={() => handleObjectSelect(obj.id)}
+                onDragEnd={(x, y) => handleObjectDragEnd(obj.id, x, y)}
+              />
+            );
+
+          // Default fallback for other shapes
           default:
             return (
               <Rect
@@ -247,8 +434,67 @@ export const BoardCanvas = memo(
       [selectedIds, canEdit, handleObjectSelect, handleObjectDragEnd, handleTextChange]
     );
 
+    // Render drawing preview
+    const renderDrawingPreview = useCallback(() => {
+      if (!drawingState.isDrawing) return null;
+
+      const { startX, startY, currentX, currentY } = drawingState;
+      const x = Math.min(startX, currentX);
+      const y = Math.min(startY, currentY);
+      const width = Math.abs(currentX - startX);
+      const height = Math.abs(currentY - startY);
+
+      if (activeTool === 'rectangle') {
+        return (
+          <Rect
+            x={x}
+            y={y}
+            width={width}
+            height={height}
+            fill={activeColor}
+            stroke='#3b82f6'
+            strokeWidth={2}
+            dash={[5, 5]}
+            listening={false}
+          />
+        );
+      }
+
+      if (activeTool === 'circle') {
+        return (
+          <Rect
+            x={x}
+            y={y}
+            width={width}
+            height={height}
+            fill={activeColor}
+            stroke='#3b82f6'
+            strokeWidth={2}
+            dash={[5, 5]}
+            cornerRadius={Math.min(width, height) / 2}
+            listening={false}
+          />
+        );
+      }
+
+      if (activeTool === 'line') {
+        return (
+          <Line
+            points={[startX, startY, currentX, currentY]}
+            stroke={activeColor}
+            strokeWidth={3}
+            dash={[5, 5]}
+            listening={false}
+          />
+        );
+      }
+
+      return null;
+    }, [drawingState, activeTool, activeColor]);
+
     // Determine if stage should be draggable
-    const isDraggable = activeTool === 'pan' || activeTool === 'select';
+    const isDraggable =
+      activeTool === 'pan' || (activeTool === 'select' && !drawingState.isDrawing);
 
     return (
       <div className='w-full h-full overflow-hidden bg-white relative'>
@@ -273,6 +519,8 @@ export const BoardCanvas = memo(
           onWheel={handleWheel}
           onDragEnd={handleDragEnd}
           onMouseMove={handleStageMouseMove}
+          onMouseDown={handleStageMouseDown}
+          onMouseUp={handleStageMouseUp}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
           onClick={handleStageClick}
@@ -289,6 +537,11 @@ export const BoardCanvas = memo(
 
           {/* Objects layer - main content */}
           <Layer name='objects'>{objects.map(renderShape)}</Layer>
+
+          {/* Drawing preview layer */}
+          <Layer name='drawing' listening={false}>
+            {renderDrawingPreview()}
+          </Layer>
 
           {/* Cursor layer - other users' cursors */}
           <CursorLayer cursors={cursors} currentUid={user.uid} />
