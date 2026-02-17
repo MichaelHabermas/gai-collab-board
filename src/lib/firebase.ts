@@ -1,6 +1,11 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import {
+  initializeFirestore,
+  Firestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+} from 'firebase/firestore';
 import { getDatabase, Database } from 'firebase/database';
 
 interface IFirebaseConfig {
@@ -26,33 +31,17 @@ const firebaseConfig: IFirebaseConfig = {
 const app: FirebaseApp = initializeApp(firebaseConfig);
 
 export const auth: Auth = getAuth(app);
-export const firestore: Firestore = getFirestore(app);
-export const realtimeDb: Database = getDatabase(app);
 
 /**
- * Enable offline persistence for Firestore.
- * This allows the app to work offline and sync changes when back online.
+ * Initialize Firestore with persistent local cache.
+ * This enables offline support and multi-tab synchronization.
  */
-export const enableOfflineSupport = async (): Promise<void> => {
-  try {
-    await enableIndexedDbPersistence(firestore);
-  } catch (err) {
-    const error = err as { code?: string };
-    if (error.code === 'failed-precondition') {
-      // Multiple tabs open, persistence can only be enabled in one tab at a time
-      // This is expected behavior, not an error
-    } else if (error.code === 'unimplemented') {
-      // The current browser doesn't support offline persistence
-      // This is expected in some browsers, not an error
-    }
-    // Re-throw other errors
-    else {
-      throw err;
-    }
-  }
-};
+export const firestore: Firestore = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager(),
+  }),
+});
 
-// Initialize offline support
-enableOfflineSupport();
+export const realtimeDb: Database = getDatabase(app);
 
 export { app };

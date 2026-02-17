@@ -43,15 +43,34 @@ const getRoleBadgeVariant = (role: UserRole): 'default' | 'secondary' | 'outline
   }
 };
 
+/**
+ * Maps presence colors to Tailwind background classes.
+ * These colors match the ones assigned in realtimeService.ts
+ */
+const COLOR_CLASS_MAP: Record<string, string> = {
+  '#ef4444': 'bg-red-500',
+  '#f97316': 'bg-orange-500',
+  '#eab308': 'bg-yellow-500',
+  '#22c55e': 'bg-green-500',
+  '#14b8a6': 'bg-teal-500',
+  '#3b82f6': 'bg-blue-500',
+  '#8b5cf6': 'bg-violet-500',
+  '#ec4899': 'bg-pink-500',
+};
+
+const getColorClass = (color: string): string => {
+  return COLOR_CLASS_MAP[color] || 'bg-slate-500';
+};
+
 const Avatar = memo(({ user, role, isCurrentUser }: IAvatarProps): ReactElement => {
   const initials = getInitials(user.displayName);
+  const bgColorClass = getColorClass(user.color);
 
   return (
     <div className='relative group'>
       {/* Avatar circle */}
       <div
-        className='w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium text-white border-2 border-white shadow-sm transition-transform hover:scale-110'
-        style={{ backgroundColor: user.color }}
+        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium text-white border-2 border-white shadow-sm transition-transform hover:scale-110 ${bgColorClass}`}
         title={`${user.displayName}${isCurrentUser ? ' (you)' : ''}`}
       >
         {user.photoURL ? (
