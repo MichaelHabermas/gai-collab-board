@@ -1,7 +1,7 @@
 import { Stage, Layer, Rect, Line } from 'react-konva';
 import { TransformHandler, type ITransformEndAttrs } from './TransformHandler';
 import { SelectionLayer, type ISelectionRect } from './SelectionLayer';
-import { useRef, useCallback, useState, useEffect, memo, type ReactElement } from 'react';
+import { useRef, useCallback, useState, useEffect, useMemo, memo, type ReactElement } from 'react';
 import Konva from 'konva';
 import { useCanvasViewport } from '@/hooks/useCanvasViewport';
 import { CursorLayer } from './CursorLayer';
@@ -97,6 +97,20 @@ export const BoardCanvas = memo(
 
     // Filter objects to only visible ones (viewport culling)
     const visibleObjects = useVisibleShapes({ objects, viewport });
+
+    // Linked connectors are excluded from transform (selectable for deletion only)
+    const linkedConnectorIds = useMemo(
+      () =>
+        objects
+          .filter(
+            (o) =>
+              o.type === 'connector' &&
+              o.fromObjectId != null &&
+              o.toObjectId != null
+          )
+          .map((o) => o.id),
+      [objects]
+    );
 
     // Cursor synchronization
     const { cursors, handleMouseMove } = useCursors({
@@ -986,6 +1000,7 @@ export const BoardCanvas = memo(
             <TransformHandler
               selectedIds={selectedIds}
               layerRef={objectsLayerRef}
+              excludedFromTransformIds={linkedConnectorIds}
               onTransformEnd={handleTransformEnd}
             />
           </Layer>

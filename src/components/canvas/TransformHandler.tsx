@@ -25,6 +25,8 @@ export type ITransformEndAttrs = ITransformEndRectAttrs | ITransformEndLineAttrs
 interface ITransformHandlerProps {
   selectedIds: string[];
   layerRef: React.RefObject<Konva.Layer | null>;
+  /** IDs to exclude from transform (e.g. linked connectors); they stay selected but get no handles */
+  excludedFromTransformIds?: string[];
   onTransformEnd?: (id: string, attrs: ITransformEndAttrs) => void;
 }
 
@@ -35,21 +37,35 @@ const MIN_SIZE = 10;
  * Attaches to selected nodes and handles resize/rotate with shape-specific attrs.
  */
 export const TransformHandler = memo(
-  ({ selectedIds, layerRef, onTransformEnd }: ITransformHandlerProps): ReactElement | null => {
+  ({
+    selectedIds,
+    layerRef,
+    excludedFromTransformIds,
+    onTransformEnd,
+  }: ITransformHandlerProps): ReactElement | null => {
     const transformerRef = useRef<Konva.Transformer>(null);
+
+    const transformableIds =
+      excludedFromTransformIds?.length !== undefined && excludedFromTransformIds.length > 0
+        ? selectedIds.filter((id) => !excludedFromTransformIds.includes(id))
+        : selectedIds;
 
     // Update transformer nodes when selection changes
     useEffect(() => {
       if (!transformerRef.current || !layerRef.current) return;
 
-      // Find all selected nodes
-      const nodes = selectedIds
+      const ids =
+        excludedFromTransformIds?.length !== undefined && excludedFromTransformIds.length > 0
+          ? selectedIds.filter((id) => !excludedFromTransformIds.includes(id))
+          : selectedIds;
+
+      const nodes = ids
         .map((id) => layerRef.current?.findOne(`#${id}`))
         .filter((node): node is Konva.Node => node !== undefined && node !== null);
 
       transformerRef.current.nodes(nodes);
       transformerRef.current.getLayer()?.batchDraw();
-    }, [selectedIds, layerRef]);
+    }, [selectedIds, excludedFromTransformIds, layerRef]);
 
     // Handle transform end with shape-aware attrs
     const handleTransformEnd = () => {
@@ -126,7 +142,7 @@ export const TransformHandler = memo(
       });
     };
 
-    if (selectedIds.length === 0) {
+    if (selectedIds.length === 0 || transformableIds.length === 0) {
       return null;
     }
 
