@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { IBoard, UserRole } from '@/types';
 import { subscribeToBoard, getUserRole, canUserEdit, canUserManage } from '@/modules/sync';
 import { useAuth } from './useAuth';
@@ -14,18 +14,24 @@ interface IUseCanEditReturn {
 
 export const useCanEdit = (boardId: string | null): IUseCanEditReturn => {
   const { user } = useAuth();
+  
   const [board, setBoard] = useState<IBoard | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(!!boardId);
+  const isFirstCallbackRef = useRef<boolean>(true);
 
   useEffect(() => {
     if (!boardId) {
-      setBoard(null);
-      setLoading(false);
       return;
     }
 
-    setLoading(true);
+    // Mark that we're waiting for first callback to reset state
+    isFirstCallbackRef.current = true;
+
     const unsubscribe = subscribeToBoard(boardId, (boardData) => {
+      // Reset loading state on first callback after subscription
+      if (isFirstCallbackRef.current) {
+        isFirstCallbackRef.current = false;
+      }
       setBoard(boardData);
       setLoading(false);
     });

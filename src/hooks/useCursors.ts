@@ -42,7 +42,6 @@ export const useCursors = ({ boardId, user }: IUseCursorsParams): IUseCursorsRet
   // Subscribe to cursor updates and setup disconnect handler
   useEffect(() => {
     if (!boardId || !user?.uid) {
-      setCursors({});
       return;
     }
 
@@ -50,6 +49,7 @@ export const useCursors = ({ boardId, user }: IUseCursorsParams): IUseCursorsRet
     setupCursorDisconnectHandler(boardId, user.uid);
 
     // Subscribe to all cursors on the board
+    // The subscription callback will replace the entire cursors state, so no need to reset synchronously
     const unsubscribe = subscribeToCursors(boardId, (cursorData) => {
       setCursors(cursorData);
     });

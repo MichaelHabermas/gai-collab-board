@@ -34,7 +34,6 @@ export const usePresence = ({ boardId, user }: IUsePresenceParams): IUsePresence
   // Subscribe to presence updates and set up own presence
   useEffect(() => {
     if (!boardId || !user?.uid) {
-      setPresenceMap({});
       return;
     }
 
@@ -48,6 +47,8 @@ export const usePresence = ({ boardId, user }: IUsePresenceParams): IUsePresence
     updatePresence(boardId, user.uid, displayName, photoURL, currentUserColor);
 
     // Subscribe to all presence on the board
+    // The subscription callback will replace the entire presence state,
+    // so no need to reset synchronously
     const unsubscribe = subscribeToPresence(boardId, (presenceData) => {
       setPresenceMap(presenceData);
     });

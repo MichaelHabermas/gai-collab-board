@@ -31,24 +31,30 @@ interface IUseObjectsReturn {
  */
 export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsReturn => {
   const [objects, setObjects] = useState<IBoardObject[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(!boardId ? false : true);
   const [error, setError] = useState<string>('');
 
   // Keep track of pending updates for rollback
   const pendingUpdatesRef = useRef<Map<string, IBoardObject>>(new Map());
+  // Track if this is the first callback after subscription to handle reset
+  const isFirstCallbackRef = useRef<boolean>(true);
 
   // Subscribe to objects
   useEffect(() => {
     if (!boardId) {
-      setObjects([]);
-      setLoading(false);
       return;
     }
 
-    setLoading(true);
-    setError('');
+    // Mark that we're waiting for first callback to reset state
+    isFirstCallbackRef.current = true;
 
     const unsubscribe = subscribeToObjects(boardId, (remoteObjects) => {
+      // Reset error on first callback after subscription
+      if (isFirstCallbackRef.current) {
+        isFirstCallbackRef.current = false;
+        setError('');
+      }
+
       setObjects(() => {
         // Merge remote objects with any pending local updates
         const mergedObjects = remoteObjects.map((remoteObj) => {
