@@ -2502,15 +2502,15 @@ Template:
 
 ### Epic 5: Tasks to complete
 
-- [ ] Story 5.1: UI Components – toolbar, sidebar (board list, AI chat),
+- [x] Story 5.1: UI Components – toolbar, sidebar (board list, AI chat),
       theme/dark mode
 - [ ] Story 5.2: Netlify Deployment – netlify.toml, GitHub link, env vars
 - [ ] Story 5.3: Documentation – AI development log, cost analysis
 
 ### Epic 5: Test
 
-- [ ] Toolbar and sidebar render and work on desktop and mobile
-- [ ] Dark mode toggle and theme persist
+- [x] Toolbar and sidebar render and work on desktop and mobile
+- [x] Dark mode toggle and theme persist
 - [ ] Build passes and app deploys to Netlify
 - [ ] Environment variables configured in Netlify
 - [ ] AI development log and cost analysis docs present
