@@ -1,4 +1,5 @@
 import { Stage, Layer, Rect, Line } from 'react-konva';
+import { TransformHandler } from './TransformHandler';
 import { useRef, useCallback, useState, memo, type ReactElement } from 'react';
 import Konva from 'konva';
 import { useCanvasViewport } from '@/hooks/useCanvasViewport';
@@ -60,6 +61,7 @@ export const BoardCanvas = memo(
     onObjectCreate,
   }: IBoardCanvasProps): ReactElement => {
     const stageRef = useRef<Konva.Stage>(null);
+    const objectsLayerRef = useRef<Konva.Layer>(null);
     const [activeTool, setActiveTool] = useState<ToolMode>('select');
     const [activeColor, setActiveColor] = useState<string>(STICKY_COLORS.yellow);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -322,6 +324,17 @@ export const BoardCanvas = memo(
     const handleTextChange = useCallback(
       (objectId: string, text: string) => {
         onObjectUpdate?.(objectId, { text });
+      },
+      [onObjectUpdate]
+    );
+
+    // Handle transform end from TransformHandler
+    const handleTransformEnd = useCallback(
+      (
+        objectId: string,
+        attrs: { x: number; y: number; width: number; height: number; rotation: number }
+      ) => {
+        onObjectUpdate?.(objectId, attrs);
       },
       [onObjectUpdate]
     );
@@ -673,7 +686,9 @@ export const BoardCanvas = memo(
           </Layer>
 
           {/* Objects layer - main content */}
-          <Layer name='objects'>{objects.map(renderShape)}</Layer>
+          <Layer ref={objectsLayerRef} name='objects'>
+            {objects.map(renderShape)}
+          </Layer>
 
           {/* Drawing preview layer */}
           <Layer name='drawing' listening={false}>
@@ -683,9 +698,13 @@ export const BoardCanvas = memo(
           {/* Cursor layer - other users' cursors */}
           <CursorLayer cursors={cursors} currentUid={user.uid} />
 
-          {/* Selection layer - will be added in selection story */}
-          <Layer name='selection' listening={false}>
-            {/* Selection rectangle and transformer will go here */}
+          {/* Selection/Transform layer */}
+          <Layer name='selection'>
+            <TransformHandler
+              selectedIds={selectedIds}
+              layerRef={objectsLayerRef}
+              onTransformEnd={handleTransformEnd}
+            />
           </Layer>
         </Stage>
 
