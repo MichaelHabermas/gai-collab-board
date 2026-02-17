@@ -12,6 +12,7 @@ import {
   LineShape,
   Connector,
   TextElement,
+  Frame,
 } from './shapes';
 import { useCursors } from '@/hooks/useCursors';
 import type { User } from 'firebase/auth';
@@ -90,7 +91,7 @@ export const BoardCanvas = memo(
 
     // Check if tool is a drawing tool
     const isDrawingTool = useCallback((tool: ToolMode) => {
-      return ['rectangle', 'circle', 'line', 'connector'].includes(tool);
+      return ['rectangle', 'circle', 'line', 'connector', 'frame'].includes(tool);
     }, []);
 
     // Handle mouse move for cursor sync and drawing
@@ -209,6 +210,19 @@ export const BoardCanvas = memo(
             fill: 'transparent',
             stroke: activeColor,
             strokeWidth: 2,
+            rotation: 0,
+          });
+        } else if (activeTool === 'frame') {
+          onObjectCreate({
+            type: 'frame',
+            x,
+            y,
+            width: Math.max(width, 150),
+            height: Math.max(height, 100),
+            fill: 'rgba(241, 245, 249, 0.5)',
+            stroke: '#94a3b8',
+            strokeWidth: 2,
+            text: 'Frame',
             rotation: 0,
           });
         }
@@ -480,6 +494,28 @@ export const BoardCanvas = memo(
               />
             );
 
+          case 'frame':
+            return (
+              <Frame
+                key={obj.id}
+                id={obj.id}
+                x={obj.x}
+                y={obj.y}
+                width={obj.width}
+                height={obj.height}
+                text={obj.text || 'Frame'}
+                fill={obj.fill}
+                stroke={obj.stroke}
+                strokeWidth={obj.strokeWidth}
+                rotation={obj.rotation}
+                isSelected={isSelected}
+                draggable={canEdit}
+                onSelect={() => handleObjectSelect(obj.id)}
+                onDragEnd={(x, y) => handleObjectDragEnd(obj.id, x, y)}
+                onTextChange={canEdit ? (text) => handleTextChange(obj.id, text) : undefined}
+              />
+            );
+
           // Default fallback for other shapes
           default:
             return (
@@ -568,6 +604,23 @@ export const BoardCanvas = memo(
             stroke={activeColor}
             strokeWidth={2}
             dash={[5, 5]}
+            listening={false}
+          />
+        );
+      }
+
+      if (activeTool === 'frame') {
+        return (
+          <Rect
+            x={x}
+            y={y}
+            width={width}
+            height={height}
+            fill='rgba(241, 245, 249, 0.3)'
+            stroke='#3b82f6'
+            strokeWidth={2}
+            dash={[5, 5]}
+            cornerRadius={6}
             listening={false}
           />
         );
