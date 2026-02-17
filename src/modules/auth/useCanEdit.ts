@@ -15,7 +15,7 @@ interface IUseCanEditReturn {
 export const useCanEdit = (boardId: string | null): IUseCanEditReturn => {
   const { user } = useAuth();
   const [board, setBoard] = useState<IBoard | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     if (!boardId) {

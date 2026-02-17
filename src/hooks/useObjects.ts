@@ -31,8 +31,8 @@ interface IUseObjectsReturn {
  */
 export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsReturn => {
   const [objects, setObjects] = useState<IBoardObject[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
 
   // Keep track of pending updates for rollback
   const pendingUpdatesRef = useRef<Map<string, IBoardObject>>(new Map());
@@ -46,7 +46,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
     }
 
     setLoading(true);
-    setError(null);
+    setError('');
 
     const unsubscribe = subscribeToObjects(boardId, (remoteObjects) => {
       setObjects(() => {
@@ -79,7 +79,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
       }
 
       try {
-        setError(null);
+        setError('');
         const newObject = await createObject(boardId, {
           ...params,
           createdBy: user.uid,
@@ -116,7 +116,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
       setObjects((prev) => prev.map((obj) => (obj.id === objectId ? { ...obj, ...updates } : obj)));
 
       try {
-        setError(null);
+        setError('');
         await updateObject(boardId, objectId, updates);
         // Clear pending update on success
         pendingUpdatesRef.current.delete(objectId);
@@ -157,7 +157,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
       setObjects((prev) => prev.filter((obj) => obj.id !== objectId));
 
       try {
-        setError(null);
+        setError('');
         await deleteObject(boardId, objectId);
         // Clear pending update on success
         pendingUpdatesRef.current.delete(objectId);

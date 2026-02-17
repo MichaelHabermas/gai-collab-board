@@ -1,4 +1,4 @@
-import { useState, FormEvent, ReactElement } from 'react';
+import { useState, ChangeEvent, SubmitEvent, ReactElement } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -6,12 +6,12 @@ import { useAuth } from '@/modules/auth';
 import { Loader2 } from 'lucide-react';
 
 export const LoginForm = (): ReactElement => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const { signIn, signInGoogle, error, clearError } = useAuth();
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleSubmit = async (e: SubmitEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setIsLoading(true);
     clearError();
@@ -35,7 +35,7 @@ export const LoginForm = (): ReactElement => {
           type='email'
           placeholder='name@example.com'
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e: ChangeEvent<HTMLInputElement>): void => setEmail(e.target.value)}
           required
           disabled={isLoading}
         />
@@ -47,7 +47,7 @@ export const LoginForm = (): ReactElement => {
           type='password'
           placeholder='Enter your password'
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e: ChangeEvent<HTMLInputElement>): void => setPassword(e.target.value)}
           required
           disabled={isLoading}
         />

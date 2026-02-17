@@ -12,7 +12,7 @@ import {
 interface IUseAuthReturn {
   user: User | null;
   loading: boolean;
-  error: string | null;
+  error: string;
   signUp: (email: string, password: string) => Promise<IAuthResult>;
   signIn: (email: string, password: string) => Promise<IAuthResult>;
   signInGoogle: () => Promise<IAuthResult>;
@@ -22,8 +22,8 @@ interface IUseAuthReturn {
 
 export const useAuth = (): IUseAuthReturn => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     const unsubscribe = subscribeToAuthChanges((authUser) => {
@@ -35,7 +35,7 @@ export const useAuth = (): IUseAuthReturn => {
 
   const handleSignUp = useCallback(
     async (email: string, password: string): Promise<IAuthResult> => {
-      setError(null);
+      setError('');
       const result = await signUpWithEmail(email, password);
       if (result.error) {
         setError(result.error);
@@ -47,7 +47,7 @@ export const useAuth = (): IUseAuthReturn => {
 
   const handleSignIn = useCallback(
     async (email: string, password: string): Promise<IAuthResult> => {
-      setError(null);
+      setError('');
       const result = await signInWithEmail(email, password);
       if (result.error) {
         setError(result.error);
@@ -58,7 +58,7 @@ export const useAuth = (): IUseAuthReturn => {
   );
 
   const handleSignInGoogle = useCallback(async (): Promise<IAuthResult> => {
-    setError(null);
+    setError('');
     const result = await signInWithGoogle();
     if (result.error) {
       setError(result.error);
@@ -67,12 +67,12 @@ export const useAuth = (): IUseAuthReturn => {
   }, []);
 
   const handleSignOut = useCallback(async (): Promise<void> => {
-    setError(null);
+    setError('');
     await logOut();
   }, []);
 
   const clearError = useCallback(() => {
-    setError(null);
+    setError('');
   }, []);
 
   return {

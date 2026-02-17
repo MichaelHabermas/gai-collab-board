@@ -941,7 +941,7 @@ interface SelectionRect {
 }
 
 export const SelectionSystem = (): ReactElement => {
-  const [shapes, setShapes] = useState([
+  const [shapes, setShapes] = useState<Shape[]>([
     { id: '1', x: 50, y: 50, width: 100, height: 100, fill: 'red' },
     { id: '2', x: 200, y: 100, width: 80, height: 120, fill: 'blue' },
   ]);

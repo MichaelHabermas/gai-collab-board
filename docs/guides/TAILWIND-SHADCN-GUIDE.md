@@ -410,10 +410,10 @@ interface CreateBoardDialogProps {
 export const CreateBoardDialog = ({
   onCreateBoard,
 }: CreateBoardDialogProps): ReactElement => {
-  const [boardName, setBoardName] = useState('');
-  const [open, setOpen] = useState(false);
+  const [boardName, setBoardName] = useState<string>('');
+  const [open, setOpen] = useState<boolean>(false);
 
-  const handleCreate = () => {
+  const handleCreate = (): void => {
     if (boardName.trim()) {
       onCreateBoard(boardName.trim());
       setBoardName('');
@@ -647,7 +647,7 @@ export const ColorPicker = ({
   onChange,
   colors = DEFAULT_COLORS,
 }: ColorPickerProps): ReactElement => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<boolean>(false);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -839,7 +839,7 @@ export const ThemeToggle = (): ReactElement => {
     applyTheme(theme);
   }, [theme]);
 
-  const handleThemeChange = (newTheme: Theme) => {
+  const handleThemeChange = (newTheme: Theme): void => {
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
   };
@@ -854,13 +854,13 @@ export const ThemeToggle = (): ReactElement => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end'>
-        <DropdownMenuItem onClick={() => handleThemeChange('light')}>
+        <DropdownMenuItem onClick={(): void => handleThemeChange('light')}>
           Light
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleThemeChange('dark')}>
+        <DropdownMenuItem onClick={(): void => handleThemeChange('dark')}>
           Dark
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleThemeChange('system')}>
+        <DropdownMenuItem onClick={(): void => handleThemeChange('system')}>
           System
         </DropdownMenuItem>
       </DropdownMenuContent>

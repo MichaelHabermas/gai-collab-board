@@ -221,8 +221,8 @@ interface IUseAuthReturn {
 
 export const useAuth = (): IUseAuthReturn => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     const unsubscribe = subscribeToAuthChanges((authUser) => {
@@ -235,7 +235,7 @@ export const useAuth = (): IUseAuthReturn => {
 
   const handleAuthAction = useCallback(
     async (action: () => Promise<IAuthResult>): Promise<IAuthResult> => {
-      setError(null);
+      setError('');
       const result = await action();
       if (result.error) {
         setError(result.error);
@@ -266,7 +266,7 @@ export const useAuth = (): IUseAuthReturn => {
     await logOut();
   }, []);
 
-  const clearError = useCallback(() => setError(null), []);
+  const clearError = useCallback(() => setError(''), []);
 
   return {
     user,

@@ -1,4 +1,4 @@
-import { useState, ReactElement } from 'react';
+import { useState, ChangeEvent, ReactElement } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -47,11 +47,11 @@ const ROLE_COLORS: Record<UserRole, 'default' | 'secondary' | 'outline'> = {
 };
 
 export const ShareDialog = ({ board, currentUserId, children }: ShareDialogProps): ReactElement => {
-  const [newMemberEmail, setNewMemberEmail] = useState('');
+  const [newMemberEmail, setNewMemberEmail] = useState<string>('');
   const [newMemberRole, setNewMemberRole] = useState<UserRole>('viewer');
-  const [isLoading, setIsLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [copied, setCopied] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
 
   const isOwner = board.ownerId === currentUserId;
   const shareLink = `${window.location.origin}/board/${board.id}`;
@@ -69,7 +69,7 @@ export const ShareDialog = ({ board, currentUserId, children }: ShareDialogProps
     }
 
     setIsLoading(true);
-    setError(null);
+    setError('');
 
     try {
       // In a real app, you would look up the user by email
@@ -154,13 +154,15 @@ export const ShareDialog = ({ board, currentUserId, children }: ShareDialogProps
                   type='email'
                   placeholder='Enter email address'
                   value={newMemberEmail}
-                  onChange={(e) => setNewMemberEmail(e.target.value)}
+                  onChange={(e: ChangeEvent<HTMLInputElement>): void =>
+                    setNewMemberEmail(e.target.value)
+                  }
                   className='bg-slate-700 border-slate-600 text-slate-200 placeholder:text-slate-500'
                   disabled={isLoading}
                 />
                 <Select
                   value={newMemberRole}
-                  onValueChange={(value) => setNewMemberRole(value as UserRole)}
+                  onValueChange={(value: string): void => setNewMemberRole(value as UserRole)}
                 >
                   <SelectTrigger className='w-28 bg-slate-700 border-slate-600 text-slate-200'>
                     <SelectValue />
@@ -207,7 +209,9 @@ export const ShareDialog = ({ board, currentUserId, children }: ShareDialogProps
                     <div className='flex items-center gap-2'>
                       <Select
                         value={role}
-                        onValueChange={(value) => handleRoleChange(userId, value as UserRole)}
+                        onValueChange={(value: string) =>
+                          handleRoleChange(userId, value as UserRole)
+                        }
                         disabled={isLoading}
                       >
                         <SelectTrigger className='w-24 h-8 bg-slate-600 border-slate-500 text-slate-200 text-xs'>

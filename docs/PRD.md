@@ -812,7 +812,7 @@ Implement secure authentication with Firebase Auth supporting email/password and
 
   export const useAuth = (): IUseAuthReturn => {
     const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -1416,8 +1416,8 @@ Build an infinite canvas with all required shapes, transforms, and operations wh
   const MAX_SCALE = 10;
 
   export const BoardCanvas = (): ReactElement => {
-    const [stagePosition, setStagePosition] = useState({ x: 0, y: 0 });
-    const [stageScale, setStageScale] = useState({ x: 1, y: 1 });
+    const [stagePosition, setStagePosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+    const [stageScale, setStageScale] = useState<{ x: number; y: number }>({ x: 1, y: 1 });
 
     const handleWheel = useCallback(
       (e: Konva.KonvaEventObject<WheelEvent>) => {

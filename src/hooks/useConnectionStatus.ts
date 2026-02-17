@@ -12,8 +12,8 @@ interface IUseConnectionStatusReturn {
  * Provides current online status and tracks if the user was recently offline.
  */
 export const useConnectionStatus = (): IUseConnectionStatusReturn => {
-  const [isOnline, setIsOnline] = useState(true);
-  const [wasOffline, setWasOffline] = useState(false);
+  const [isOnline, setIsOnline] = useState<boolean>(true);
+  const [wasOffline, setWasOffline] = useState<boolean>(false);
 
   useEffect(() => {
     const unsubscribe = subscribeToConnectionStatus((connected) => {
