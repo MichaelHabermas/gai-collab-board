@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- Radix re-exports and compound Tabs components */
 import { forwardRef, ComponentPropsWithoutRef, ElementRef, ReactElement } from 'react';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 import { cn } from '@/lib/utils';

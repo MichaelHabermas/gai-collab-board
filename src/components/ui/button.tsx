@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- exports buttonVariants for className composition */
 import { forwardRef, ButtonHTMLAttributes, ReactElement } from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';

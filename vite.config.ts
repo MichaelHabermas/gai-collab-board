@@ -1,26 +1,26 @@
-import { defineConfig, loadEnv } from "vite";
-import react from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
-import path from "path";
-import { readFileSync, existsSync } from "fs";
+import { defineConfig, loadEnv } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+import path from 'path';
+import { readFileSync, existsSync } from 'fs';
 
-const GROQ_ORIGIN = "https://api.groq.com/openai";
-const NVIDIA_ORIGIN = "https://integrate.api.nvidia.com";
+const GROQ_ORIGIN = 'https://api.groq.com/openai';
+const SECONDARY_ORIGIN = 'https://integrate.api.nvidia.com';
 
 function parseEnvFile(envDir: string): Record<string, string> {
-  const envPath = path.resolve(envDir, ".env");
+  const envPath = path.resolve(envDir, '.env');
   const out: Record<string, string> = {};
   if (!existsSync(envPath)) {
     return out;
   }
-  let content = readFileSync(envPath, "utf-8");
-  content = content.replace(/^\uFEFF/, "");
+  let content = readFileSync(envPath, 'utf-8');
+  content = content.replace(/^\uFEFF/, '');
   for (const line of content.split(/\r?\n/)) {
     const trimmed = line.trim();
-    if (trimmed.startsWith("#") || !trimmed.includes("=")) {
+    if (trimmed.startsWith('#') || !trimmed.includes('=')) {
       continue;
     }
-    const eq = trimmed.indexOf("=");
+    const eq = trimmed.indexOf('=');
     const key = trimmed.slice(0, eq).trim();
     let value = trimmed.slice(eq + 1).trim();
     if (
@@ -35,32 +35,30 @@ function parseEnvFile(envDir: string): Record<string, string> {
 }
 
 function getAiProxyConfig(env: Record<string, string>) {
-  const configured = (env.VITE_AI_PROVIDER ?? "").toLowerCase();
-  const groqKey = (env.VITE_GROQ_API_KEY ?? "").trim();
-  const nvidiaKey = (env.VITE_NVIDIA_API_KEY ?? "").trim();
+  const configured = (env.VITE_AI_PROVIDER ?? '').toLowerCase();
+  const groqKey = (env.VITE_GROQ_API_KEY ?? '').trim();
+  const secondaryKey = (env.VITE_NVIDIA_API_KEY ?? '').trim();
 
-  const useNvidia =
-    (configured === "nvidia" && nvidiaKey !== "") ||
-    (configured !== "groq" && groqKey === "" && nvidiaKey !== "");
+  const useSecondary =
+    (configured === 'nvidia' && secondaryKey !== '') ||
+    (configured !== 'groq' && groqKey === '' && secondaryKey !== '');
   const useGroq =
-    (configured === "groq" && groqKey !== "") ||
-    (groqKey !== "") ||
-    (nvidiaKey === "" && configured !== "nvidia");
+    (configured === 'groq' && groqKey !== '') ||
+    groqKey !== '' ||
+    (secondaryKey === '' && configured !== 'nvidia');
 
-  if (useGroq && groqKey !== "") {
+  if (useGroq && groqKey !== '') {
     return {
       target: GROQ_ORIGIN,
       apiKey: groqKey,
-      rewrite: (pathSegment: string) =>
-        pathSegment.replace(/^\/api\/ai/, ""),
+      rewrite: (pathSegment: string) => pathSegment.replace(/^\/api\/ai/, ''),
     };
   }
-  if (useNvidia && nvidiaKey !== "") {
+  if (useSecondary && secondaryKey !== '') {
     return {
-      target: NVIDIA_ORIGIN,
-      apiKey: nvidiaKey,
-      rewrite: (pathSegment: string) =>
-        pathSegment.replace(/^\/api\/ai/, ""),
+      target: SECONDARY_ORIGIN,
+      apiKey: secondaryKey,
+      rewrite: (pathSegment: string) => pathSegment.replace(/^\/api\/ai/, ''),
     };
   }
   return null;
@@ -73,14 +71,14 @@ function getAiProxyConfigFromFile(envDir: string): ReturnType<typeof getAiProxyC
 }
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), "");
+  const env = loadEnv(mode, process.cwd(), '');
   const aiProxy = getAiProxyConfig(env);
 
   return {
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
-        "@": path.resolve(__dirname, "./src"),
+        '@': path.resolve(__dirname, './src'),
       },
     },
     server: {
@@ -91,19 +89,16 @@ export default defineConfig(({ mode }) => {
       proxy:
         aiProxy !== null
           ? {
-              "/api/ai": {
+              '/api/ai': {
                 target: aiProxy.target,
                 changeOrigin: true,
                 rewrite: aiProxy.rewrite,
                 configure: (proxy) => {
-                  const envDir = path.resolve(__dirname, ".");
-                  proxy.on("proxyReq", (proxyReq, _req, _res) => {
+                  const envDir = path.resolve(__dirname, '.');
+                  proxy.on('proxyReq', (proxyReq, _req, _res) => {
                     const config = getAiProxyConfigFromFile(envDir);
                     if (config?.apiKey) {
-                      proxyReq.setHeader(
-                        "Authorization",
-                        `Bearer ${config.apiKey}`
-                      );
+                      proxyReq.setHeader('Authorization', `Bearer ${config.apiKey}`);
                     }
                   });
                 },
@@ -112,25 +107,20 @@ export default defineConfig(({ mode }) => {
           : undefined,
     },
     build: {
-      outDir: "dist",
+      outDir: 'dist',
       sourcemap: true,
-      minify: "esbuild",
-      target: "es2020",
+      minify: 'esbuild',
+      target: 'es2020',
       rollupOptions: {
         output: {
           manualChunks: {
-            vendor: ["react", "react-dom"],
-            firebase: [
-              "firebase/app",
-              "firebase/auth",
-              "firebase/firestore",
-              "firebase/database",
-            ],
-            konva: ["konva", "react-konva"],
+            vendor: ['react', 'react-dom'],
+            firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/database'],
+            konva: ['konva', 'react-konva'],
           },
         },
       },
     },
-    envPrefix: "VITE_",
+    envPrefix: 'VITE_',
   };
 });

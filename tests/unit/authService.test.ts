@@ -1,14 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   signUpWithEmail,
   signInWithEmail,
   signInWithGoogle,
   logOut,
   subscribeToAuthChanges,
-} from "@/modules/auth/authService";
+} from '@/modules/auth/authService';
 
 // Mock Firebase auth
-vi.mock("firebase/auth", () => ({
+vi.mock('firebase/auth', () => ({
   createUserWithEmailAndPassword: vi.fn(),
   signInWithEmailAndPassword: vi.fn(),
   signInWithPopup: vi.fn(),
@@ -17,7 +17,7 @@ vi.mock("firebase/auth", () => ({
   onAuthStateChanged: vi.fn(),
 }));
 
-vi.mock("@/lib/firebase", () => ({
+vi.mock('@/lib/firebase', () => ({
   auth: {},
 }));
 
@@ -27,66 +27,64 @@ import {
   signInWithPopup,
   signOut,
   onAuthStateChanged,
-} from "firebase/auth";
+} from 'firebase/auth';
 
-describe("authService", () => {
+describe('authService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe("signUpWithEmail", () => {
-    it("should return user on successful signup", async () => {
-      const mockUser = { uid: "123", email: "test@example.com" };
+  describe('signUpWithEmail', () => {
+    it('should return user on successful signup', async () => {
+      const mockUser = { uid: '123', email: 'test@example.com' };
       vi.mocked(createUserWithEmailAndPassword).mockResolvedValue({
         user: mockUser,
       } as never);
 
-      const result = await signUpWithEmail("test@example.com", "password123");
+      const result = await signUpWithEmail('test@example.com', 'password123');
 
       expect(result.user).toEqual(mockUser);
       expect(result.error).toBeNull();
     });
 
-    it("should return error on failed signup", async () => {
+    it('should return error on failed signup', async () => {
       vi.mocked(createUserWithEmailAndPassword).mockRejectedValue(
-        new Error("Email already in use")
+        new Error('Email already in use')
       );
 
-      const result = await signUpWithEmail("test@example.com", "password123");
+      const result = await signUpWithEmail('test@example.com', 'password123');
 
       expect(result.user).toBeNull();
-      expect(result.error).toBe("Email already in use");
+      expect(result.error).toBe('Email already in use');
     });
   });
 
-  describe("signInWithEmail", () => {
-    it("should return user on successful signin", async () => {
-      const mockUser = { uid: "123", email: "test@example.com" };
+  describe('signInWithEmail', () => {
+    it('should return user on successful signin', async () => {
+      const mockUser = { uid: '123', email: 'test@example.com' };
       vi.mocked(signInWithEmailAndPassword).mockResolvedValue({
         user: mockUser,
       } as never);
 
-      const result = await signInWithEmail("test@example.com", "password123");
+      const result = await signInWithEmail('test@example.com', 'password123');
 
       expect(result.user).toEqual(mockUser);
       expect(result.error).toBeNull();
     });
 
-    it("should return error on failed signin", async () => {
-      vi.mocked(signInWithEmailAndPassword).mockRejectedValue(
-        new Error("Invalid credentials")
-      );
+    it('should return error on failed signin', async () => {
+      vi.mocked(signInWithEmailAndPassword).mockRejectedValue(new Error('Invalid credentials'));
 
-      const result = await signInWithEmail("test@example.com", "wrongpassword");
+      const result = await signInWithEmail('test@example.com', 'wrongpassword');
 
       expect(result.user).toBeNull();
-      expect(result.error).toBe("Invalid credentials");
+      expect(result.error).toBe('Invalid credentials');
     });
   });
 
-  describe("signInWithGoogle", () => {
-    it("should return user on successful Google signin", async () => {
-      const mockUser = { uid: "456", email: "google@example.com" };
+  describe('signInWithGoogle', () => {
+    it('should return user on successful Google signin', async () => {
+      const mockUser = { uid: '456', email: 'google@example.com' };
       vi.mocked(signInWithPopup).mockResolvedValue({
         user: mockUser,
       } as never);
@@ -97,20 +95,18 @@ describe("authService", () => {
       expect(result.error).toBeNull();
     });
 
-    it("should return error on failed Google signin", async () => {
-      vi.mocked(signInWithPopup).mockRejectedValue(
-        new Error("Popup closed by user")
-      );
+    it('should return error on failed Google signin', async () => {
+      vi.mocked(signInWithPopup).mockRejectedValue(new Error('Popup closed by user'));
 
       const result = await signInWithGoogle();
 
       expect(result.user).toBeNull();
-      expect(result.error).toBe("Popup closed by user");
+      expect(result.error).toBe('Popup closed by user');
     });
   });
 
-  describe("logOut", () => {
-    it("should call signOut", async () => {
+  describe('logOut', () => {
+    it('should call signOut', async () => {
       vi.mocked(signOut).mockResolvedValue(undefined);
 
       await logOut();
@@ -119,8 +115,8 @@ describe("authService", () => {
     });
   });
 
-  describe("subscribeToAuthChanges", () => {
-    it("should subscribe to auth state changes", () => {
+  describe('subscribeToAuthChanges', () => {
+    it('should subscribe to auth state changes', () => {
       const mockCallback = vi.fn();
       const mockUnsubscribe = vi.fn();
       vi.mocked(onAuthStateChanged).mockReturnValue(mockUnsubscribe);

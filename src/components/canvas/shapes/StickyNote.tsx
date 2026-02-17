@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- exports STICKY_COLORS and StickyColor for consumers */
 import { Group, Rect, Text } from 'react-konva';
 import { forwardRef, useState, useRef, useCallback, useEffect, memo } from 'react';
 import type { ReactElement } from 'react';

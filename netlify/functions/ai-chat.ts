@@ -1,20 +1,18 @@
 import type { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 
 const GROQ_BASE = 'https://api.groq.com/openai';
-const NVIDIA_BASE = 'https://integrate.api.nvidia.com';
+const SECONDARY_API_BASE = 'https://integrate.api.nvidia.com';
 const FUNCTION_PATH_PREFIX = '/.netlify/functions/ai-chat';
 
 type AIProvider = 'groq' | 'nvidia';
 
 function getProviderAndKey(): { provider: AIProvider; apiKey: string } | null {
-  const configured =
-    (process.env.AI_PROVIDER ?? '').toLowerCase() as AIProvider | '';
+  const configured = (process.env.AI_PROVIDER ?? '').toLowerCase() as AIProvider | '';
   const groqKey = process.env.GROQ_API_KEY ?? process.env.VITE_GROQ_API_KEY ?? '';
-  const nvidiaKey =
-    process.env.NVIDIA_API_KEY ?? process.env.VITE_NVIDIA_API_KEY ?? '';
+  const secondaryKey = process.env.NVIDIA_API_KEY ?? process.env.VITE_NVIDIA_API_KEY ?? '';
 
-  if (configured === 'nvidia' && nvidiaKey) {
-    return { provider: 'nvidia', apiKey: nvidiaKey };
+  if (configured === 'nvidia' && secondaryKey) {
+    return { provider: 'nvidia', apiKey: secondaryKey };
   }
   if (configured === 'groq' && groqKey) {
     return { provider: 'groq', apiKey: groqKey };
@@ -22,17 +20,14 @@ function getProviderAndKey(): { provider: AIProvider; apiKey: string } | null {
   if (groqKey) {
     return { provider: 'groq', apiKey: groqKey };
   }
-  if (nvidiaKey) {
-    return { provider: 'nvidia', apiKey: nvidiaKey };
+  if (secondaryKey) {
+    return { provider: 'nvidia', apiKey: secondaryKey };
   }
   return null;
 }
 
-/** Proxies chat completion requests to Groq or NVIDIA so the key stays server-side and CORS is avoided. */
-export const handler: Handler = async (
-  event: HandlerEvent,
-  _context: HandlerContext
-) => {
+/** Proxies chat completion requests to the configured AI provider (Groq or secondary) so the key stays server-side and CORS is avoided. */
+export const handler: Handler = async (event: HandlerEvent, _context: HandlerContext) => {
   const config = getProviderAndKey();
 
   if (!config) {
@@ -52,10 +47,8 @@ export const handler: Handler = async (
     ? event.path.slice(FUNCTION_PATH_PREFIX.length) || '/v1'
     : '/v1';
 
-  const base = config.provider === 'groq' ? GROQ_BASE : NVIDIA_BASE;
-  const url = pathSuffix.startsWith('/')
-    ? `${base}${pathSuffix}`
-    : `${base}/${pathSuffix}`;
+  const base = config.provider === 'groq' ? GROQ_BASE : SECONDARY_API_BASE;
+  const url = pathSuffix.startsWith('/') ? `${base}${pathSuffix}` : `${base}/${pathSuffix}`;
 
   const method = event.httpMethod;
   const headers: Record<string, string> = {

@@ -1,6 +1,8 @@
 # CollabBoard
 
-A real-time collaborative whiteboard application inspired by Miro, enabling multiple users to brainstorm, map ideas, and run workshops simultaneously. Built with an AI-first development approach.
+A real-time collaborative whiteboard application inspired by Miro, enabling
+multiple users to brainstorm, map ideas, and run workshops simultaneously. Built
+with an AI-first development approach.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
@@ -20,7 +22,8 @@ A real-time collaborative whiteboard application inspired by Miro, enabling mult
 
 ### Real-Time Collaboration
 
-- **Multiplayer Cursors** — See other users' cursors with name labels in real-time
+- **Multiplayer Cursors** — See other users' cursors with name labels in
+  real-time
 - **Presence Awareness** — Know who's currently on the board
 - **Instant Sync** — Object changes appear for all users (<100ms latency)
 - **Conflict Resolution** — Last-write-wins with optimistic updates
@@ -38,23 +41,24 @@ Natural language commands to manipulate the board:
 
 ## Tech Stack
 
-| Layer | Technology |
-| ------- | ------------ |
-| **Backend** | Firebase (Firestore, Realtime DB, Auth) |
-| **Frontend** | React 19 + Vite + Bun + TypeScript |
-| **UI Components** | Shadcn/ui + Tailwind CSS v4 |
-| **Canvas** | Konva.js |
-| **AI Integration** | Groq (free tier, default) or Kimi 2.5 via Nvidia API |
-| **Deployment** | Netlify |
-| **Testing** | Vitest + Playwright |
-| **Linting** | ESLint + Prettier |
+| Layer              | Technology                                                        |
+| ------------------ | ----------------------------------------------------------------- |
+| **Backend**        | Firebase (Firestore, Realtime DB, Auth)                           |
+| **Frontend**       | React 19 + Vite + Bun + TypeScript                                |
+| **UI Components**  | Shadcn/ui + Tailwind CSS v4                                       |
+| **Canvas**         | Konva.js                                                          |
+| **AI Integration** | Groq (free tier, default) or secondary provider (e.g. NVIDIA API) |
+| **Deployment**     | Netlify                                                           |
+| **Testing**        | Vitest + Playwright                                               |
+| **Linting**        | ESLint + Prettier                                                 |
 
 ## Prerequisites
 
 - [Bun](https://bun.sh/) v1.0+ (recommended) or Node.js v20+
 - [Git](https://git-scm.com/)
 - Firebase account
-- Groq API key (free at [console.groq.com](https://console.groq.com)) or Nvidia API key (for Kimi 2.5)
+- Groq API key (free at [console.groq.com](https://console.groq.com)) or
+  secondary provider API key (e.g. NVIDIA)
 
 ## Setup
 
@@ -85,15 +89,16 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 VITE_FIREBASE_DATABASE_URL=https://your_project.firebaseio.com
 
-# AI: Groq (recommended, free) or NVIDIA. Production: set GROQ_API_KEY or NVIDIA_API_KEY in Netlify.
+# AI: Groq (recommended, free) or secondary provider. Production: set GROQ_API_KEY or NVIDIA_API_KEY in Netlify.
 VITE_AI_PROVIDER=groq
 VITE_GROQ_API_KEY=your_groq_api_key
-# VITE_NVIDIA_API_KEY=your_nvidia_api_key
+# VITE_NVIDIA_API_KEY=your_secondary_provider_key
 ```
 
 ### 4. Firebase Setup
 
-1. Create a new project at [Firebase Console](https://console.firebase.google.com/)
+1. Create a new project at
+   [Firebase Console](https://console.firebase.google.com/)
 2. Enable **Authentication** (Email/Password and Google providers)
 3. Create a **Firestore Database** in production mode
 4. Create a **Realtime Database** for presence/cursors
@@ -118,16 +123,16 @@ The app will be available at `http://localhost:5173`
 
 ### Keyboard Shortcuts
 
-| Action | Shortcut |
-| ------- | ---------- |
-| Pan | Click + Drag (on empty space) |
-| Zoom | Scroll wheel |
-| Select | Click on object |
+| Action       | Shortcut                           |
+| ------------ | ---------------------------------- |
+| Pan          | Click + Drag (on empty space)      |
+| Zoom         | Scroll wheel                       |
+| Select       | Click on object                    |
 | Multi-select | Shift + Click / Drag selection box |
-| Delete | Delete / Backspace |
-| Duplicate | Ctrl/Cmd + D |
-| Copy | Ctrl/Cmd + C |
-| Paste | Ctrl/Cmd + V |
+| Delete       | Delete / Backspace                 |
+| Duplicate    | Ctrl/Cmd + D                       |
+| Copy         | Ctrl/Cmd + C                       |
+| Paste        | Ctrl/Cmd + V                       |
 
 ### AI Commands
 
@@ -201,13 +206,13 @@ flowchart LR
 
 ## Performance Targets
 
-| Metric | Target |
-| ------- | ------- |
-| Frame rate | 60 FPS during pan, zoom, manipulation |
-| Object sync latency | <100ms |
-| Cursor sync latency | <50ms |
-| Object capacity | 500+ objects |
-| Concurrent users | 5+ without degradation |
+| Metric              | Target                                |
+| ------------------- | ------------------------------------- |
+| Frame rate          | 60 FPS during pan, zoom, manipulation |
+| Object sync latency | <100ms                                |
+| Cursor sync latency | <50ms                                 |
+| Object capacity     | 500+ objects                          |
+| Concurrent users    | 5+ without degradation                |
 
 ## Contributing
 
@@ -220,7 +225,8 @@ flowchart LR
 
 ## License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file
+for details.
 
 ## Acknowledgments
 

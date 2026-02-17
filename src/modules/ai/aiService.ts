@@ -12,8 +12,8 @@ const INITIAL_BACKOFF_MS = 1000;
 /** Timeout per request so the UI does not hang if the API or proxy never responds. */
 const REQUEST_TIMEOUT_MS = 90_000;
 
-/** Disable Kimi thinking mode so we get instant responses (NVIDIA API only). */
-const NVIDIA_INSTANT_MODE = { thinking: { type: 'disabled' as const } };
+/** Extra body for providers that support disabling thinking mode (e.g. some OpenAI-compatible APIs). */
+const PROVIDER_EXTRA_BODY = { thinking: { type: 'disabled' as const } };
 
 const SYSTEM_PROMPT = `You are an AI assistant for CollabBoard, a collaborative whiteboard application.
 Your role is to help users manipulate the board through natural language commands.
@@ -79,8 +79,7 @@ export class AIService {
       { role: 'user', content: userMessage },
     ];
 
-    const nvidiaExtra =
-      AI_CONFIG.provider === 'nvidia' ? NVIDIA_INSTANT_MODE : {};
+    const providerExtra = AI_CONFIG.provider === 'nvidia' ? PROVIDER_EXTRA_BODY : {};
     const response = await this.throttledRequest(() =>
       this.withRetry(() =>
         aiClient.chat.completions.create(
@@ -92,7 +91,7 @@ export class AIService {
             max_tokens: AI_CONFIG.maxTokens,
             temperature: AI_CONFIG.temperature,
             top_p: AI_CONFIG.topP,
-            ...nvidiaExtra,
+            ...providerExtra,
           },
           { timeout: REQUEST_TIMEOUT_MS }
         )
@@ -164,8 +163,7 @@ export class AIService {
       ...toolResults,
     ];
 
-    const nvidiaExtraFollowUp =
-      AI_CONFIG.provider === 'nvidia' ? NVIDIA_INSTANT_MODE : {};
+    const providerExtraFollowUp = AI_CONFIG.provider === 'nvidia' ? PROVIDER_EXTRA_BODY : {};
     const followUpResponse = await this.throttledRequest(() =>
       this.withRetry(() =>
         aiClient.chat.completions.create(
@@ -174,7 +172,7 @@ export class AIService {
             messages: followUpMessages,
             max_tokens: AI_CONFIG.maxTokens,
             temperature: AI_CONFIG.temperature,
-            ...nvidiaExtraFollowUp,
+            ...providerExtraFollowUp,
           },
           { timeout: REQUEST_TIMEOUT_MS }
         )

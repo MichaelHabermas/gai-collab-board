@@ -1,8 +1,8 @@
 /**
- * Quick connection test for the AI proxy (Groq or NVIDIA).
+ * Quick connection test for the AI proxy (Groq or secondary provider).
  * Usage:
  *   bun run test:ai-connection           — POST to dev proxy (dev server must be running at 5173)
- *   bun run test:ai-connection -- --direct — POST to Groq or NVIDIA directly (uses env key)
+ *   bun run test:ai-connection -- --direct — POST to Groq or secondary provider directly (uses env key)
  */
 
 import { readFileSync, existsSync } from 'fs';
@@ -22,7 +22,10 @@ function loadEnv(): void {
     const eq = trimmed.indexOf('=');
     const key = trimmed.slice(0, eq).trim();
     let value = trimmed.slice(eq + 1).trim();
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
       value = value.slice(1, -1);
     }
     if (!process.env[key]) {
@@ -35,9 +38,9 @@ loadEnv();
 
 const PROXY_URL = 'http://127.0.0.1:5173/api/ai/v1/chat/completions';
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const NVIDIA_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
+const SECONDARY_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
-const NVIDIA_MODEL = 'moonshotai/kimi-k2.5';
+const SECONDARY_MODEL = 'moonshotai/kimi-k2.5';
 const SCRIPT_TIMEOUT_MS = 20_000;
 
 function parseArgs(): { direct: boolean } {
@@ -52,14 +55,14 @@ function getDirectConfig(): {
   bodyExtra: Record<string, unknown>;
 } | null {
   const groqKey = (process.env.GROQ_API_KEY ?? process.env.VITE_GROQ_API_KEY ?? '').trim();
-  const nvidiaKey = (process.env.NVIDIA_API_KEY ?? process.env.VITE_NVIDIA_API_KEY ?? '').trim();
+  const secondaryKey = (process.env.NVIDIA_API_KEY ?? process.env.VITE_NVIDIA_API_KEY ?? '').trim();
   const provider = (process.env.AI_PROVIDER ?? process.env.VITE_AI_PROVIDER ?? '').toLowerCase();
 
-  if (provider === 'nvidia' && nvidiaKey !== '') {
+  if (provider === 'nvidia' && secondaryKey !== '') {
     return {
-      url: NVIDIA_URL,
-      model: NVIDIA_MODEL,
-      apiKey: nvidiaKey,
+      url: SECONDARY_URL,
+      model: SECONDARY_MODEL,
+      apiKey: secondaryKey,
       bodyExtra: { thinking: { type: 'disabled' as const } },
     };
   }
@@ -71,11 +74,11 @@ function getDirectConfig(): {
       bodyExtra: {},
     };
   }
-  if (nvidiaKey !== '') {
+  if (secondaryKey !== '') {
     return {
-      url: NVIDIA_URL,
-      model: NVIDIA_MODEL,
-      apiKey: nvidiaKey,
+      url: SECONDARY_URL,
+      model: SECONDARY_MODEL,
+      apiKey: secondaryKey,
       bodyExtra: { thinking: { type: 'disabled' as const } },
     };
   }
@@ -89,7 +92,7 @@ async function run(): Promise<void> {
     const config = getDirectConfig();
     if (!config) {
       process.stderr.write(
-        'Error: --direct requires GROQ_API_KEY/VITE_GROQ_API_KEY or NVIDIA_API_KEY/VITE_NVIDIA_API_KEY in env.\n'
+        'Error: --direct requires GROQ_API_KEY/VITE_GROQ_API_KEY or NVIDIA_API_KEY/VITE_NVIDIA_API_KEY (secondary provider) in env.\n'
       );
       process.exit(1);
     }
@@ -117,9 +120,7 @@ async function run(): Promise<void> {
       const elapsed = Date.now() - start;
       const text = await res.text();
       if (!res.ok) {
-        process.stderr.write(
-          `Error: ${res.status} ${res.statusText}\n${text.slice(0, 500)}\n`
-        );
+        process.stderr.write(`Error: ${res.status} ${res.statusText}\n${text.slice(0, 500)}\n`);
         process.exit(1);
       }
       const parsed = JSON.parse(text) as {
@@ -132,9 +133,7 @@ async function run(): Promise<void> {
       clearTimeout(timeoutId);
       const message = err instanceof Error ? err.message : String(err);
       const isAbort = err instanceof Error && err.name === 'AbortError';
-      process.stderr.write(
-        `Error: ${isAbort ? 'timeout' : message}\n`
-      );
+      process.stderr.write(`Error: ${isAbort ? 'timeout' : message}\n`);
       process.exit(1);
     }
   }
@@ -165,9 +164,7 @@ async function run(): Promise<void> {
     const text = await res.text();
 
     if (!res.ok) {
-      process.stderr.write(
-        `Error: ${res.status} ${res.statusText}\n${text.slice(0, 500)}\n`
-      );
+      process.stderr.write(`Error: ${res.status} ${res.statusText}\n${text.slice(0, 500)}\n`);
       process.exit(1);
     }
 
@@ -177,9 +174,7 @@ async function run(): Promise<void> {
         choices?: Array<{ message?: { content?: string } }>;
       };
     } catch {
-      process.stderr.write(
-        `Error: invalid JSON response\n${text.slice(0, 300)}\n`
-      );
+      process.stderr.write(`Error: invalid JSON response\n${text.slice(0, 300)}\n`);
       process.exit(1);
     }
 
@@ -191,9 +186,7 @@ async function run(): Promise<void> {
     const elapsed = Date.now() - start;
     const message = err instanceof Error ? err.message : String(err);
     const isAbort = err instanceof Error && err.name === 'AbortError';
-    process.stderr.write(
-      `Error after ${elapsed}ms: ${isAbort ? 'timeout' : message}\n`
-    );
+    process.stderr.write(`Error after ${elapsed}ms: ${isAbort ? 'timeout' : message}\n`);
     process.exit(1);
   }
 }

@@ -2,7 +2,7 @@
 
 ## Overview
 
-CollabBoard supports multiple AI providers for board manipulation via natural language. The **recommended option** is **Groq** (free tier, no credit card). You can also use **Kimi 2.5** via the NVIDIA API. Both use the same OpenAI-compatible client and proxy; the key stays server-side in production.
+CollabBoard supports multiple AI providers for board manipulation via natural language. The **recommended option** is **Groq** (free tier, no credit card). You can also use a secondary provider (e.g. NVIDIA API for Kimi 2.5). Both use the same OpenAI-compatible client and proxy; the key stays server-side in production.
 
 **API Documentation**:
 

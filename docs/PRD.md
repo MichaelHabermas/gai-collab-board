@@ -83,7 +83,7 @@ graph TB
 
     subgraph External[External APIs]
         Groq[Groq API - default free]
-        Nvidia[Kimi 2.5 via Nvidia API - optional]
+        Secondary[Secondary provider - optional]
     end
 
     Netlify --> Frontend
@@ -92,7 +92,7 @@ graph TB
     SyncMod --> Firestore
     SyncMod --> RealtimeDB
     AIMod --> Groq
-    AIMod --> Nvidia
+    AIMod --> Secondary
     CanvasMod --> Konva
 ```
 
@@ -104,7 +104,7 @@ graph TB
 | **Frontend**   | React 19 + Vite + Bun                 | Fast dev (Vite HMR, Bun speed), type safety (TS), modern React features                   |
 | **Canvas**     | Konva.js                              | High performance (60fps with 1000+ objects), layered structure, React integration         |
 | **UI**         | Shadcn/ui + Tailwind v4               | Customizable components, CSS-first approach, accessible by default                        |
-| **AI**         | Groq (default) or Kimi 2.5 via Nvidia | Groq: free tier, Llama 3.3 70B; Nvidia: 256K context, OpenAI-compatible, function calling |
+| **AI**         | Groq (default) or secondary provider | Groq: free tier, Llama 3.3 70B; secondary (e.g. NVIDIA): OpenAI-compatible, function calling |
 | **Deployment** | Netlify                               | Easy Git deploys, serverless functions, global CDN, free tier                             |
 
 ### SOLID Principles Application

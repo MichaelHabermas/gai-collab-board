@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- Radix re-exports and compound Dialog components */
 import {
   forwardRef,
   ComponentPropsWithoutRef,

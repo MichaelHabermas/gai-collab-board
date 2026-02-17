@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   updateCursor,
   subscribeToCursors,
@@ -10,7 +10,7 @@ import {
   setupPresenceDisconnectHandler,
   subscribeToConnectionStatus,
   getUserColor,
-} from "@/modules/sync/realtimeService";
+} from '@/modules/sync/realtimeService';
 
 // Mock Firebase Realtime Database
 const mockSet = vi.fn();
@@ -19,7 +19,7 @@ const mockOnValue = vi.fn();
 const mockOnDisconnect = vi.fn(() => ({ remove: vi.fn() }));
 const mockRef = vi.fn();
 
-vi.mock("firebase/database", () => ({
+vi.mock('firebase/database', () => ({
   ref: (db: unknown, path: string) => {
     mockRef(db, path);
     return { path };
@@ -33,11 +33,11 @@ vi.mock("firebase/database", () => ({
   onDisconnect: () => mockOnDisconnect(),
 }));
 
-vi.mock("@/lib/firebase", () => ({
+vi.mock('@/lib/firebase', () => ({
   realtimeDb: {},
 }));
 
-describe("realtimeService", () => {
+describe('realtimeService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -46,22 +46,19 @@ describe("realtimeService", () => {
     vi.resetAllMocks();
   });
 
-  describe("Cursor Functions", () => {
-    describe("updateCursor", () => {
-      it("should update cursor position in database", async () => {
-        const boardId = "board-123";
-        const uid = "user-456";
+  describe('Cursor Functions', () => {
+    describe('updateCursor', () => {
+      it('should update cursor position in database', async () => {
+        const boardId = 'board-123';
+        const uid = 'user-456';
         const x = 100;
         const y = 200;
-        const displayName = "Test User";
-        const color = "#ff0000";
+        const displayName = 'Test User';
+        const color = '#ff0000';
 
         await updateCursor(boardId, uid, x, y, displayName, color);
 
-        expect(mockRef).toHaveBeenCalledWith(
-          expect.anything(),
-          `boards/${boardId}/cursors/${uid}`
-        );
+        expect(mockRef).toHaveBeenCalledWith(expect.anything(), `boards/${boardId}/cursors/${uid}`);
         expect(mockSet).toHaveBeenCalledWith(
           expect.anything(),
           expect.objectContaining({
@@ -76,69 +73,60 @@ describe("realtimeService", () => {
       });
     });
 
-    describe("subscribeToCursors", () => {
-      it("should subscribe to cursor updates", () => {
-        const boardId = "board-123";
+    describe('subscribeToCursors', () => {
+      it('should subscribe to cursor updates', () => {
+        const boardId = 'board-123';
         const callback = vi.fn();
 
         subscribeToCursors(boardId, callback);
 
-        expect(mockRef).toHaveBeenCalledWith(
-          expect.anything(),
-          `boards/${boardId}/cursors`
-        );
+        expect(mockRef).toHaveBeenCalledWith(expect.anything(), `boards/${boardId}/cursors`);
         expect(mockOnValue).toHaveBeenCalled();
       });
 
-      it("should return unsubscribe function", () => {
-        const boardId = "board-123";
+      it('should return unsubscribe function', () => {
+        const boardId = 'board-123';
         const callback = vi.fn();
 
         const unsubscribe = subscribeToCursors(boardId, callback);
 
-        expect(typeof unsubscribe).toBe("function");
+        expect(typeof unsubscribe).toBe('function');
       });
     });
 
-    describe("removeCursor", () => {
-      it("should remove cursor from database", async () => {
-        const boardId = "board-123";
-        const uid = "user-456";
+    describe('removeCursor', () => {
+      it('should remove cursor from database', async () => {
+        const boardId = 'board-123';
+        const uid = 'user-456';
 
         await removeCursor(boardId, uid);
 
-        expect(mockRef).toHaveBeenCalledWith(
-          expect.anything(),
-          `boards/${boardId}/cursors/${uid}`
-        );
+        expect(mockRef).toHaveBeenCalledWith(expect.anything(), `boards/${boardId}/cursors/${uid}`);
         expect(mockRemove).toHaveBeenCalled();
       });
     });
 
-    describe("setupCursorDisconnectHandler", () => {
-      it("should setup onDisconnect handler", () => {
-        const boardId = "board-123";
-        const uid = "user-456";
+    describe('setupCursorDisconnectHandler', () => {
+      it('should setup onDisconnect handler', () => {
+        const boardId = 'board-123';
+        const uid = 'user-456';
 
         setupCursorDisconnectHandler(boardId, uid);
 
-        expect(mockRef).toHaveBeenCalledWith(
-          expect.anything(),
-          `boards/${boardId}/cursors/${uid}`
-        );
+        expect(mockRef).toHaveBeenCalledWith(expect.anything(), `boards/${boardId}/cursors/${uid}`);
         expect(mockOnDisconnect).toHaveBeenCalled();
       });
     });
   });
 
-  describe("Presence Functions", () => {
-    describe("updatePresence", () => {
-      it("should update presence in database", async () => {
-        const boardId = "board-123";
-        const uid = "user-456";
-        const displayName = "Test User";
-        const photoURL = "https://example.com/photo.jpg";
-        const color = "#ff0000";
+  describe('Presence Functions', () => {
+    describe('updatePresence', () => {
+      it('should update presence in database', async () => {
+        const boardId = 'board-123';
+        const uid = 'user-456';
+        const displayName = 'Test User';
+        const photoURL = 'https://example.com/photo.jpg';
+        const color = '#ff0000';
 
         await updatePresence(boardId, uid, displayName, photoURL, color);
 
@@ -159,11 +147,11 @@ describe("realtimeService", () => {
         );
       });
 
-      it("should handle null photoURL", async () => {
-        const boardId = "board-123";
-        const uid = "user-456";
-        const displayName = "Test User";
-        const color = "#ff0000";
+      it('should handle null photoURL', async () => {
+        const boardId = 'board-123';
+        const uid = 'user-456';
+        const displayName = 'Test User';
+        const color = '#ff0000';
 
         await updatePresence(boardId, uid, displayName, null, color);
 
@@ -176,25 +164,22 @@ describe("realtimeService", () => {
       });
     });
 
-    describe("subscribeToPresence", () => {
-      it("should subscribe to presence updates", () => {
-        const boardId = "board-123";
+    describe('subscribeToPresence', () => {
+      it('should subscribe to presence updates', () => {
+        const boardId = 'board-123';
         const callback = vi.fn();
 
         subscribeToPresence(boardId, callback);
 
-        expect(mockRef).toHaveBeenCalledWith(
-          expect.anything(),
-          `boards/${boardId}/presence`
-        );
+        expect(mockRef).toHaveBeenCalledWith(expect.anything(), `boards/${boardId}/presence`);
         expect(mockOnValue).toHaveBeenCalled();
       });
     });
 
-    describe("removePresence", () => {
-      it("should remove presence from database", async () => {
-        const boardId = "board-123";
-        const uid = "user-456";
+    describe('removePresence', () => {
+      it('should remove presence from database', async () => {
+        const boardId = 'board-123';
+        const uid = 'user-456';
 
         await removePresence(boardId, uid);
 
@@ -206,10 +191,10 @@ describe("realtimeService", () => {
       });
     });
 
-    describe("setupPresenceDisconnectHandler", () => {
-      it("should setup onDisconnect handler", () => {
-        const boardId = "board-123";
-        const uid = "user-456";
+    describe('setupPresenceDisconnectHandler', () => {
+      it('should setup onDisconnect handler', () => {
+        const boardId = 'board-123';
+        const uid = 'user-456';
 
         setupPresenceDisconnectHandler(boardId, uid);
 
@@ -222,31 +207,31 @@ describe("realtimeService", () => {
     });
   });
 
-  describe("Connection Status", () => {
-    describe("subscribeToConnectionStatus", () => {
-      it("should subscribe to connection status", () => {
+  describe('Connection Status', () => {
+    describe('subscribeToConnectionStatus', () => {
+      it('should subscribe to connection status', () => {
         const callback = vi.fn();
 
         subscribeToConnectionStatus(callback);
 
-        expect(mockRef).toHaveBeenCalledWith(expect.anything(), ".info/connected");
+        expect(mockRef).toHaveBeenCalledWith(expect.anything(), '.info/connected');
         expect(mockOnValue).toHaveBeenCalled();
       });
     });
   });
 
-  describe("getUserColor", () => {
-    it("should return consistent color for same uid", () => {
-      const uid = "user-123";
+  describe('getUserColor', () => {
+    it('should return consistent color for same uid', () => {
+      const uid = 'user-123';
       const color1 = getUserColor(uid);
       const color2 = getUserColor(uid);
 
       expect(color1).toBe(color2);
     });
 
-    it("should return different colors for different uids", () => {
+    it('should return different colors for different uids', () => {
       const colors = new Set<string>();
-      const uids = ["user-1", "user-2", "user-3", "user-4", "user-5"];
+      const uids = ['user-1', 'user-2', 'user-3', 'user-4', 'user-5'];
 
       uids.forEach((uid) => {
         colors.add(getUserColor(uid));
@@ -257,8 +242,8 @@ describe("realtimeService", () => {
       expect(colors.size).toBeGreaterThanOrEqual(1);
     });
 
-    it("should return a valid hex color", () => {
-      const uid = "test-user";
+    it('should return a valid hex color', () => {
+      const uid = 'test-user';
       const color = getUserColor(uid);
 
       expect(color).toMatch(/^#[0-9a-f]{6}$/i);

@@ -5,7 +5,7 @@ const DEV_PROXY_PATH = '/api/ai/v1';
 const PROD_PROXY_PATH = '/.netlify/functions/ai-chat/v1';
 
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
-const NVIDIA_MODEL = 'moonshotai/kimi-k2.5';
+const SECONDARY_MODEL = 'moonshotai/kimi-k2.5';
 
 export type AIProvider = 'groq' | 'nvidia';
 
@@ -33,8 +33,7 @@ function getProxyBaseURL(): string {
 
 export const createAIClient = (): OpenAI => {
   const baseURL = getProxyBaseURL();
-  const apiKey =
-    'proxy'; /* Proxy injects the real key; client does not send it */
+  const apiKey = 'proxy'; /* Proxy injects the real key; client does not send it */
 
   return new OpenAI({ apiKey, baseURL, dangerouslyAllowBrowser: true });
 };
@@ -45,7 +44,7 @@ const provider = resolveProvider();
 
 export const AI_CONFIG = {
   provider,
-  model: provider === 'groq' ? GROQ_MODEL : NVIDIA_MODEL,
+  model: provider === 'groq' ? GROQ_MODEL : SECONDARY_MODEL,
   maxTokens: 4096,
   temperature: 0.3,
   topP: 0.9,
