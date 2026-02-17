@@ -1,5 +1,5 @@
 ---
-description: Git branch and merge workflow - merge only to development, never to main
+description: 
 alwaysApply: true
 ---
 
