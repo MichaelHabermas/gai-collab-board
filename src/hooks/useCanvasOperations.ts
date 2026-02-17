@@ -50,10 +50,10 @@ export const useCanvasOperations = ({
   // Duplicate selected objects with offset
   const handleDuplicate = useCallback(() => {
     const selectedObjects = getSelectedObjects();
-    const newIds: string[] = [];
 
     selectedObjects.forEach((obj) => {
-      const { id, createdAt, updatedAt, ...rest } = obj;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = obj;
       onObjectCreate({
         ...rest,
         x: obj.x + DUPLICATE_OFFSET,
@@ -72,7 +72,8 @@ export const useCanvasOperations = ({
   const handlePaste = useCallback(
     (offsetX: number = PASTE_OFFSET, offsetY: number = PASTE_OFFSET) => {
       clipboard.forEach((obj) => {
-        const { id, createdAt, updatedAt, ...rest } = obj;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = obj;
         onObjectCreate({
           ...rest,
           x: obj.x + offsetX,

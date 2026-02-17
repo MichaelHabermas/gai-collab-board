@@ -11,7 +11,7 @@ import {
   MousePointer2,
   Hand,
 } from 'lucide-react';
-import { STICKY_COLORS, type StickyColor } from './shapes/StickyNote';
+import { STICKY_COLORS } from './shapes/StickyNote';
 import type { ShapeType } from '@/types';
 
 export type ToolMode = 'select' | 'pan' | ShapeType;
@@ -30,15 +30,17 @@ interface IToolButtonProps {
   isActive: boolean;
   onClick: () => void;
   disabled?: boolean;
+  testId?: string;
 }
 
 const ToolButton = memo(
-  ({ icon, label, isActive, onClick, disabled = false }: IToolButtonProps): ReactElement => (
+  ({ icon, label, isActive, onClick, disabled = false, testId }: IToolButtonProps): ReactElement => (
     <Button
       variant={isActive ? 'default' : 'ghost'}
       size='icon'
       onClick={onClick}
       disabled={disabled}
+      data-testid={testId}
       className={`
         w-10 h-10 relative group
         ${isActive ? 'bg-primary text-primary-foreground' : 'text-slate-300 hover:text-white hover:bg-slate-700'}
@@ -135,7 +137,7 @@ export const Toolbar = memo(
     ];
 
     return (
-      <div className='absolute left-4 top-1/2 -translate-y-1/2 z-20'>
+      <div className='absolute left-4 top-1/2 -translate-y-1/2 z-20' data-testid='toolbar'>
         <div className='bg-slate-800/95 backdrop-blur-sm rounded-xl p-2 shadow-xl border border-slate-700 flex flex-col gap-1'>
           {/* Tool buttons */}
           {tools.map((tool) => (
@@ -146,6 +148,7 @@ export const Toolbar = memo(
               isActive={activeTool === tool.mode}
               onClick={() => onToolChange(tool.mode)}
               disabled={tool.requiresEdit && !canEdit}
+              testId={`tool-${tool.mode}`}
             />
           ))}
 
@@ -156,6 +159,7 @@ export const Toolbar = memo(
           <div className='relative'>
             <button
               onClick={() => setShowColors(!showColors)}
+              data-testid='color-picker-toggle'
               className={`
                 w-10 h-10 rounded-lg border-2 transition-all
                 ${showColors ? 'border-primary' : 'border-slate-600 hover:border-slate-500'}

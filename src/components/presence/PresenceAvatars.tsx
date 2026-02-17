@@ -67,7 +67,7 @@ const Avatar = memo(({ user, role, isCurrentUser }: IAvatarProps): ReactElement 
   const bgColorClass = getColorClass(user.color);
 
   return (
-    <div className='relative group'>
+    <div className='relative group' data-testid={`presence-avatar-${user.uid}`}>
       {/* Avatar circle */}
       <div
         className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium text-white border-2 border-white shadow-sm transition-transform hover:scale-110 ${bgColorClass}`}
@@ -124,7 +124,7 @@ export const PresenceAvatars = memo(
     });
 
     return (
-      <div className='flex items-center -space-x-2'>
+      <div className='flex items-center -space-x-2' data-testid='presence-avatars'>
         {sortedUsers.map((user) => (
           <Avatar
             key={user.uid}

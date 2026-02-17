@@ -53,6 +53,7 @@ const BoardView = ({ boardId }: { boardId: string }): ReactElement => {
       if (!boardLoading && !board && user) {
         try {
           await createBoard({
+            id: boardId, // Use the specified board ID
             name: 'Development Board',
             ownerId: user.uid,
           });
@@ -62,7 +63,7 @@ const BoardView = ({ boardId }: { boardId: string }): ReactElement => {
       }
     };
     initBoard();
-  }, [boardLoading, board, user]);
+  }, [boardLoading, board, user, boardId]);
 
   if (!user) return <div />;
 
@@ -77,13 +78,14 @@ const BoardView = ({ boardId }: { boardId: string }): ReactElement => {
     );
   }
 
-  // Check if user can edit
-  const canEdit = board ? canUserEdit(board, user.uid) : false;
+  // Check if user can edit - default to true for authenticated users if board doesn't exist yet
+  // This allows the first user to create objects while the board is being created
+  const canEdit = board ? canUserEdit(board, user.uid) : true;
 
   return (
     <div className='h-screen flex flex-col bg-slate-900 overflow-hidden'>
       {/* Header */}
-      <header className='flex-shrink-0 border-b border-slate-700 bg-slate-800/90 backdrop-blur-sm z-10'>
+      <header className='shrink-0 border-b border-slate-700 bg-slate-800/90 backdrop-blur-sm z-10'>
         <div className='px-4 py-2 flex items-center justify-between'>
           <div className='flex items-center gap-4'>
             <h1 className='text-lg font-bold text-white'>CollabBoard</h1>
@@ -91,7 +93,7 @@ const BoardView = ({ boardId }: { boardId: string }): ReactElement => {
             <ConnectionStatus />
           </div>
           <div className='flex items-center gap-4'>
-            <PresenceAvatars users={onlineUsers} currentUserId={user.uid} />
+            <PresenceAvatars users={onlineUsers} currentUid={user.uid} />
             <span className='text-sm text-slate-400'>{user.email}</span>
             <Button
               variant='ghost'

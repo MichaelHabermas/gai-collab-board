@@ -15,7 +15,7 @@ export const useBatchDraw = (): IUseBatchDrawReturn => {
 
   const processBatchDraws = useCallback(() => {
     pendingDraws.current.forEach((layer) => {
-      if (layer && !layer.isDestroyed()) {
+      if (layer && !(layer as Konva.Layer & { isDestroyed?: () => boolean }).isDestroyed?.()) {
         layer.batchDraw();
       }
     });

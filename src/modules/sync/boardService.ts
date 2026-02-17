@@ -15,14 +15,18 @@ import { IBoard, UserRole } from '@/types';
 const BOARDS_COLLECTION = 'boards';
 
 export interface ICreateBoardParams {
+  id?: string; // Optional - use this ID instead of generating one
   name: string;
   ownerId: string;
   ownerEmail?: string;
 }
 
 export const createBoard = async (params: ICreateBoardParams): Promise<IBoard> => {
-  const { name, ownerId } = params;
-  const boardRef = doc(collection(firestore, BOARDS_COLLECTION));
+  const { id, name, ownerId } = params;
+  // Use provided ID or generate a new one
+  const boardRef = id
+    ? doc(firestore, BOARDS_COLLECTION, id)
+    : doc(collection(firestore, BOARDS_COLLECTION));
   const now = Timestamp.now();
 
   const board: IBoard = {

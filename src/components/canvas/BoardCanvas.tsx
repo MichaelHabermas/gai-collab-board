@@ -21,6 +21,7 @@ import { useCanvasOperations } from '@/hooks/useCanvasOperations';
 import { useVisibleShapes } from '@/hooks/useVisibleShapes';
 import type { User } from 'firebase/auth';
 import type { IBoardObject } from '@/types';
+import type { ICreateObjectParams } from '@/modules/sync/objectService';
 
 interface IBoardCanvasProps {
   boardId: string;
@@ -28,8 +29,8 @@ interface IBoardCanvasProps {
   objects: IBoardObject[];
   canEdit?: boolean;
   onObjectUpdate?: (objectId: string, updates: Partial<IBoardObject>) => void;
-  onObjectCreate?: (params: Partial<IBoardObject>) => void;
-  onObjectDelete?: (objectId: string) => void;
+  onObjectCreate?: (params: Omit<ICreateObjectParams, 'createdBy'>) => Promise<IBoardObject | null>;
+  onObjectDelete?: (objectId: string) => Promise<void>;
 }
 
 // Grid pattern configuration
@@ -39,7 +40,6 @@ const GRID_STROKE_WIDTH = 1;
 
 // Default sizes for new objects
 const DEFAULT_STICKY_SIZE = { width: 200, height: 200 };
-const DEFAULT_SHAPE_SIZE = { width: 100, height: 100 };
 
 // Drawing state for shapes
 interface IDrawingState {
@@ -103,11 +103,12 @@ export const BoardCanvas = memo(
     }, []);
 
     // Canvas operations (delete, duplicate, copy, paste)
-    const { handleDelete, handleDuplicate, handleCopy, handlePaste } = useCanvasOperations({
+    // Type assertion needed because useCanvasOperations uses a more permissive type
+    useCanvasOperations({
       objects,
       selectedIds,
-      onObjectCreate: onObjectCreate || (() => {}),
-      onObjectDelete: onObjectDelete || (() => {}),
+      onObjectCreate: (onObjectCreate as ((params: Partial<IBoardObject>) => void)) || (() => {}),
+      onObjectDelete: (onObjectDelete as ((objectId: string) => void)) || (() => {}),
       clearSelection,
     });
 
@@ -745,7 +746,7 @@ export const BoardCanvas = memo(
       activeTool === 'pan' || (activeTool === 'select' && !drawingState.isDrawing && !isSelecting);
 
     return (
-      <div className='w-full h-full overflow-hidden bg-white relative'>
+      <div className='w-full h-full overflow-hidden bg-white relative' data-testid='board-canvas'>
         {/* Toolbar */}
         <Toolbar
           activeTool={activeTool}
@@ -772,7 +773,6 @@ export const BoardCanvas = memo(
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
           onClick={handleStageClick}
-          onTap={handleStageClick}
           style={{
             cursor:
               activeTool === 'pan' ? 'grab' : activeTool === 'select' ? 'default' : 'crosshair',
@@ -810,11 +810,17 @@ export const BoardCanvas = memo(
         {/* Status indicators */}
         <div className='absolute bottom-4 right-4 flex gap-2'>
           {/* Object count (visible/total) */}
-          <div className='bg-slate-800/80 text-white px-3 py-1.5 rounded-md text-sm font-medium backdrop-blur-sm'>
+          <div
+            className='bg-slate-800/80 text-white px-3 py-1.5 rounded-md text-sm font-medium backdrop-blur-sm'
+            data-testid='object-count'
+          >
             {visibleObjects.length}/{objects.length}
           </div>
           {/* Zoom indicator */}
-          <div className='bg-slate-800/80 text-white px-3 py-1.5 rounded-md text-sm font-medium backdrop-blur-sm'>
+          <div
+            className='bg-slate-800/80 text-white px-3 py-1.5 rounded-md text-sm font-medium backdrop-blur-sm'
+            data-testid='zoom-indicator'
+          >
             {Math.round(viewport.scale.x * 100)}%
           </div>
         </div>
