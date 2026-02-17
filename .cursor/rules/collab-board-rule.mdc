@@ -1,6 +1,6 @@
 ---
-name: collab-board-rule
 description: This is a new rule
+alwaysApply: false
 ---
 
 # Tech Stack
@@ -102,6 +102,8 @@ src/
 - `refactor:` code restructuring
 - `docs:` documentation changes
 - `test:` test additions/changes
+
+Always branch off of and into the development branch. Never into main.
 
 ## Before Committing Checklist
 

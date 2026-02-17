@@ -1,0 +1,10 @@
+---
+description: Git branch and merge workflow - merge only to development, never to main
+alwaysApply: true
+---
+
+# Git Merge Workflow
+
+- **NEVER merge to `main`.** Do not merge feature or fix branches into `main`, and do not push merge commits to `origin/main`.
+- **Merge only to `development`.** Feature and fix branches must be merged into `development` (e.g. `git checkout development && git merge <branch>` then `git push origin development`).
+- When asked to "merge" or "push and merge", merge the current branch into **development** and push `development`; do not touch `main`.
