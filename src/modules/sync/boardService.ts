@@ -8,11 +8,11 @@ import {
   onSnapshot,
   Timestamp,
   Unsubscribe,
-} from "firebase/firestore";
-import { firestore } from "@/lib/firebase";
-import { IBoard, UserRole } from "@/types";
+} from 'firebase/firestore';
+import { firestore } from '@/lib/firebase';
+import { IBoard, UserRole } from '@/types';
 
-const BOARDS_COLLECTION = "boards";
+const BOARDS_COLLECTION = 'boards';
 
 export interface ICreateBoardParams {
   name: string;
@@ -20,9 +20,7 @@ export interface ICreateBoardParams {
   ownerEmail?: string;
 }
 
-export const createBoard = async (
-  params: ICreateBoardParams
-): Promise<IBoard> => {
+export const createBoard = async (params: ICreateBoardParams): Promise<IBoard> => {
   const { name, ownerId } = params;
   const boardRef = doc(collection(firestore, BOARDS_COLLECTION));
   const now = Timestamp.now();
@@ -32,7 +30,7 @@ export const createBoard = async (
     name,
     ownerId,
     members: {
-      [ownerId]: "owner",
+      [ownerId]: 'owner',
     },
     createdAt: now,
     updatedAt: now,
@@ -67,10 +65,7 @@ export const subscribeToBoard = (
   });
 };
 
-export const updateBoardName = async (
-  boardId: string,
-  name: string
-): Promise<void> => {
+export const updateBoardName = async (boardId: string, name: string): Promise<void> => {
   const boardRef = doc(firestore, BOARDS_COLLECTION, boardId);
   await updateDoc(boardRef, {
     name,
@@ -96,7 +91,7 @@ export const addBoardMember = async (
 ): Promise<void> => {
   const board = await getBoard(boardId);
   if (!board) {
-    throw new Error("Board not found");
+    throw new Error('Board not found');
   }
 
   const updatedMembers = {
@@ -107,17 +102,14 @@ export const addBoardMember = async (
   await updateBoardMembers(boardId, updatedMembers);
 };
 
-export const removeBoardMember = async (
-  boardId: string,
-  userId: string
-): Promise<void> => {
+export const removeBoardMember = async (boardId: string, userId: string): Promise<void> => {
   const board = await getBoard(boardId);
   if (!board) {
-    throw new Error("Board not found");
+    throw new Error('Board not found');
   }
 
   if (board.ownerId === userId) {
-    throw new Error("Cannot remove the owner from the board");
+    throw new Error('Cannot remove the owner from the board');
   }
 
   const { [userId]: _, ...remainingMembers } = board.members;
@@ -131,10 +123,10 @@ export const updateMemberRole = async (
 ): Promise<void> => {
   const board = await getBoard(boardId);
   if (!board) {
-    throw new Error("Board not found");
+    throw new Error('Board not found');
   }
 
-  if (board.ownerId === userId && role !== "owner") {
+  if (board.ownerId === userId && role !== 'owner') {
     throw new Error("Cannot change the owner's role");
   }
 
@@ -151,16 +143,13 @@ export const deleteBoard = async (boardId: string): Promise<void> => {
   await deleteDoc(boardRef);
 };
 
-export const getUserRole = (
-  board: IBoard,
-  userId: string
-): UserRole | null => {
+export const getUserRole = (board: IBoard, userId: string): UserRole | null => {
   return board.members[userId] ?? null;
 };
 
 export const canUserEdit = (board: IBoard, userId: string): boolean => {
   const role = getUserRole(board, userId);
-  return role === "owner" || role === "editor";
+  return role === 'owner' || role === 'editor';
 };
 
 export const canUserManage = (board: IBoard, userId: string): boolean => {

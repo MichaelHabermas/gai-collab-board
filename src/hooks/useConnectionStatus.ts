@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { subscribeToConnectionStatus } from "@/modules/sync/realtimeService";
+import { useState, useEffect, useCallback } from 'react';
+import { subscribeToConnectionStatus } from '@/modules/sync/realtimeService';
 
 interface IUseConnectionStatusReturn {
   isOnline: boolean;

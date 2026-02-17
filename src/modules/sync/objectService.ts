@@ -10,24 +10,24 @@ import {
   query,
   orderBy,
   writeBatch,
-} from "firebase/firestore";
-import { firestore } from "@/lib/firebase";
-import type { IBoardObject, ShapeType } from "@/types";
+} from 'firebase/firestore';
+import { firestore } from '@/lib/firebase';
+import type { IBoardObject, ShapeType } from '@/types';
 
-const OBJECTS_SUBCOLLECTION = "objects";
+const OBJECTS_SUBCOLLECTION = 'objects';
 
 /**
  * Gets the reference to the objects subcollection for a board.
  */
 const getObjectsCollection = (boardId: string) => {
-  return collection(firestore, "boards", boardId, OBJECTS_SUBCOLLECTION);
+  return collection(firestore, 'boards', boardId, OBJECTS_SUBCOLLECTION);
 };
 
 /**
  * Gets a reference to a specific object document.
  */
 const getObjectRef = (boardId: string, objectId: string) => {
-  return doc(firestore, "boards", boardId, OBJECTS_SUBCOLLECTION, objectId);
+  return doc(firestore, 'boards', boardId, OBJECTS_SUBCOLLECTION, objectId);
 };
 
 // ============================================================================
@@ -129,9 +129,7 @@ export const createObjectsBatch = async (
 // Object Updates
 // ============================================================================
 
-export type IUpdateObjectParams = Partial<
-  Omit<IBoardObject, "id" | "createdBy" | "createdAt">
->;
+export type IUpdateObjectParams = Partial<Omit<IBoardObject, 'id' | 'createdBy' | 'createdAt'>>;
 
 /**
  * Updates an existing object on the board.
@@ -177,10 +175,7 @@ export const updateObjectsBatch = async (
 /**
  * Deletes an object from the board.
  */
-export const deleteObject = async (
-  boardId: string,
-  objectId: string
-): Promise<void> => {
+export const deleteObject = async (boardId: string, objectId: string): Promise<void> => {
   const objectRef = getObjectRef(boardId, objectId);
   await deleteDoc(objectRef);
 };
@@ -188,10 +183,7 @@ export const deleteObject = async (
 /**
  * Deletes multiple objects in a batch operation.
  */
-export const deleteObjectsBatch = async (
-  boardId: string,
-  objectIds: string[]
-): Promise<void> => {
+export const deleteObjectsBatch = async (boardId: string, objectIds: string[]): Promise<void> => {
   const batch = writeBatch(firestore);
 
   for (const objectId of objectIds) {
@@ -215,7 +207,7 @@ export const subscribeToObjects = (
   callback: (objects: IBoardObject[]) => void
 ): Unsubscribe => {
   const objectsRef = getObjectsCollection(boardId);
-  const objectsQuery = query(objectsRef, orderBy("createdAt", "asc"));
+  const objectsQuery = query(objectsRef, orderBy('createdAt', 'asc'));
 
   return onSnapshot(objectsQuery, (snapshot) => {
     const objects: IBoardObject[] = [];
@@ -234,10 +226,7 @@ export const subscribeToObjects = (
  * Merges local and remote object states using last-write-wins strategy.
  * Returns the object with the most recent updatedAt timestamp.
  */
-export const mergeObjectUpdates = (
-  local: IBoardObject,
-  remote: IBoardObject
-): IBoardObject => {
+export const mergeObjectUpdates = (local: IBoardObject, remote: IBoardObject): IBoardObject => {
   const localTime = local.updatedAt?.toMillis?.() || 0;
   const remoteTime = remote.updatedAt?.toMillis?.() || 0;
   return remoteTime > localTime ? remote : local;

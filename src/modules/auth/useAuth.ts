@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { User } from "firebase/auth";
+import { useState, useEffect, useCallback } from 'react';
+import { User } from 'firebase/auth';
 import {
   subscribeToAuthChanges,
   signUpWithEmail,
@@ -7,7 +7,7 @@ import {
   signInWithGoogle,
   logOut,
   IAuthResult,
-} from "./authService";
+} from './authService';
 
 interface IUseAuthReturn {
   user: User | null;

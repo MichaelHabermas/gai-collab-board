@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { IBoard, UserRole } from "@/types";
-import { subscribeToBoard, getUserRole, canUserEdit, canUserManage } from "@/modules/sync";
-import { useAuth } from "./useAuth";
+import { useState, useEffect } from 'react';
+import { IBoard, UserRole } from '@/types';
+import { subscribeToBoard, getUserRole, canUserEdit, canUserManage } from '@/modules/sync';
+import { useAuth } from './useAuth';
 
 interface IUseCanEditReturn {
   role: UserRole | null;

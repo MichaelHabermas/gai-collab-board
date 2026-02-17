@@ -1,14 +1,7 @@
-import { Timestamp } from "firebase/firestore";
-import { UserRole } from "./user";
+import { Timestamp } from 'firebase/firestore';
+import { UserRole } from './user';
 
-export type ShapeType =
-  | "sticky"
-  | "rectangle"
-  | "circle"
-  | "line"
-  | "text"
-  | "frame"
-  | "connector";
+export type ShapeType = 'sticky' | 'rectangle' | 'circle' | 'line' | 'text' | 'frame' | 'connector';
 
 export interface IBoardObject {
   id: string;

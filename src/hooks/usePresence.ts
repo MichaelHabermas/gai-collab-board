@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
-import { User } from "firebase/auth";
+import { useState, useEffect, useMemo } from 'react';
+import { User } from 'firebase/auth';
 import {
   IPresenceData,
   updatePresence,
@@ -7,7 +7,7 @@ import {
   removePresence,
   setupPresenceDisconnectHandler,
   getUserColor,
-} from "@/modules/sync/realtimeService";
+} from '@/modules/sync/realtimeService';
 
 interface IUsePresenceParams {
   boardId: string | null;
@@ -23,17 +23,12 @@ interface IUsePresenceReturn {
  * Hook for managing user presence on a board.
  * Tracks which users are currently online and assigns consistent colors.
  */
-export const usePresence = ({
-  boardId,
-  user,
-}: IUsePresenceParams): IUsePresenceReturn => {
-  const [presenceMap, setPresenceMap] = useState<Record<string, IPresenceData>>(
-    {}
-  );
+export const usePresence = ({ boardId, user }: IUsePresenceParams): IUsePresenceReturn => {
+  const [presenceMap, setPresenceMap] = useState<Record<string, IPresenceData>>({});
 
   // Generate consistent color for user
   const currentUserColor = useMemo(() => {
-    return user?.uid ? getUserColor(user.uid) : "#6b7280";
+    return user?.uid ? getUserColor(user.uid) : '#6b7280';
   }, [user?.uid]);
 
   // Subscribe to presence updates and set up own presence
@@ -43,8 +38,7 @@ export const usePresence = ({
       return;
     }
 
-    const displayName =
-      user.displayName || user.email?.split("@")[0] || "Anonymous";
+    const displayName = user.displayName || user.email?.split('@')[0] || 'Anonymous';
     const photoURL = user.photoURL;
 
     // Setup disconnect handler so presence is removed if user disconnects

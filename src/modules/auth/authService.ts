@@ -7,40 +7,26 @@ import {
   onAuthStateChanged,
   User,
   UserCredential,
-} from "firebase/auth";
-import { auth } from "@/lib/firebase";
+} from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 export interface IAuthResult {
   user: User | null;
   error: string | null;
 }
 
-export const signUpWithEmail = async (
-  email: string,
-  password: string
-): Promise<IAuthResult> => {
+export const signUpWithEmail = async (email: string, password: string): Promise<IAuthResult> => {
   try {
-    const credential: UserCredential = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
+    const credential: UserCredential = await createUserWithEmailAndPassword(auth, email, password);
     return { user: credential.user, error: null };
   } catch (error) {
     return { user: null, error: (error as Error).message };
   }
 };
 
-export const signInWithEmail = async (
-  email: string,
-  password: string
-): Promise<IAuthResult> => {
+export const signInWithEmail = async (email: string, password: string): Promise<IAuthResult> => {
   try {
-    const credential: UserCredential = await signInWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
+    const credential: UserCredential = await signInWithEmailAndPassword(auth, email, password);
     return { user: credential.user, error: null };
   } catch (error) {
     return { user: null, error: (error as Error).message };
@@ -61,8 +47,6 @@ export const logOut = async (): Promise<void> => {
   await signOut(auth);
 };
 
-export const subscribeToAuthChanges = (
-  callback: (user: User | null) => void
-): (() => void) => {
+export const subscribeToAuthChanges = (callback: (user: User | null) => void): (() => void) => {
   return onAuthStateChanged(auth, callback);
 };

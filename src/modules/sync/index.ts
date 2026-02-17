@@ -13,7 +13,7 @@ export {
   canUserEdit,
   canUserManage,
   type ICreateBoardParams,
-} from "./boardService";
+} from './boardService';
 
 // Realtime service exports (cursors, presence, connection)
 export {
@@ -29,7 +29,7 @@ export {
   getUserColor,
   type ICursorData,
   type IPresenceData,
-} from "./realtimeService";
+} from './realtimeService';
 
 // Object service exports
 export {
@@ -43,4 +43,4 @@ export {
   mergeObjectUpdates,
   type ICreateObjectParams,
   type IUpdateObjectParams,
-} from "./objectService";
+} from './objectService';

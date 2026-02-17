@@ -1,6 +1,6 @@
-import { memo, useEffect, type ReactElement } from "react";
-import { Wifi, WifiOff } from "lucide-react";
-import { useConnectionStatus } from "@/hooks/useConnectionStatus";
+import { memo, useEffect, type ReactElement } from 'react';
+import { Wifi, WifiOff } from 'lucide-react';
+import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 
 interface IConnectionStatusProps {
   showOnlineIndicator?: boolean;
@@ -28,9 +28,9 @@ export const ConnectionStatus = memo(
     // Show reconnection message
     if (isOnline && wasOffline) {
       return (
-        <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg shadow-lg animate-in slide-in-from-bottom-2">
-          <Wifi className="h-4 w-4" />
-          <span className="text-sm font-medium">Back online</span>
+        <div className='fixed bottom-4 left-4 z-50 flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg shadow-lg animate-in slide-in-from-bottom-2'>
+          <Wifi className='h-4 w-4' />
+          <span className='text-sm font-medium'>Back online</span>
         </div>
       );
     }
@@ -38,11 +38,9 @@ export const ConnectionStatus = memo(
     // Show offline indicator
     if (!isOnline) {
       return (
-        <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg shadow-lg animate-in slide-in-from-bottom-2">
-          <WifiOff className="h-4 w-4" />
-          <span className="text-sm font-medium">
-            Offline - Changes will sync when reconnected
-          </span>
+        <div className='fixed bottom-4 left-4 z-50 flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg shadow-lg animate-in slide-in-from-bottom-2'>
+          <WifiOff className='h-4 w-4' />
+          <span className='text-sm font-medium'>Offline - Changes will sync when reconnected</span>
         </div>
       );
     }
@@ -50,9 +48,9 @@ export const ConnectionStatus = memo(
     // Optionally show online indicator
     if (showOnlineIndicator) {
       return (
-        <div className="flex items-center gap-1.5 text-green-500">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-          <span className="text-xs font-medium">Online</span>
+        <div className='flex items-center gap-1.5 text-green-500'>
+          <div className='w-2 h-2 bg-green-500 rounded-full animate-pulse' />
+          <span className='text-xs font-medium'>Online</span>
         </div>
       );
     }
@@ -61,4 +59,4 @@ export const ConnectionStatus = memo(
   }
 );
 
-ConnectionStatus.displayName = "ConnectionStatus";
+ConnectionStatus.displayName = 'ConnectionStatus';

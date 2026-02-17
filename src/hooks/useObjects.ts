@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { User } from "firebase/auth";
-import type { IBoardObject } from "@/types";
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { User } from 'firebase/auth';
+import type { IBoardObject } from '@/types';
 import {
   createObject,
   updateObject,
@@ -9,7 +9,7 @@ import {
   mergeObjectUpdates,
   ICreateObjectParams,
   IUpdateObjectParams,
-} from "@/modules/sync/objectService";
+} from '@/modules/sync/objectService';
 
 interface IUseObjectsParams {
   boardId: string | null;
@@ -20,7 +20,7 @@ interface IUseObjectsReturn {
   objects: IBoardObject[];
   loading: boolean;
   error: string | null;
-  createObject: (params: Omit<ICreateObjectParams, "createdBy">) => Promise<IBoardObject | null>;
+  createObject: (params: Omit<ICreateObjectParams, 'createdBy'>) => Promise<IBoardObject | null>;
   updateObject: (objectId: string, updates: IUpdateObjectParams) => Promise<void>;
   deleteObject: (objectId: string) => Promise<void>;
 }
@@ -29,10 +29,7 @@ interface IUseObjectsReturn {
  * Hook for managing board objects with optimistic updates and rollback.
  * Provides real-time synchronization with Firestore.
  */
-export const useObjects = ({
-  boardId,
-  user,
-}: IUseObjectsParams): IUseObjectsReturn => {
+export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsReturn => {
   const [objects, setObjects] = useState<IBoardObject[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,11 +72,9 @@ export const useObjects = ({
 
   // Create object with optimistic update
   const handleCreateObject = useCallback(
-    async (
-      params: Omit<ICreateObjectParams, "createdBy">
-    ): Promise<IBoardObject | null> => {
+    async (params: Omit<ICreateObjectParams, 'createdBy'>): Promise<IBoardObject | null> => {
       if (!boardId || !user) {
-        setError("Cannot create object: not connected to board");
+        setError('Cannot create object: not connected to board');
         return null;
       }
 
@@ -91,8 +86,7 @@ export const useObjects = ({
         });
         return newObject;
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to create object";
+        const errorMessage = err instanceof Error ? err.message : 'Failed to create object';
         setError(errorMessage);
         return null;
       }
@@ -104,14 +98,14 @@ export const useObjects = ({
   const handleUpdateObject = useCallback(
     async (objectId: string, updates: IUpdateObjectParams): Promise<void> => {
       if (!boardId) {
-        setError("Cannot update object: not connected to board");
+        setError('Cannot update object: not connected to board');
         return;
       }
 
       // Find the current object for potential rollback
       const currentObject = objects.find((obj) => obj.id === objectId);
       if (!currentObject) {
-        setError("Object not found");
+        setError('Object not found');
         return;
       }
 
@@ -119,11 +113,7 @@ export const useObjects = ({
       pendingUpdatesRef.current.set(objectId, currentObject);
 
       // Optimistic update
-      setObjects((prev) =>
-        prev.map((obj) =>
-          obj.id === objectId ? { ...obj, ...updates } : obj
-        )
-      );
+      setObjects((prev) => prev.map((obj) => (obj.id === objectId ? { ...obj, ...updates } : obj)));
 
       try {
         setError(null);
@@ -134,14 +124,11 @@ export const useObjects = ({
         // Rollback on failure
         const original = pendingUpdatesRef.current.get(objectId);
         if (original) {
-          setObjects((prev) =>
-            prev.map((obj) => (obj.id === objectId ? original : obj))
-          );
+          setObjects((prev) => prev.map((obj) => (obj.id === objectId ? original : obj)));
           pendingUpdatesRef.current.delete(objectId);
         }
 
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to update object";
+        const errorMessage = err instanceof Error ? err.message : 'Failed to update object';
         setError(errorMessage);
       }
     },
@@ -152,14 +139,14 @@ export const useObjects = ({
   const handleDeleteObject = useCallback(
     async (objectId: string): Promise<void> => {
       if (!boardId) {
-        setError("Cannot delete object: not connected to board");
+        setError('Cannot delete object: not connected to board');
         return;
       }
 
       // Find the current object for potential rollback
       const currentObject = objects.find((obj) => obj.id === objectId);
       if (!currentObject) {
-        setError("Object not found");
+        setError('Object not found');
         return;
       }
 
@@ -182,8 +169,7 @@ export const useObjects = ({
           pendingUpdatesRef.current.delete(objectId);
         }
 
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to delete object";
+        const errorMessage = err instanceof Error ? err.message : 'Failed to delete object';
         setError(errorMessage);
       }
     },

@@ -1,13 +1,6 @@
-import {
-  ref,
-  set,
-  onValue,
-  onDisconnect,
-  remove,
-  Unsubscribe,
-} from "firebase/database";
-import { realtimeDb } from "@/lib/firebase";
-import type { Cursors } from "@/hooks/useCursors";
+import { ref, set, onValue, onDisconnect, remove, Unsubscribe } from 'firebase/database';
+import { realtimeDb } from '@/lib/firebase';
+import type { Cursors } from '@/hooks/useCursors';
 
 // ============================================================================
 // Cursor Types and Functions
@@ -62,10 +55,7 @@ export const subscribeToCursors = (
 /**
  * Removes a user's cursor from the board.
  */
-export const removeCursor = async (
-  boardId: string,
-  uid: string
-): Promise<void> => {
+export const removeCursor = async (boardId: string, uid: string): Promise<void> => {
   const cursorRef = ref(realtimeDb, `boards/${boardId}/cursors/${uid}`);
   await remove(cursorRef);
 };
@@ -74,10 +64,7 @@ export const removeCursor = async (
  * Sets up automatic cursor removal when user disconnects.
  * Should be called once when joining a board.
  */
-export const setupCursorDisconnectHandler = (
-  boardId: string,
-  uid: string
-): void => {
+export const setupCursorDisconnectHandler = (boardId: string, uid: string): void => {
   const cursorRef = ref(realtimeDb, `boards/${boardId}/cursors/${uid}`);
   onDisconnect(cursorRef).remove();
 };
@@ -133,10 +120,7 @@ export const subscribeToPresence = (
 /**
  * Removes a user's presence from the board.
  */
-export const removePresence = async (
-  boardId: string,
-  uid: string
-): Promise<void> => {
+export const removePresence = async (boardId: string, uid: string): Promise<void> => {
   const presenceRef = ref(realtimeDb, `boards/${boardId}/presence/${uid}`);
   await remove(presenceRef);
 };
@@ -145,10 +129,7 @@ export const removePresence = async (
  * Sets up automatic presence removal when user disconnects.
  * Should be called once when joining a board.
  */
-export const setupPresenceDisconnectHandler = (
-  boardId: string,
-  uid: string
-): void => {
+export const setupPresenceDisconnectHandler = (boardId: string, uid: string): void => {
   const presenceRef = ref(realtimeDb, `boards/${boardId}/presence/${uid}`);
   onDisconnect(presenceRef).remove();
 };
@@ -164,7 +145,7 @@ export const setupPresenceDisconnectHandler = (
 export const subscribeToConnectionStatus = (
   callback: (isConnected: boolean) => void
 ): Unsubscribe => {
-  const connectedRef = ref(realtimeDb, ".info/connected");
+  const connectedRef = ref(realtimeDb, '.info/connected');
   return onValue(connectedRef, (snapshot) => {
     callback(snapshot.val() === true);
   });
@@ -175,16 +156,16 @@ export const subscribeToConnectionStatus = (
 // ============================================================================
 
 const USER_COLORS = [
-  "#ef4444", // red
-  "#f97316", // orange
-  "#eab308", // yellow
-  "#22c55e", // green
-  "#14b8a6", // teal
-  "#3b82f6", // blue
-  "#8b5cf6", // violet
-  "#ec4899", // pink
-  "#06b6d4", // cyan
-  "#84cc16", // lime
+  '#ef4444', // red
+  '#f97316', // orange
+  '#eab308', // yellow
+  '#22c55e', // green
+  '#14b8a6', // teal
+  '#3b82f6', // blue
+  '#8b5cf6', // violet
+  '#ec4899', // pink
+  '#06b6d4', // cyan
+  '#84cc16', // lime
 ] as const;
 
 /**

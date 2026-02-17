@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { User } from "firebase/auth";
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { User } from 'firebase/auth';
 import {
   ICursorData,
   updateCursor,
@@ -7,7 +7,7 @@ import {
   removeCursor,
   setupCursorDisconnectHandler,
   getUserColor,
-} from "@/modules/sync/realtimeService";
+} from '@/modules/sync/realtimeService';
 
 export type Cursors = Record<string, ICursorData>;
 
@@ -27,13 +27,10 @@ const DEBOUNCE_MS = 16; // ~60fps
  * Hook for managing cursor synchronization on a board.
  * Handles subscribing to other users' cursors and broadcasting own cursor position.
  */
-export const useCursors = ({
-  boardId,
-  user,
-}: IUseCursorsParams): IUseCursorsReturn => {
+export const useCursors = ({ boardId, user }: IUseCursorsParams): IUseCursorsReturn => {
   const [cursors, setCursors] = useState<Cursors>({});
   const lastUpdateRef = useRef<number>(0);
-  const userColorRef = useRef<string>("");
+  const userColorRef = useRef<string>('');
 
   // Generate consistent color for user
   useEffect(() => {
@@ -75,17 +72,9 @@ export const useCursors = ({
       }
       lastUpdateRef.current = now;
 
-      const displayName =
-        user.displayName || user.email?.split("@")[0] || "Anonymous";
+      const displayName = user.displayName || user.email?.split('@')[0] || 'Anonymous';
 
-      updateCursor(
-        boardId,
-        user.uid,
-        x,
-        y,
-        displayName,
-        userColorRef.current
-      );
+      updateCursor(boardId, user.uid, x, y, displayName, userColorRef.current);
     },
     [boardId, user]
   );

@@ -1,5 +1,5 @@
-export { useAuth } from "./useAuth";
-export { useCanEdit } from "./useCanEdit";
+export { useAuth } from './useAuth';
+export { useCanEdit } from './useCanEdit';
 export {
   signUpWithEmail,
   signInWithEmail,
@@ -7,4 +7,4 @@ export {
   logOut,
   subscribeToAuthChanges,
   type IAuthResult,
-} from "./authService";
+} from './authService';

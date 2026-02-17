@@ -1,11 +1,7 @@
-import { initializeApp, FirebaseApp } from "firebase/app";
-import { getAuth, Auth } from "firebase/auth";
-import {
-  getFirestore,
-  Firestore,
-  enableIndexedDbPersistence,
-} from "firebase/firestore";
-import { getDatabase, Database } from "firebase/database";
+import { initializeApp, FirebaseApp } from 'firebase/app';
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, Firestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import { getDatabase, Database } from 'firebase/database';
 
 interface IFirebaseConfig {
   apiKey: string;
@@ -42,10 +38,10 @@ export const enableOfflineSupport = async (): Promise<void> => {
     await enableIndexedDbPersistence(firestore);
   } catch (err) {
     const error = err as { code?: string };
-    if (error.code === "failed-precondition") {
+    if (error.code === 'failed-precondition') {
       // Multiple tabs open, persistence can only be enabled in one tab at a time
       // This is expected behavior, not an error
-    } else if (error.code === "unimplemented") {
+    } else if (error.code === 'unimplemented') {
       // The current browser doesn't support offline persistence
       // This is expected in some browsers, not an error
     }
