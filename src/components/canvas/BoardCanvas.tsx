@@ -87,6 +87,7 @@ export const BoardCanvas = memo(
       y2: 0,
     });
     const [isSelecting, setIsSelecting] = useState(false);
+    const selectionStartRef = useRef<{ x1: number; y1: number } | null>(null);
     const [connectorFrom, setConnectorFrom] = useState<{
       shapeId: string;
       anchor: ConnectorAnchor;
@@ -250,6 +251,7 @@ export const BoardCanvas = memo(
 
         // Start drag-to-select if using select tool
         if (activeTool === 'select') {
+          selectionStartRef.current = { x1: canvasX, y1: canvasY };
           setIsSelecting(true);
           setSelectionRect({
             visible: true,
@@ -264,137 +266,143 @@ export const BoardCanvas = memo(
     );
 
     // Handle mouse up for drawing end and selection completion
-    const handleStageMouseUp = useCallback(async () => {
-      // Handle drawing completion if we were drawing
-      if (drawingState.isDrawing && onObjectCreate) {
-        const { startX, startY, currentX, currentY } = drawingState;
+    const handleStageMouseUp = useCallback(
+      async (e: Konva.KonvaEventObject<MouseEvent>) => {
+        // Handle drawing completion if we were drawing
+        if (drawingState.isDrawing && onObjectCreate) {
+          const { startX, startY, currentX, currentY } = drawingState;
 
-        // Calculate dimensions
-        const x = Math.min(startX, currentX);
-        const y = Math.min(startY, currentY);
-        const width = Math.abs(currentX - startX);
-        const height = Math.abs(currentY - startY);
+          // Calculate dimensions
+          const x = Math.min(startX, currentX);
+          const y = Math.min(startY, currentY);
+          const width = Math.abs(currentX - startX);
+          const height = Math.abs(currentY - startY);
 
-        // Only create if size is significant
-        if (width > 5 || height > 5) {
-          let result: IBoardObject | null = null;
+          // Only create if size is significant
+          if (width > 5 || height > 5) {
+            let result: IBoardObject | null = null;
 
-          if (activeTool === 'rectangle') {
-            result = await onObjectCreate({
-              type: 'rectangle',
-              x,
-              y,
-              width: Math.max(width, 20),
-              height: Math.max(height, 20),
-              fill: activeColor,
-              stroke: '#1e293b',
-              strokeWidth: 2,
-              rotation: 0,
-            });
-          } else if (activeTool === 'circle') {
-            result = await onObjectCreate({
-              type: 'circle',
-              x,
-              y,
-              width: Math.max(width, 20),
-              height: Math.max(height, 20),
-              fill: activeColor,
-              stroke: '#1e293b',
-              strokeWidth: 2,
-              rotation: 0,
-            });
-          } else if (activeTool === 'line') {
-            result = await onObjectCreate({
-              type: 'line',
-              x: 0,
-              y: 0,
-              width: 0,
-              height: 0,
-              points: [startX, startY, currentX, currentY],
-              fill: 'transparent',
-              stroke: activeColor,
-              strokeWidth: 3,
-              rotation: 0,
-            });
-          } else if (activeTool === 'frame') {
-            result = await onObjectCreate({
-              type: 'frame',
-              x,
-              y,
-              width: Math.max(width, 150),
-              height: Math.max(height, 100),
-              fill: 'rgba(241, 245, 249, 0.5)',
-              stroke: '#94a3b8',
-              strokeWidth: 2,
-              text: 'Frame',
-              rotation: 0,
-            });
+            if (activeTool === 'rectangle') {
+              result = await onObjectCreate({
+                type: 'rectangle',
+                x,
+                y,
+                width: Math.max(width, 20),
+                height: Math.max(height, 20),
+                fill: activeColor,
+                stroke: '#1e293b',
+                strokeWidth: 2,
+                rotation: 0,
+              });
+            } else if (activeTool === 'circle') {
+              result = await onObjectCreate({
+                type: 'circle',
+                x,
+                y,
+                width: Math.max(width, 20),
+                height: Math.max(height, 20),
+                fill: activeColor,
+                stroke: '#1e293b',
+                strokeWidth: 2,
+                rotation: 0,
+              });
+            } else if (activeTool === 'line') {
+              result = await onObjectCreate({
+                type: 'line',
+                x: 0,
+                y: 0,
+                width: 0,
+                height: 0,
+                points: [startX, startY, currentX, currentY],
+                fill: 'transparent',
+                stroke: activeColor,
+                strokeWidth: 3,
+                rotation: 0,
+              });
+            } else if (activeTool === 'frame') {
+              result = await onObjectCreate({
+                type: 'frame',
+                x,
+                y,
+                width: Math.max(width, 150),
+                height: Math.max(height, 100),
+                fill: 'rgba(241, 245, 249, 0.5)',
+                stroke: '#94a3b8',
+                strokeWidth: 2,
+                text: 'Frame',
+                rotation: 0,
+              });
+            }
+
+            // Only switch back to select tool if object was successfully created
+            if (result) {
+              setActiveTool('select');
+              activeToolRef.current = 'select';
+            }
           }
 
-          // Only switch back to select tool if object was successfully created
-          if (result) {
-            setActiveTool('select');
-            activeToolRef.current = 'select';
+          // Reset drawing state
+          setDrawingState({
+            isDrawing: false,
+            startX: 0,
+            startY: 0,
+            currentX: 0,
+            currentY: 0,
+          });
+        }
+
+        // Handle selection rectangle completion using ref + event (avoids stale state)
+        if (isSelecting && selectionStartRef.current) {
+          const start = selectionStartRef.current;
+          const stage = e.target.getStage();
+          const pointer = stage?.getPointerPosition();
+          if (stage && pointer) {
+            const end = getCanvasCoords(stage, pointer);
+            const selX1 = Math.min(start.x1, end.x);
+            const selY1 = Math.min(start.y1, end.y);
+            const selX2 = Math.max(start.x1, end.x);
+            const selY2 = Math.max(start.y1, end.y);
+
+            // Only select if the rectangle has meaningful size
+            if (Math.abs(selX2 - selX1) > 5 && Math.abs(selY2 - selY1) > 5) {
+              const selectedObjectIds = objects
+                .filter((obj) => {
+                  const objX1 = obj.x;
+                  const objY1 = obj.y;
+                  const objX2 = obj.x + obj.width;
+                  const objY2 = obj.y + obj.height;
+                  return objX1 < selX2 && objX2 > selX1 && objY1 < selY2 && objY2 > selY1;
+                })
+                .map((obj) => obj.id);
+
+              setSelectedIds(selectedObjectIds);
+            }
           }
         }
 
-        // Reset drawing state
-        setDrawingState({
-          isDrawing: false,
-          startX: 0,
-          startY: 0,
-          currentX: 0,
-          currentY: 0,
-        });
-      }
-
-      // Handle selection rectangle completion (always check, regardless of drawing state)
-      if (isSelecting && selectionRect.visible) {
-        // Find objects within selection rectangle
-        const selX1 = Math.min(selectionRect.x1, selectionRect.x2);
-        const selY1 = Math.min(selectionRect.y1, selectionRect.y2);
-        const selX2 = Math.max(selectionRect.x1, selectionRect.x2);
-        const selY2 = Math.max(selectionRect.y1, selectionRect.y2);
-
-        // Only select if the rectangle has meaningful size
-        if (Math.abs(selX2 - selX1) > 5 && Math.abs(selY2 - selY1) > 5) {
-          const selectedObjectIds = objects
-            .filter((obj) => {
-              // Check if object is within selection rectangle
-              const objX1 = obj.x;
-              const objY1 = obj.y;
-              const objX2 = obj.x + obj.width;
-              const objY2 = obj.y + obj.height;
-
-              // Check for intersection
-              return objX1 < selX2 && objX2 > selX1 && objY1 < selY2 && objY2 > selY1;
-            })
-            .map((obj) => obj.id);
-
-          setSelectedIds(selectedObjectIds);
+        // Always reset selection state on mouse up
+        if (isSelecting) {
+          selectionStartRef.current = null;
+          setIsSelecting(false);
+          setSelectionRect({
+            visible: false,
+            x1: 0,
+            y1: 0,
+            x2: 0,
+            y2: 0,
+          });
         }
-      }
-
-      // Always reset selection state on mouse up
-      if (isSelecting) {
-        setIsSelecting(false);
-        setSelectionRect({
-          visible: false,
-          x1: 0,
-          y1: 0,
-          x2: 0,
-          y2: 0,
-        });
-      }
-    }, [
-      drawingState,
-      activeTool,
-      activeColor,
-      onObjectCreate,
-      isSelecting,
-      selectionRect,
-      objects,
-    ]);
+      },
+      [
+        drawingState,
+        activeTool,
+        activeColor,
+        onObjectCreate,
+        isSelecting,
+        objects,
+        getCanvasCoords,
+      ]
+    );
 
     // Handle stage click for object creation or deselection
     const handleStageClick = useCallback(
@@ -438,8 +446,7 @@ export const BoardCanvas = memo(
                 setActiveTool('select');
                 activeToolRef.current = 'select';
               })
-              .catch((error) => {
-                console.error('[DEBUG] Error creating sticky note:', error);
+              .catch(() => {
                 // On error, still switch back to select
                 setActiveTool('select');
                 activeToolRef.current = 'select';
