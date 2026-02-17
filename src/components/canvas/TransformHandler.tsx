@@ -112,9 +112,7 @@ export const TransformHandler = memo(
           // Line / Connector: persist scaled points, not width/height
           const lineNode = node as Konva.Line;
           const currentPoints = lineNode.points();
-          const scaledPoints = currentPoints.map((p, i) =>
-            i % 2 === 0 ? p * scaleX : p * scaleY
-          );
+          const scaledPoints = currentPoints.map((p, i) => (i % 2 === 0 ? p * scaleX : p * scaleY));
           node.scaleX(1);
           node.scaleY(1);
           attrs = {

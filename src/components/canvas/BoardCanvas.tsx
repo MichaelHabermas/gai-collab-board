@@ -43,6 +43,52 @@ const GRID_STROKE_WIDTH = 1;
 // Default sizes for new objects
 const DEFAULT_STICKY_SIZE = { width: 200, height: 200 };
 
+// Minimum size for line/connector bounds when points define a degenerate box
+const MIN_POINTS_BOUND_SIZE = 2;
+
+/**
+ * Returns axis-aligned bounds { x1, y1, x2, y2 } for an object.
+ * For line/connector, computes bounds from points (relative to obj.x, obj.y).
+ */
+function getObjectBounds(obj: IBoardObject): { x1: number; y1: number; x2: number; y2: number } {
+  if (
+    (obj.type === 'line' || obj.type === 'connector') &&
+    obj.points != null &&
+    obj.points.length >= 4
+  ) {
+    const pts = obj.points;
+    const p0 = pts[0] ?? 0;
+    const p1 = pts[1] ?? 0;
+    let minX = obj.x + p0;
+    let maxX = obj.x + p0;
+    let minY = obj.y + p1;
+    let maxY = obj.y + p1;
+    for (let i = 2; i + 1 < pts.length; i += 2) {
+      const px = obj.x + (pts[i] ?? 0);
+      const py = obj.y + (pts[i + 1] ?? 0);
+      minX = Math.min(minX, px);
+      maxX = Math.max(maxX, px);
+      minY = Math.min(minY, py);
+      maxY = Math.max(maxY, py);
+    }
+    if (maxX - minX < MIN_POINTS_BOUND_SIZE) {
+      minX -= MIN_POINTS_BOUND_SIZE / 2;
+      maxX += MIN_POINTS_BOUND_SIZE / 2;
+    }
+    if (maxY - minY < MIN_POINTS_BOUND_SIZE) {
+      minY -= MIN_POINTS_BOUND_SIZE / 2;
+      maxY += MIN_POINTS_BOUND_SIZE / 2;
+    }
+    return { x1: minX, y1: minY, x2: maxX, y2: maxY };
+  }
+  return {
+    x1: obj.x,
+    y1: obj.y,
+    x2: obj.x + obj.width,
+    y2: obj.y + obj.height,
+  };
+}
+
 // Drawing state for shapes
 interface IDrawingState {
   isDrawing: boolean;
@@ -87,7 +133,10 @@ export const BoardCanvas = memo(
       y2: 0,
     });
     const [isSelecting, setIsSelecting] = useState(false);
+    const isSelectingRef = useRef(false);
     const selectionStartRef = useRef<{ x1: number; y1: number } | null>(null);
+    // When true, the next click is the release of a marquee; skip empty-area deselect so selection is not cleared
+    const justDidMarqueeSelectionRef = useRef(false);
     const [connectorFrom, setConnectorFrom] = useState<{
       shapeId: string;
       anchor: ConnectorAnchor;
@@ -103,12 +152,7 @@ export const BoardCanvas = memo(
     const linkedConnectorIds = useMemo(
       () =>
         objects
-          .filter(
-            (o) =>
-              o.type === 'connector' &&
-              o.fromObjectId != null &&
-              o.toObjectId != null
-          )
+          .filter((o) => o.type === 'connector' && o.fromObjectId != null && o.toObjectId != null)
           .map((o) => o.id),
       [objects]
     );
@@ -252,6 +296,7 @@ export const BoardCanvas = memo(
         // Start drag-to-select if using select tool
         if (activeTool === 'select') {
           selectionStartRef.current = { x1: canvasX, y1: canvasY };
+          isSelectingRef.current = true;
           setIsSelecting(true);
           setSelectionRect({
             visible: true,
@@ -351,12 +396,22 @@ export const BoardCanvas = memo(
           });
         }
 
-        // Handle selection rectangle completion using ref + event (avoids stale state)
-        if (isSelecting && selectionStartRef.current) {
+        // Handle selection rectangle completion using refs + event (avoids stale state)
+        // Use isSelectingRef so we don't rely on isSelecting state which may not have flushed yet
+        if (isSelectingRef.current && selectionStartRef.current) {
           const start = selectionStartRef.current;
           const stage = e.target.getStage();
-          const pointer = stage?.getPointerPosition();
-          if (stage && pointer) {
+          if (stage) {
+            // getPointerPosition() can be null on mouseup; fallback to native event
+            let pointer = stage.getPointerPosition();
+            if (!pointer) {
+              const container = stage.container();
+              const rect = container.getBoundingClientRect();
+              pointer = {
+                x: e.evt.clientX - rect.left,
+                y: e.evt.clientY - rect.top,
+              };
+            }
             const end = getCanvasCoords(stage, pointer);
             const selX1 = Math.min(start.x1, end.x);
             const selY1 = Math.min(start.y1, end.y);
@@ -367,21 +422,20 @@ export const BoardCanvas = memo(
             if (Math.abs(selX2 - selX1) > 5 && Math.abs(selY2 - selY1) > 5) {
               const selectedObjectIds = objects
                 .filter((obj) => {
-                  const objX1 = obj.x;
-                  const objY1 = obj.y;
-                  const objX2 = obj.x + obj.width;
-                  const objY2 = obj.y + obj.height;
+                  const { x1: objX1, y1: objY1, x2: objX2, y2: objY2 } = getObjectBounds(obj);
                   return objX1 < selX2 && objX2 > selX1 && objY1 < selY2 && objY2 > selY1;
                 })
                 .map((obj) => obj.id);
 
               setSelectedIds(selectedObjectIds);
+              justDidMarqueeSelectionRef.current = true;
             }
           }
         }
 
-        // Always reset selection state on mouse up
-        if (isSelecting) {
+        // Always reset selection state on mouse up (use ref so we clear when we were selecting)
+        if (isSelectingRef.current) {
+          isSelectingRef.current = false;
           selectionStartRef.current = null;
           setIsSelecting(false);
           setSelectionRect({
@@ -393,15 +447,7 @@ export const BoardCanvas = memo(
           });
         }
       },
-      [
-        drawingState,
-        activeTool,
-        activeColor,
-        onObjectCreate,
-        isSelecting,
-        objects,
-        getCanvasCoords,
-      ]
+      [drawingState, activeTool, activeColor, onObjectCreate, objects, getCanvasCoords]
     );
 
     // Handle stage click for object creation or deselection
@@ -409,6 +455,11 @@ export const BoardCanvas = memo(
       (e: Konva.KonvaEventObject<MouseEvent>) => {
         const stage = e.target.getStage();
         if (!stage) {
+          return;
+        }
+        // Click that follows marquee release on empty area must not clear selection
+        if (justDidMarqueeSelectionRef.current) {
+          justDidMarqueeSelectionRef.current = false;
           return;
         }
 
@@ -713,19 +764,14 @@ export const BoardCanvas = memo(
 
           case 'connector': {
             const fromObj =
-              obj.fromObjectId != null
-                ? objects.find((o) => o.id === obj.fromObjectId)
-                : undefined;
+              obj.fromObjectId != null ? objects.find((o) => o.id === obj.fromObjectId) : undefined;
             const toObj =
               obj.toObjectId != null ? objects.find((o) => o.id === obj.toObjectId) : undefined;
-            const isLinked =
-              Boolean(fromObj && toObj && obj.fromAnchor != null && obj.toAnchor != null);
-            const x = isLinked
-              ? getAnchorPosition(fromObj!, obj.fromAnchor!).x
-              : obj.x;
-            const y = isLinked
-              ? getAnchorPosition(fromObj!, obj.fromAnchor!).y
-              : obj.y;
+            const isLinked = Boolean(
+              fromObj && toObj && obj.fromAnchor != null && obj.toAnchor != null
+            );
+            const x = isLinked ? getAnchorPosition(fromObj!, obj.fromAnchor!).x : obj.x;
+            const y = isLinked ? getAnchorPosition(fromObj!, obj.fromAnchor!).y : obj.y;
             const points = isLinked
               ? [
                   0,
@@ -733,7 +779,7 @@ export const BoardCanvas = memo(
                   getAnchorPosition(toObj!, obj.toAnchor!).x - x,
                   getAnchorPosition(toObj!, obj.toAnchor!).y - y,
                 ]
-              : (obj.points || [0, 0, 100, 100]);
+              : obj.points || [0, 0, 100, 100];
             return (
               <Connector
                 key={obj.id}
@@ -895,12 +941,16 @@ export const BoardCanvas = memo(
       return null;
     }, [drawingState, activeTool, activeColor]);
 
-    // Determine if stage should be draggable
-    const isDraggable =
-      activeTool === 'pan' || (activeTool === 'select' && !drawingState.isDrawing && !isSelecting);
+    // Stage is draggable only in pan mode so marquee selection is not stolen by pan
+    const isDraggable = activeTool === 'pan';
 
     return (
-      <div className='w-full h-full overflow-hidden bg-white relative' data-testid='board-canvas'>
+      <div
+        className='w-full h-full overflow-hidden bg-white relative'
+        data-testid='board-canvas'
+        data-selected-count={selectedIds.length}
+        data-selected-ids={selectedIds.join(',')}
+      >
         {/* Toolbar */}
         <Toolbar
           activeTool={activeTool}

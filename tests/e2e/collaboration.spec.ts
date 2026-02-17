@@ -468,6 +468,65 @@ test.describe("Object Manipulation", () => {
       }
     }
   });
+
+  test("should select shapes when dragging marquee with select tool", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await waitForPageReady(page);
+
+    const isBoard = await isOnBoardPage(page);
+    if (isBoard) {
+      // Ensure select tool is active
+      await page.click('[data-testid="tool-select"]');
+
+      const canvas = page.locator("canvas").first();
+      const box = await canvas.boundingBox();
+      if (box) {
+        // Marquee drag: empty area to empty area (no shapes required)
+        await page.mouse.move(box.x + 150, box.y + 150);
+        await page.mouse.down();
+        await page.mouse.move(box.x + 350, box.y + 350);
+        await page.mouse.up();
+
+        // App should remain stable; data-selected-count is available for assertion
+        const boardCanvas = page.locator('[data-testid="board-canvas"]');
+        await expect(boardCanvas).toBeVisible();
+        await expect(boardCanvas).toHaveAttribute("data-selected-count");
+      }
+
+      // With a shape: create sticky then marquee over it and assert selection
+      await page.click('[data-testid="tool-sticky"]');
+      const canvas2 = page.locator("canvas").first();
+      const box2 = await canvas2.boundingBox();
+      if (box2) {
+        const centerX = box2.x + box2.width / 2;
+        const centerY = box2.y + box2.height / 2;
+        await page.mouse.click(centerX, centerY);
+      }
+
+      // Wait for sticky to be created (object count shows at least one object)
+      await expect(page.locator('[data-testid="object-count"]')).toContainText("1", {
+        timeout: 10000,
+      });
+
+      await page.click('[data-testid="tool-select"]');
+      const canvas3 = page.locator("canvas").first();
+      const box3 = await canvas3.boundingBox();
+      if (box3) {
+        // Drag marquee over center (where sticky was placed)
+        await page.mouse.move(box3.x + box3.width / 2 - 150, box3.y + box3.height / 2 - 150);
+        await page.mouse.down();
+        await page.mouse.move(box3.x + box3.width / 2 + 150, box3.y + box3.height / 2 + 150);
+        await page.mouse.up();
+
+        const selectedCount = await page
+          .locator('[data-testid="board-canvas"]')
+          .getAttribute("data-selected-count");
+        expect(selectedCount).toBe("1");
+      }
+    }
+  });
 });
 
 // ============================================================================

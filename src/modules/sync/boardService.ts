@@ -116,7 +116,8 @@ export const removeBoardMember = async (boardId: string, userId: string): Promis
     throw new Error('Cannot remove the owner from the board');
   }
 
-  const { [userId]: _, ...remainingMembers } = board.members;
+  const remainingMembers = { ...board.members };
+  delete remainingMembers[userId];
   await updateBoardMembers(boardId, remainingMembers);
 };
 

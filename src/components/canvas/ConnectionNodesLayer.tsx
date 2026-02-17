@@ -24,14 +24,20 @@ interface IConnectionNodesLayerProps {
 export const ConnectionNodesLayer = memo(
   ({ shapes, onNodeClick }: IConnectionNodesLayerProps): ReactElement => {
     const handleNodeClick = useCallback(
-      (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>, shapeId: string, anchor: ConnectorAnchor) => {
+      (
+        e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
+        shapeId: string,
+        anchor: ConnectorAnchor
+      ) => {
         e.cancelBubble = true;
         onNodeClick(shapeId, anchor);
       },
       [onNodeClick]
     );
 
-    const connectableShapes = shapes.filter((s): s is IBoardObject => isConnectableShapeType(s.type));
+    const connectableShapes = shapes.filter((s): s is IBoardObject =>
+      isConnectableShapeType(s.type)
+    );
 
     return (
       <>

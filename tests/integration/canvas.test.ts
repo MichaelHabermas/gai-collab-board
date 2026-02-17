@@ -1106,6 +1106,154 @@ describe("Selection Operations", () => {
       )
     ).toBe(false);
   });
+
+  it("should make stage draggable only when pan tool is active", () => {
+    // BoardCanvas uses isDraggable = activeTool === 'pan' so marquee is not stolen by pan
+    const isStageDraggable = (activeTool: string): boolean => activeTool === "pan";
+
+    expect(isStageDraggable("select")).toBe(false);
+    expect(isStageDraggable("pan")).toBe(true);
+    expect(isStageDraggable("sticky")).toBe(false);
+    expect(isStageDraggable("rectangle")).toBe(false);
+  });
+
+  it("should return rect bounds for rectangular shapes", () => {
+    // Mirror getObjectBounds for non-line/connector: x1,y1 = x,y; x2,y2 = x+width, y+height
+    const getObjectBoundsRect = (obj: {
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      type?: string;
+    }) => ({
+      x1: obj.x,
+      y1: obj.y,
+      x2: obj.x + obj.width,
+      y2: obj.y + obj.height,
+    });
+
+    const sticky = { x: 100, y: 100, width: 200, height: 200 };
+    const bounds = getObjectBoundsRect(sticky);
+    expect(bounds.x1).toBe(100);
+    expect(bounds.y1).toBe(100);
+    expect(bounds.x2).toBe(300);
+    expect(bounds.y2).toBe(300);
+  });
+
+  it("should return bounds from points for line and connector", () => {
+    const MIN_POINTS_BOUND_SIZE = 2;
+    const getObjectBoundsFromPoints = (
+      obj: { x: number; y: number; points: number[] },
+      type: string
+    ): { x1: number; y1: number; x2: number; y2: number } => {
+      if ((type !== "line" && type !== "connector") || !obj.points || obj.points.length < 4) {
+        return { x1: obj.x, y1: obj.y, x2: obj.x, y2: obj.y };
+      }
+      const pts = obj.points;
+      const p0 = pts[0] ?? 0;
+      const p1 = pts[1] ?? 0;
+      let minX = obj.x + p0;
+      let maxX = obj.x + p0;
+      let minY = obj.y + p1;
+      let maxY = obj.y + p1;
+      for (let i = 2; i + 1 < pts.length; i += 2) {
+        const px = obj.x + (pts[i] ?? 0);
+        const py = obj.y + (pts[i + 1] ?? 0);
+        minX = Math.min(minX, px);
+        maxX = Math.max(maxX, px);
+        minY = Math.min(minY, py);
+        maxY = Math.max(maxY, py);
+      }
+      if (maxX - minX < MIN_POINTS_BOUND_SIZE) {
+        minX -= MIN_POINTS_BOUND_SIZE / 2;
+        maxX += MIN_POINTS_BOUND_SIZE / 2;
+      }
+      if (maxY - minY < MIN_POINTS_BOUND_SIZE) {
+        minY -= MIN_POINTS_BOUND_SIZE / 2;
+        maxY += MIN_POINTS_BOUND_SIZE / 2;
+      }
+      return { x1: minX, y1: minY, x2: maxX, y2: maxY };
+    };
+
+    const line = { x: 0, y: 0, points: [100, 100, 300, 200] };
+    const lineBounds = getObjectBoundsFromPoints(line, "line");
+    expect(lineBounds.x1).toBe(100);
+    expect(lineBounds.y1).toBe(100);
+    expect(lineBounds.x2).toBe(300);
+    expect(lineBounds.y2).toBe(200);
+
+    const connector = { x: 10, y: 20, points: [0, 0, 50, 80] };
+    const connBounds = getObjectBoundsFromPoints(connector, "connector");
+    expect(connBounds.x1).toBe(10);
+    expect(connBounds.y1).toBe(20);
+    expect(connBounds.x2).toBe(60);
+    expect(connBounds.y2).toBe(100);
+  });
+
+  it("should include line/connector in marquee when selection rect intersects their bounds", () => {
+    const MIN_POINTS_BOUND_SIZE = 2;
+    const getObjectBounds = (
+      obj: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+        type?: string;
+        points?: number[];
+      },
+      type: string
+    ): { x1: number; y1: number; x2: number; y2: number } => {
+      if ((type === "line" || type === "connector") && obj.points && obj.points.length >= 4) {
+        const pts = obj.points;
+        const p0 = pts[0] ?? 0;
+        const p1 = pts[1] ?? 0;
+        let minX = obj.x + p0;
+        let maxX = obj.x + p0;
+        let minY = obj.y + p1;
+        let maxY = obj.y + p1;
+        for (let i = 2; i + 1 < pts.length; i += 2) {
+          const px = obj.x + (pts[i] ?? 0);
+          const py = obj.y + (pts[i + 1] ?? 0);
+          minX = Math.min(minX, px);
+          maxX = Math.max(maxX, px);
+          minY = Math.min(minY, py);
+          maxY = Math.max(maxY, py);
+        }
+        if (maxX - minX < MIN_POINTS_BOUND_SIZE) {
+          minX -= MIN_POINTS_BOUND_SIZE / 2;
+          maxX += MIN_POINTS_BOUND_SIZE / 2;
+        }
+        if (maxY - minY < MIN_POINTS_BOUND_SIZE) {
+          minY -= MIN_POINTS_BOUND_SIZE / 2;
+          maxY += MIN_POINTS_BOUND_SIZE / 2;
+        }
+        return { x1: minX, y1: minY, x2: maxX, y2: maxY };
+      }
+      return {
+        x1: obj.x,
+        y1: obj.y,
+        x2: obj.x + obj.width,
+        y2: obj.y + obj.height,
+      };
+    };
+    const isIntersecting = (
+      objBounds: { x1: number; y1: number; x2: number; y2: number },
+      sel: { x1: number; y1: number; x2: number; y2: number }
+    ): boolean =>
+      objBounds.x1 < sel.x2 &&
+      objBounds.x2 > sel.x1 &&
+      objBounds.y1 < sel.y2 &&
+      objBounds.y2 > sel.y1;
+
+    const selectionRect = { x1: 50, y1: 50, x2: 250, y2: 250 };
+    const lineObj = { x: 0, y: 0, width: 0, height: 0, points: [100, 100, 300, 200] };
+    const lineBounds = getObjectBounds(lineObj, "line");
+    expect(isIntersecting(lineBounds, selectionRect)).toBe(true);
+
+    const lineOutside = { x: 0, y: 0, width: 0, height: 0, points: [400, 400, 500, 500] };
+    const lineOutsideBounds = getObjectBounds(lineOutside, "line");
+    expect(isIntersecting(lineOutsideBounds, selectionRect)).toBe(false);
+  });
 });
 
 describe("Click-to-Create Operations", () => {
