@@ -1,11 +1,16 @@
-import { useState, useEffect, type ReactElement } from 'react';
+import { useState, useEffect, useRef, type ReactElement } from 'react';
 import { useAuth } from '@/modules/auth';
 import { AuthPage } from '@/components/auth/AuthPage';
 import { Button } from '@/components/ui/button';
 import { LogOut, Loader2 } from 'lucide-react';
 import { BoardCanvas } from '@/components/canvas/BoardCanvas';
 import { useObjects } from '@/hooks/useObjects';
-import { createBoard, subscribeToBoard, canUserEdit } from '@/modules/sync/boardService';
+import {
+  createBoard,
+  subscribeToBoard,
+  canUserEdit,
+  addBoardMember,
+} from '@/modules/sync/boardService';
 import { ConnectionStatus } from '@/components/ui/ConnectionStatus';
 import { PresenceAvatars } from '@/components/presence/PresenceAvatars';
 import { usePresence } from '@/hooks/usePresence';
@@ -18,6 +23,7 @@ const BoardView = ({ boardId }: { boardId: string }): ReactElement => {
   const { user, signOut } = useAuth();
   const [board, setBoard] = useState<IBoard | null>(null);
   const [boardLoading, setBoardLoading] = useState(true);
+  const joinedBoardIdsRef = useRef<Set<string>>(new Set());
 
   const {
     objects,
@@ -64,6 +70,17 @@ const BoardView = ({ boardId }: { boardId: string }): ReactElement => {
     };
     initBoard();
   }, [boardLoading, board, user, boardId]);
+
+  // When opening a board the user is not a member of, add them as editor so they can view and edit
+  useEffect(() => {
+    if (!board || !user || user.uid in board.members || joinedBoardIdsRef.current.has(boardId)) {
+      return;
+    }
+    joinedBoardIdsRef.current.add(boardId);
+    addBoardMember(boardId, user.uid, 'editor').catch(() => {
+      joinedBoardIdsRef.current.delete(boardId);
+    });
+  }, [board, user, boardId]);
 
   if (!user) return <div />;
 

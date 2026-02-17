@@ -21,27 +21,38 @@ service cloud.firestore {
       let board = get(/databases/$(database)/documents/boards/$(boardId));
       return board.data.ownerId == request.auth.uid;
     }
+
+    // True when the only change to members is adding request.auth.uid with role editor or viewer
+    function canAddSelfAsMember() {
+      let newMembers = request.resource.data.members;
+      let oldMembers = resource.data.members;
+      return request.auth.uid in newMembers
+        && !(request.auth.uid in oldMembers)
+        && newMembers[request.auth.uid] in ['editor', 'viewer']
+        && newMembers.diff(oldMembers).addedKeys().hasOnly([request.auth.uid])
+        && newMembers.diff(oldMembers).removedKeys().size() == 0;
+    }
     
     // Board rules
     match /boards/{boardId} {
-      // Anyone authenticated can read boards they're a member of
-      allow read: if isAuthenticated() && isBoardMember(boardId);
+      // Any authenticated user can read a board (by ID/link) so they can join and then edit
+      allow read: if isAuthenticated();
       
       // Anyone authenticated can create a board
       allow create: if isAuthenticated() 
         && request.resource.data.ownerId == request.auth.uid
         && request.resource.data.members[request.auth.uid] == 'owner';
       
-      // Only owners and editors can update
-      allow update: if isAuthenticated() && canEdit(boardId);
+      // Members with edit permission can update; or a user can add themselves as editor/viewer
+      allow update: if isAuthenticated() && (canEdit(boardId) || canAddSelfAsMember());
       
       // Only owners can delete
       allow delete: if isAuthenticated() && isOwner(boardId);
       
-      // Board objects subcollection
+      // Board objects subcollection - any board member can create/update/delete objects
       match /objects/{objectId} {
         allow read: if isAuthenticated() && isBoardMember(boardId);
-        allow write: if isAuthenticated() && canEdit(boardId);
+        allow write: if isAuthenticated() && isBoardMember(boardId);
       }
     }
     
