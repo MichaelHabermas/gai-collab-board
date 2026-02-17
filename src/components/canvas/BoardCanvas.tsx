@@ -17,6 +17,7 @@ import {
   Frame,
 } from './shapes';
 import { useCursors } from '@/hooks/useCursors';
+import { useCanvasOperations } from '@/hooks/useCanvasOperations';
 import type { User } from 'firebase/auth';
 import type { IBoardObject } from '@/types';
 
@@ -60,6 +61,7 @@ export const BoardCanvas = memo(
     canEdit = true,
     onObjectUpdate,
     onObjectCreate,
+    onObjectDelete,
   }: IBoardCanvasProps): ReactElement => {
     const stageRef = useRef<Konva.Stage>(null);
     const objectsLayerRef = useRef<Konva.Layer>(null);
@@ -89,6 +91,20 @@ export const BoardCanvas = memo(
     const { cursors, handleMouseMove } = useCursors({
       boardId,
       user,
+    });
+
+    // Clear selection helper
+    const clearSelection = useCallback(() => {
+      setSelectedIds([]);
+    }, []);
+
+    // Canvas operations (delete, duplicate, copy, paste)
+    const { handleDelete, handleDuplicate, handleCopy, handlePaste } = useCanvasOperations({
+      objects,
+      selectedIds,
+      onObjectCreate: onObjectCreate || (() => {}),
+      onObjectDelete: onObjectDelete || (() => {}),
+      clearSelection,
     });
 
     // Convert screen coordinates to canvas coordinates
