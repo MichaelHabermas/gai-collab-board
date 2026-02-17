@@ -2350,13 +2350,13 @@ sequenceDiagram
 
 ### Epic 4: Test
 
-- [ ] AI client connects with valid API key and rejects when missing
-- [ ] Natural language command creates/updates board objects via tools
-- [ ] Multi-step command (e.g. SWOT) produces expected layout
-- [ ] Response time under 2s for single-step commands
-- [ ] 6+ command types supported
-- [ ] AI-generated changes sync to other users in real time
-- [ ] Error handling and retries behave correctly
+- [x] AI client connects with valid API key and rejects when missing
+- [x] Natural language command creates/updates board objects via tools
+- [x] Multi-step command (e.g. SWOT) produces expected layout
+- [x] Response time under 2s for single-step commands
+- [x] 6+ command types supported
+- [x] AI-generated changes sync to other users in real time
+- [x] Error handling and retries behave correctly
 
 ---
 
