@@ -1,40 +1,136 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
+import { readFileSync, existsSync } from "fs";
 
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
+const GROQ_ORIGIN = "https://api.groq.com/openai";
+const NVIDIA_ORIGIN = "https://integrate.api.nvidia.com";
+
+function parseEnvFile(envDir: string): Record<string, string> {
+  const envPath = path.resolve(envDir, ".env");
+  const out: Record<string, string> = {};
+  if (!existsSync(envPath)) {
+    return out;
+  }
+  let content = readFileSync(envPath, "utf-8");
+  content = content.replace(/^\uFEFF/, "");
+  for (const line of content.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("#") || !trimmed.includes("=")) {
+      continue;
+    }
+    const eq = trimmed.indexOf("=");
+    const key = trimmed.slice(0, eq).trim();
+    let value = trimmed.slice(eq + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    out[key] = value.trim();
+  }
+  return out;
+}
+
+function getAiProxyConfig(env: Record<string, string>) {
+  const configured = (env.VITE_AI_PROVIDER ?? "").toLowerCase();
+  const groqKey = (env.VITE_GROQ_API_KEY ?? "").trim();
+  const nvidiaKey = (env.VITE_NVIDIA_API_KEY ?? "").trim();
+
+  const useNvidia =
+    (configured === "nvidia" && nvidiaKey !== "") ||
+    (configured !== "groq" && groqKey === "" && nvidiaKey !== "");
+  const useGroq =
+    (configured === "groq" && groqKey !== "") ||
+    (groqKey !== "") ||
+    (nvidiaKey === "" && configured !== "nvidia");
+
+  if (useGroq && groqKey !== "") {
+    return {
+      target: GROQ_ORIGIN,
+      apiKey: groqKey,
+      rewrite: (pathSegment: string) =>
+        pathSegment.replace(/^\/api\/ai/, ""),
+    };
+  }
+  if (useNvidia && nvidiaKey !== "") {
+    return {
+      target: NVIDIA_ORIGIN,
+      apiKey: nvidiaKey,
+      rewrite: (pathSegment: string) =>
+        pathSegment.replace(/^\/api\/ai/, ""),
+    };
+  }
+  return null;
+}
+
+/** Read .env from disk so proxy uses current key without restarting dev server. */
+function getAiProxyConfigFromFile(envDir: string): ReturnType<typeof getAiProxyConfig> {
+  const env = parseEnvFile(envDir);
+  return getAiProxyConfig(env);
+}
+
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+  const aiProxy = getAiProxyConfig(env);
+
+  return {
+    plugins: [react(), tailwindcss()],
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+      },
     },
-  },
-  server: {
-    port: 5173,
-    strictPort: true,
-    host: true,
-    open: true,
-  },
-  build: {
-    outDir: "dist",
-    sourcemap: true,
-    minify: "esbuild",
-    target: "es2020",
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ["react", "react-dom"],
-          firebase: [
-            "firebase/app",
-            "firebase/auth",
-            "firebase/firestore",
-            "firebase/database",
-          ],
-          konva: ["konva", "react-konva"],
+    server: {
+      port: 5173,
+      strictPort: true,
+      host: true,
+      open: true,
+      proxy:
+        aiProxy !== null
+          ? {
+              "/api/ai": {
+                target: aiProxy.target,
+                changeOrigin: true,
+                rewrite: aiProxy.rewrite,
+                configure: (proxy) => {
+                  const envDir = path.resolve(__dirname, ".");
+                  proxy.on("proxyReq", (proxyReq, _req, _res) => {
+                    const config = getAiProxyConfigFromFile(envDir);
+                    if (config?.apiKey) {
+                      proxyReq.setHeader(
+                        "Authorization",
+                        `Bearer ${config.apiKey}`
+                      );
+                    }
+                  });
+                },
+              },
+            }
+          : undefined,
+    },
+    build: {
+      outDir: "dist",
+      sourcemap: true,
+      minify: "esbuild",
+      target: "es2020",
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ["react", "react-dom"],
+            firebase: [
+              "firebase/app",
+              "firebase/auth",
+              "firebase/firestore",
+              "firebase/database",
+            ],
+            konva: ["konva", "react-konva"],
+          },
         },
       },
     },
-  },
-  envPrefix: "VITE_",
+    envPrefix: "VITE_",
+  };
 });

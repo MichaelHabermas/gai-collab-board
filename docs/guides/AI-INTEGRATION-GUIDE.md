@@ -2,17 +2,18 @@
 
 ## Overview
 
-CollabBoard uses **Kimi 2.5** (Moonshot AI) via the Nvidia API for AI-powered board manipulation. This guide covers setting up the AI integration, implementing function calling for board commands, and handling multi-step operations.
+CollabBoard supports multiple AI providers for board manipulation via natural language. The **recommended option** is **Groq** (free tier, no credit card). You can also use **Kimi 2.5** via the NVIDIA API. Both use the same OpenAI-compatible client and proxy; the key stays server-side in production.
 
 **API Documentation**:
 
-- [Nvidia Kimi 2.5 API](https://build.nvidia.com/moonshotai/kimi-k2.5)
+- [Groq Console & API Keys](https://console.groq.com/keys) (recommended, free tier)
+- [Nvidia Kimi 2.5 API](https://build.nvidia.com/moonshotai/kimi-k2.5) (optional)
 
 ---
 
 ## Table of Contents
 
-1. [Kimi 2.5 Overview](#kimi-25-overview)
+1. [Provider Options](#provider-options)
 2. [API Setup](#api-setup)
 3. [Function Calling Schema](#function-calling-schema)
 4. [AI Service Implementation](#ai-service-implementation)
@@ -25,85 +26,72 @@ CollabBoard uses **Kimi 2.5** (Moonshot AI) via the Nvidia API for AI-powered bo
 
 ---
 
-## Kimi 2.5 Overview
+## Provider Options
 
-### Key Features
+### Groq (recommended, free)
 
 | Feature | Value |
-| --------- | ------- |
-| Model | Kimi K2.5 (1T MoE, 32B active) |
-| Context Window | 256K tokens |
-| Multimodal | Yes (vision-text) |
-| Function Calling | Yes (OpenAI-compatible) |
-| API Compatibility | OpenAI SDK compatible |
+| -------- | ----- |
+| Cost | Free tier, no credit card |
+| Model | Llama 3.3 70B Versatile |
+| Function calling | Yes (OpenAI-compatible) |
+| Setup | Sign up at [console.groq.com](https://console.groq.com) → Create API key |
 
-### Why Kimi 2.5 for CollabBoard
+### Kimi 2.5 via NVIDIA (optional)
 
-1. **Cost-effective**: 10x-76% cheaper than GPT-4
-2. **Large context**: 256K tokens for complex board state
-3. **Function calling**: Native tool support for board operations
-4. **Agentic capabilities**: Multi-step task planning
-5. **Free tier**: Development credits for prototyping
+| Feature | Value |
+| -------- | ----- |
+| Cost | 5,000 free API credits, then paid |
+| Model | Kimi K2.5 (256K context) |
+| Function calling | Yes (OpenAI-compatible) |
+| Setup | [Nvidia Build](https://build.nvidia.com/moonshotai/kimi-k2.5) → API key |
 
 ---
 
 ## API Setup
 
-### Get API Key
+### Groq (recommended)
 
-1. Visit [Nvidia Build](https://build.nvidia.com/moonshotai/kimi-k2.5)
-2. Sign up / Log in
-3. Navigate to API Keys section
-4. Generate a new API key
-5. Copy and save securely
+1. Go to [console.groq.com](https://console.groq.com) and sign up or log in.
+2. Open [API Keys](https://console.groq.com/keys) and create a new key (e.g. `gsk_...`).
+3. Copy the key and add it to your environment (see below).
+
+### NVIDIA / Kimi 2.5 (optional)
+
+1. Visit [Nvidia Build – Kimi 2.5](https://build.nvidia.com/moonshotai/kimi-k2.5).
+2. Sign up / Log in, then generate an API key.
+3. Add the key to your environment if you want to use NVIDIA.
 
 ### Environment Configuration
 
-Add to `.env`:
+**Local development** — in project root `.env` (create from `.env.example`):
 
 ```env
-VITE_NVIDIA_API_KEY=nvapi-xxxx-xxxx-xxxx-xxxx
+# Prefer Groq (free)
+VITE_AI_PROVIDER=groq
+VITE_GROQ_API_KEY=gsk_your_key_here
+
+# Optional: use NVIDIA/Kimi 2.5 instead
+# VITE_AI_PROVIDER=nvidia
+# VITE_NVIDIA_API_KEY=nvapi-xxxx-xxxx-xxxx
 ```
+
+**Production (Netlify)** — in Site → Environment variables:
+
+- **Groq:** `GROQ_API_KEY` = your Groq API key (and optionally `AI_PROVIDER=groq`).
+- **NVIDIA:** `NVIDIA_API_KEY` = your NVIDIA API key (and optionally `AI_PROVIDER=nvidia`).
+
+The app uses a single proxy (`/.netlify/functions/ai-chat`). The proxy chooses the provider from `AI_PROVIDER` or from which key is set (Groq preferred if both are set).
 
 ### Install Dependencies
 
 ```bash
-bun add openai  # Kimi 2.5 uses OpenAI-compatible API
+bun add openai  # OpenAI-compatible API for Groq and NVIDIA
 ```
 
-### API Client Setup
+### API Client (existing)
 
-Create `src/lib/ai.ts`:
-
-```typescript
-import OpenAI from 'openai';
-
-const NVIDIA_API_BASE = 'https://integrate.api.nvidia.com/v1';
-
-export const createAIClient = (): OpenAI => {
-  const apiKey = import.meta.env.VITE_NVIDIA_API_KEY;
-
-  if (!apiKey) {
-    throw new Error('VITE_NVIDIA_API_KEY is not configured');
-  }
-
-  return new OpenAI({
-    apiKey,
-    baseURL: NVIDIA_API_BASE,
-    dangerouslyAllowBrowser: true, // Required for client-side usage
-  });
-};
-
-export const aiClient = createAIClient();
-
-// Model configuration
-export const AI_CONFIG = {
-  model: 'moonshotai/kimi-k2.5',
-  maxTokens: 4096,
-  temperature: 0.7,
-  topP: 0.9,
-} as const;
-```
+`src/lib/ai.ts` is already set up to use the unified proxy path (`/api/ai/v1` in dev, `/.netlify/functions/ai-chat/v1` in prod). The client resolves the provider from `VITE_AI_PROVIDER` and key env vars, and selects the model (Groq: `llama-3.3-70b-versatile`, NVIDIA: `moonshotai/kimi-k2.5`). The proxy injects the API key in both dev (Vite proxy) and prod (Netlify function).
 
 ---
 

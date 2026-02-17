@@ -44,7 +44,7 @@ Natural language commands to manipulate the board:
 | **Frontend** | React 19 + Vite + Bun + TypeScript |
 | **UI Components** | Shadcn/ui + Tailwind CSS v4 |
 | **Canvas** | Konva.js |
-| **AI Integration** | Kimi 2.5 (Moonshot AI via Nvidia API) |
+| **AI Integration** | Groq (free tier, default) or Kimi 2.5 via Nvidia API |
 | **Deployment** | Netlify |
 | **Testing** | Vitest + Playwright |
 | **Linting** | ESLint + Prettier |
@@ -54,7 +54,7 @@ Natural language commands to manipulate the board:
 - [Bun](https://bun.sh/) v1.0+ (recommended) or Node.js v20+
 - [Git](https://git-scm.com/)
 - Firebase account
-- Nvidia API key (for Kimi 2.5 AI)
+- Groq API key (free at [console.groq.com](https://console.groq.com)) or Nvidia API key (for Kimi 2.5)
 
 ## Setup
 
@@ -85,8 +85,10 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 VITE_FIREBASE_DATABASE_URL=https://your_project.firebaseio.com
 
-# AI Configuration (Kimi 2.5 via Nvidia API)
-VITE_NVIDIA_API_KEY=your_nvidia_api_key
+# AI: Groq (recommended, free) or NVIDIA. Production: set GROQ_API_KEY or NVIDIA_API_KEY in Netlify.
+VITE_AI_PROVIDER=groq
+VITE_GROQ_API_KEY=your_groq_api_key
+# VITE_NVIDIA_API_KEY=your_nvidia_api_key
 ```
 
 ### 4. Firebase Setup

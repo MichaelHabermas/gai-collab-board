@@ -82,7 +82,8 @@ graph TB
     end
 
     subgraph External[External APIs]
-        Kimi[Kimi 2.5 via Nvidia API]
+        Groq[Groq API - default free]
+        Nvidia[Kimi 2.5 via Nvidia API - optional]
     end
 
     Netlify --> Frontend
@@ -90,20 +91,21 @@ graph TB
     AuthMod --> FireAuth
     SyncMod --> Firestore
     SyncMod --> RealtimeDB
-    AIMod --> Kimi
+    AIMod --> Groq
+    AIMod --> Nvidia
     CanvasMod --> Konva
 ```
 
 ### Stack Rationale
 
-| Layer          | Technology              | Rationale                                                                         |
-| -------------- | ----------------------- | --------------------------------------------------------------------------------- |
-| **Backend**    | Firebase                | Mature real-time sync, offline support, Google integration, quick prototyping     |
-| **Frontend**   | React 19 + Vite + Bun   | Fast dev (Vite HMR, Bun speed), type safety (TS), modern React features           |
-| **Canvas**     | Konva.js                | High performance (60fps with 1000+ objects), layered structure, React integration |
-| **UI**         | Shadcn/ui + Tailwind v4 | Customizable components, CSS-first approach, accessible by default                |
-| **AI**         | Kimi 2.5                | 256K context, OpenAI-compatible, function calling, 10x cheaper than GPT-4         |
-| **Deployment** | Netlify                 | Easy Git deploys, serverless functions, global CDN, free tier                     |
+| Layer          | Technology                            | Rationale                                                                                 |
+| -------------- | ------------------------------------- | ----------------------------------------------------------------------------------------- |
+| **Backend**    | Firebase                              | Mature real-time sync, offline support, Google integration, quick prototyping             |
+| **Frontend**   | React 19 + Vite + Bun                 | Fast dev (Vite HMR, Bun speed), type safety (TS), modern React features                   |
+| **Canvas**     | Konva.js                              | High performance (60fps with 1000+ objects), layered structure, React integration         |
+| **UI**         | Shadcn/ui + Tailwind v4               | Customizable components, CSS-first approach, accessible by default                        |
+| **AI**         | Groq (default) or Kimi 2.5 via Nvidia | Groq: free tier, Llama 3.3 70B; Nvidia: 256K context, OpenAI-compatible, function calling |
+| **Deployment** | Netlify                               | Easy Git deploys, serverless functions, global CDN, free tier                             |
 
 ### SOLID Principles Application
 
@@ -646,7 +648,9 @@ environment variables.
   VITE_FIREBASE_APP_ID=1:123456789:web:abc123
   VITE_FIREBASE_DATABASE_URL=https://your-project.firebaseio.com
 
-  # AI Configuration (Kimi 2.5 via Nvidia API)
+  # AI: Groq (free) or NVIDIA/Kimi 2.5. Production: set GROQ_API_KEY or NVIDIA_API_KEY in Netlify.
+  VITE_AI_PROVIDER=groq
+  VITE_GROQ_API_KEY=gsk_xxxx
   VITE_NVIDIA_API_KEY=nvapi-xxxx-xxxx-xxxx
 
   # App Configuration
@@ -2703,16 +2707,18 @@ interface IPresenceData {
 
 ### Appendix C: Environment Variables
 
-| Variable                            | Required | Description                  |
-| ----------------------------------- | -------- | ---------------------------- |
-| `VITE_FIREBASE_API_KEY`             | Yes      | Firebase API key             |
-| `VITE_FIREBASE_AUTH_DOMAIN`         | Yes      | Firebase auth domain         |
-| `VITE_FIREBASE_PROJECT_ID`          | Yes      | Firebase project ID          |
-| `VITE_FIREBASE_STORAGE_BUCKET`      | Yes      | Firebase storage bucket      |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Yes      | Firebase messaging sender ID |
-| `VITE_FIREBASE_APP_ID`              | Yes      | Firebase app ID              |
-| `VITE_FIREBASE_DATABASE_URL`        | Yes      | Realtime Database URL        |
-| `VITE_NVIDIA_API_KEY`               | Yes      | Nvidia API key for Kimi 2.5  |
+| Variable                            | Required    | Description                             |
+| ----------------------------------- | ----------- | --------------------------------------- |
+| `VITE_FIREBASE_API_KEY`             | Yes         | Firebase API key                        |
+| `VITE_FIREBASE_AUTH_DOMAIN`         | Yes         | Firebase auth domain                    |
+| `VITE_FIREBASE_PROJECT_ID`          | Yes         | Firebase project ID                     |
+| `VITE_FIREBASE_STORAGE_BUCKET`      | Yes         | Firebase storage bucket                 |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Yes         | Firebase messaging sender ID            |
+| `VITE_FIREBASE_APP_ID`              | Yes         | Firebase app ID                         |
+| `VITE_FIREBASE_DATABASE_URL`        | Yes         | Realtime Database URL                   |
+| `VITE_AI_PROVIDER`                  | No          | `groq` (default) or `nvidia`            |
+| `VITE_GROQ_API_KEY`                 | Yes (Groq)  | Groq API key (free at console.groq.com) |
+| `VITE_NVIDIA_API_KEY`               | No (Nvidia) | Nvidia API key for Kimi 2.5             |
 
 ### Appendix D: Deployment Checklist
 
