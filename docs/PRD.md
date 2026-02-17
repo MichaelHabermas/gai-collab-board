@@ -2505,7 +2505,7 @@ Template:
 - [x] Story 5.1: UI Components – toolbar, sidebar (board list, AI chat),
       theme/dark mode
 - [x] Story 5.2: Netlify Deployment – netlify.toml, GitHub link, env vars
-- [ ] Story 5.3: Documentation – AI development log, cost analysis
+- [x] Story 5.3: Documentation – AI development log, cost analysis
 
 ### Epic 5: Test
 
@@ -2513,7 +2513,7 @@ Template:
 - [x] Dark mode toggle and theme persist
 - [x] Build passes and app deploys to Netlify
 - [x] Environment variables configured in Netlify
-- [ ] AI development log and cost analysis docs present
+- [x] AI development log and cost analysis docs present
 
 ---
 
