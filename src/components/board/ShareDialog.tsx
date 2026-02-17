@@ -118,7 +118,7 @@ export const ShareDialog = ({ board, currentUserId, children }: ShareDialogProps
     setDeleteInProgress(true);
     setError('');
     try {
-      await deleteBoard(board.id);
+      await deleteBoard(board.id, currentUserId);
       window.location.href = window.location.origin;
     } catch (err) {
       setError((err as Error).message);

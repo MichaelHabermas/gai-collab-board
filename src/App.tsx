@@ -27,7 +27,8 @@ const DEFAULT_BOARD_ID = 'dev-board-001';
 interface IBoardViewProps {
   boardId: string;
   onSelectBoard: (boardId: string) => void;
-  onCreateNewBoard: () => Promise<string>;
+  onCreateNewBoard: () => Promise<IBoard>;
+  defaultBoardId: string;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
 }
@@ -36,6 +37,7 @@ const BoardView = ({
   boardId,
   onSelectBoard,
   onCreateNewBoard,
+  defaultBoardId,
   theme,
   onToggleTheme,
 }: IBoardViewProps): ReactElement => {
@@ -50,10 +52,7 @@ const BoardView = ({
     createObject,
     updateObject,
     deleteObject,
-  } = useObjects({
-    boardId,
-    user,
-  });
+  } = useObjects({ boardId, user });
 
   const { onlineUsers } = usePresence({
     boardId,
@@ -78,13 +77,13 @@ const BoardView = ({
     return () => unsubscribe();
   }, [boardId]);
 
-  // Create board if it doesn't exist (development helper)
+  // Create board if it doesn't exist (only for the default dev board; do not overwrite newly created boards)
   useEffect(() => {
     const initBoard = async () => {
-      if (!boardLoading && !board && user) {
+      if (boardId === defaultBoardId && !boardLoading && !board && user) {
         try {
           await createBoard({
-            id: boardId, // Use the specified board ID
+            id: boardId,
             name: 'Development Board',
             ownerId: user.uid,
           });
@@ -94,7 +93,7 @@ const BoardView = ({
       }
     };
     initBoard();
-  }, [boardLoading, board, user, boardId]);
+  }, [boardId, defaultBoardId, boardLoading, board, user]);
 
   // When opening a board the user is not a member of, add them as editor so they can view and edit
   useEffect(() => {
@@ -234,7 +233,7 @@ export const App = (): ReactElement => {
   const { theme, toggleTheme } = useTheme();
   const [currentBoardId, setCurrentBoardId] = useState<string>(DEFAULT_BOARD_ID);
 
-  const handleCreateNewBoard = useCallback(async (): Promise<string> => {
+  const handleCreateNewBoard = useCallback(async (): Promise<IBoard> => {
     if (!user) {
       throw new Error('User not authenticated');
     }
@@ -243,7 +242,7 @@ export const App = (): ReactElement => {
       ownerId: user.uid,
     });
     setCurrentBoardId(board.id);
-    return board.id;
+    return board;
   }, [user]);
 
   if (loading) {
@@ -266,6 +265,7 @@ export const App = (): ReactElement => {
       boardId={currentBoardId}
       onSelectBoard={setCurrentBoardId}
       onCreateNewBoard={handleCreateNewBoard}
+      defaultBoardId={DEFAULT_BOARD_ID}
       theme={theme}
       onToggleTheme={toggleTheme}
     />

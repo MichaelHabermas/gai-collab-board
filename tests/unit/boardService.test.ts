@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Timestamp } from 'firebase/firestore';
-import { getUserRole, canUserEdit, canUserManage } from '@/modules/sync/boardService';
+import { Timestamp, getDoc, deleteDoc } from 'firebase/firestore';
+import {
+  getUserRole,
+  canUserEdit,
+  canUserManage,
+  deleteBoard,
+} from '@/modules/sync/boardService';
 import { IBoard } from '@/types';
 
 // Mock Firebase Firestore
@@ -95,5 +100,57 @@ describe('boardService - Role Functions', () => {
     it('should return false for non-member', () => {
       expect(canUserManage(mockBoard, 'unknown-user')).toBe(false);
     });
+  });
+});
+
+describe('boardService - deleteBoard', () => {
+  const mockBoard: IBoard = {
+    id: 'board-123',
+    name: 'Test Board',
+    ownerId: 'owner-user',
+    members: {
+      'owner-user': 'owner',
+      'editor-user': 'editor',
+    },
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+  };
+
+  const mockGetDocSnapshot = (board: IBoard | null) => ({
+    exists: () => board != null,
+    data: () => (board != null ? board : undefined),
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should throw when userId is provided and board does not exist', async () => {
+    vi.mocked(getDoc).mockResolvedValue(mockGetDocSnapshot(null) as ReturnType<typeof getDoc>);
+    await expect(deleteBoard('missing-id', 'owner-user')).rejects.toThrow('Board not found');
+    expect(deleteDoc).not.toHaveBeenCalled();
+  });
+
+  it('should throw when userId is provided and user is not owner', async () => {
+    vi.mocked(getDoc).mockResolvedValue(mockGetDocSnapshot(mockBoard) as ReturnType<typeof getDoc>);
+    await expect(deleteBoard('board-123', 'editor-user')).rejects.toThrow(
+      'Only the board owner can delete the board'
+    );
+    expect(deleteDoc).not.toHaveBeenCalled();
+  });
+
+  it('should call deleteDoc when userId is provided and user is owner', async () => {
+    vi.mocked(getDoc).mockResolvedValue(mockGetDocSnapshot(mockBoard) as ReturnType<typeof getDoc>);
+    vi.mocked(deleteDoc).mockResolvedValue(undefined as never);
+    await deleteBoard('board-123', 'owner-user');
+    expect(getDoc).toHaveBeenCalled();
+    expect(deleteDoc).toHaveBeenCalled();
+  });
+
+  it('should call deleteDoc when userId is omitted', async () => {
+    vi.mocked(deleteDoc).mockResolvedValue(undefined as never);
+    await deleteBoard('board-123');
+    expect(deleteDoc).toHaveBeenCalled();
+    expect(getDoc).not.toHaveBeenCalled();
   });
 });

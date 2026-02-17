@@ -158,34 +158,50 @@ CollabBoard/
 │   ├── modules/
 │   │   ├── auth/        # Authentication logic
 │   │   ├── sync/        # Real-time synchronization
-│   │   ├── canvas/      # Konva.js canvas rendering
 │   │   ├── ai/          # AI agent integration
 │   │   └── ui/          # UI utilities
-│   ├── components/      # React components
+│   ├── components/      # React components (board, canvas, auth, ai, ui)
+│   ├── hooks/           # React hooks (canvas, selection, presence, AI)
+│   ├── lib/             # Firebase, AI client, utilities
 │   └── types/           # TypeScript type definitions
+├── netlify/functions/   # Serverless functions (e.g. AI chat)
 ├── docs/
+│   ├── guides/          # Development, Firebase, testing, AI integration
 │   └── research/        # Design documents and research
+├── scripts/             # CLI scripts (e.g. test-ai-connection)
 ├── public/              # Static assets
-└── tests/               # Test files
+└── tests/               # Unit, integration, and E2E tests
 ```
 
 ## Scripts
 
 ```bash
 # Development
-bun run dev          # Start dev server
-bun run build        # Build for production
-bun run preview      # Preview production build
+bun run dev             # Start dev server
+bun run build           # Build for production
+bun run preview         # Preview production build
 
 # Testing
-bun run test         # Run unit tests
-bun run test:e2e     # Run end-to-end tests
-bun run test:coverage # Run tests with coverage
+bun run test            # Run unit tests (watch)
+bun run test:run        # Run unit tests once
+bun run test:e2e        # Run Playwright E2E tests
+bun run test:e2e:ui     # Run E2E tests with Playwright UI
+bun run test:coverage   # Run tests with coverage
+bun run test:ai-connection  # Test AI provider connectivity
 
-# Linting
-bun run lint         # Run ESLint
-bun run format       # Format with Prettier
+# Quality
+bun run typecheck       # TypeScript check
+bun run lint            # Run ESLint
+bun run lint:fix        # ESLint with auto-fix
+bun run format          # Format with Prettier
+bun run validate        # typecheck + lint + test:run
 ```
+
+## Documentation
+
+- [Deployment](docs/DEPLOYMENT.md) — Netlify setup and environment variables
+- [Guides](docs/guides/README.md) — Development environment, Firebase, testing, AI integration, Konva, Tailwind/Shadcn
+- [AI Cost Analysis](docs/AI-COST-ANALYSIS.md) — AI usage and cost notes
 
 ## Architecture
 
@@ -221,11 +237,11 @@ flowchart LR
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch from `dev`: `git checkout -b feature/your-feature`
+2. Create a feature branch from `development`: `git checkout development && git pull && git checkout -b feature/your-feature`
 3. Make your changes with descriptive commits
 4. Write tests for new functionality
-5. Run tests and linting: `bun run test && bun run lint`
-6. Submit a pull request to `dev`
+5. Run validation: `bun run validate` (or `bun run test:run && bun run lint`)
+6. Submit a pull request to `development` (do not target `main`)
 
 ## License
 
