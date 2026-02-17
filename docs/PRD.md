@@ -975,10 +975,10 @@ Implement bulletproof real-time synchronization with cursor tracking (<50ms), ob
 
 **Acceptance Criteria**:
 
-- [ ] Cursor position updates broadcast to all users
-- [ ] Cursor displays user name label
-- [ ] Cursor has unique color per user
-- [ ] Cursors disappear when user leaves
+- [x] Cursor position updates broadcast to all users
+- [x] Cursor displays user name label
+- [x] Cursor has unique color per user
+- [x] Cursors disappear when user leaves
 - [ ] Latency under 50ms
 
 **Branch**: `feature/collab-cursors`
@@ -1150,9 +1150,9 @@ sequenceDiagram
 
 **Acceptance Criteria**:
 
-- [ ] List of online users with avatars
-- [ ] Real-time updates when users join/leave
-- [ ] User color assignment for cursor/selection
+- [x] List of online users with avatars
+- [x] Real-time updates when users join/leave
+- [x] User color assignment for cursor/selection
 
 **Branch**: `feature/collab-presence`
 
@@ -1186,10 +1186,10 @@ sequenceDiagram
 
 **Acceptance Criteria**:
 
-- [ ] Object creation syncs to all users
-- [ ] Object updates sync to all users
-- [ ] Object deletion syncs to all users
-- [ ] Conflicts resolved with last-write-wins
+- [x] Object creation syncs to all users
+- [x] Object updates sync to all users
+- [x] Object deletion syncs to all users
+- [x] Conflicts resolved with last-write-wins
 - [ ] Latency under 100ms
 
 **Branch**: `feature/collab-sync`
@@ -1309,10 +1309,10 @@ flowchart LR
 
 **Acceptance Criteria**:
 
-- [ ] Board remains usable during disconnection
-- [ ] Changes queue locally during offline
-- [ ] Changes sync when connection restored
-- [ ] User notified of connection status
+- [x] Board remains usable during disconnection
+- [x] Changes queue locally during offline
+- [x] Changes sync when connection restored
+- [x] User notified of connection status
 
 **Branch**: `feature/collab-resilience`
 
@@ -1364,9 +1364,9 @@ flowchart LR
 
 **Acceptance Criteria**:
 
-- [ ] Board state persists in Firestore
-- [ ] State loads correctly on return
-- [ ] No data loss on page refresh
+- [x] Board state persists in Firestore
+- [x] State loads correctly on return
+- [x] No data loss on page refresh
 
 **Branch**: `feature/collab-persistence`
 
