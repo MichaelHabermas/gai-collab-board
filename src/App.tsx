@@ -1,19 +1,95 @@
-import { ReactElement } from 'react';
+import { useState, useEffect, type ReactElement } from 'react';
 import { useAuth } from '@/modules/auth';
 import { AuthPage } from '@/components/auth/AuthPage';
 import { Button } from '@/components/ui/button';
-import { LogOut, Loader2 } from 'lucide-react';
+import { LogOut, Loader2, Plus } from 'lucide-react';
+import { BoardCanvas } from '@/components/canvas/BoardCanvas';
+import { useObjects } from '@/hooks/useObjects';
+import { createBoard, subscribeToBoard } from '@/modules/sync/boardService';
+import { ConnectionStatus } from '@/components/ui/ConnectionStatus';
+import { PresenceAvatars } from '@/components/presence/PresenceAvatars';
+import { usePresence } from '@/hooks/usePresence';
+import type { IBoard } from '@/types';
 
-const Dashboard = (): ReactElement => {
+// Temporary board ID for development - will be replaced with board selection UI
+const DEV_BOARD_ID = 'dev-board-001';
+
+const BoardView = ({ boardId }: { boardId: string }): ReactElement => {
   const { user, signOut } = useAuth();
+  const [board, setBoard] = useState<IBoard | null>(null);
+  const [boardLoading, setBoardLoading] = useState(true);
+
+  const {
+    objects,
+    loading: objectsLoading,
+    createObject,
+    updateObject,
+    deleteObject,
+  } = useObjects({
+    boardId,
+    user,
+  });
+
+  const { onlineUsers } = usePresence({
+    boardId,
+    user,
+  });
+
+  // Subscribe to board data
+  useEffect(() => {
+    if (!boardId) return;
+
+    const unsubscribe = subscribeToBoard(boardId, (boardData) => {
+      setBoard(boardData);
+      setBoardLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [boardId]);
+
+  // Create board if it doesn't exist (development helper)
+  useEffect(() => {
+    const initBoard = async () => {
+      if (!boardLoading && !board && user) {
+        try {
+          await createBoard({
+            name: 'Development Board',
+            ownerId: user.uid,
+          });
+        } catch {
+          // Board might already exist or creation failed
+        }
+      }
+    };
+    initBoard();
+  }, [boardLoading, board, user]);
+
+  if (!user) return <div />;
+
+  if (boardLoading || objectsLoading) {
+    return (
+      <div className='min-h-screen flex items-center justify-center bg-slate-900'>
+        <div className='text-center'>
+          <Loader2 className='h-8 w-8 animate-spin text-primary mx-auto mb-4' />
+          <p className='text-slate-400'>Loading board...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className='min-h-screen bg-slate-900'>
-      <header className='border-b border-slate-700 bg-slate-800/50 backdrop-blur'>
-        <div className='container mx-auto px-4 py-3 flex items-center justify-between'>
-          <h1 className='text-xl font-bold text-white'>CollabBoard</h1>
+    <div className='h-screen flex flex-col bg-slate-900 overflow-hidden'>
+      {/* Header */}
+      <header className='flex-shrink-0 border-b border-slate-700 bg-slate-800/90 backdrop-blur-sm z-10'>
+        <div className='px-4 py-2 flex items-center justify-between'>
           <div className='flex items-center gap-4'>
-            <span className='text-sm text-slate-400'>{user?.email}</span>
+            <h1 className='text-lg font-bold text-white'>CollabBoard</h1>
+            <span className='text-sm text-slate-400'>{board?.name || 'Untitled Board'}</span>
+            <ConnectionStatus />
+          </div>
+          <div className='flex items-center gap-4'>
+            <PresenceAvatars users={onlineUsers} currentUserId={user.uid} />
+            <span className='text-sm text-slate-400'>{user.email}</span>
             <Button
               variant='ghost'
               size='sm'
@@ -26,13 +102,40 @@ const Dashboard = (): ReactElement => {
           </div>
         </div>
       </header>
-      <main className='container mx-auto px-4 py-8'>
-        <div className='text-center'>
-          <h2 className='text-3xl font-bold text-white mb-4'>Welcome to CollabBoard</h2>
-          <p className='text-slate-400 mb-8'>Your real-time collaborative whiteboard is ready.</p>
-          <div className='bg-slate-800/50 border border-slate-700 rounded-lg p-8'>
-            <p className='text-slate-300'>Board canvas will be implemented in Epic 3.</p>
-          </div>
+
+      {/* Canvas area */}
+      <main className='flex-1 relative'>
+        <BoardCanvas
+          boardId={boardId}
+          user={user}
+          objects={objects}
+          onObjectUpdate={updateObject}
+          onObjectCreate={createObject}
+          onObjectDelete={deleteObject}
+        />
+
+        {/* Temporary: Add object button for testing */}
+        <div className='absolute top-4 left-4 z-10'>
+          <Button
+            size='sm'
+            onClick={() => {
+              createObject({
+                type: 'rectangle',
+                x: Math.random() * 400 + 100,
+                y: Math.random() * 300 + 100,
+                width: 100,
+                height: 100,
+                fill: '#3b82f6',
+                stroke: '#1d4ed8',
+                strokeWidth: 2,
+                rotation: 0,
+              });
+            }}
+            className='bg-primary hover:bg-primary/90'
+          >
+            <Plus className='h-4 w-4 mr-2' />
+            Add Shape
+          </Button>
         </div>
       </main>
     </div>
@@ -57,5 +160,5 @@ export const App = (): ReactElement => {
     return <AuthPage />;
   }
 
-  return <Dashboard />;
+  return <BoardView boardId={DEV_BOARD_ID} />;
 };
