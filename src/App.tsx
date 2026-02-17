@@ -2,10 +2,10 @@ import { useState, useEffect, type ReactElement } from 'react';
 import { useAuth } from '@/modules/auth';
 import { AuthPage } from '@/components/auth/AuthPage';
 import { Button } from '@/components/ui/button';
-import { LogOut, Loader2, Plus } from 'lucide-react';
+import { LogOut, Loader2 } from 'lucide-react';
 import { BoardCanvas } from '@/components/canvas/BoardCanvas';
 import { useObjects } from '@/hooks/useObjects';
-import { createBoard, subscribeToBoard } from '@/modules/sync/boardService';
+import { createBoard, subscribeToBoard, canUserEdit } from '@/modules/sync/boardService';
 import { ConnectionStatus } from '@/components/ui/ConnectionStatus';
 import { PresenceAvatars } from '@/components/presence/PresenceAvatars';
 import { usePresence } from '@/hooks/usePresence';
@@ -77,6 +77,9 @@ const BoardView = ({ boardId }: { boardId: string }): ReactElement => {
     );
   }
 
+  // Check if user can edit
+  const canEdit = board ? canUserEdit(board, user.uid) : false;
+
   return (
     <div className='h-screen flex flex-col bg-slate-900 overflow-hidden'>
       {/* Header */}
@@ -109,34 +112,11 @@ const BoardView = ({ boardId }: { boardId: string }): ReactElement => {
           boardId={boardId}
           user={user}
           objects={objects}
+          canEdit={canEdit}
           onObjectUpdate={updateObject}
           onObjectCreate={createObject}
           onObjectDelete={deleteObject}
         />
-
-        {/* Temporary: Add object button for testing */}
-        <div className='absolute top-4 left-4 z-10'>
-          <Button
-            size='sm'
-            onClick={() => {
-              createObject({
-                type: 'rectangle',
-                x: Math.random() * 400 + 100,
-                y: Math.random() * 300 + 100,
-                width: 100,
-                height: 100,
-                fill: '#3b82f6',
-                stroke: '#1d4ed8',
-                strokeWidth: 2,
-                rotation: 0,
-              });
-            }}
-            className='bg-primary hover:bg-primary/90'
-          >
-            <Plus className='h-4 w-4 mr-2' />
-            Add Shape
-          </Button>
-        </div>
       </main>
     </div>
   );
