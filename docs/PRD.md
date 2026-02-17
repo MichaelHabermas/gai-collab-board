@@ -2338,6 +2338,26 @@ sequenceDiagram
     AIService-->>User: "Created SWOT template"
 ```
 
+### Epic 4: Tasks to complete
+
+- [ ] Story 4.1: AI Service Setup – API client (`src/lib/ai.ts`) and config
+- [ ] Story 4.2: Tool Schema Definition – `src/modules/ai/tools.ts` with board tools
+- [ ] Story 4.3: AI Service Implementation – `src/modules/ai/aiService.ts` with command processing
+- [ ] Story 4.4: Tool Executor – `src/modules/ai/toolExecutor.ts` wiring tools to board
+- [ ] Story 4.5: Complex Commands – multi-step planning (e.g. SWOT template)
+- [ ] Story 4.6: AI Performance and Reliability – rate limiting, retry, AIError handling
+- [ ] Story 4.7: Shared AI State – AI changes routed through sync, real-time for all users
+
+### Epic 4: Test
+
+- [ ] AI client connects with valid API key and rejects when missing
+- [ ] Natural language command creates/updates board objects via tools
+- [ ] Multi-step command (e.g. SWOT) produces expected layout
+- [ ] Response time under 2s for single-step commands
+- [ ] 6+ command types supported
+- [ ] AI-generated changes sync to other users in real time
+- [ ] Error handling and retries behave correctly
+
 ---
 
 ## Epic 5: UI, Deployment, and Polish
@@ -2474,6 +2494,20 @@ Template:
 - Average 300 output tokens per command
 - Mix: 60% simple, 30% medium, 10% complex
 ```
+
+### Epic 5: Tasks to complete
+
+- [ ] Story 5.1: UI Components – toolbar, sidebar (board list, AI chat), theme/dark mode
+- [ ] Story 5.2: Netlify Deployment – netlify.toml, GitHub link, env vars
+- [ ] Story 5.3: Documentation – AI development log, cost analysis
+
+### Epic 5: Test
+
+- [ ] Toolbar and sidebar render and work on desktop and mobile
+- [ ] Dark mode toggle and theme persist
+- [ ] Build passes and app deploys to Netlify
+- [ ] Environment variables configured in Netlify
+- [ ] AI development log and cost analysis docs present
 
 ---
 
