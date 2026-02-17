@@ -18,6 +18,7 @@ import {
 } from './shapes';
 import { useCursors } from '@/hooks/useCursors';
 import { useCanvasOperations } from '@/hooks/useCanvasOperations';
+import { useVisibleShapes } from '@/hooks/useVisibleShapes';
 import type { User } from 'firebase/auth';
 import type { IBoardObject } from '@/types';
 
@@ -86,6 +87,9 @@ export const BoardCanvas = memo(
 
     const { viewport, handleWheel, handleDragEnd, handleTouchMove, handleTouchEnd } =
       useCanvasViewport();
+
+    // Filter objects to only visible ones (viewport culling)
+    const visibleObjects = useVisibleShapes({ objects, viewport });
 
     // Cursor synchronization
     const { cursors, handleMouseMove } = useCursors({
@@ -779,9 +783,9 @@ export const BoardCanvas = memo(
             {renderGrid()}
           </Layer>
 
-          {/* Objects layer - main content */}
+          {/* Objects layer - main content (viewport culled) */}
           <Layer ref={objectsLayerRef} name='objects'>
-            {objects.map(renderShape)}
+            {visibleObjects.map(renderShape)}
           </Layer>
 
           {/* Drawing preview layer */}
@@ -803,9 +807,16 @@ export const BoardCanvas = memo(
           </Layer>
         </Stage>
 
-        {/* Zoom indicator */}
-        <div className='absolute bottom-4 right-4 bg-slate-800/80 text-white px-3 py-1.5 rounded-md text-sm font-medium backdrop-blur-sm'>
-          {Math.round(viewport.scale.x * 100)}%
+        {/* Status indicators */}
+        <div className='absolute bottom-4 right-4 flex gap-2'>
+          {/* Object count (visible/total) */}
+          <div className='bg-slate-800/80 text-white px-3 py-1.5 rounded-md text-sm font-medium backdrop-blur-sm'>
+            {visibleObjects.length}/{objects.length}
+          </div>
+          {/* Zoom indicator */}
+          <div className='bg-slate-800/80 text-white px-3 py-1.5 rounded-md text-sm font-medium backdrop-blur-sm'>
+            {Math.round(viewport.scale.x * 100)}%
+          </div>
         </div>
       </div>
     );
