@@ -4,7 +4,7 @@ import { AuthPage } from '@/components/auth/AuthPage';
 import { Button } from '@/components/ui/button';
 import { ShareDialog } from '@/components/board/ShareDialog';
 import { BoardListSidebar } from '@/components/board/BoardListSidebar';
-import { LogOut, Loader2, Share2 } from 'lucide-react';
+import { LogOut, Loader2, Share2, Sun, Moon } from 'lucide-react';
 import { BoardCanvas } from '@/components/canvas/BoardCanvas';
 import { useObjects } from '@/hooks/useObjects';
 import { useAI } from '@/hooks/useAI';
@@ -19,6 +19,7 @@ import { PresenceAvatars } from '@/components/presence/PresenceAvatars';
 import { usePresence } from '@/hooks/usePresence';
 import { AIChatPanel } from '@/components/ai/AIChatPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useTheme } from '@/hooks/useTheme';
 import type { IBoard } from '@/types';
 
 const DEFAULT_BOARD_ID = 'dev-board-001';
@@ -27,9 +28,17 @@ interface IBoardViewProps {
   boardId: string;
   onSelectBoard: (boardId: string) => void;
   onCreateNewBoard: () => Promise<string>;
+  theme: 'light' | 'dark';
+  onToggleTheme: () => void;
 }
 
-const BoardView = ({ boardId, onSelectBoard, onCreateNewBoard }: IBoardViewProps): ReactElement => {
+const BoardView = ({
+  boardId,
+  onSelectBoard,
+  onCreateNewBoard,
+  theme,
+  onToggleTheme,
+}: IBoardViewProps): ReactElement => {
   const { user, signOut } = useAuth();
   const [board, setBoard] = useState<IBoard | null>(null);
   const [boardLoading, setBoardLoading] = useState(true);
@@ -143,6 +152,16 @@ const BoardView = ({ boardId, onSelectBoard, onCreateNewBoard }: IBoardViewProps
               currentUid={user.uid}
               roles={board?.members ?? {}}
             />
+            <Button
+              variant='ghost'
+              size='sm'
+              onClick={onToggleTheme}
+              className='text-slate-300 hover:text-white hover:bg-slate-700'
+              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              data-testid='theme-toggle'
+            >
+              {theme === 'dark' ? <Sun className='h-4 w-4' /> : <Moon className='h-4 w-4' />}
+            </Button>
             <span className='text-sm text-slate-400'>{user.email}</span>
             <Button
               variant='ghost'
@@ -212,6 +231,7 @@ const BoardView = ({ boardId, onSelectBoard, onCreateNewBoard }: IBoardViewProps
 
 export const App = (): ReactElement => {
   const { user, loading } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [currentBoardId, setCurrentBoardId] = useState<string>(DEFAULT_BOARD_ID);
 
   const handleCreateNewBoard = useCallback(async (): Promise<string> => {
@@ -246,6 +266,8 @@ export const App = (): ReactElement => {
       boardId={currentBoardId}
       onSelectBoard={setCurrentBoardId}
       onCreateNewBoard={handleCreateNewBoard}
+      theme={theme}
+      onToggleTheme={toggleTheme}
     />
   );
 };
