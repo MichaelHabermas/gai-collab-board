@@ -2342,7 +2342,7 @@ sequenceDiagram
 
 - [x] Story 4.1: AI Service Setup – API client (`src/lib/ai.ts`) and config
 - [x] Story 4.2: Tool Schema Definition – `src/modules/ai/tools.ts` with board tools
-- [ ] Story 4.3: AI Service Implementation – `src/modules/ai/aiService.ts` with command processing
+- [x] Story 4.3: AI Service Implementation – `src/modules/ai/aiService.ts` with command processing
 - [ ] Story 4.4: Tool Executor – `src/modules/ai/toolExecutor.ts` wiring tools to board
 - [ ] Story 4.5: Complex Commands – multi-step planning (e.g. SWOT template)
 - [ ] Story 4.6: AI Performance and Reliability – rate limiting, retry, AIError handling

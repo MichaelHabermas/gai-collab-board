@@ -1,0 +1,161 @@
+import type {
+  ChatCompletionMessageParam,
+  ChatCompletionMessage,
+} from 'openai/resources/chat/completions';
+import { aiClient, AI_CONFIG } from '@/lib/ai';
+import { boardTools, type IToolCall } from './tools';
+import type { IBoardObject } from '@/types';
+
+const SYSTEM_PROMPT = `You are an AI assistant for CollabBoard, a collaborative whiteboard application.
+Your role is to help users manipulate the board through natural language commands.
+
+You can:
+- Create sticky notes, shapes (rectangles, circles, lines), frames, connectors, and text
+- Move, resize, and modify existing objects
+- Arrange objects in grids or align them
+- Query the board state to understand what's on it
+
+Guidelines:
+1. For creation commands, place objects at reasonable positions (avoid edges, overlap)
+2. For manipulation commands, first query the board state if needed to find objects
+3. For complex templates (like SWOT), create frames and sticky notes in organized layouts
+4. Use appropriate colors: yellow for general notes, pink for important, blue for questions, green for done
+5. Spacing should be consistent (typically 20-50 pixels between objects)
+
+Always confirm what you've done after executing commands.`;
+
+interface IConversationContext {
+  messages: ChatCompletionMessageParam[];
+  boardState: IBoardObject[];
+}
+
+export class AIService {
+  private context: IConversationContext = {
+    messages: [],
+    boardState: [],
+  };
+
+  constructor(private onToolExecute: (tool: IToolCall) => Promise<unknown>) {}
+
+  updateBoardState(objects: IBoardObject[]): void {
+    this.context.boardState = objects;
+  }
+
+  clearContext(): void {
+    this.context.messages = [];
+  }
+
+  async processCommand(userMessage: string): Promise<string> {
+    const messages: ChatCompletionMessageParam[] = [
+      { role: 'system', content: SYSTEM_PROMPT },
+      {
+        role: 'system',
+        content: `Current board state (${this.context.boardState.length} objects):\n${JSON.stringify(
+          this.context.boardState.map((obj) => ({
+            id: obj.id,
+            type: obj.type,
+            x: obj.x,
+            y: obj.y,
+            text: obj.text,
+            fill: obj.fill,
+          })),
+          null,
+          2
+        )}`,
+      },
+      ...this.context.messages,
+      { role: 'user', content: userMessage },
+    ];
+
+    const response = await aiClient.chat.completions.create({
+      model: AI_CONFIG.model,
+      messages,
+      tools: boardTools,
+      tool_choice: 'auto',
+      max_tokens: AI_CONFIG.maxTokens,
+      temperature: AI_CONFIG.temperature,
+      top_p: AI_CONFIG.topP,
+    });
+
+    const assistantMessage = response.choices[0]?.message;
+
+    if (!assistantMessage) {
+      throw new Error('No response from AI');
+    }
+
+    if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
+      return await this.handleToolCalls(messages, assistantMessage);
+    }
+
+    this.context.messages.push(
+      { role: 'user', content: userMessage },
+      { role: 'assistant', content: assistantMessage.content ?? '' }
+    );
+
+    return assistantMessage.content ?? "I'm not sure how to help with that.";
+  }
+
+  private async handleToolCalls(
+    messages: ChatCompletionMessageParam[],
+    assistantMessage: ChatCompletionMessage
+  ): Promise<string> {
+    const toolCalls = assistantMessage.tool_calls!;
+    const toolResults: Array<{
+      tool_call_id: string;
+      role: 'tool';
+      content: string;
+    }> = [];
+
+    for (const toolCall of toolCalls) {
+      const functionName = toolCall.function.name;
+      const functionArgs = JSON.parse(toolCall.function.arguments ?? '{}');
+
+      try {
+        const result = await this.onToolExecute({
+          name: functionName as IToolCall['name'],
+          arguments: functionArgs,
+        });
+
+        toolResults.push({
+          tool_call_id: toolCall.id,
+          role: 'tool',
+          content: JSON.stringify(result),
+        });
+      } catch (error) {
+        toolResults.push({
+          tool_call_id: toolCall.id,
+          role: 'tool',
+          content: JSON.stringify({ error: (error as Error).message }),
+        });
+      }
+    }
+
+    const followUpMessages: ChatCompletionMessageParam[] = [
+      ...messages,
+      assistantMessage,
+      ...toolResults,
+    ];
+
+    const followUpResponse = await aiClient.chat.completions.create({
+      model: AI_CONFIG.model,
+      messages: followUpMessages,
+      max_tokens: AI_CONFIG.maxTokens,
+      temperature: AI_CONFIG.temperature,
+    });
+
+    const finalMessage = followUpResponse.choices[0]?.message?.content ?? '';
+
+    const lastUserContent = messages[messages.length - 1];
+    const userContent =
+      lastUserContent && 'content' in lastUserContent ? (lastUserContent.content as string) : '';
+
+    this.context.messages.push(
+      { role: 'user', content: userContent },
+      assistantMessage,
+      ...toolResults,
+      { role: 'assistant', content: finalMessage }
+    );
+
+    return finalMessage;
+  }
+}
