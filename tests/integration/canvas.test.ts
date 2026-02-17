@@ -1511,6 +1511,92 @@ describe("Click-to-Create Operations", () => {
     });
   });
 
+  describe("Transform end per shape type", () => {
+    const MIN_SIZE = 10;
+
+    it("should produce rect-like attrs for Rectangle (x, y, width, height, rotation)", () => {
+      const nodeWidth = 100;
+      const nodeHeight = 80;
+      const scaleX = 1.5;
+      const scaleY = 2;
+      const x = 50;
+      const y = 60;
+      const rotation = 15;
+
+      const width = Math.max(MIN_SIZE, nodeWidth * scaleX);
+      const height = Math.max(MIN_SIZE, nodeHeight * scaleY);
+
+      expect(width).toBe(150);
+      expect(height).toBe(160);
+      expect(x).toBe(50);
+      expect(y).toBe(60);
+      expect(rotation).toBe(15);
+    });
+
+    it("should produce rect-like attrs for Group (StickyNote) from getClientRect + scale", () => {
+      const rect = { x: 0, y: 0, width: 200, height: 200 };
+      const scaleX = 0.5;
+      const scaleY = 1.5;
+      const nodeX = 100;
+      const nodeY = 100;
+      const rotation = 0;
+
+      const width = Math.max(MIN_SIZE, rect.width * scaleX);
+      const height = Math.max(MIN_SIZE, rect.height * scaleY);
+
+      expect(width).toBe(100);
+      expect(height).toBe(300);
+      expect(nodeX).toBe(100);
+      expect(nodeY).toBe(100);
+      expect(rotation).toBe(0);
+    });
+
+    it("should produce top-left and size for Ellipse (Oval) from center and radii", () => {
+      const centerX = 100;
+      const centerY = 100;
+      const radiusX = 40;
+      const radiusY = 30;
+      const scaleX = 2;
+      const scaleY = 1.5;
+      const rotation = 45;
+
+      const rx = Math.max(MIN_SIZE / 2, radiusX * scaleX);
+      const ry = Math.max(MIN_SIZE / 2, radiusY * scaleY);
+      const x = centerX - rx;
+      const y = centerY - ry;
+      const width = rx * 2;
+      const height = ry * 2;
+
+      expect(rx).toBe(80);
+      expect(ry).toBe(45);
+      expect(x).toBe(20);
+      expect(y).toBe(55);
+      expect(width).toBe(160);
+      expect(height).toBe(90);
+      expect(rotation).toBe(45);
+    });
+
+    it("should produce points and position for Line (no width/height)", () => {
+      const currentPoints = [0, 0, 100, 50];
+      const scaleX = 2;
+      const scaleY = 2;
+      const nodeX = 10;
+      const nodeY = 20;
+      const rotation = 0;
+
+      const scaledPoints = currentPoints.map((p, i) =>
+        i % 2 === 0 ? p * scaleX : p * scaleY
+      );
+
+      expect(scaledPoints).toEqual([0, 0, 200, 100]);
+      expect(nodeX).toBe(10);
+      expect(nodeY).toBe(20);
+      expect(rotation).toBe(0);
+      expect(Object.keys({ nodeX, nodeY, points: scaledPoints, rotation })).not.toContain("width");
+      expect(Object.keys({ nodeX, nodeY, points: scaledPoints, rotation })).not.toContain("height");
+    });
+  });
+
   describe("Textarea Positioning", () => {
     it("should calculate textarea position accounting for stage pan offset", () => {
       // Simulate textarea position calculation with stage pan/zoom
