@@ -22,6 +22,8 @@ interface IToolbarProps {
   activeColor: string;
   onColorChange: (color: string) => void;
   canEdit: boolean;
+  /** When true, toolbar is rendered inline (e.g. inside mobile sheet) without absolute positioning */
+  embedded?: boolean;
 }
 
 interface IToolButtonProps {
@@ -98,6 +100,7 @@ export const Toolbar = memo(
     activeColor,
     onColorChange,
     canEdit,
+    embedded = false,
   }: IToolbarProps): ReactElement => {
     const [showColors, setShowColors] = useState(false);
 
@@ -143,9 +146,15 @@ export const Toolbar = memo(
       },
     ];
 
+    const wrapperClassName = embedded
+      ? 'flex flex-col gap-1'
+      : 'absolute left-4 top-1/2 -translate-y-1/2 z-20';
+    const innerClassName =
+      'bg-slate-800/95 backdrop-blur-sm rounded-xl p-2 shadow-xl border border-slate-700 flex flex-col gap-1';
+
     return (
-      <div className='absolute left-4 top-1/2 -translate-y-1/2 z-20' data-testid='toolbar'>
-        <div className='bg-slate-800/95 backdrop-blur-sm rounded-xl p-2 shadow-xl border border-slate-700 flex flex-col gap-1'>
+      <div className={wrapperClassName} data-testid={embedded ? 'toolbar-embedded' : 'toolbar'}>
+        <div className={innerClassName}>
           {/* Tool buttons */}
           {tools.map((tool) => (
             <ToolButton

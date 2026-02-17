@@ -3,9 +3,12 @@ import { TransformHandler, type ITransformEndAttrs } from './TransformHandler';
 import { SelectionLayer, type ISelectionRect } from './SelectionLayer';
 import { useRef, useCallback, useState, useEffect, useMemo, memo, type ReactElement } from 'react';
 import Konva from 'konva';
+import { Wrench } from 'lucide-react';
 import { useCanvasViewport } from '@/hooks/useCanvasViewport';
 import { CursorLayer } from './CursorLayer';
 import { Toolbar, type ToolMode } from './Toolbar';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import {
   StickyNote,
   STICKY_COLORS,
@@ -141,6 +144,7 @@ export const BoardCanvas = memo(
       shapeId: string;
       anchor: ConnectorAnchor;
     } | null>(null);
+    const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
 
     const { viewport, handleWheel, handleDragEnd, handleTouchMove, handleTouchEnd } =
       useCanvasViewport();
@@ -525,9 +529,7 @@ export const BoardCanvas = memo(
                 setActiveTool('select');
                 activeToolRef.current = 'select';
               })
-              .catch((error) => {
-                console.error('[DEBUG] Error creating text element:', error);
-                // On error, still switch back to select
+              .catch(() => {
                 setActiveTool('select');
                 activeToolRef.current = 'select';
               });
@@ -968,17 +970,50 @@ export const BoardCanvas = memo(
         data-selected-count={selectedIds.length}
         data-selected-ids={selectedIds.join(',')}
       >
-        {/* Toolbar */}
-        <Toolbar
-          activeTool={activeTool}
-          onToolChange={(tool) => {
-            setActiveTool(tool);
-            activeToolRef.current = tool;
-          }}
-          activeColor={activeColor}
-          onColorChange={setActiveColor}
-          canEdit={canEdit}
-        />
+        {/* Desktop toolbar: visible from md up */}
+        <div className='hidden md:block absolute left-4 top-1/2 -translate-y-1/2 z-20'>
+          <Toolbar
+            activeTool={activeTool}
+            onToolChange={(tool) => {
+              setActiveTool(tool);
+              activeToolRef.current = tool;
+            }}
+            activeColor={activeColor}
+            onColorChange={setActiveColor}
+            canEdit={canEdit}
+          />
+        </div>
+
+        {/* Mobile: floating Tools button + bottom sheet */}
+        <div className='md:hidden fixed bottom-6 left-4 z-30'>
+          <Button
+            size='icon'
+            className='h-12 w-12 rounded-full shadow-lg bg-slate-800 border border-slate-700 text-white hover:bg-slate-700'
+            onClick={() => setMobileToolsOpen(true)}
+            data-testid='toolbar-mobile-toggle'
+            title='Tools'
+          >
+            <Wrench className='h-6 w-6' />
+          </Button>
+        </div>
+        <Dialog open={mobileToolsOpen} onOpenChange={setMobileToolsOpen}>
+          <DialogContent
+            className='fixed left-0 right-0 bottom-0 top-auto translate-x-0 translate-y-0 max-h-[70vh] w-full rounded-t-xl border-t border-slate-700 bg-slate-800/95 p-4'
+            data-testid='toolbar-mobile-sheet'
+          >
+            <Toolbar
+              embedded
+              activeTool={activeTool}
+              onToolChange={(tool) => {
+                setActiveTool(tool);
+                activeToolRef.current = tool;
+              }}
+              activeColor={activeColor}
+              onColorChange={setActiveColor}
+              canEdit={canEdit}
+            />
+          </DialogContent>
+        </Dialog>
 
         <Stage
           ref={stageRef}
