@@ -1,5 +1,5 @@
 import { Stage, Layer, Rect, Line } from 'react-konva';
-import { TransformHandler } from './TransformHandler';
+import { TransformHandler, type ITransformEndAttrs } from './TransformHandler';
 import { SelectionLayer, type ISelectionRect } from './SelectionLayer';
 import { useRef, useCallback, useState, useEffect, memo, type ReactElement } from 'react';
 import Konva from 'konva';
@@ -552,13 +552,10 @@ export const BoardCanvas = memo(
       [onObjectUpdate]
     );
 
-    // Handle transform end from TransformHandler
+    // Handle transform end from TransformHandler (shape-aware attrs: rect-like or points for line/connector)
     const handleTransformEnd = useCallback(
-      (
-        objectId: string,
-        attrs: { x: number; y: number; width: number; height: number; rotation: number }
-      ) => {
-        onObjectUpdate?.(objectId, attrs);
+      (objectId: string, attrs: ITransformEndAttrs) => {
+        onObjectUpdate?.(objectId, attrs as Partial<IBoardObject>);
       },
       [onObjectUpdate]
     );

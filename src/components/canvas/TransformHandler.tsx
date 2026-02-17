@@ -3,28 +3,36 @@ import { useRef, useEffect, memo } from 'react';
 import type { ReactElement } from 'react';
 import Konva from 'konva';
 
+/** Attrs sent for rect-like shapes (rectangle, group/sticky, ellipse/circle). */
+export interface ITransformEndRectAttrs {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+}
+
+/** Attrs sent for line-like shapes (line, connector). */
+export interface ITransformEndLineAttrs {
+  x: number;
+  y: number;
+  points: number[];
+  rotation: number;
+}
+
+export type ITransformEndAttrs = ITransformEndRectAttrs | ITransformEndLineAttrs;
+
 interface ITransformHandlerProps {
   selectedIds: string[];
   layerRef: React.RefObject<Konva.Layer | null>;
-  onTransformEnd?: (
-    id: string,
-    attrs: {
-      x: number;
-      y: number;
-      width: number;
-      height: number;
-      rotation: number;
-      scaleX?: number;
-      scaleY?: number;
-    }
-  ) => void;
+  onTransformEnd?: (id: string, attrs: ITransformEndAttrs) => void;
 }
 
 const MIN_SIZE = 10;
 
 /**
  * TransformHandler component - manages the Konva Transformer for selected shapes.
- * Attaches to selected nodes and handles resize/rotate operations.
+ * Attaches to selected nodes and handles resize/rotate with shape-specific attrs.
  */
 export const TransformHandler = memo(
   ({ selectedIds, layerRef, onTransformEnd }: ITransformHandlerProps): ReactElement | null => {
@@ -43,7 +51,7 @@ export const TransformHandler = memo(
       transformerRef.current.getLayer()?.batchDraw();
     }, [selectedIds, layerRef]);
 
-    // Handle transform end
+    // Handle transform end with shape-aware attrs
     const handleTransformEnd = () => {
       if (!transformerRef.current || !onTransformEnd) return;
 
@@ -52,21 +60,67 @@ export const TransformHandler = memo(
       nodes.forEach((node) => {
         const scaleX = node.scaleX();
         const scaleY = node.scaleY();
+        const className = node.getClassName();
 
-        // Calculate new dimensions
-        const attrs = {
-          x: node.x(),
-          y: node.y(),
-          width: Math.max(MIN_SIZE, node.width() * scaleX),
-          height: Math.max(MIN_SIZE, node.height() * scaleY),
-          rotation: node.rotation(),
-          scaleX: 1,
-          scaleY: 1,
-        };
+        let attrs: ITransformEndAttrs;
 
-        // Reset scale
-        node.scaleX(1);
-        node.scaleY(1);
+        if (className === 'Group') {
+          // StickyNote and other Group-based shapes: use getClientRect (skipTransform) then apply scale
+          const rect = node.getClientRect({ skipTransform: true });
+          const width = Math.max(MIN_SIZE, rect.width * scaleX);
+          const height = Math.max(MIN_SIZE, rect.height * scaleY);
+          node.scaleX(1);
+          node.scaleY(1);
+          attrs = {
+            x: node.x(),
+            y: node.y(),
+            width,
+            height,
+            rotation: node.rotation(),
+          };
+        } else if (className === 'Ellipse') {
+          // Oval: store top-left and size; node uses center and radii
+          const ellipse = node as Konva.Ellipse;
+          const rx = Math.max(MIN_SIZE / 2, ellipse.radiusX() * scaleX);
+          const ry = Math.max(MIN_SIZE / 2, ellipse.radiusY() * scaleY);
+          node.scaleX(1);
+          node.scaleY(1);
+          attrs = {
+            x: node.x() - rx,
+            y: node.y() - ry,
+            width: rx * 2,
+            height: ry * 2,
+            rotation: node.rotation(),
+          };
+        } else if (className === 'Line' || className === 'Arrow') {
+          // Line / Connector: persist scaled points, not width/height
+          const lineNode = node as Konva.Line;
+          const currentPoints = lineNode.points();
+          const scaledPoints = currentPoints.map((p, i) =>
+            i % 2 === 0 ? p * scaleX : p * scaleY
+          );
+          node.scaleX(1);
+          node.scaleY(1);
+          attrs = {
+            x: node.x(),
+            y: node.y(),
+            points: scaledPoints,
+            rotation: node.rotation(),
+          };
+        } else {
+          // Rect and any other (Rectangle, Text, Frame, etc.)
+          const width = Math.max(MIN_SIZE, node.width() * scaleX);
+          const height = Math.max(MIN_SIZE, node.height() * scaleY);
+          node.scaleX(1);
+          node.scaleY(1);
+          attrs = {
+            x: node.x(),
+            y: node.y(),
+            width,
+            height,
+            rotation: node.rotation(),
+          };
+        }
 
         onTransformEnd(node.id(), attrs);
       });
