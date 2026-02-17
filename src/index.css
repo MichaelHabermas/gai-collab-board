@@ -49,6 +49,12 @@
   --color-accent-foreground: #f8fafc;
 }
 
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   font-family:
     'Inter',
@@ -58,4 +64,9 @@ body {
     'Segoe UI',
     Roboto,
     sans-serif;
+}
+
+#root {
+  height: 100%;
+  overflow: hidden;
 }

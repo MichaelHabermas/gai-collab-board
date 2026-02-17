@@ -177,7 +177,7 @@ const BoardView = ({
       </header>
 
       {/* Canvas area and AI panel */}
-      <main className='flex-1 flex relative min-w-0'>
+      <main className='flex-1 flex relative min-w-0 min-h-0 overflow-hidden'>
         <div className='flex-1 relative min-w-0'>
           <BoardCanvas
             boardId={boardId}
@@ -191,10 +191,10 @@ const BoardView = ({
         </div>
         {canEdit && (
           <aside
-            className='shrink-0 w-80 border-l border-slate-700 bg-slate-800/50 p-2 flex flex-col min-h-0'
+            className='shrink-0 w-80 border-l border-slate-700 bg-slate-800/50 p-2 flex flex-col min-h-0 overflow-hidden'
             data-testid='sidebar'
           >
-            <Tabs defaultValue='boards' className='flex flex-col min-h-0 flex-1'>
+            <Tabs defaultValue='boards' className='flex flex-col min-h-0 flex-1 overflow-hidden'>
               <TabsList className='w-full grid grid-cols-2 bg-slate-700/50'>
                 <TabsTrigger value='boards' className='data-[state=active]:bg-slate-700'>
                   Boards
