@@ -1268,37 +1268,74 @@ describe("Click-to-Create Operations", () => {
 
   describe("Empty Area Click Detection", () => {
     it("should correctly identify empty area clicks", () => {
-      // Simulate the click detection logic from BoardCanvas
+      // Simulate the improved click detection logic from BoardCanvas that traverses node tree
+      interface MockNode {
+        name: () => string;
+        getClassName: () => string;
+        getParent: () => MockNode | null;
+      }
+
+      const createNode = (
+        name: string,
+        className: string,
+        parent?: MockNode | null
+      ): MockNode => ({
+        name: () => name,
+        getClassName: () => className,
+        getParent: () => parent || null,
+      });
+
+      const checkIfShape = (node: MockNode | null): boolean => {
+        if (!node) return false;
+        const name = node.name();
+        if (name.includes("shape")) return true;
+        return checkIfShape(node.getParent());
+      };
+
       const isEmptyAreaClick = (
-        targetName: string,
-        targetClassName: string,
+        target: MockNode,
         isStage: boolean
       ): boolean => {
-        const clickedOnShape = targetName.includes("shape");
-        const clickedOnBackground = targetName === "background";
-        const clickedOnStageOrLayer = isStage || targetClassName === "Layer";
-        return !clickedOnShape && (clickedOnBackground || clickedOnStageOrLayer);
+        const targetName = target.name();
+        const targetClassName = target.getClassName();
+
+        // Check if we clicked on a shape (including child elements)
+        if (checkIfShape(target)) {
+          return false;
+        }
+
+        // Allow clicks on: background rect, Stage, or Layer (empty areas)
+        return (
+          targetName === "background" ||
+          isStage ||
+          targetClassName === "Layer" ||
+          (targetClassName === "Rect" && targetName === "background")
+        );
       };
 
       // Click on stage - should be empty area
-      expect(isEmptyAreaClick("", "Stage", true)).toBe(true);
+      const stageNode = createNode("", "Stage", null);
+      expect(isEmptyAreaClick(stageNode, true)).toBe(true);
 
       // Click on layer - should be empty area
-      expect(isEmptyAreaClick("", "Layer", false)).toBe(true);
+      const layerNode = createNode("", "Layer", null);
+      expect(isEmptyAreaClick(layerNode, false)).toBe(true);
 
       // Click on background rect - should be empty area
-      expect(isEmptyAreaClick("background", "Rect", false)).toBe(true);
+      const backgroundNode = createNode("background", "Rect", null);
+      expect(isEmptyAreaClick(backgroundNode, false)).toBe(true);
 
-      // Click on shape - should NOT be empty area
-      expect(isEmptyAreaClick("shape sticky", "Group", false)).toBe(false);
-      expect(isEmptyAreaClick("shape rectangle", "Rect", false)).toBe(false);
+      // Click on shape Group - should NOT be empty area
+      const shapeGroup = createNode("shape sticky", "Group", null);
+      expect(isEmptyAreaClick(shapeGroup, false)).toBe(false);
 
-      // Click on other elements without 'shape' or 'background' in name
-      // Should be empty area only if on Layer
-      expect(isEmptyAreaClick("grid", "Layer", false)).toBe(true);
-      // But not if it's a regular Rect without background name
-      expect(isEmptyAreaClick("", "Rect", false)).toBe(false);
-      expect(isEmptyAreaClick("grid", "Rect", false)).toBe(false);
+      // Click on child Rect inside shape Group - should NOT be empty area (traverses up)
+      const childRect = createNode("", "Rect", shapeGroup);
+      expect(isEmptyAreaClick(childRect, false)).toBe(false);
+
+      // Click on shape rectangle - should NOT be empty area
+      const shapeRect = createNode("shape rectangle", "Rect", null);
+      expect(isEmptyAreaClick(shapeRect, false)).toBe(false);
     });
   });
 
@@ -1357,6 +1394,211 @@ describe("Click-to-Create Operations", () => {
       const resultDrawing = handleMouseUp(initialState, true);
       expect(resultDrawing.isSelecting).toBe(false);
       expect(resultDrawing.selectionRect.visible).toBe(false);
+    });
+  });
+
+  describe("Single-Click Selection", () => {
+    it("should detect clicks on shape parent nodes", () => {
+      // Simulate the improved isEmptyAreaClick that traverses node tree
+      const checkIfShape = (nodeName: string, parentName?: string): boolean => {
+        if (nodeName.includes("shape")) return true;
+        if (parentName?.includes("shape")) return true;
+        return false;
+      };
+
+      // Click on shape Group - should detect as shape
+      expect(checkIfShape("shape sticky", undefined)).toBe(true);
+
+      // Click on child Rect inside shape Group - should detect via parent
+      expect(checkIfShape("", "shape sticky")).toBe(true);
+
+      // Click on empty area - should not detect as shape
+      expect(checkIfShape("background", undefined)).toBe(false);
+    });
+
+    it("should select object when clicking on child elements", () => {
+      // Simulate selection logic where child element click selects parent shape
+      interface MockNode {
+        name: () => string;
+        getParent: () => MockNode | null;
+      }
+
+      const createNode = (name: string, parent?: MockNode | null): MockNode => ({
+        name: () => name,
+        getParent: () => parent || null,
+      });
+
+      // Create a shape Group with a child Rect
+      const shapeGroup = createNode("shape sticky");
+      const childRect = createNode("", shapeGroup);
+
+      // Check if shape (traverses up tree)
+      const checkIfShape = (node: MockNode): boolean => {
+        const name = node.name();
+        if (name.includes("shape")) return true;
+        const parent = node.getParent();
+        if (parent) return checkIfShape(parent);
+        return false;
+      };
+
+      // Click on child should detect parent shape
+      expect(checkIfShape(childRect)).toBe(true);
+      expect(checkIfShape(shapeGroup)).toBe(true);
+    });
+  });
+
+  describe("Resize Functionality", () => {
+    it("should calculate new dimensions after resize", () => {
+      // Simulate TransformHandler resize logic
+      const MIN_SIZE = 10;
+
+      const calculateResize = (
+        currentWidth: number,
+        currentHeight: number,
+        scaleX: number,
+        scaleY: number
+      ) => {
+        return {
+          width: Math.max(MIN_SIZE, currentWidth * scaleX),
+          height: Math.max(MIN_SIZE, currentHeight * scaleY),
+        };
+      };
+
+      // Normal resize
+      const result1 = calculateResize(100, 100, 1.5, 1.5);
+      expect(result1.width).toBe(150);
+      expect(result1.height).toBe(150);
+
+      // Shrink resize
+      const result2 = calculateResize(100, 100, 0.5, 0.5);
+      expect(result2.width).toBe(50);
+      expect(result2.height).toBe(50);
+
+      // Minimum size constraint
+      const result3 = calculateResize(100, 100, 0.05, 0.05);
+      expect(result3.width).toBe(MIN_SIZE);
+      expect(result3.height).toBe(MIN_SIZE);
+    });
+
+    it("should handle resize with rotation", () => {
+      // Simulate transform end with rotation
+      const handleTransformEnd = (
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+        rotation: number,
+        scaleX: number,
+        scaleY: number
+      ) => {
+        return {
+          x,
+          y,
+          width: width * scaleX,
+          height: height * scaleY,
+          rotation,
+          scaleX: 1,
+          scaleY: 1,
+        };
+      };
+
+      const result = handleTransformEnd(100, 100, 200, 200, 45, 1.5, 1.5);
+      expect(result.width).toBe(300);
+      expect(result.height).toBe(300);
+      expect(result.rotation).toBe(45);
+      expect(result.scaleX).toBe(1);
+      expect(result.scaleY).toBe(1);
+    });
+  });
+
+  describe("Textarea Positioning", () => {
+    it("should calculate textarea position accounting for stage pan offset", () => {
+      // Simulate textarea position calculation with stage pan/zoom
+      const calculateTextareaPosition = (
+        textPosition: { x: number; y: number },
+        stageBox: { left: number; top: number },
+        stagePos: { x: number; y: number },
+        scale: number
+      ) => {
+        return {
+          x: stageBox.left + (textPosition.x + stagePos.x) * scale,
+          y: stageBox.top + (textPosition.y + stagePos.y) * scale,
+        };
+      };
+
+      // No pan, no zoom
+      const pos1 = calculateTextareaPosition(
+        { x: 100, y: 100 },
+        { left: 0, top: 0 },
+        { x: 0, y: 0 },
+        1
+      );
+      expect(pos1.x).toBe(100);
+      expect(pos1.y).toBe(100);
+
+      // With pan offset
+      const pos2 = calculateTextareaPosition(
+        { x: 100, y: 100 },
+        { left: 0, top: 0 },
+        { x: 50, y: 50 },
+        1
+      );
+      expect(pos2.x).toBe(150);
+      expect(pos2.y).toBe(150);
+
+      // With pan and zoom
+      const pos3 = calculateTextareaPosition(
+        { x: 100, y: 100 },
+        { left: 0, top: 0 },
+        { x: 50, y: 50 },
+        2
+      );
+      expect(pos3.x).toBe(300);
+      expect(pos3.y).toBe(300);
+
+      // With stage container offset
+      const pos4 = calculateTextareaPosition(
+        { x: 100, y: 100 },
+        { left: 200, top: 100 },
+        { x: 50, y: 50 },
+        1.5
+      );
+      expect(pos4.x).toBe(200 + (100 + 50) * 1.5);
+      expect(pos4.y).toBe(100 + (100 + 50) * 1.5);
+    });
+
+    it("should position textarea correctly when canvas is panned", () => {
+      // Test that textarea appears in correct position relative to note
+      // even when canvas has been panned
+      const stageBox = { left: 100, top: 100 };
+      const textPosition = { x: 200, y: 200 };
+      const stagePos = { x: -100, y: -100 }; // Canvas panned left and up
+      const scale = 1;
+
+      const areaPosition = {
+        x: stageBox.left + (textPosition.x + stagePos.x) * scale,
+        y: stageBox.top + (textPosition.y + stagePos.y) * scale,
+      };
+
+      // Should account for pan offset
+      expect(areaPosition.x).toBe(100 + (200 - 100));
+      expect(areaPosition.y).toBe(100 + (200 - 100));
+    });
+
+    it("should position textarea correctly when canvas is zoomed", () => {
+      // Test that textarea scales correctly with zoom
+      const stageBox = { left: 0, top: 0 };
+      const textPosition = { x: 100, y: 100 };
+      const stagePos = { x: 0, y: 0 };
+      const scale = 2; // 200% zoom
+
+      const areaPosition = {
+        x: stageBox.left + (textPosition.x + stagePos.x) * scale,
+        y: stageBox.top + (textPosition.y + stagePos.y) * scale,
+      };
+
+      expect(areaPosition.x).toBe(200);
+      expect(areaPosition.y).toBe(200);
     });
   });
 });

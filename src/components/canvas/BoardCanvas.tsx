@@ -175,6 +175,17 @@ export const BoardCanvas = memo(
         return false;
       }
 
+      // Traverse up the node tree to find if any ancestor is a shape
+      const checkIfShape = (node: Konva.Node | null): boolean => {
+        if (!node) return false;
+        const name = node.name?.() || '';
+        if (name.includes('shape')) {
+          return true;
+        }
+        // Check parent recursively
+        return checkIfShape(node.getParent());
+      };
+
       const targetName = e.target.name?.() || '';
       const targetClassName = e.target.getClassName();
 
@@ -185,8 +196,8 @@ export const BoardCanvas = memo(
         includesShape: targetName.includes('shape'),
       });
 
-      // Shapes have 'shape' in their name - if we clicked on a shape, it's not empty
-      if (targetName.includes('shape')) {
+      // Check if we clicked on a shape (including child elements)
+      if (checkIfShape(e.target)) {
         console.warn('[DEBUG] isEmptyAreaClick: Clicked on shape, returning false');
         return false;
       }
@@ -924,8 +935,36 @@ export const BoardCanvas = memo(
           {/* Cursor layer - other users' cursors */}
           <CursorLayer cursors={cursors} currentUid={user.uid} />
 
-          {/* Selection/Transform layer - listening={false} to prevent intercepting clicks */}
-          <Layer name='selection' listening={false}>
+          {/* Selection/Transform layer - listening enabled for Transformer, but clicks on Transformer are handled */}
+          <Layer
+            name='selection'
+            listening={true}
+            onClick={(e) => {
+              // Prevent clicks on Transformer (anchors, borders, or Transformer itself) from propagating to stage
+              const target = e.target;
+              const className = target.getClassName();
+              
+              // If clicking directly on Transformer, prevent propagation
+              if (className === 'Transformer') {
+                e.cancelBubble = true;
+                return;
+              }
+              
+              // Transformer creates Circle nodes for anchors and Line nodes for borders
+              // Check if the click is on a Transformer element
+              if (className === 'Circle' || className === 'Line') {
+                // Check if it's part of a Transformer by looking for parent Transformer
+                let node: Konva.Node | null = target;
+                while (node) {
+                  if (node.getClassName() === 'Transformer') {
+                    e.cancelBubble = true;
+                    return;
+                  }
+                  node = node.getParent();
+                }
+              }
+            }}
+          >
             <TransformHandler
               selectedIds={selectedIds}
               layerRef={objectsLayerRef}

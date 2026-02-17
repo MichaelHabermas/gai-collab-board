@@ -88,10 +88,12 @@ export const StickyNote = memo(
         const textPosition = textNode.absolutePosition();
         const stageBox = stage.container().getBoundingClientRect();
         const scale = stage.scaleX();
+        const stagePos = stage.position();
 
+        // Account for stage pan/zoom offset
         const areaPosition = {
-          x: stageBox.left + textPosition.x * scale,
-          y: stageBox.top + textPosition.y * scale,
+          x: stageBox.left + (textPosition.x + stagePos.x) * scale,
+          y: stageBox.top + (textPosition.y + stagePos.y) * scale,
         };
 
         // Create textarea for editing
