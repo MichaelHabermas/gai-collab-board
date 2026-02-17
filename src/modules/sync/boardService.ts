@@ -6,6 +6,8 @@ import {
   updateDoc,
   deleteDoc,
   onSnapshot,
+  query,
+  where,
   Timestamp,
   Unsubscribe,
 } from 'firebase/firestore';
@@ -13,6 +15,8 @@ import { firestore } from '@/lib/firebase';
 import { IBoard, UserRole } from '@/types';
 
 const BOARDS_COLLECTION = 'boards';
+
+const USER_BOARD_ROLES: UserRole[] = ['owner', 'editor', 'viewer'];
 
 export interface ICreateBoardParams {
   id?: string; // Optional - use this ID instead of generating one
@@ -66,6 +70,23 @@ export const subscribeToBoard = (
     } else {
       callback(null);
     }
+  });
+};
+
+/**
+ * Subscribe to all boards where the user is a member (owner, editor, or viewer).
+ * Requires a Firestore composite index on (members.{userId}, updatedAt) if ordering is added later.
+ */
+export const subscribeToUserBoards = (
+  userId: string,
+  callback: (boards: IBoard[]) => void
+): Unsubscribe => {
+  const boardsRef = collection(firestore, BOARDS_COLLECTION);
+  const memberPath = `members.${userId}`;
+  const q = query(boardsRef, where(memberPath, 'in', USER_BOARD_ROLES));
+  return onSnapshot(q, (snapshot) => {
+    const boards = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as IBoard);
+    callback(boards);
   });
 };
 
