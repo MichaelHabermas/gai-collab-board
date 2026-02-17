@@ -107,8 +107,8 @@ export const BoardCanvas = memo(
     useCanvasOperations({
       objects,
       selectedIds,
-      onObjectCreate: (onObjectCreate as ((params: Partial<IBoardObject>) => void)) || (() => {}),
-      onObjectDelete: (onObjectDelete as ((objectId: string) => void)) || (() => {}),
+      onObjectCreate: (onObjectCreate as (params: Partial<IBoardObject>) => void) || (() => {}),
+      onObjectDelete: (onObjectDelete as (objectId: string) => void) || (() => {}),
       clearSelection,
     });
 
@@ -202,101 +202,100 @@ export const BoardCanvas = memo(
       [activeTool, canEdit, isDrawingTool, getCanvasCoords]
     );
 
-    // Handle mouse up for drawing end
+    // Handle mouse up for drawing end and selection completion
     const handleStageMouseUp = useCallback(() => {
-      if (!drawingState.isDrawing || !onObjectCreate) {
-        return;
-      }
+      // Handle drawing completion if we were drawing
+      if (drawingState.isDrawing && onObjectCreate) {
+        const { startX, startY, currentX, currentY } = drawingState;
 
-      const { startX, startY, currentX, currentY } = drawingState;
+        // Calculate dimensions
+        const x = Math.min(startX, currentX);
+        const y = Math.min(startY, currentY);
+        const width = Math.abs(currentX - startX);
+        const height = Math.abs(currentY - startY);
 
-      // Calculate dimensions
-      const x = Math.min(startX, currentX);
-      const y = Math.min(startY, currentY);
-      const width = Math.abs(currentX - startX);
-      const height = Math.abs(currentY - startY);
+        // Only create if size is significant
+        if (width > 5 || height > 5) {
+          if (activeTool === 'rectangle') {
+            onObjectCreate({
+              type: 'rectangle',
+              x,
+              y,
+              width: Math.max(width, 20),
+              height: Math.max(height, 20),
+              fill: activeColor,
+              stroke: '#1e293b',
+              strokeWidth: 2,
+              rotation: 0,
+            });
+          } else if (activeTool === 'circle') {
+            onObjectCreate({
+              type: 'circle',
+              x,
+              y,
+              width: Math.max(width, 20),
+              height: Math.max(height, 20),
+              fill: activeColor,
+              stroke: '#1e293b',
+              strokeWidth: 2,
+              rotation: 0,
+            });
+          } else if (activeTool === 'line') {
+            onObjectCreate({
+              type: 'line',
+              x: 0,
+              y: 0,
+              width: 0,
+              height: 0,
+              points: [startX, startY, currentX, currentY],
+              fill: 'transparent',
+              stroke: activeColor,
+              strokeWidth: 3,
+              rotation: 0,
+            });
+          } else if (activeTool === 'connector') {
+            onObjectCreate({
+              type: 'connector',
+              x: 0,
+              y: 0,
+              width: 0,
+              height: 0,
+              points: [startX, startY, currentX, currentY],
+              fill: 'transparent',
+              stroke: activeColor,
+              strokeWidth: 2,
+              rotation: 0,
+            });
+          } else if (activeTool === 'frame') {
+            onObjectCreate({
+              type: 'frame',
+              x,
+              y,
+              width: Math.max(width, 150),
+              height: Math.max(height, 100),
+              fill: 'rgba(241, 245, 249, 0.5)',
+              stroke: '#94a3b8',
+              strokeWidth: 2,
+              text: 'Frame',
+              rotation: 0,
+            });
+          }
 
-      // Only create if size is significant
-      if (width > 5 || height > 5) {
-        if (activeTool === 'rectangle') {
-          onObjectCreate({
-            type: 'rectangle',
-            x,
-            y,
-            width: Math.max(width, 20),
-            height: Math.max(height, 20),
-            fill: activeColor,
-            stroke: '#1e293b',
-            strokeWidth: 2,
-            rotation: 0,
-          });
-        } else if (activeTool === 'circle') {
-          onObjectCreate({
-            type: 'circle',
-            x,
-            y,
-            width: Math.max(width, 20),
-            height: Math.max(height, 20),
-            fill: activeColor,
-            stroke: '#1e293b',
-            strokeWidth: 2,
-            rotation: 0,
-          });
-        } else if (activeTool === 'line') {
-          onObjectCreate({
-            type: 'line',
-            x: 0,
-            y: 0,
-            width: 0,
-            height: 0,
-            points: [startX, startY, currentX, currentY],
-            fill: 'transparent',
-            stroke: activeColor,
-            strokeWidth: 3,
-            rotation: 0,
-          });
-        } else if (activeTool === 'connector') {
-          onObjectCreate({
-            type: 'connector',
-            x: 0,
-            y: 0,
-            width: 0,
-            height: 0,
-            points: [startX, startY, currentX, currentY],
-            fill: 'transparent',
-            stroke: activeColor,
-            strokeWidth: 2,
-            rotation: 0,
-          });
-        } else if (activeTool === 'frame') {
-          onObjectCreate({
-            type: 'frame',
-            x,
-            y,
-            width: Math.max(width, 150),
-            height: Math.max(height, 100),
-            fill: 'rgba(241, 245, 249, 0.5)',
-            stroke: '#94a3b8',
-            strokeWidth: 2,
-            text: 'Frame',
-            rotation: 0,
-          });
+          // Switch back to select tool
+          setActiveTool('select');
         }
 
-        // Switch back to select tool
-        setActiveTool('select');
+        // Reset drawing state
+        setDrawingState({
+          isDrawing: false,
+          startX: 0,
+          startY: 0,
+          currentX: 0,
+          currentY: 0,
+        });
       }
 
-      // Reset drawing state
-      setDrawingState({
-        isDrawing: false,
-        startX: 0,
-        startY: 0,
-        currentX: 0,
-        currentY: 0,
-      });
-
-      // Handle selection rectangle completion
+      // Handle selection rectangle completion (always check, regardless of drawing state)
       if (isSelecting && selectionRect.visible) {
         // Find objects within selection rectangle
         const selX1 = Math.min(selectionRect.x1, selectionRect.x2);
@@ -323,15 +322,17 @@ export const BoardCanvas = memo(
         }
       }
 
-      // Reset selection state
-      setIsSelecting(false);
-      setSelectionRect({
-        visible: false,
-        x1: 0,
-        y1: 0,
-        x2: 0,
-        y2: 0,
-      });
+      // Always reset selection state on mouse up
+      if (isSelecting) {
+        setIsSelecting(false);
+        setSelectionRect({
+          visible: false,
+          x1: 0,
+          y1: 0,
+          x2: 0,
+          y2: 0,
+        });
+      }
     }, [
       drawingState,
       activeTool,
@@ -348,8 +349,12 @@ export const BoardCanvas = memo(
         const stage = e.target.getStage();
         if (!stage) return;
 
-        // Check if clicked on empty stage
-        const clickedOnEmpty = e.target === stage;
+        // Check if clicked on empty area (stage or layer, not a shape)
+        // Shapes have a 'name' attribute containing 'shape', layers and stage don't
+        const targetName = e.target.name?.() || '';
+        const clickedOnShape = targetName.includes('shape');
+        const clickedOnEmpty =
+          !clickedOnShape && (e.target === stage || e.target.getClassName() === 'Layer');
 
         if (clickedOnEmpty) {
           // Get click position in canvas coordinates
@@ -797,8 +802,8 @@ export const BoardCanvas = memo(
           {/* Cursor layer - other users' cursors */}
           <CursorLayer cursors={cursors} currentUid={user.uid} />
 
-          {/* Selection/Transform layer */}
-          <Layer name='selection'>
+          {/* Selection/Transform layer - listening={false} to prevent intercepting clicks */}
+          <Layer name='selection' listening={false}>
             <TransformHandler
               selectedIds={selectedIds}
               layerRef={objectsLayerRef}

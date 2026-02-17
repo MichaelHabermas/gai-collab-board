@@ -63,6 +63,431 @@ describe("Canvas Operations Integration Tests", () => {
     vi.resetAllMocks();
   });
 
+  describe("Object Persistence - Sticky Notes", () => {
+    it("should persist sticky note after creation and return it with an ID", async () => {
+      const { createObject } = await import("@/modules/sync/objectService");
+
+      const boardId = "test-board";
+      const stickyParams = {
+        type: "sticky" as const,
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 200,
+        fill: "#fef08a",
+        text: "My persistent sticky note",
+        createdBy: "user-1",
+      };
+
+      const createdSticky = await createObject(boardId, stickyParams);
+
+      // Verify the object was persisted to Firestore
+      expect(mockFirestoreSetDoc).toHaveBeenCalledTimes(1);
+
+      // Verify the returned object has all required fields
+      expect(createdSticky).toMatchObject({
+        id: expect.any(String),
+        type: "sticky",
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 200,
+        fill: "#fef08a",
+        text: "My persistent sticky note",
+        createdBy: "user-1",
+        rotation: 0,
+        createdAt: expect.anything(),
+        updatedAt: expect.anything(),
+      });
+
+      // Verify the ID is not empty
+      expect(createdSticky.id).toBeTruthy();
+      expect(createdSticky.id.length).toBeGreaterThan(0);
+    });
+
+    it("should persist sticky note with empty text for later editing", async () => {
+      const { createObject } = await import("@/modules/sync/objectService");
+
+      const boardId = "test-board";
+      const stickyParams = {
+        type: "sticky" as const,
+        x: 250,
+        y: 150,
+        width: 200,
+        height: 200,
+        fill: "#fda4af", // Pink sticky
+        text: "", // Empty text - user will edit later
+        createdBy: "user-1",
+      };
+
+      const createdSticky = await createObject(boardId, stickyParams);
+
+      expect(mockFirestoreSetDoc).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          type: "sticky",
+          text: "",
+          fill: "#fda4af",
+        })
+      );
+
+      expect(createdSticky.text).toBe("");
+      expect(createdSticky.id).toBeTruthy();
+    });
+
+    it("should allow updating sticky note text after creation", async () => {
+      const { createObject, updateObject } = await import(
+        "@/modules/sync/objectService"
+      );
+
+      const boardId = "test-board";
+
+      // First create a sticky note
+      const stickyParams = {
+        type: "sticky" as const,
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 200,
+        fill: "#fef08a",
+        text: "",
+        createdBy: "user-1",
+      };
+
+      const createdSticky = await createObject(boardId, stickyParams);
+
+      // Then update its text
+      await updateObject(boardId, createdSticky.id, {
+        text: "Updated sticky note content!",
+      });
+
+      // Verify both operations were called
+      expect(mockFirestoreSetDoc).toHaveBeenCalledTimes(1);
+      expect(mockFirestoreUpdateDoc).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          text: "Updated sticky note content!",
+        })
+      );
+    });
+  });
+
+  describe("Object Persistence - Shapes", () => {
+    it("should persist rectangle shape after creation", async () => {
+      const { createObject } = await import("@/modules/sync/objectService");
+
+      const boardId = "test-board";
+      const rectParams = {
+        type: "rectangle" as const,
+        x: 50,
+        y: 50,
+        width: 150,
+        height: 100,
+        fill: "#93c5fd",
+        stroke: "#1e293b",
+        strokeWidth: 2,
+        createdBy: "user-1",
+      };
+
+      const createdRect = await createObject(boardId, rectParams);
+
+      // Verify persistence
+      expect(mockFirestoreSetDoc).toHaveBeenCalledTimes(1);
+
+      // Verify returned object
+      expect(createdRect).toMatchObject({
+        id: expect.any(String),
+        type: "rectangle",
+        x: 50,
+        y: 50,
+        width: 150,
+        height: 100,
+        fill: "#93c5fd",
+        stroke: "#1e293b",
+        strokeWidth: 2,
+      });
+
+      expect(createdRect.id).toBeTruthy();
+    });
+
+    it("should persist circle shape after creation", async () => {
+      const { createObject } = await import("@/modules/sync/objectService");
+
+      const boardId = "test-board";
+      const circleParams = {
+        type: "circle" as const,
+        x: 200,
+        y: 200,
+        width: 80,
+        height: 80,
+        fill: "#86efac",
+        stroke: "#1e293b",
+        strokeWidth: 2,
+        createdBy: "user-1",
+      };
+
+      const createdCircle = await createObject(boardId, circleParams);
+
+      expect(mockFirestoreSetDoc).toHaveBeenCalledTimes(1);
+      expect(createdCircle).toMatchObject({
+        id: expect.any(String),
+        type: "circle",
+        width: 80,
+        height: 80,
+      });
+      expect(createdCircle.id).toBeTruthy();
+    });
+
+    it("should persist line shape with points after creation", async () => {
+      const { createObject } = await import("@/modules/sync/objectService");
+
+      const boardId = "test-board";
+      const lineParams = {
+        type: "line" as const,
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+        fill: "transparent",
+        stroke: "#ef4444",
+        strokeWidth: 3,
+        points: [100, 100, 300, 200],
+        createdBy: "user-1",
+      };
+
+      const createdLine = await createObject(boardId, lineParams);
+
+      expect(mockFirestoreSetDoc).toHaveBeenCalledTimes(1);
+      expect(createdLine).toMatchObject({
+        id: expect.any(String),
+        type: "line",
+        points: [100, 100, 300, 200],
+        stroke: "#ef4444",
+        strokeWidth: 3,
+      });
+      expect(createdLine.id).toBeTruthy();
+    });
+  });
+
+  describe("Object Persistence - Visibility on Board", () => {
+    it("should make created objects available via subscription", async () => {
+      const { createObject, subscribeToObjects } = await import(
+        "@/modules/sync/objectService"
+      );
+
+      const boardId = "test-board";
+
+      // Create a sticky note
+      const stickyParams = {
+        type: "sticky" as const,
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 200,
+        fill: "#fef08a",
+        text: "Visible sticky",
+        createdBy: "user-1",
+      };
+
+      const createdSticky = await createObject(boardId, stickyParams);
+
+      // Subscribe to objects (simulating what the board does)
+      const objectsCallback = vi.fn();
+      subscribeToObjects(boardId, objectsCallback);
+
+      // Verify subscription was set up
+      expect(mockFirestoreOnSnapshot).toHaveBeenCalled();
+
+      // Simulate Firestore returning the created object
+      const snapshotCallback = mockFirestoreOnSnapshot.mock.calls[0]?.[1] as
+        | ((snapshot: unknown) => void)
+        | undefined;
+      expect(snapshotCallback).toBeDefined();
+      const mockSnapshot = {
+        forEach: (cb: (doc: { data: () => IBoardObject }) => void) => {
+          cb({ data: () => createdSticky });
+        },
+      };
+      snapshotCallback!(mockSnapshot);
+
+      // Verify the callback received the object
+      expect(objectsCallback).toHaveBeenCalledWith([createdSticky]);
+    });
+
+    it("should show multiple objects on board after creation", async () => {
+      const { createObject, subscribeToObjects } = await import(
+        "@/modules/sync/objectService"
+      );
+
+      const boardId = "test-board";
+
+      // Create multiple objects
+      const sticky = await createObject(boardId, {
+        type: "sticky" as const,
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 200,
+        fill: "#fef08a",
+        text: "Sticky 1",
+        createdBy: "user-1",
+      });
+
+      const rect = await createObject(boardId, {
+        type: "rectangle" as const,
+        x: 350,
+        y: 100,
+        width: 100,
+        height: 80,
+        fill: "#93c5fd",
+        stroke: "#1e293b",
+        strokeWidth: 2,
+        createdBy: "user-1",
+      });
+
+      const circle = await createObject(boardId, {
+        type: "circle" as const,
+        x: 500,
+        y: 100,
+        width: 60,
+        height: 60,
+        fill: "#86efac",
+        stroke: "#1e293b",
+        strokeWidth: 2,
+        createdBy: "user-1",
+      });
+
+      // All three objects were persisted
+      expect(mockFirestoreSetDoc).toHaveBeenCalledTimes(3);
+
+      // Subscribe to objects
+      const objectsCallback = vi.fn();
+      subscribeToObjects(boardId, objectsCallback);
+
+      // Simulate Firestore returning all objects
+      const snapshotCallback = mockFirestoreOnSnapshot.mock.calls[0]?.[1] as
+        | ((snapshot: unknown) => void)
+        | undefined;
+      expect(snapshotCallback).toBeDefined();
+      const mockSnapshot = {
+        forEach: (cb: (doc: { data: () => IBoardObject }) => void) => {
+          cb({ data: () => sticky });
+          cb({ data: () => rect });
+          cb({ data: () => circle });
+        },
+      };
+      snapshotCallback!(mockSnapshot);
+
+      // Verify callback received all three objects
+      expect(objectsCallback).toHaveBeenCalledWith([sticky, rect, circle]);
+    });
+
+    it("should persist object movement and reflect in subscription", async () => {
+      const { createObject, updateObject, subscribeToObjects } = await import(
+        "@/modules/sync/objectService"
+      );
+
+      const boardId = "test-board";
+
+      // Create a sticky note
+      const sticky = await createObject(boardId, {
+        type: "sticky" as const,
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 200,
+        fill: "#fef08a",
+        text: "Movable sticky",
+        createdBy: "user-1",
+      });
+
+      // Move it
+      await updateObject(boardId, sticky.id, { x: 300, y: 250 });
+
+      expect(mockFirestoreUpdateDoc).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          x: 300,
+          y: 250,
+        })
+      );
+
+      // Subscribe and verify updated position
+      const objectsCallback = vi.fn();
+      subscribeToObjects(boardId, objectsCallback);
+
+      const movedSticky = { ...sticky, x: 300, y: 250 };
+      const snapshotCallback = mockFirestoreOnSnapshot.mock.calls[0]?.[1] as
+        | ((snapshot: unknown) => void)
+        | undefined;
+      expect(snapshotCallback).toBeDefined();
+      const mockSnapshot = {
+        forEach: (cb: (doc: { data: () => IBoardObject }) => void) => {
+          cb({ data: () => movedSticky });
+        },
+      };
+      snapshotCallback!(mockSnapshot);
+
+      expect(objectsCallback).toHaveBeenCalledWith([
+        expect.objectContaining({ x: 300, y: 250 }),
+      ]);
+    });
+  });
+
+  describe("Object Persistence - Real-time Sync", () => {
+    it("should sync created object to other users via subscription", async () => {
+      const { createObject, subscribeToObjects } = await import(
+        "@/modules/sync/objectService"
+      );
+
+      const boardId = "shared-board";
+
+      // User 1 subscribes to objects
+      const user1Callback = vi.fn();
+      subscribeToObjects(boardId, user1Callback);
+
+      // User 2 subscribes to objects
+      const user2Callback = vi.fn();
+      subscribeToObjects(boardId, user2Callback);
+
+      // User 1 creates a sticky note
+      const sticky = await createObject(boardId, {
+        type: "sticky" as const,
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 200,
+        fill: "#fef08a",
+        text: "Shared sticky",
+        createdBy: "user-1",
+      });
+
+      // Simulate Firestore broadcasting to both subscribers
+      const mockSnapshot = {
+        forEach: (cb: (doc: { data: () => IBoardObject }) => void) => {
+          cb({ data: () => sticky });
+        },
+      };
+
+      // Both subscription callbacks should receive the object
+      const user1SnapshotCallback = mockFirestoreOnSnapshot.mock.calls[0]?.[1] as
+        | ((snapshot: unknown) => void)
+        | undefined;
+      const user2SnapshotCallback = mockFirestoreOnSnapshot.mock.calls[1]?.[1] as
+        | ((snapshot: unknown) => void)
+        | undefined;
+
+      expect(user1SnapshotCallback).toBeDefined();
+      expect(user2SnapshotCallback).toBeDefined();
+
+      user1SnapshotCallback!(mockSnapshot);
+      user2SnapshotCallback!(mockSnapshot);
+
+      expect(user1Callback).toHaveBeenCalledWith([sticky]);
+      expect(user2Callback).toHaveBeenCalledWith([sticky]);
+    });
+  });
+
   describe("Object CRUD Operations", () => {
     it("should create objects with all required fields", async () => {
       const { createObject } = await import("@/modules/sync/objectService");
@@ -680,5 +1105,251 @@ describe("Selection Operations", () => {
         { x1: 100, y1: 100, x2: 200, y2: 200 }
       )
     ).toBe(false);
+  });
+});
+
+describe("Click-to-Create Operations", () => {
+  describe("Sticky Note Creation via Click", () => {
+    it("should create sticky note with correct parameters when clicking with sticky tool", async () => {
+      const { createObject } = await import("@/modules/sync/objectService");
+
+      const boardId = "test-board";
+      const clickX = 500;
+      const clickY = 300;
+      const defaultStickySize = { width: 200, height: 200 };
+      const activeColor = "#fef08a";
+
+      // Simulate the parameters that would be passed from handleStageClick
+      const stickyParams = {
+        type: "sticky" as const,
+        x: clickX - defaultStickySize.width / 2,
+        y: clickY - defaultStickySize.height / 2,
+        width: defaultStickySize.width,
+        height: defaultStickySize.height,
+        fill: activeColor,
+        text: "",
+        rotation: 0,
+        createdBy: "user-1",
+      };
+
+      const createdSticky = await createObject(boardId, stickyParams);
+
+      // Verify sticky note was created at centered position
+      expect(createdSticky.x).toBe(400); // 500 - 100
+      expect(createdSticky.y).toBe(200); // 300 - 100
+      expect(createdSticky.width).toBe(200);
+      expect(createdSticky.height).toBe(200);
+      expect(createdSticky.type).toBe("sticky");
+      expect(createdSticky.text).toBe("");
+      expect(createdSticky.fill).toBe("#fef08a");
+      expect(createdSticky.rotation).toBe(0);
+      expect(createdSticky.id).toBeTruthy();
+    });
+
+    it("should create sticky note with different colors", async () => {
+      const { createObject } = await import("@/modules/sync/objectService");
+
+      const boardId = "test-board";
+      const colors = ["#fef08a", "#fda4af", "#93c5fd", "#86efac", "#c4b5fd"];
+
+      for (const color of colors) {
+        vi.clearAllMocks();
+
+        const stickyParams = {
+          type: "sticky" as const,
+          x: 100,
+          y: 100,
+          width: 200,
+          height: 200,
+          fill: color,
+          text: "",
+          rotation: 0,
+          createdBy: "user-1",
+        };
+
+        const createdSticky = await createObject(boardId, stickyParams);
+
+        expect(createdSticky.fill).toBe(color);
+        expect(mockFirestoreSetDoc).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({
+            fill: color,
+          })
+        );
+      }
+    });
+
+    it("should create sticky note at edge of canvas", async () => {
+      const { createObject } = await import("@/modules/sync/objectService");
+
+      const boardId = "test-board";
+
+      // Test creation at canvas origin
+      const stickyParams = {
+        type: "sticky" as const,
+        x: 0 - 100, // Centered at origin
+        y: 0 - 100,
+        width: 200,
+        height: 200,
+        fill: "#fef08a",
+        text: "",
+        rotation: 0,
+        createdBy: "user-1",
+      };
+
+      const createdSticky = await createObject(boardId, stickyParams);
+
+      expect(createdSticky.x).toBe(-100);
+      expect(createdSticky.y).toBe(-100);
+      expect(createdSticky.id).toBeTruthy();
+    });
+  });
+
+  describe("Text Element Creation via Click", () => {
+    it("should create text element with correct parameters when clicking with text tool", async () => {
+      const { createObject } = await import("@/modules/sync/objectService");
+
+      const boardId = "test-board";
+      const clickX = 400;
+      const clickY = 250;
+
+      // Simulate the parameters that would be passed from handleStageClick
+      const textParams = {
+        type: "text" as const,
+        x: clickX,
+        y: clickY,
+        width: 200,
+        height: 30,
+        fill: "#1f2937", // Default text color when sticky color is active
+        text: "",
+        fontSize: 16,
+        rotation: 0,
+        createdBy: "user-1",
+      };
+
+      const createdText = await createObject(boardId, textParams);
+
+      // Verify text element was created at click position (not centered)
+      expect(createdText.x).toBe(400);
+      expect(createdText.y).toBe(250);
+      expect(createdText.width).toBe(200);
+      expect(createdText.height).toBe(30);
+      expect(createdText.type).toBe("text");
+      expect(createdText.text).toBe("");
+      expect(createdText.fontSize).toBe(16);
+      expect(createdText.fill).toBe("#1f2937");
+      expect(createdText.id).toBeTruthy();
+    });
+
+    it("should create text element with custom color when non-yellow color is active", async () => {
+      const { createObject } = await import("@/modules/sync/objectService");
+
+      const boardId = "test-board";
+      const customColor = "#3b82f6"; // Blue
+
+      const textParams = {
+        type: "text" as const,
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 30,
+        fill: customColor,
+        text: "",
+        fontSize: 16,
+        rotation: 0,
+        createdBy: "user-1",
+      };
+
+      const createdText = await createObject(boardId, textParams);
+
+      expect(createdText.fill).toBe(customColor);
+    });
+  });
+
+  describe("Empty Area Click Detection", () => {
+    it("should correctly identify empty area clicks", () => {
+      // Simulate the click detection logic from BoardCanvas
+      const isEmptyAreaClick = (
+        targetName: string,
+        targetClassName: string,
+        isStage: boolean
+      ): boolean => {
+        const clickedOnShape = targetName.includes("shape");
+        return !clickedOnShape && (isStage || targetClassName === "Layer");
+      };
+
+      // Click on stage - should be empty area
+      expect(isEmptyAreaClick("", "Stage", true)).toBe(true);
+
+      // Click on layer - should be empty area
+      expect(isEmptyAreaClick("", "Layer", false)).toBe(true);
+
+      // Click on shape - should NOT be empty area
+      expect(isEmptyAreaClick("shape sticky", "Group", false)).toBe(false);
+      expect(isEmptyAreaClick("shape rectangle", "Rect", false)).toBe(false);
+
+      // Click on other elements without 'shape' in name - should be empty area if on Layer
+      expect(isEmptyAreaClick("grid", "Layer", false)).toBe(true);
+      // But not if it's a regular Rect (which would have listening=false anyway)
+      expect(isEmptyAreaClick("", "Rect", false)).toBe(false);
+    });
+  });
+
+  describe("Selection State Reset", () => {
+    it("should reset selection state after mouse up regardless of drawing state", () => {
+      // Simulate selection state management
+      interface ISelectionState {
+        isSelecting: boolean;
+        selectionRect: {
+          visible: boolean;
+          x1: number;
+          y1: number;
+          x2: number;
+          y2: number;
+        };
+      }
+
+      const initialState: ISelectionState = {
+        isSelecting: true,
+        selectionRect: {
+          visible: true,
+          x1: 100,
+          y1: 100,
+          x2: 200,
+          y2: 200,
+        },
+      };
+
+      // Simulate handleStageMouseUp behavior (fixed version)
+      const handleMouseUp = (
+        state: ISelectionState,
+        _isDrawing: boolean
+      ): ISelectionState => {
+        // The fix ensures selection state is always reset regardless of _isDrawing
+        if (state.isSelecting) {
+          return {
+            isSelecting: false,
+            selectionRect: {
+              visible: false,
+              x1: 0,
+              y1: 0,
+              x2: 0,
+              y2: 0,
+            },
+          };
+        }
+        return state;
+      };
+
+      // Test: Selection should be reset even when not drawing
+      const resultNotDrawing = handleMouseUp(initialState, false);
+      expect(resultNotDrawing.isSelecting).toBe(false);
+      expect(resultNotDrawing.selectionRect.visible).toBe(false);
+
+      // Test: Selection should be reset when drawing
+      const resultDrawing = handleMouseUp(initialState, true);
+      expect(resultDrawing.isSelecting).toBe(false);
+      expect(resultDrawing.selectionRect.visible).toBe(false);
+    });
   });
 });

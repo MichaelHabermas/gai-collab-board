@@ -34,7 +34,14 @@ interface IToolButtonProps {
 }
 
 const ToolButton = memo(
-  ({ icon, label, isActive, onClick, disabled = false, testId }: IToolButtonProps): ReactElement => (
+  ({
+    icon,
+    label,
+    isActive,
+    onClick,
+    disabled = false,
+    testId,
+  }: IToolButtonProps): ReactElement => (
     <Button
       variant={isActive ? 'default' : 'ghost'}
       size='icon'
