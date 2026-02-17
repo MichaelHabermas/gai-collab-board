@@ -39,7 +39,7 @@ Natural language commands to manipulate the board:
 ## Tech Stack
 
 | Layer | Technology |
-|-------|------------|
+| ------- | ------------ |
 | **Backend** | Firebase (Firestore, Realtime DB, Auth) |
 | **Frontend** | React 19 + Vite + Bun + TypeScript |
 | **UI Components** | Shadcn/ui + Tailwind CSS v4 |
@@ -117,7 +117,7 @@ The app will be available at `http://localhost:5173`
 ### Keyboard Shortcuts
 
 | Action | Shortcut |
-|--------|----------|
+| ------- | ---------- |
 | Pan | Click + Drag (on empty space) |
 | Zoom | Scroll wheel |
 | Select | Click on object |
@@ -200,7 +200,7 @@ flowchart LR
 ## Performance Targets
 
 | Metric | Target |
-|--------|--------|
+| ------- | ------- |
 | Frame rate | 60 FPS during pan, zoom, manipulation |
 | Object sync latency | <100ms |
 | Cursor sync latency | <50ms |
