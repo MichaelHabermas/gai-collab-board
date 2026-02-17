@@ -1,7 +1,7 @@
 import { Stage, Layer, Rect, Line } from 'react-konva';
 import { TransformHandler } from './TransformHandler';
 import { SelectionLayer, type ISelectionRect } from './SelectionLayer';
-import { useRef, useCallback, useState, memo, type ReactElement } from 'react';
+import { useRef, useCallback, useState, useEffect, memo, type ReactElement } from 'react';
 import Konva from 'konva';
 import { useCanvasViewport } from '@/hooks/useCanvasViewport';
 import { CursorLayer } from './CursorLayer';
@@ -67,6 +67,7 @@ export const BoardCanvas = memo(
     const stageRef = useRef<Konva.Stage>(null);
     const objectsLayerRef = useRef<Konva.Layer>(null);
     const [activeTool, setActiveTool] = useState<ToolMode>('select');
+    const activeToolRef = useRef<ToolMode>('select');
     const [activeColor, setActiveColor] = useState<string>(STICKY_COLORS.yellow);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [drawingState, setDrawingState] = useState<IDrawingState>({
@@ -96,6 +97,11 @@ export const BoardCanvas = memo(
       boardId,
       user,
     });
+
+    // Keep ref in sync with state
+    useEffect(() => {
+      activeToolRef.current = activeTool;
+    }, [activeTool]);
 
     // Clear selection helper
     const clearSelection = useCallback(() => {
@@ -321,6 +327,7 @@ export const BoardCanvas = memo(
           // Only switch back to select tool if object was successfully created
           if (result) {
             setActiveTool('select');
+            activeToolRef.current = 'select';
           }
         }
 
@@ -412,8 +419,17 @@ export const BoardCanvas = memo(
           const { x: canvasX, y: canvasY } = getCanvasCoords(stage, pointer);
           console.warn('[DEBUG] handleStageClick: Click position:', { canvasX, canvasY });
 
+          // Use ref to get the tool at the time of click (avoids stale closure issues)
+          const toolAtClick = activeToolRef.current;
+          console.warn(
+            '[DEBUG] handleStageClick: Tool at click time:',
+            toolAtClick,
+            'activeTool state:',
+            activeTool
+          );
+
           // Create new object based on active tool (for click-to-create tools)
-          if (activeTool === 'sticky' && canEdit && onObjectCreate) {
+          if ((toolAtClick === 'sticky' || activeTool === 'sticky') && canEdit && onObjectCreate) {
             const params = {
               type: 'sticky' as const,
               x: canvasX - DEFAULT_STICKY_SIZE.width / 2,
@@ -425,7 +441,7 @@ export const BoardCanvas = memo(
               rotation: 0,
             };
             console.warn('[DEBUG] Creating sticky note with params:', params);
-            
+
             // Call async function but handle it properly
             onObjectCreate(params)
               .then((result) => {
@@ -433,13 +449,19 @@ export const BoardCanvas = memo(
                 // Switch back to select tool after creation attempt
                 // (regardless of success/failure to allow user to try again)
                 setActiveTool('select');
+                activeToolRef.current = 'select';
               })
               .catch((error) => {
                 console.error('[DEBUG] Error creating sticky note:', error);
                 // On error, still switch back to select
                 setActiveTool('select');
+                activeToolRef.current = 'select';
               });
-          } else if (activeTool === 'text' && canEdit && onObjectCreate) {
+          } else if (
+            (toolAtClick === 'text' || activeTool === 'text') &&
+            canEdit &&
+            onObjectCreate
+          ) {
             const params = {
               type: 'text' as const,
               x: canvasX,
@@ -452,17 +474,19 @@ export const BoardCanvas = memo(
               rotation: 0,
             };
             console.warn('[DEBUG] Creating text element with params:', params);
-            
+
             onObjectCreate(params)
               .then((result) => {
                 console.warn('[DEBUG] Text element creation result:', result);
                 // Switch back to select tool after creation attempt
                 setActiveTool('select');
+                activeToolRef.current = 'select';
               })
               .catch((error) => {
                 console.error('[DEBUG] Error creating text element:', error);
                 // On error, still switch back to select
                 setActiveTool('select');
+                activeToolRef.current = 'select';
               });
           } else {
             console.warn('[DEBUG] handleStageClick: Conditions not met:', {
@@ -840,7 +864,10 @@ export const BoardCanvas = memo(
         {/* Toolbar */}
         <Toolbar
           activeTool={activeTool}
-          onToolChange={setActiveTool}
+          onToolChange={(tool) => {
+            setActiveTool(tool);
+            activeToolRef.current = tool;
+          }}
           activeColor={activeColor}
           onColorChange={setActiveColor}
           canEdit={canEdit}

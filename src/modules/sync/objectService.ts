@@ -62,6 +62,7 @@ export const createObject = async (
   const objectRef = doc(objectsRef);
   const now = Timestamp.now();
 
+  // Build object, only including defined fields (Firestore doesn't allow undefined)
   const object: IBoardObject = {
     id: objectRef.id,
     type: params.type,
@@ -71,15 +72,27 @@ export const createObject = async (
     height: params.height,
     rotation: params.rotation ?? 0,
     fill: params.fill,
-    stroke: params.stroke,
-    strokeWidth: params.strokeWidth,
-    text: params.text,
-    fontSize: params.fontSize,
-    points: params.points,
     createdBy: params.createdBy,
     createdAt: now,
     updatedAt: now,
   };
+
+  // Only add optional fields if they are defined
+  if (params.stroke !== undefined) {
+    object.stroke = params.stroke;
+  }
+  if (params.strokeWidth !== undefined) {
+    object.strokeWidth = params.strokeWidth;
+  }
+  if (params.text !== undefined) {
+    object.text = params.text;
+  }
+  if (params.fontSize !== undefined) {
+    object.fontSize = params.fontSize;
+  }
+  if (params.points !== undefined) {
+    object.points = params.points;
+  }
 
   await setDoc(objectRef, object);
   return object;
