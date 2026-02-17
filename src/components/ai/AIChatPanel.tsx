@@ -74,7 +74,7 @@ export const AIChatPanel = ({
             <div
               key={i}
               className={cn(
-                'rounded-lg px-3 py-2 text-sm break-words',
+                'rounded-lg px-3 py-2 text-sm wrap-break-word',
                 msg.role === 'user'
                   ? 'bg-slate-700 text-slate-100 ml-4'
                   : 'bg-slate-600/80 text-slate-100 mr-4'

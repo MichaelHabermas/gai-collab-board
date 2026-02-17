@@ -110,7 +110,10 @@ export class AIService {
     messages: ChatCompletionMessageParam[],
     assistantMessage: ChatCompletionMessage
   ): Promise<string> {
-    const toolCalls = assistantMessage.tool_calls!;
+    const toolCalls = assistantMessage.tool_calls;
+    if (!toolCalls?.length) {
+      return "I couldn't process any tools.";
+    }
     const toolResults: Array<{
       tool_call_id: string;
       role: 'tool';
@@ -118,6 +121,9 @@ export class AIService {
     }> = [];
 
     for (const toolCall of toolCalls) {
+      if (!('function' in toolCall) || !toolCall.function) {
+        continue;
+      }
       const functionName = toolCall.function.name;
       const functionArgs = JSON.parse(toolCall.function.arguments ?? '{}');
 
@@ -176,7 +182,7 @@ export class AIService {
 
   private async throttledRequest<T>(fn: () => Promise<T>): Promise<T> {
     const prev = this.requestQueue;
-    let resolve: () => void;
+    let resolve: (() => void) | undefined;
     this.requestQueue = new Promise((r) => {
       resolve = r;
     });
@@ -184,7 +190,7 @@ export class AIService {
     try {
       return await fn();
     } finally {
-      resolve!();
+      resolve?.();
     }
   }
 

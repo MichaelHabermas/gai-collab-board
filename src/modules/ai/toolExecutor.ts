@@ -128,7 +128,12 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
         const toPos = getAnchorPosition(toObj, toAnchor);
         const x = fromPos.x;
         const y = fromPos.y;
-        const points = [0, 0, toPos.x - fromPos.x, toPos.y - fromPos.y];
+        const points: [number, number, number, number] = [
+          0,
+          0,
+          toPos.x - fromPos.x,
+          toPos.y - fromPos.y,
+        ];
         const stroke = style === 'arrow' || style === 'dashed' ? '#64748b' : '#64748b';
         const obj = await ctx.createObject(boardId, {
           type: 'connector',
@@ -283,6 +288,9 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           const row = Math.floor(i / columns);
           const col = i % columns;
           const obj = objects[i];
+          if (obj === undefined) {
+            continue;
+          }
           const newX = startX + col * (obj.width + spacing);
           const newY = startY + row * (obj.height + spacing);
           await ctx.updateObject(boardId, obj.id, { x: newX, y: newY });

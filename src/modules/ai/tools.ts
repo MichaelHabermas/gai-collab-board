@@ -354,7 +354,10 @@ export const boardTools: ChatCompletionTool[] = [
   },
 ];
 
-export type ToolName = (typeof boardTools)[number]['function']['name'];
+export type ToolName = Extract<
+  (typeof boardTools)[number],
+  { type: 'function' }
+>['function']['name'];
 
 export interface IToolCall {
   name: ToolName;

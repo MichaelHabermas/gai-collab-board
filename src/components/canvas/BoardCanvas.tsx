@@ -767,19 +767,36 @@ export const BoardCanvas = memo(
               obj.fromObjectId != null ? objects.find((o) => o.id === obj.fromObjectId) : undefined;
             const toObj =
               obj.toObjectId != null ? objects.find((o) => o.id === obj.toObjectId) : undefined;
-            const isLinked = Boolean(
-              fromObj && toObj && obj.fromAnchor != null && obj.toAnchor != null
-            );
-            const x = isLinked ? getAnchorPosition(fromObj!, obj.fromAnchor!).x : obj.x;
-            const y = isLinked ? getAnchorPosition(fromObj!, obj.fromAnchor!).y : obj.y;
-            const points = isLinked
-              ? [
-                  0,
-                  0,
-                  getAnchorPosition(toObj!, obj.toAnchor!).x - x,
-                  getAnchorPosition(toObj!, obj.toAnchor!).y - y,
-                ]
-              : obj.points || [0, 0, 100, 100];
+            if (fromObj && toObj && obj.fromAnchor != null && obj.toAnchor != null) {
+              const x = getAnchorPosition(fromObj, obj.fromAnchor).x;
+              const y = getAnchorPosition(fromObj, obj.fromAnchor).y;
+              const points: [number, number, number, number] = [
+                0,
+                0,
+                getAnchorPosition(toObj, obj.toAnchor).x - x,
+                getAnchorPosition(toObj, obj.toAnchor).y - y,
+              ];
+              return (
+                <Connector
+                  key={obj.id}
+                  id={obj.id}
+                  x={x}
+                  y={y}
+                  points={points}
+                  stroke={obj.stroke || obj.fill}
+                  strokeWidth={obj.strokeWidth}
+                  rotation={obj.rotation}
+                  isSelected={isSelected}
+                  draggable={false}
+                  hasArrow={true}
+                  onSelect={() => handleObjectSelect(obj.id)}
+                  onDragEnd={(dx, dy) => handleObjectDragEnd(obj.id, dx, dy)}
+                />
+              );
+            }
+            const x = obj.x;
+            const y = obj.y;
+            const points = obj.points || [0, 0, 100, 100];
             return (
               <Connector
                 key={obj.id}
@@ -791,7 +808,7 @@ export const BoardCanvas = memo(
                 strokeWidth={obj.strokeWidth}
                 rotation={obj.rotation}
                 isSelected={isSelected}
-                draggable={isLinked ? false : canEdit}
+                draggable={canEdit}
                 hasArrow={true}
                 onSelect={() => handleObjectSelect(obj.id)}
                 onDragEnd={(dx, dy) => handleObjectDragEnd(obj.id, dx, dy)}

@@ -152,6 +152,7 @@ export const useCanvasViewport = (): IUseCanvasViewportReturn => {
         return;
       }
 
+      const lastCenter = touchStateRef.current.lastCenter;
       const scale = viewport.scale.x * (dist / touchStateRef.current.lastDist);
       const clampedScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale));
 
@@ -164,14 +165,8 @@ export const useCanvasViewport = (): IUseCanvasViewportReturn => {
         ...prev,
         scale: { x: clampedScale, y: clampedScale },
         position: {
-          x:
-            newCenter.x -
-            pointTo.x * clampedScale +
-            (newCenter.x - touchStateRef.current.lastCenter!.x),
-          y:
-            newCenter.y -
-            pointTo.y * clampedScale +
-            (newCenter.y - touchStateRef.current.lastCenter!.y),
+          x: newCenter.x - pointTo.x * clampedScale + (newCenter.x - lastCenter.x),
+          y: newCenter.y - pointTo.y * clampedScale + (newCenter.y - lastCenter.y),
         },
       }));
 

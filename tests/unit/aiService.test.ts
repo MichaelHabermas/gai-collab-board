@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { AIService } from '@/modules/ai/aiService';
 import type { IToolCall } from '@/modules/ai/tools';
 import { aiClient } from '@/lib/ai';
@@ -17,7 +17,7 @@ vi.mock('@/lib/ai', () => ({
 const mockCreate = vi.mocked(aiClient.chat.completions.create);
 
 describe('AIService', () => {
-  let onToolExecute: (tool: IToolCall) => Promise<unknown>;
+  let onToolExecute: Mock<(tool: IToolCall) => Promise<unknown>>;
   let service: AIService;
 
   beforeEach(() => {
@@ -29,12 +29,21 @@ describe('AIService', () => {
 
   it('returns assistant content when no tool calls', async () => {
     mockCreate.mockResolvedValue({
+      id: 'test-id',
+      created: 1717171717,
+      model: 'test-model',
+      object: 'chat.completion',
       choices: [
         {
           message: {
             content: 'Done!',
-            tool_calls: undefined,
+            tool_calls: [],
+            refusal: null,
+            role: 'assistant',
           },
+          finish_reason: 'stop',
+          index: 0,
+          logprobs: null,
         },
       ],
     });
@@ -47,13 +56,23 @@ describe('AIService', () => {
   it('calls onToolExecute for each tool call and returns follow-up content', async () => {
     mockCreate
       .mockResolvedValueOnce({
+        id: 'test-id',
+        created: 1717171717,
+        model: 'test-model',
+        object: 'chat.completion',
         choices: [
           {
+            finish_reason: 'stop',
+            index: 0,
+            logprobs: null,
             message: {
               content: null,
+              refusal: null,
+              role: 'assistant',
               tool_calls: [
                 {
                   id: 'call-1',
+                  type: 'function',
                   function: {
                     name: 'createStickyNote',
                     arguments: JSON.stringify({ text: 'Hi', x: 10, y: 20 }),
@@ -65,7 +84,18 @@ describe('AIService', () => {
         ],
       })
       .mockResolvedValueOnce({
-        choices: [{ message: { content: 'Created a sticky note.' } }],
+        id: 'test-id',
+        created: 1717171717,
+        model: 'test-model',
+        object: 'chat.completion',
+        choices: [
+          {
+            message: { content: 'Created a sticky note.', refusal: null, role: 'assistant' },
+            finish_reason: 'stop',
+            index: 0,
+            logprobs: null,
+          },
+        ],
       });
 
     const result = await service.processCommand('Add a sticky saying Hi at 10,20');
@@ -81,13 +111,20 @@ describe('AIService', () => {
     onToolExecute.mockRejectedValueOnce(new Error('Object not found'));
     mockCreate
       .mockResolvedValueOnce({
+        id: 'test-id',
+        created: 1717171717,
+        model: 'test-model',
+        object: 'chat.completion',
         choices: [
           {
             message: {
               content: null,
+              refusal: null,
+              role: 'assistant',
               tool_calls: [
                 {
                   id: 'call-1',
+                  type: 'function',
                   function: {
                     name: 'deleteObject',
                     arguments: JSON.stringify({ objectId: 'bad-id' }),
@@ -95,11 +132,29 @@ describe('AIService', () => {
                 },
               ],
             },
+            finish_reason: 'stop',
+            index: 0,
+            logprobs: null,
           },
         ],
       })
       .mockResolvedValueOnce({
-        choices: [{ message: { content: 'That object could not be found.' } }],
+        id: 'test-id',
+        created: 1717171717,
+        model: 'test-model',
+        object: 'chat.completion',
+        choices: [
+          {
+            message: {
+              content: 'That object could not be found.',
+              refusal: null,
+              role: 'assistant',
+            },
+            finish_reason: 'stop',
+            index: 0,
+            logprobs: null,
+          },
+        ],
       });
 
     const result = await service.processCommand('Delete the bad object');
