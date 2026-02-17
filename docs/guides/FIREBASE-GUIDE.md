@@ -529,7 +529,7 @@ export const updateCursor = async (
 
 export const subscribeToCursors = (
   boardId: string,
-  callback: (cursors: Record<string, ICursorData>) => void
+  callback: (cursors: Cursors) => void
 ): Unsubscribe => {
   const cursorsRef = ref(realtimeDb, `boards/${boardId}/cursors`);
   return onValue(cursorsRef, (snapshot: DataSnapshot) => {

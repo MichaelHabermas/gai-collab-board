@@ -9,13 +9,15 @@ import {
   getUserColor,
 } from "@/modules/sync/realtimeService";
 
+export type Cursors = Record<string, ICursorData>;
+
 interface IUseCursorsParams {
   boardId: string | null;
   user: User | null;
 }
 
 interface IUseCursorsReturn {
-  cursors: Record<string, ICursorData>;
+  cursors: Cursors;
   handleMouseMove: (x: number, y: number) => void;
 }
 
@@ -29,7 +31,7 @@ export const useCursors = ({
   boardId,
   user,
 }: IUseCursorsParams): IUseCursorsReturn => {
-  const [cursors, setCursors] = useState<Record<string, ICursorData>>({});
+  const [cursors, setCursors] = useState<Cursors>({});
   const lastUpdateRef = useRef<number>(0);
   const userColorRef = useRef<string>("");
 

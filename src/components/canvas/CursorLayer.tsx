@@ -1,9 +1,10 @@
 import { Layer, Circle, Text, Group } from "react-konva";
 import { memo, type ReactElement } from "react";
 import type { ICursorData } from "@/modules/sync/realtimeService";
+import type { Cursors } from "@/hooks/useCursors";
 
 interface ICursorLayerProps {
-  cursors: Record<string, ICursorData>;
+  cursors: Cursors;
   currentUid: string;
 }
 

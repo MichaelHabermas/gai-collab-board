@@ -1045,7 +1045,7 @@ Implement bulletproof real-time synchronization with cursor tracking (<50ms), ob
 
   export const subscribeToCursors = (
     boardId: string,
-    callback: (cursors: Record<string, ICursorData>) => void
+    callback: (cursors: Cursors) => void
   ): Unsubscribe => {
     const cursorsRef = ref(realtimeDb, `boards/${boardId}/cursors`);
     return onValue(cursorsRef, (snapshot) => {
@@ -1075,7 +1075,7 @@ Implement bulletproof real-time synchronization with cursor tracking (<50ms), ob
   import { ICursorData } from '@/modules/sync/realtimeService';
 
   interface CursorLayerProps {
-    cursors: Record<string, ICursorData>;
+    cursors: Cursors;
     currentUid: string;
   }
 

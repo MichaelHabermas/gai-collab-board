@@ -7,6 +7,7 @@ import {
   Unsubscribe,
 } from "firebase/database";
 import { realtimeDb } from "@/lib/firebase";
+import type { Cursors } from "@/hooks/useCursors";
 
 // ============================================================================
 // Cursor Types and Functions
@@ -50,7 +51,7 @@ export const updateCursor = async (
  */
 export const subscribeToCursors = (
   boardId: string,
-  callback: (cursors: Record<string, ICursorData>) => void
+  callback: (cursors: Cursors) => void
 ): Unsubscribe => {
   const cursorsRef = ref(realtimeDb, `boards/${boardId}/cursors`);
   return onValue(cursorsRef, (snapshot) => {
