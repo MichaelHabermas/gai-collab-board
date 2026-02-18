@@ -5,6 +5,7 @@ import {
   createObject,
   updateObject,
   deleteObject,
+  deleteObjectsBatch,
   subscribeToObjectsWithChanges,
   mergeObjectUpdates,
   type IObjectChange,
@@ -25,6 +26,7 @@ interface IUseObjectsReturn {
   createObject: (params: Omit<ICreateObjectParams, 'createdBy'>) => Promise<IBoardObject | null>;
   updateObject: (objectId: string, updates: IUpdateObjectParams) => Promise<void>;
   deleteObject: (objectId: string) => Promise<void>;
+  deleteObjects: (objectIds: string[]) => Promise<void>;
 }
 
 /**
@@ -272,6 +274,43 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
     [boardId, objects]
   );
 
+  // Delete multiple objects in one batch (optimistic update + rollback)
+  const handleDeleteObjects = useCallback(
+    async (objectIds: string[]): Promise<void> => {
+      if (!boardId) {
+        setError('Cannot delete objects: not connected to board');
+        return;
+      }
+
+      if (objectIds.length === 0) {
+        return;
+      }
+
+      const toRemove = objects.filter((obj) => objectIds.includes(obj.id));
+      for (const obj of toRemove) {
+        pendingUpdatesRef.current.set(obj.id, obj);
+      }
+
+      setObjects((prev) => prev.filter((obj) => !objectIds.includes(obj.id)));
+
+      try {
+        setError('');
+        await deleteObjectsBatch(boardId, objectIds);
+        for (const id of objectIds) {
+          pendingUpdatesRef.current.delete(id);
+        }
+      } catch (err) {
+        for (const original of toRemove) {
+          setObjects((prev) => [...prev, original]);
+          pendingUpdatesRef.current.delete(original.id);
+        }
+        const errorMessage = err instanceof Error ? err.message : 'Failed to delete objects';
+        setError(errorMessage);
+      }
+    },
+    [boardId, objects]
+  );
+
   return {
     objects,
     loading,
@@ -279,5 +318,6 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
     createObject: handleCreateObject,
     updateObject: handleUpdateObject,
     deleteObject: handleDeleteObject,
+    deleteObjects: handleDeleteObjects,
   };
 };

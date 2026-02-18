@@ -909,6 +909,23 @@ collaboration is secure.
 - [x] Owners can manage roles and delete board
 - [x] Role badges displayed in presence list
 
+#### Share links and deep-linking
+
+Share links allow opening a specific board by URL. Deep-linking must work when the user is logged in or when they sign in after opening the link.
+
+**Expected behaviour**:
+
+- Share link format is `{origin}/board/{boardId}` (e.g. `https://app.example.com/board/abc123`).
+- Opening that URL when authenticated loads that board; if the user is not a member, they are added as a viewer.
+- Opening that URL when not authenticated shows the auth page; after sign-in, the user lands on that board (URL preserved).
+- Copying the link from the Share dialog and pasting it in a new tab or window opens the same board.
+
+**Verification (do not check until confirmed in browser or via E2E)**:
+
+- [ ] Opening `{origin}/board/{boardId}` while logged in loads that board.
+- [ ] Opening `{origin}/board/{boardId}` while logged out shows auth; after login, user is on that board.
+- [ ] Copy link from Share dialog and open in new tab/window; same board is shown.
+
 **Branch**: `feature/auth-rbac`
 
 #### Commit 1: Role Types and Schema

@@ -1,5 +1,5 @@
 import { useState, useEffect, memo, useMemo, useCallback, type ReactElement } from 'react';
-import { LayoutDashboard, Plus, Loader2, Trash2, Star, Pencil } from 'lucide-react';
+import { LayoutDashboard, Plus, Loader2, Trash2, Star, Pencil, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -15,8 +15,9 @@ import { Label } from '@/components/ui/label';
 import {
   subscribeToUserBoards,
   deleteBoard,
+  removeBoardMember,
   updateBoardName,
-  canUserEdit,
+  canUserManage,
 } from '@/modules/sync/boardService';
 import {
   subscribeToUserPreferences,
@@ -41,6 +42,7 @@ interface IBoardListSidebarProps {
   currentBoardId: string;
   onSelectBoard: (boardId: string) => void;
   onCreateNewBoard: (name?: string) => Promise<IBoard>;
+  onLeaveBoard?: () => void;
 }
 
 export const BoardListSidebar = memo(
@@ -49,11 +51,13 @@ export const BoardListSidebar = memo(
     currentBoardId,
     onSelectBoard,
     onCreateNewBoard,
+    onLeaveBoard,
   }: IBoardListSidebarProps): ReactElement => {
     const [boards, setBoards] = useState<IBoard[]>([]);
     const [loading, setLoading] = useState(true);
     const [creating, setCreating] = useState(false);
     const [deletingBoardId, setDeletingBoardId] = useState<string | null>(null);
+    const [leavingBoardId, setLeavingBoardId] = useState<string | null>(null);
     const [deleteError, setDeleteError] = useState<string>('');
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
     const [createBoardName, setCreateBoardName] = useState<string>('Untitled Board');
@@ -107,7 +111,7 @@ export const BoardListSidebar = memo(
 
     const handleOpenRename = useCallback(
       (item: IBoardListItem) => {
-        if (item.board && canUserEdit(item.board, user.uid)) {
+        if (item.board && canUserManage(item.board, user.uid)) {
           setRenameBoardId(item.id);
           setRenameBoardName(item.name);
           setRenameError('');
@@ -155,6 +159,29 @@ export const BoardListSidebar = memo(
         await removeBoardIdFromPreferences(user.uid, boardId);
         const wasCurrent = boardId === currentBoardId;
         if (wasCurrent) {
+          onLeaveBoard?.();
+        }
+        // List updates from subscribeToUserBoards when Firestore snapshot excludes the deleted board
+      } catch (err) {
+        setDeleteError(err instanceof Error ? err.message : 'Failed to delete board');
+      } finally {
+        setDeletingBoardId(null);
+      }
+    };
+
+    const handleLeaveBoard = async (boardId: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!window.confirm('Leave this board? It will be removed from your list.')) {
+        return;
+      }
+
+      setDeleteError('');
+      setLeavingBoardId(boardId);
+      try {
+        await removeBoardMember(boardId, user.uid);
+        await removeBoardIdFromPreferences(user.uid, boardId);
+        const wasCurrent = boardId === currentBoardId;
+        if (wasCurrent) {
           const others = boards.filter((b) => b.id !== boardId);
           const firstOther = others[0];
           if (firstOther) {
@@ -164,11 +191,10 @@ export const BoardListSidebar = memo(
             onSelectBoard(newBoard.id);
           }
         }
-        // List updates from subscribeToUserBoards when Firestore snapshot excludes the deleted board
       } catch (err) {
-        setDeleteError(err instanceof Error ? err.message : 'Failed to delete board');
+        setDeleteError(err instanceof Error ? err.message : 'Failed to leave board');
       } finally {
-        setDeletingBoardId(null);
+        setLeavingBoardId(null);
       }
     };
 
@@ -214,9 +240,10 @@ export const BoardListSidebar = memo(
 
     const renderBoardRow = (item: IBoardListItem) => {
       const isCurrent = item.id === currentBoardId;
-      const isOwner = item.board ? item.board.ownerId === user.uid : false;
-      const canEditBoard = item.board ? canUserEdit(item.board, user.uid) : false;
+      const isOwner = item.board ? canUserManage(item.board, user.uid) : false;
+      const isMember = item.board ? user.uid in item.board.members : false;
       const isDeleting = deletingBoardId === item.id;
+      const isLeaving = leavingBoardId === item.id;
       const isFavorite = preferences.favoriteBoardIds.includes(item.id);
       return (
         <li key={item.id}>
@@ -235,7 +262,7 @@ export const BoardListSidebar = memo(
               <LayoutDashboard className='h-4 w-4 shrink-0' />
               <span className='truncate'>{item.name}</span>
             </button>
-            {canEditBoard && (
+            {isOwner && (
               <Button
                 type='button'
                 variant='ghost'
@@ -282,6 +309,24 @@ export const BoardListSidebar = memo(
                   <Loader2 className='h-4 w-4 animate-spin' />
                 ) : (
                   <Trash2 className='h-4 w-4' />
+                )}
+              </Button>
+            )}
+            {!isOwner && isMember && (
+              <Button
+                type='button'
+                variant='ghost'
+                size='icon'
+                className='h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground hover:bg-accent'
+                onClick={(e) => handleLeaveBoard(item.id, e)}
+                disabled={isLeaving}
+                title='Leave board'
+                data-testid={`board-list-leave-${item.id}`}
+              >
+                {isLeaving ? (
+                  <Loader2 className='h-4 w-4 animate-spin' />
+                ) : (
+                  <LogOut className='h-4 w-4' aria-hidden />
                 )}
               </Button>
             )}

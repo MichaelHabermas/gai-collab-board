@@ -57,6 +57,7 @@ interface IBoardCanvasProps {
   onObjectUpdate?: (objectId: string, updates: Partial<IBoardObject>) => void;
   onObjectCreate?: (params: Omit<ICreateObjectParams, 'createdBy'>) => Promise<IBoardObject | null>;
   onObjectDelete?: (objectId: string) => Promise<void>;
+  onObjectsDeleteBatch?: (objectIds: string[]) => Promise<void>;
   onViewportActionsReady?: (actions: IViewportActionsValue | null) => void;
 }
 
@@ -111,6 +112,7 @@ export const BoardCanvas = memo(
     onObjectUpdate,
     onObjectCreate,
     onObjectDelete,
+    onObjectsDeleteBatch,
     onViewportActionsReady,
   }: IBoardCanvasProps): ReactElement => {
     const stageRef = useRef<Konva.Stage>(null);
@@ -293,6 +295,11 @@ export const BoardCanvas = memo(
       selectedIds,
       onObjectCreate: (onObjectCreate as (params: Partial<IBoardObject>) => void) || (() => {}),
       onObjectDelete: (onObjectDelete as (objectId: string) => void) || (() => {}),
+      onObjectsDeleteBatch: onObjectsDeleteBatch
+        ? (ids) => {
+            void onObjectsDeleteBatch(ids);
+          }
+        : undefined,
       clearSelection,
     });
 

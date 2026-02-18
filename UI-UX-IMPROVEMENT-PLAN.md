@@ -1,0 +1,269 @@
+# UI/UX Improvement Plan
+
+## Requirement Check (First Principles)
+
+- Requirement in one sentence: improve core collaboration UX reliability first, then add high-value product polish and new interaction capabilities.
+- Done criteria: each item has a concrete behavior change and a verification step (manual + targeted tests where practical).
+- Non-breaking policy: keep current auth/data model working; use additive changes and guarded migrations only.
+
+## Decisions Locked From Your Answers
+
+- Prioritization model: **balanced scoring** (not strict single-axis ordering).
+- Broad initiatives (`expand AI use`, `voice input`, `frames/layering`) use **discovery/spec first**, then implementation.
+- Share links: opening as non-member should **auto-add as viewer**.
+- Non-owner “delete” should mean **leave membership** (remove from members list + from user lists).
+
+## Prioritization Method (Balanced)
+
+- Each item is ranked by combined impact across:
+  - Ease of implementation
+  - Usefulness
+  - App need
+  - Risk (lower risk ranks higher)
+  - Speed to implement
+  - Wow factor
+- Tie-breakers: ship-risk reduction and user-facing unblockers first.
+
+## Ordered Delivery Plan
+
+### P0 - Immediate UX unblockers (highest combined value)
+
+1. [ ] **Fix share links (currently broken deep-linking)**
+
+- Why now: high usefulness/app need; currently blocks collaboration entry.
+- What to change:
+  - Read board ID from URL path (`/board/:boardId`) and route app state from URL.
+  - Keep login gate, then open intended board after auth.
+  - Preserve auto-join behavior as **viewer** for non-members.
+- Primary files:
+  - [src/App.tsx](src/App.tsx)
+  - [src/components/board/ShareDialog.tsx](src/components/board/ShareDialog.tsx)
+  - [netlify.toml](netlify.toml)
+- Verify:
+  - Copy link from share dialog -> paste in new browser -> lands on same board.
+  - Logged-out flow redirects to auth, then returns to target board.
+
+2. [ ] **Non-owner “delete” becomes “leave board”**
+
+- Why now: correctness + trust; current behavior conflicts with expected semantics.
+- What to change:
+  - If owner: true delete allowed.
+  - If non-owner: remove current user from `members` and hide from lists/recent.
+  - Rename UI action text for non-owners to avoid confusion (`Leave board`).
+- Primary files:
+  - [src/modules/sync/boardService.ts](src/modules/sync/boardService.ts)
+  - [src/components/board/BoardListSidebar.tsx](src/components/board/BoardListSidebar.tsx)
+  - [src/components/board/ShareDialog.tsx](src/components/board/ShareDialog.tsx)
+- Verify:
+  - Non-owner action removes board from their sidebar.
+  - Owner still can permanently delete board.
+
+3. [ ] **Only owners can rename board names**
+
+- Why now: permissions clarity and data integrity.
+- What to change:
+  - UI gate rename controls by owner role only.
+  - Backend-side guard alignment (if missing).
+- Primary files:
+  - [src/components/board/BoardListSidebar.tsx](src/components/board/BoardListSidebar.tsx)
+  - [src/modules/sync/boardService.ts](src/modules/sync/boardService.ts)
+- Verify:
+  - Viewer/editor cannot edit board title; owner can.
+
+4. [ ] **Bulk delete performance fix**
+
+- Why now: high speed-to-value and low risk; clear user pain.
+- What to change:
+  - Replace per-object delete loop with batched delete path for multi-select.
+- Primary files:
+  - [src/hooks/useCanvasOperations.ts](src/hooks/useCanvasOperations.ts)
+  - [src/modules/sync/objectService.ts](src/modules/sync/objectService.ts)
+- Verify:
+  - Deleting 50+ objects is significantly faster and UI remains responsive.
+
+5. [ ] **Snap-to-grid parity for drag (not only resize)**
+
+- Why now: predictable editing behavior; medium effort, high UX consistency.
+- What to change:
+  - Apply snap during drag interaction (not just end), aligned with resize snap rules.
+- Primary files:
+  - [src/components/canvas/BoardCanvas.tsx](src/components/canvas/BoardCanvas.tsx)
+  - [src/lib/snapToGrid.ts](src/lib/snapToGrid.ts)
+- Verify:
+  - Drag and resize both show identical snap behavior to grid.
+
+6. [ ] **Panning reliability pass (middle mouse + Mac trackpad)**
+
+- Why now: navigation reliability is foundational.
+- What to change:
+  - Harden wheel/gesture detection: distinguish pan vs pinch-zoom.
+  - Ensure middle-mouse pan consistently captures and prevents conflicting browser behavior.
+- Primary files:
+  - [src/components/canvas/BoardCanvas.tsx](src/components/canvas/BoardCanvas.tsx)
+  - [src/hooks/useCanvasViewport.ts](src/hooks/useCanvasViewport.ts)
+- Verify:
+  - Windows mouse and Mac trackpad can pan without workaround.
+
+7. [ ] **Text editing overlay stability (“text moves” bug)**
+
+- Why now: direct content editing must feel stable.
+- What to change:
+  - Recompute overlay position when viewport/canvas transforms change while editing.
+- Primary files:
+  - [src/components/canvas/shapes/TextElement.tsx](src/components/canvas/shapes/TextElement.tsx)
+  - [src/components/canvas/shapes/StickyNote.tsx](src/components/canvas/shapes/StickyNote.tsx)
+  - [src/lib/canvasOverlayPosition.ts](src/lib/canvasOverlayPosition.ts)
+- Verify:
+  - While editing text, pan/zoom does not cause visible text jump/drift.
+
+8. [ ] **Properties panel height increase**
+
+- Why now: low effort, immediate ergonomic gain.
+- What to change:
+  - Increase available vertical space and scroll behavior for inspector controls.
+- Primary files:
+  - [src/components/canvas/PropertyInspector.tsx](src/components/canvas/PropertyInspector.tsx)
+  - [src/components/board/RightSidebar.tsx](src/components/board/RightSidebar.tsx)
+- Verify:
+  - More controls visible without excessive scrolling on standard laptop viewport.
+
+9. [ ] **Spin box rapid-click polish**
+
+- Why now: small polish item, low risk.
+- What to change:
+  - Smooth number input updates under rapid increment/decrement.
+- Primary files:
+  - [src/components/canvas/PropertyInspector.tsx](src/components/canvas/PropertyInspector.tsx)
+- Verify:
+  - Rapid clicking does not stutter or visually glitch.
+
+### P1 - Product UX and maintainability improvements
+
+10. [ ] **Welcome page for logged-out users**
+
+- Why now: strong first impression + conversion utility.
+- What to change:
+  - Replace bare auth-only entry with welcome/feature value proposition + login/signup CTA.
+  - Keep auth tabs available from welcome CTA.
+- Primary files:
+  - [src/components/auth/AuthPage.tsx](src/components/auth/AuthPage.tsx)
+  - [src/App.tsx](src/App.tsx)
+- Verify:
+  - Logged-out users see welcome content + clear auth actions.
+
+11. [ ] **Light/dark mode fix and consistency audit**
+
+- Why now: broad perceived quality impact; likely moderate effort.
+- What to change:
+  - Audit token usage and canvas/system theme transitions for mismatches.
+- Primary files:
+  - [src/hooks/useTheme.ts](src/hooks/useTheme.ts)
+  - [src/index.css](src/index.css)
+  - [src/components/canvas/BoardCanvas.tsx](src/components/canvas/BoardCanvas.tsx)
+- Verify:
+  - No low-contrast/mismatched backgrounds when toggling themes.
+
+12. [ ] **Move groups of selected objects**
+
+- Why now: high usefulness, moderate complexity.
+- What to change:
+  - Add delta-based multi-drag behavior for selected set, preserving relative positions.
+- Primary files:
+  - [src/components/canvas/BoardCanvas.tsx](src/components/canvas/BoardCanvas.tsx)
+  - [src/hooks/useShapeDragHandler.ts](src/hooks/useShapeDragHandler.ts)
+- Verify:
+  - Multi-selected objects move together as one group.
+
+13. [ ] **Address `only-export-components` violations**
+
+- Why now: cleaner architecture, lower lint debt.
+- What to change:
+  - Move non-component exports (constants/helpers) out of component files where needed.
+- Primary files:
+  - [eslint.config.js](eslint.config.js)
+  - `src/components/**` affected files
+- Verify:
+  - Lint warnings are resolved for targeted files without behavior change.
+
+14. [ ] **Refactor files with >2 useEffects into custom hooks**
+
+- Why now: maintainability + reduced side-effect complexity.
+- What to change:
+  - Start with highest-effect files (`BoardCanvas`, `App`) and extract coherent hooks.
+- Primary files:
+  - [src/components/canvas/BoardCanvas.tsx](src/components/canvas/BoardCanvas.tsx)
+  - [src/App.tsx](src/App.tsx)
+  - [src/hooks](src/hooks)
+- Verify:
+  - Effect count per component reduced; behavior unchanged.
+
+### P2 - Discovery then implementation (higher uncertainty, higher potential wow)
+
+15. [ ] **Frames: purpose + layering model (discovery first)**
+
+- Discovery outputs:
+  - Define frame UX intent (grouping, containment, layout aid, export regions, etc.).
+  - Define layering rules and interaction model.
+- Then implement in phases if approved:
+  - Data model support, drag-in/out semantics, rendering order, selection behavior.
+- Primary files:
+  - [src/components/canvas/shapes/Frame.tsx](src/components/canvas/shapes/Frame.tsx)
+  - [src/components/canvas/BoardCanvas.tsx](src/components/canvas/BoardCanvas.tsx)
+  - [src/types](src/types)
+
+16. [ ] **Expand AI use in app (discovery first)**
+
+- Discovery outputs:
+  - Highest-value AI actions not already covered by existing tools.
+  - Safety/latency boundaries and measurable success criteria.
+- Then implement focused increments:
+  - Add 1-2 high-impact capabilities in chat/workflow.
+- Primary files:
+  - [src/modules/ai/aiService.ts](src/modules/ai/aiService.ts)
+  - [src/modules/ai/tools.ts](src/modules/ai/tools.ts)
+  - [src/components/ai/AIChatPanel.tsx](src/components/ai/AIChatPanel.tsx)
+
+17. [ ] **Voice input (discovery first, then pilot)**
+
+- Discovery outputs:
+  - Browser support constraints and fallback UX.
+  - Scope (dictation to AI prompt first, then command mapping).
+- Pilot implementation:
+  - Mic capture -> transcript -> AI input box -> submit flow.
+- Primary files:
+  - [src/components/ai/AIChatPanel.tsx](src/components/ai/AIChatPanel.tsx)
+  - [src/hooks](src/hooks)
+
+## Execution Sequence (Modular / SOLID)
+
+- Track A (Permissions + Routing): items 1-3.
+- Track B (Canvas interactions + perf): items 4-9 + 12.
+- Track C (UX shell + quality): items 10-11 + 13-14.
+- Track D (Discovery epics): items 15-17.
+
+## Verification Matrix (Minimum)
+
+- Unit/integration tests for permission/routing/service logic changes.
+- Manual QA checklist for canvas interactions (drag, pan, snap, text edit, bulk delete).
+- Cross-theme visual pass (light/dark) and auth flow pass (logged out/in/deep link).
+
+## Architecture Flow (share-link + auth + board open)
+
+```mermaid
+flowchart TD
+  userOpensLink[UserOpensBoardLink] --> appReadsPath[AppReadsBoardIdFromPath]
+  appReadsPath --> authCheck{IsAuthenticated}
+  authCheck -->|No| showWelcomeAuth[ShowWelcomeAndAuth]
+  authCheck -->|Yes| boardLoad[LoadBoardById]
+  showWelcomeAuth --> loginSuccess[LoginSuccess]
+  loginSuccess --> boardLoad
+  boardLoad --> membershipCheck{IsMember}
+  membershipCheck -->|No| autoJoinViewer[AutoJoinAsViewer]
+  membershipCheck -->|Yes| openBoard[OpenBoard]
+  autoJoinViewer --> openBoard
+```
+
+## Out of Scope for First Pass
+
+- Large schema migrations without discovery sign-off.
+- Replacing core canvas engine or introducing heavy new dependencies unless clearly required.

@@ -148,11 +148,12 @@ describe('boardService - deleteBoard', () => {
     expect(deleteDoc).toHaveBeenCalled();
   });
 
-  it('should call deleteDoc when userId is omitted', async () => {
-    vi.mocked(deleteDoc).mockResolvedValue(undefined as never);
-    await deleteBoard('board-123');
-    expect(deleteDoc).toHaveBeenCalled();
-    expect(getDoc).not.toHaveBeenCalled();
+  it('should throw when userId is provided and user is not owner', async () => {
+    vi.mocked(getDoc).mockResolvedValue(mockGetDocSnapshot(mockBoard) as Awaited<ReturnType<typeof getDoc>>);
+    await expect(deleteBoard('board-123', 'other-user')).rejects.toThrow(
+      'Only the board owner can delete the board'
+    );
+    expect(deleteDoc).not.toHaveBeenCalled();
   });
 });
 

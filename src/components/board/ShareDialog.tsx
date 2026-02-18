@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { getBoardShareLink } from '@/lib/shareLink';
 import { IBoard, UserRole } from '@/types';
 import { addBoardMember, removeBoardMember, updateMemberRole, deleteBoard } from '@/modules/sync';
 import { Copy, Check, UserPlus, Trash2, Crown, Edit, Eye, Trash } from 'lucide-react';
@@ -25,6 +26,7 @@ import { Copy, Check, UserPlus, Trash2, Crown, Edit, Eye, Trash } from 'lucide-r
 interface ShareDialogProps {
   board: IBoard;
   currentUserId: string;
+  onLeaveBoard?: () => void;
   children: ReactElement;
 }
 
@@ -46,16 +48,22 @@ const ROLE_COLORS: Record<UserRole, 'default' | 'secondary' | 'outline'> = {
   viewer: 'outline',
 };
 
-export const ShareDialog = ({ board, currentUserId, children }: ShareDialogProps): ReactElement => {
+export const ShareDialog = ({
+  board,
+  currentUserId,
+  onLeaveBoard,
+  children,
+}: ShareDialogProps): ReactElement => {
   const [newMemberEmail, setNewMemberEmail] = useState<string>('');
   const [newMemberRole, setNewMemberRole] = useState<UserRole>('viewer');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [deleteInProgress, setDeleteInProgress] = useState<boolean>(false);
+  const [leaveInProgress, setLeaveInProgress] = useState<boolean>(false);
 
   const isOwner = board.ownerId === currentUserId;
-  const shareLink = `${window.location.origin}/board/${board.id}`;
+  const shareLink = getBoardShareLink(window.location.origin, board.id);
 
   const handleCopyLink = async (): Promise<void> => {
     await navigator.clipboard.writeText(shareLink);
@@ -120,11 +128,24 @@ export const ShareDialog = ({ board, currentUserId, children }: ShareDialogProps
     setError('');
     try {
       await deleteBoard(board.id, currentUserId);
-      window.location.href = window.location.origin;
+      onLeaveBoard?.();
     } catch (err) {
       setError((err as Error).message);
     } finally {
       setDeleteInProgress(false);
+    }
+  };
+
+  const handleLeaveBoard = async (): Promise<void> => {
+    setLeaveInProgress(true);
+    setError('');
+    try {
+      await removeBoardMember(board.id, currentUserId);
+      onLeaveBoard?.();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLeaveInProgress(false);
     }
   };
 
@@ -264,6 +285,21 @@ export const ShareDialog = ({ board, currentUserId, children }: ShareDialogProps
               ))}
             </div>
           </div>
+
+          {/* Leave board (non-owners) */}
+          {!isOwner && onLeaveBoard && (
+            <div className='pt-4 border-t border-slate-600'>
+              <Button
+                type='button'
+                variant='outline'
+                onClick={handleLeaveBoard}
+                disabled={isLoading || leaveInProgress}
+                className='w-full border-slate-600 hover:bg-slate-700'
+              >
+                Leave board
+              </Button>
+            </div>
+          )}
 
           {/* Delete board (owners only) */}
           {isOwner && (

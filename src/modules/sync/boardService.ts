@@ -169,16 +169,14 @@ export const updateMemberRole = async (
   await updateBoardMembers(boardId, updatedMembers);
 };
 
-export const deleteBoard = async (boardId: string, userId?: string | null): Promise<void> => {
-  if (userId != null) {
-    const board = await getBoard(boardId);
-    if (!board) {
-      throw new Error('Board not found');
-    }
+export const deleteBoard = async (boardId: string, userId: string): Promise<void> => {
+  const board = await getBoard(boardId);
+  if (!board) {
+    throw new Error('Board not found');
+  }
 
-    if (!canUserManage(board, userId)) {
-      throw new Error('Only the board owner can delete the board');
-    }
+  if (!canUserManage(board, userId)) {
+    throw new Error('Only the board owner can delete the board');
   }
 
   const boardRef = doc(firestore, BOARDS_COLLECTION, boardId);

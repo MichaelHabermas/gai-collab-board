@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, type ReactElement } from 'react';
+import { useParams, useNavigate, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/modules/auth';
 import { AuthPage } from '@/components/auth/AuthPage';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import {
   createBoard,
   subscribeToBoard,
   canUserEdit,
+  canUserManage,
   addBoardMember,
   updateBoardName,
 } from '@/modules/sync/boardService';
@@ -46,6 +48,7 @@ interface IBoardViewProps {
   boardId: string;
   onSelectBoard: (boardId: string) => void;
   onCreateNewBoard: (name?: string) => Promise<IBoard>;
+  onLeaveBoard: () => void;
   defaultBoardId: string;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
@@ -56,6 +59,7 @@ const BoardView = ({
   boardId,
   onSelectBoard,
   onCreateNewBoard,
+  onLeaveBoard,
   defaultBoardId,
   theme,
   onToggleTheme,
@@ -74,6 +78,7 @@ const BoardView = ({
     createObject,
     updateObject,
     deleteObject,
+    deleteObjects,
   } = useObjects({ boardId, user });
 
   const { onlineUsers } = usePresence({ boardId, user });
@@ -111,14 +116,14 @@ const BoardView = ({
     initBoard();
   }, [boardId, defaultBoardId, boardLoading, board, user]);
 
-  // When opening a board the user is not a member of, add them as editor so they can view and edit
+  // When opening a board the user is not a member of, add them as viewer
   useEffect(() => {
     if (!board || !user || user.uid in board.members || joinedBoardIdsRef.current.has(boardId)) {
       return;
     }
 
     joinedBoardIdsRef.current.add(boardId);
-    addBoardMember(boardId, user.uid, 'editor').catch(() => {
+    addBoardMember(boardId, user.uid, 'viewer').catch(() => {
       joinedBoardIdsRef.current.delete(boardId);
     });
   }, [board, user, boardId]);
@@ -147,7 +152,7 @@ const BoardView = ({
         <div className='px-4 py-2 flex items-center justify-between gap-6'>
           <div className='flex items-center gap-4'>
             <h1 className='text-lg font-bold text-foreground'>CollabBoard</h1>
-            {board && canEdit ? (
+            {board && canUserManage(board, user.uid) ? (
               <div className='flex items-center gap-1'>
                 <span className='text-sm text-muted-foreground'>
                   {board.name || 'Untitled Board'}
@@ -213,7 +218,11 @@ const BoardView = ({
             </Dialog>
             <ConnectionStatus />
             {board && (
-              <ShareDialog board={board} currentUserId={user.uid}>
+              <ShareDialog
+                board={board}
+                currentUserId={user.uid}
+                onLeaveBoard={onLeaveBoard}
+              >
                 <Button
                   variant='outline'
                   size='sm'
@@ -268,6 +277,7 @@ const BoardView = ({
               onObjectUpdate={updateObject}
               onObjectCreate={createObject}
               onObjectDelete={deleteObject}
+              onObjectsDeleteBatch={deleteObjects}
               onViewportActionsReady={onViewportActionsReady}
             />
           </div>
@@ -285,6 +295,7 @@ const BoardView = ({
                       currentBoardId={boardId}
                       onSelectBoard={onSelectBoard}
                       onCreateNewBoard={onCreateNewBoard}
+                      onLeaveBoard={onLeaveBoard}
                     />
                   </TabsContent>
                   <TabsContent
@@ -317,23 +328,32 @@ const BoardView = ({
   );
 };
 
-export const App = (): ReactElement => {
+const BoardViewRoute = (): ReactElement => {
+  const { boardId: paramBoardId } = useParams<{ boardId: string }>();
+  const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { theme, toggleTheme } = useTheme();
-
-  const [currentBoardId, setCurrentBoardId] = useState<string>(DEFAULT_BOARD_ID);
   const [viewportActions, setViewportActions] = useState<IViewportActionsValue | null>(null);
+
+  const boardId = paramBoardId ?? DEFAULT_BOARD_ID;
 
   // Update recent boards when user opens a board (navigates to it)
   useEffect(() => {
-    if (!user || !currentBoardId) {
+    if (!user || !boardId) {
       return;
     }
 
-    updateRecentBoardIds(user.uid, currentBoardId).catch(() => {
+    updateRecentBoardIds(user.uid, boardId).catch(() => {
       // Non-blocking; preferences update failure should not break the app
     });
-  }, [user, currentBoardId]);
+  }, [user, boardId]);
+
+  const handleSelectBoard = useCallback(
+    (id: string) => {
+      navigate(`/board/${id}`, { replace: false });
+    },
+    [navigate]
+  );
 
   const handleCreateNewBoard = useCallback(
     async (name?: string): Promise<IBoard> => {
@@ -344,11 +364,49 @@ export const App = (): ReactElement => {
       const boardName = (name?.trim() ?? '') || 'Untitled Board';
       const board = await createBoard({ name: boardName, ownerId: user.uid });
 
-      setCurrentBoardId(board.id);
+      navigate(`/board/${board.id}`, { replace: false });
       return board;
     },
-    [user]
+    [user, navigate]
   );
+
+  const handleLeaveBoard = useCallback(() => {
+    navigate(`/board/${DEFAULT_BOARD_ID}`, { replace: false });
+  }, [navigate]);
+
+  if (loading) {
+    return (
+      <div className='min-h-screen flex items-center justify-center bg-background'>
+        <div className='text-center'>
+          <Loader2 className='h-8 w-8 animate-spin text-primary mx-auto mb-4' />
+          <p className='text-muted-foreground'>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <div />;
+  }
+
+  return (
+    <ViewportActionsContext.Provider value={viewportActions}>
+      <BoardView
+        boardId={boardId}
+        onSelectBoard={handleSelectBoard}
+        onCreateNewBoard={handleCreateNewBoard}
+        onLeaveBoard={handleLeaveBoard}
+        defaultBoardId={DEFAULT_BOARD_ID}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        onViewportActionsReady={setViewportActions}
+      />
+    </ViewportActionsContext.Provider>
+  );
+};
+
+export const App = (): ReactElement => {
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -366,16 +424,10 @@ export const App = (): ReactElement => {
   }
 
   return (
-    <ViewportActionsContext.Provider value={viewportActions}>
-      <BoardView
-        boardId={currentBoardId}
-        onSelectBoard={setCurrentBoardId}
-        onCreateNewBoard={handleCreateNewBoard}
-        defaultBoardId={DEFAULT_BOARD_ID}
-        theme={theme}
-        onToggleTheme={toggleTheme}
-        onViewportActionsReady={setViewportActions}
-      />
-    </ViewportActionsContext.Provider>
+    <Routes>
+      <Route path='/board/:boardId' element={<BoardViewRoute />} />
+      <Route path='/' element={<Navigate to={`/board/${DEFAULT_BOARD_ID}`} replace />} />
+      <Route path='*' element={<Navigate to={`/board/${DEFAULT_BOARD_ID}`} replace />} />
+    </Routes>
   );
 };

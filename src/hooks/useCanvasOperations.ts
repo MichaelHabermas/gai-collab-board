@@ -6,6 +6,7 @@ interface IUseCanvasOperationsProps {
   selectedIds: string[];
   onObjectCreate: (params: Partial<IBoardObject>) => void;
   onObjectDelete: (objectId: string) => void;
+  onObjectsDeleteBatch?: (objectIds: string[]) => void;
   clearSelection: () => void;
 }
 
@@ -30,6 +31,7 @@ export const useCanvasOperations = ({
   selectedIds,
   onObjectCreate,
   onObjectDelete,
+  onObjectsDeleteBatch,
   clearSelection,
 }: IUseCanvasOperationsProps): IUseCanvasOperationsReturn => {
   const [clipboard, setClipboard] = useState<IBoardObject[]>([]);
@@ -39,13 +41,20 @@ export const useCanvasOperations = ({
     return objects.filter((obj) => selectedIds.includes(obj.id));
   }, [objects, selectedIds]);
 
-  // Delete selected objects
+  // Delete selected objects (batch when multiple and batch callback provided)
   const handleDelete = useCallback(() => {
-    selectedIds.forEach((id) => {
-      onObjectDelete(id);
-    });
+    if (selectedIds.length === 0) {
+      return;
+    }
+    if (selectedIds.length > 1 && onObjectsDeleteBatch) {
+      onObjectsDeleteBatch(selectedIds);
+    } else {
+      selectedIds.forEach((id) => {
+        onObjectDelete(id);
+      });
+    }
     clearSelection();
-  }, [selectedIds, onObjectDelete, clearSelection]);
+  }, [selectedIds, onObjectDelete, onObjectsDeleteBatch, clearSelection]);
 
   // Duplicate selected objects with offset
   const handleDuplicate = useCallback(() => {
