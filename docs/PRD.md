@@ -909,6 +909,21 @@ collaboration is secure.
 - [x] Owners can manage roles and delete board
 - [x] Role badges displayed in presence list
 
+#### Non-owner delete becomes leave board
+
+For non-owners, the action that removes a board from their view is "Leave board", not delete. Only the owner can permanently delete the board.
+
+**Expected behaviour**:
+
+- **Owner:** Can permanently delete the board (document removed from Firestore; board disappears for all members).
+- **Non-owner:** Only "Leave board" — removes the current user from `members` and from their board list, recent, and favorites; the board is not deleted and remains for other members.
+- **UI:** Owner sees "Delete board" in the board list sidebar and Share dialog; non-owner sees "Leave board" in both places.
+
+**Verification (do not check until confirmed in browser or via E2E)**:
+
+- [ ] Non-owner "Leave board" (sidebar or Share dialog) removes the board from their list and navigates away if it was the current board.
+- [ ] Owner "Delete board" permanently deletes the board (board is gone for all members).
+
 #### Share links and deep-linking
 
 Share links allow opening a specific board by URL. Deep-linking must work when the user is logged in or when they sign in after opening the link.

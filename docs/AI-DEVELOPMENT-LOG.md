@@ -223,3 +223,23 @@ This log records how AI was used during development: tools (Cursor, Context7 MCP
 - Approximate cumulative tokens across logged sessions: ~270k input / ~95k output (estimate)
 
 **Deployment impact (expected):** Routing and deployment-config only; no change to LLM usage, API calls, or production cost. Production projections and token mix unchanged.
+
+## Non-owner leave board verification (Feb 2026)
+
+**Scope:** Verify and document UI-UX item 2 (non-owner "delete" becomes "leave board"). Behaviour was already implemented: owner sees Delete board, non-owner sees Leave board in sidebar and Share dialog; `boardService.deleteBoard` is owner-only, `removeBoardMember` implements leave.
+
+**Implementation:**
+
+- **PRD:** Added subsection "Non-owner delete becomes leave board" under Story 1.2 with expected behaviour and two verification checkboxes (unchecked until browser/E2E confirmation).
+- **Tests:** [tests/unit/boardService.test.ts](tests/unit/boardService.test.ts) — `removeBoardMember` (success when non-owner, throw when board missing or when removing owner). [tests/unit/BoardListSidebar.test.tsx](tests/unit/BoardListSidebar.test.tsx) — added `removeBoardMember` to mock; test that owner row shows Delete and no Leave, non-owner row shows Leave and no Delete; test that Leave flow calls `removeBoardMember`, `removeBoardIdFromPreferences`, and navigates away (e.g. `onCreateNewBoard` + `onSelectBoard` when current board).
+- **Plan:** Marked item 2 in [UI-UX-IMPROVEMENT-PLAN.md](../UI-UX-IMPROVEMENT-PLAN.md) as complete.
+
+**Cost & usage (this session):** Development via Cursor; no external LLM API. Approximate token use: ~15k input / ~5k output (estimate).
+
+**Running totals (development):**
+
+- Cursor subscription: $20/month
+- External API spend during development: $0
+- Approximate cumulative tokens across logged sessions: ~285k input / ~100k output (estimate)
+
+**Deployment impact (expected):** None; verification and documentation only. No new production cost or LLM usage.

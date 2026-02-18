@@ -6,6 +6,7 @@ import type { IBoard } from '@/types';
 
 const mockSubscribeToUserBoards = vi.fn();
 const mockDeleteBoard = vi.fn();
+const mockRemoveBoardMember = vi.fn();
 const mockSubscribeToUserPreferences = vi.fn();
 const mockToggleFavoriteBoardId = vi.fn();
 const mockRemoveBoardIdFromPreferences = vi.fn();
@@ -18,6 +19,7 @@ vi.mock('@/modules/sync/boardService', () => ({
     return vi.fn();
   },
   deleteBoard: (boardId: string, userId?: string | null) => mockDeleteBoard(boardId, userId),
+  removeBoardMember: (boardId: string, userId: string) => mockRemoveBoardMember(boardId, userId),
   updateBoardName: (boardId: string, name: string) => mockUpdateBoardName(boardId, name),
   canUserEdit: (board: { ownerId: string; members: Record<string, string> }, userId: string) =>
     board.ownerId === userId || board.members[userId] === 'editor' || board.members[userId] === 'owner',
@@ -46,6 +48,21 @@ describe('BoardListSidebar', () => {
     name,
     ownerId,
     members: { [ownerId]: 'owner' },
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+  });
+
+  /** Board where current user (mockUser.uid) is a non-owner member (e.g. editor). */
+  const createMockBoardWhereUserIsMember = (
+    id: string,
+    name: string,
+    ownerId: string,
+    memberRole: 'editor' | 'viewer'
+  ): IBoard => ({
+    id,
+    name,
+    ownerId,
+    members: { [ownerId]: 'owner', [mockUser.uid]: memberRole },
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
   });
@@ -79,6 +96,7 @@ describe('BoardListSidebar', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockDeleteBoard.mockResolvedValue(undefined);
+    mockRemoveBoardMember.mockResolvedValue(undefined);
     mockToggleFavoriteBoardId.mockResolvedValue(undefined);
     mockRemoveBoardIdFromPreferences.mockResolvedValue(undefined);
     mockUpdateBoardName.mockResolvedValue(undefined);
@@ -513,5 +531,63 @@ describe('BoardListSidebar', () => {
       expect(new Set(ids).size).toBe(2);
       expect(ids.sort()).toEqual(['board-1', 'board-2']);
     });
+  });
+
+  it('owner board row shows Delete button and no Leave button; non-owner board row shows Leave and no Delete', async () => {
+    const ownedBoard = createMockBoard('board-1', 'My Board', mockUser.uid);
+    const sharedBoard = createMockBoardWhereUserIsMember('board-2', 'Shared Board', 'other-owner', 'editor');
+    const initialBoards = [ownedBoard, sharedBoard];
+
+    render(
+      <BoardListSidebar
+        user={mockUser}
+        currentBoardId='board-1'
+        onSelectBoard={vi.fn()}
+        onCreateNewBoard={vi.fn()}
+      />
+    );
+    triggerSubscriptions(initialBoards);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('board-list-sidebar')).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('board-list-delete-board-1')).toBeInTheDocument();
+    expect(screen.queryByTestId('board-list-leave-board-1')).not.toBeInTheDocument();
+
+    expect(screen.getByTestId('board-list-leave-board-2')).toBeInTheDocument();
+    expect(screen.queryByTestId('board-list-delete-board-2')).not.toBeInTheDocument();
+  });
+
+  it('non-owner Leave board calls removeBoardMember and removeBoardIdFromPreferences and navigates away when current board', async () => {
+    const sharedBoard = createMockBoardWhereUserIsMember('board-2', 'Shared Board', 'other-owner', 'editor');
+    const newBoard = createMockBoard('board-new', 'Untitled Board', mockUser.uid);
+    const onSelectBoard = vi.fn();
+    const onCreateNewBoard = vi.fn().mockResolvedValue(newBoard);
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    render(
+      <BoardListSidebar
+        user={mockUser}
+        currentBoardId='board-2'
+        onSelectBoard={onSelectBoard}
+        onCreateNewBoard={onCreateNewBoard}
+      />
+    );
+    triggerSubscriptions([sharedBoard]);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('board-list-leave-board-2')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTestId('board-list-leave-board-2'));
+
+    await waitFor(() => {
+      expect(mockRemoveBoardMember).toHaveBeenCalledWith('board-2', 'user-1');
+    });
+    expect(mockRemoveBoardIdFromPreferences).toHaveBeenCalledWith('user-1', 'board-2');
+    expect(onCreateNewBoard).toHaveBeenCalledTimes(1);
+    expect(onSelectBoard).toHaveBeenCalledWith('board-new');
+    confirmSpy.mockRestore();
   });
 });

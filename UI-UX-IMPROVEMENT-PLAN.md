@@ -45,7 +45,7 @@
   - Logged-out flow redirects to auth, then returns to target board.
 - **Scores (1–10):** Ease `5` · Usefulness `9` · App need `9` · Risk `5` · Speed `5` · Wow `6` → **Overall `7`**
 
-2. [ ] **Non-owner “delete” becomes “leave board”**
+2. [x] **Non-owner “delete” becomes “leave board”**
 
 - Why now: correctness + trust; current behavior conflicts with expected semantics.
 - What to change:
@@ -116,7 +116,7 @@
 - Why now: direct content editing must feel stable.
 - What to change:
   - Recompute overlay position when viewport/canvas transforms change while editing.
-  - Make sure to sonsiiider if note is rotated.
+  - Make sure to consider if note is rotated.
   - Check if same problem exists in text tool.
 - Primary files:
   - [src/components/canvas/shapes/TextElement.tsx](src/components/canvas/shapes/TextElement.tsx)
@@ -260,6 +260,66 @@
 - Track B (Canvas interactions + perf): items 4-9 + 12.
 - Track C (UX shell + quality): items 10-11 + 13-14.
 - Track D (Discovery epics): items 15-17.
+
+## Parallel execution (multi-agent safe)
+
+- **Purpose:** Allow multiple agents or contributors to work in parallel without editing the same files.
+- **Rule:** Two tasks can run in parallel only if their primary file sets are disjoint.
+- **Coupled tasks (same files — one agent or sequential):**
+  - **2 + 3:** `boardService.ts`, `BoardListSidebar.tsx`, `ShareDialog.tsx` (2 only for ShareDialog).
+  - **8 + 9:** `PropertyInspector.tsx` (and `RightSidebar.tsx` for 8).
+  - **5, 6, 11, 12:** All touch `BoardCanvas.tsx` plus related hooks/libs — treat as one "canvas interaction" lane.
+  - **16 + 17:** Both touch `AIChatPanel.tsx`.
+- **Sequencing constraints:**
+  - **Task 13** (only-export-components): touches many `src/components/**`; run alone or after other component work to reduce merge conflicts.
+  - **Task 14** (refactor useEffects): touches `BoardCanvas.tsx` and `App.tsx` — run after the canvas lane (5,6,11,12) and after task 10 if 10 touches `App.tsx`.
+  - **Task 15** (Frames): touches `BoardCanvas.tsx` — after canvas lane.
+
+### Parallel waves (safe to run in tandem)
+
+- **Wave 1 (no shared files — up to 5 agents):**
+  - Agent 1: **Tasks 2 + 3** (permissions: leave board + owner-only rename).
+  - Agent 2: **Task 4** (bulk delete performance).
+  - Agent 3: **Task 7** (text editing overlay stability).
+  - Agent 4: **Tasks 8 + 9** (properties panel height + spin box polish).
+  - Agent 5: **Task 10** (welcome page).
+- **Wave 2 (one agent):** **Tasks 5, 6, 11, 12** (snap-to-grid, panning, theme audit, move groups) — all BoardCanvas-related.
+- **Wave 3 (one agent):** **Task 16 or 17** (expand AI or voice input — same file AIChatPanel).
+- **Standalone / after waves:** Task 13 (lint); Task 14 (after Wave 2 and after 10); Task 15 (after Wave 2).
+
+```mermaid
+flowchart LR
+  subgraph wave1 [Wave 1 - parallel]
+    A[Tasks 2+3]
+    B[Task 4]
+    C[Task 7]
+    D[Tasks 8+9]
+    E[Task 10]
+  end
+  subgraph wave2 [Wave 2]
+    F[Tasks 5,6,11,12]
+  end
+  subgraph wave3 [Wave 3]
+    G[Task 16 or 17]
+  end
+  wave1 --> wave2
+  wave2 --> wave3
+```
+
+### File conflict reference
+
+| Tasks | Primary files | Conflict with |
+|-------|---------------|---------------|
+| 2, 3 | boardService, BoardListSidebar, ShareDialog (2 only) | Each other |
+| 4 | useCanvasOperations, objectService | — |
+| 5, 6, 11, 12 | BoardCanvas + snapToGrid, useCanvasViewport, useTheme/index.css, useShapeDragHandler | Each other; 14; 15 |
+| 7 | TextElement, StickyNote, canvasOverlayPosition | — |
+| 8, 9 | PropertyInspector, RightSidebar (8 only) | Each other |
+| 10 | AuthPage, App | 14 |
+| 13 | eslint.config, src/components/** | Run alone |
+| 14 | BoardCanvas, App, hooks | 5–6–11–12, 10, 15 |
+| 15 | Frame, BoardCanvas, types | 5–6–11–12, 14 |
+| 16, 17 | AIChatPanel (16: aiService, tools) | Each other |
 
 ## Verification Matrix (Minimum)
 

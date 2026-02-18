@@ -5,6 +5,7 @@ import {
   canUserEdit,
   canUserManage,
   deleteBoard,
+  removeBoardMember,
   updateBoardName,
 } from '@/modules/sync/boardService';
 import { IBoard } from '@/types';
@@ -154,6 +155,63 @@ describe('boardService - deleteBoard', () => {
       'Only the board owner can delete the board'
     );
     expect(deleteDoc).not.toHaveBeenCalled();
+  });
+});
+
+describe('boardService - removeBoardMember', () => {
+  const mockBoard: IBoard = {
+    id: 'board-123',
+    name: 'Test Board',
+    ownerId: 'owner-user',
+    members: {
+      'owner-user': 'owner',
+      'editor-user': 'editor',
+      'viewer-user': 'viewer',
+    },
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+  };
+
+  const mockGetDocSnapshot = (board: IBoard | null) => ({
+    exists: () => board != null,
+    data: () => (board != null ? board : undefined),
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(updateDoc).mockResolvedValue(undefined as never);
+  });
+
+  it('should throw when board does not exist', async () => {
+    vi.mocked(getDoc).mockResolvedValue(mockGetDocSnapshot(null) as Awaited<ReturnType<typeof getDoc>>);
+    await expect(removeBoardMember('missing-id', 'editor-user')).rejects.toThrow('Board not found');
+    expect(updateDoc).not.toHaveBeenCalled();
+  });
+
+  it('should throw when userId is the owner', async () => {
+    vi.mocked(getDoc).mockResolvedValue(mockGetDocSnapshot(mockBoard) as Awaited<ReturnType<typeof getDoc>>);
+    await expect(removeBoardMember('board-123', 'owner-user')).rejects.toThrow(
+      'Cannot remove the owner from the board'
+    );
+    expect(updateDoc).not.toHaveBeenCalled();
+  });
+
+  it('should call updateDoc with members without userId when user is not owner', async () => {
+    vi.mocked(getDoc).mockResolvedValue(mockGetDocSnapshot(mockBoard) as Awaited<ReturnType<typeof getDoc>>);
+    await removeBoardMember('board-123', 'editor-user');
+    expect(getDoc).toHaveBeenCalled();
+    expect(updateDoc).toHaveBeenCalledTimes(1);
+    const call = vi.mocked(updateDoc).mock.calls[0];
+    if (call == null || call[1] == null) {
+      throw new Error('updateDoc expected to be called with (ref, updates)');
+    }
+    const updates = call[1] as unknown as { members: Record<string, string>; updatedAt: unknown };
+    expect(updates.members).toEqual({
+      'owner-user': 'owner',
+      'viewer-user': 'viewer',
+    });
+    expect(updates.members['editor-user']).toBeUndefined();
+    expect(updates.updatedAt).toBeDefined();
   });
 });
 
