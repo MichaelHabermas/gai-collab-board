@@ -6,7 +6,7 @@ export const boardTools: ChatCompletionTool[] = [
     function: {
       name: 'createStickyNote',
       description:
-        'Creates a new sticky note on the board with specified text, position, and color. Optionally set font size and opacity.',
+        'Creates a new sticky note on the board with specified text, position, and color. Optionally set font size, font color, and opacity.',
       parameters: {
         type: 'object',
         properties: {
@@ -30,6 +30,10 @@ export const boardTools: ChatCompletionTool[] = [
           fontSize: {
             type: 'number',
             description: 'Font size in pixels (e.g. 14–72). Omit for default (14).',
+          },
+          fontColor: {
+            type: 'string',
+            description: 'Font color as hex (e.g. #1e293b) or named color.',
           },
           opacity: {
             type: 'number',
@@ -239,6 +243,27 @@ export const boardTools: ChatCompletionTool[] = [
           },
         },
         required: ['objectId', 'fontSize'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'setFontColor',
+      description: 'Sets font color for sticky notes and text elements',
+      parameters: {
+        type: 'object',
+        properties: {
+          objectId: {
+            type: 'string',
+            description: 'ID of the sticky note or text object',
+          },
+          color: {
+            type: 'string',
+            description: 'Font color as hex (e.g. #1e293b) or named color.',
+          },
+        },
+        required: ['objectId', 'color'],
       },
     },
   },

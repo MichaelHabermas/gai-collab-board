@@ -15,6 +15,7 @@ const DEFAULT_STICKY_HEIGHT = 120;
 const DEFAULT_FRAME_WIDTH = 300;
 const DEFAULT_FRAME_HEIGHT = 200;
 const DEFAULT_FILL = '#fef08a';
+const DEFAULT_FONT_COLOR = '#1e293b';
 
 /** Resolves a color name or hex string to a sticky-note fill hex. */
 function resolveStickyColor(input: string): string {
@@ -26,6 +27,18 @@ function resolveStickyColor(input: string): string {
     return input.trim();
   }
   return DEFAULT_FILL;
+}
+
+/** Resolves a color name or hex string to a valid text color. */
+function resolveTextColor(input: string): string {
+  const key = input.toLowerCase().trim() as keyof typeof STICKY_COLORS;
+  if (key in STICKY_COLORS) {
+    return STICKY_COLORS[key];
+  }
+  if (/^#[0-9A-Fa-f]{6}$/.test(input.trim())) {
+    return input.trim();
+  }
+  return DEFAULT_FONT_COLOR;
 }
 
 /** Optional viewport actions; when absent, zoom tools return success with a stub message */
@@ -62,6 +75,7 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           y,
           color = DEFAULT_FILL,
           fontSize: rawFontSize,
+          fontColor,
           opacity: rawOpacity,
         } = tool.arguments as {
           text: string;
@@ -69,6 +83,7 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           y: number;
           color?: string;
           fontSize?: number;
+          fontColor?: string;
           opacity?: number;
         };
         const MIN_FONT_SIZE = 8;
@@ -88,6 +103,7 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           fill: resolveStickyColor(color),
           text,
           createdBy,
+          ...(fontColor !== undefined && { textFill: resolveTextColor(fontColor) }),
           ...(clampedFontSize !== undefined && { fontSize: clampedFontSize }),
           ...(clampedOpacity !== undefined && { opacity: clampedOpacity }),
         });
@@ -278,6 +294,27 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
         }
         await ctx.updateObject(boardId, objectId, { fontSize });
         return { success: true, message: `Set font size to ${fontSize}px` };
+      }
+
+      case 'setFontColor': {
+        const { objectId, color } = tool.arguments as {
+          objectId: string;
+          color: string;
+        };
+        const object = getObjects().find((item) => item.id === objectId);
+        if (object === undefined) {
+          return { success: false, message: `Object not found: ${objectId}` };
+        }
+        const resolvedColor = resolveTextColor(color);
+        if (object.type === 'sticky') {
+          await ctx.updateObject(boardId, objectId, { textFill: resolvedColor });
+          return { success: true, message: `Set font color to ${resolvedColor}` };
+        }
+        if (object.type === 'text') {
+          await ctx.updateObject(boardId, objectId, { fill: resolvedColor });
+          return { success: true, message: `Set font color to ${resolvedColor}` };
+        }
+        return { success: false, message: 'Font color can only be set on sticky notes and text.' };
       }
 
       case 'setStroke': {

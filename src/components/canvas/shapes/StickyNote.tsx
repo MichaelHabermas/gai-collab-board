@@ -4,6 +4,7 @@ import { forwardRef, useState, useRef, useCallback, useEffect, useMemo, memo } f
 import type { ReactElement } from 'react';
 import Konva from 'konva';
 import { useTheme } from '@/hooks/useTheme';
+import { getOverlayRectFromLocalCorners } from '@/lib/canvasOverlayPosition';
 
 // Sticky note color palette
 export const STICKY_COLORS = {
@@ -28,6 +29,7 @@ interface IStickyNoteProps {
   height: number;
   text: string;
   fill: string;
+  textFill?: string;
   fontSize?: number;
   opacity?: number;
   rotation?: number;
@@ -62,6 +64,7 @@ export const StickyNote = memo(
         height,
         text,
         fill,
+        textFill,
         fontSize = DEFAULT_STICKY_FONT_SIZE,
         opacity = 1,
         rotation = 0,
@@ -72,7 +75,7 @@ export const StickyNote = memo(
         onDragEnd,
         dragBoundFunc,
         onTextChange,
-        onTransformEnd,
+        onTransformEnd: _onTransformEnd,
       },
       ref
     ): ReactElement => {
@@ -87,13 +90,18 @@ export const StickyNote = memo(
             : '') || '#3b82f6',
         [theme]
       );
-      const textFillColor = useMemo(
-        () =>
+      const textFillColor = useMemo(() => {
+        if (textFill !== undefined && textFill !== '') {
+          return textFill;
+        }
+        return (
           (typeof document !== 'undefined'
-            ? getComputedStyle(document.documentElement).getPropertyValue('--color-foreground').trim()
-            : '') || '#0f172a',
-        [theme]
-      );
+            ? getComputedStyle(document.documentElement)
+                .getPropertyValue('--color-foreground')
+                .trim()
+            : '') || '#0f172a'
+        );
+      }, [theme, textFill]);
 
       // Handle double-click to start editing. Position textarea from Group's screen rect
       // so it stays aligned for any rotation/zoom (avoids text "jumping" out of the note).
@@ -110,10 +118,6 @@ export const StickyNote = memo(
 
         // Defer overlay by one frame so Konva Text is hidden and stage has redrawn first.
         requestAnimationFrame(() => {
-          const stageBox = stage.container().getBoundingClientRect();
-          const stagePos = stage.position();
-          const scaleX = stage.scaleX();
-          const scaleY = stage.scaleY();
           const transform = group.getAbsoluteTransform();
 
           // Text content rect in group-local coords (same padding as Konva Text: 8px)
@@ -125,22 +129,7 @@ export const StickyNote = memo(
             { x: padding, y: height - padding },
           ];
 
-          // Transform corners to stage then to screen
-          const screenPoints = localCorners.map((p) => {
-            const stagePt = transform.point(p);
-            return {
-              x: stageBox.left + (stagePt.x + stagePos.x) * scaleX,
-              y: stageBox.top + (stagePt.y + stagePos.y) * scaleY,
-            };
-          });
-
-          const left = Math.min(...screenPoints.map((p) => p.x));
-          const top = Math.min(...screenPoints.map((p) => p.y));
-          const right = Math.max(...screenPoints.map((p) => p.x));
-          const bottom = Math.max(...screenPoints.map((p) => p.y));
-          const areaWidth = Math.max(1, right - left);
-          const areaHeight = Math.max(1, bottom - top);
-          const avgScale = (scaleX + scaleY) / 2;
+          const overlayRect = getOverlayRectFromLocalCorners(stage, transform, localCorners);
 
           const textarea = document.createElement('textarea');
           textarea.className = 'sticky-note-edit-overlay';
@@ -148,11 +137,11 @@ export const StickyNote = memo(
 
           textarea.value = text;
           textarea.style.position = 'fixed';
-          textarea.style.top = `${top}px`;
-          textarea.style.left = `${left}px`;
-          textarea.style.width = `${areaWidth}px`;
-          textarea.style.height = `${areaHeight}px`;
-          textarea.style.fontSize = `${fontSize * avgScale}px`;
+          textarea.style.top = `${overlayRect.top}px`;
+          textarea.style.left = `${overlayRect.left}px`;
+          textarea.style.width = `${overlayRect.width}px`;
+          textarea.style.height = `${overlayRect.height}px`;
+          textarea.style.fontSize = `${fontSize * overlayRect.avgScale}px`;
           textarea.style.border = 'none';
           textarea.style.padding = '0px';
           textarea.style.margin = '0px';
@@ -162,6 +151,7 @@ export const StickyNote = memo(
           textarea.style.resize = 'none';
           textarea.style.fontFamily = 'Inter, system-ui, sans-serif';
           textarea.style.lineHeight = '1.4';
+          textarea.style.color = textFillColor;
           textarea.style.zIndex = '1000';
 
           textarea.focus();
@@ -193,7 +183,7 @@ export const StickyNote = memo(
           textarea.addEventListener('keydown', handleKeyDown);
           textarea.addEventListener('blur', handleBlur);
         });
-      }, [text, width, height, fontSize, onTextChange]);
+      }, [text, width, height, fontSize, onTextChange, textFillColor]);
 
       // Handle drag end
       const handleDragEnd = useCallback(

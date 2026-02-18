@@ -1545,6 +1545,8 @@ while maintaining 60 FPS with 500+ objects.
 - [x] Change background color
 - [x] Drag to move
 - [x] Resize with handles
+- [ ] Change sticky note text **Font color** from the property inspector
+- [ ] Keep sticky note text editor overlay aligned inside the note while pan/zoom/rotation is active
 
 **Branch**: `feature/canvas-sticky-notes`
 
@@ -1721,6 +1723,11 @@ while maintaining 60 FPS with 500+ objects.
 ### Story 3.5: Text Elements
 
 **As a user**, I can add standalone text labels.
+
+**Acceptance Criteria**:
+
+- [ ] Change text element **Font color** from the property inspector
+- [ ] Keep text element editor overlay aligned with text bounds while pan/zoom/rotation is active
 
 **Branch**: `feature/canvas-text`
 

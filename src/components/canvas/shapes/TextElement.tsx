@@ -3,6 +3,7 @@ import { forwardRef, useCallback, useRef, useState, useMemo, memo } from 'react'
 import type { ReactElement } from 'react';
 import Konva from 'konva';
 import { useTheme } from '@/hooks/useTheme';
+import { getOverlayRectFromLocalCorners } from '@/lib/canvasOverlayPosition';
 
 interface ITextElementProps {
   id: string;
@@ -83,10 +84,6 @@ export const TextElement = memo(
         setIsEditing(true);
 
         requestAnimationFrame(() => {
-          const stageBox = stage.container().getBoundingClientRect();
-          const stagePos = stage.position();
-          const scaleX = stage.scaleX();
-          const scaleY = stage.scaleY();
           const transform = textNode.getAbsoluteTransform();
           const w = width ?? textNode.width();
           const h = textNode.height();
@@ -97,20 +94,8 @@ export const TextElement = memo(
             { x: w, y: h },
             { x: 0, y: h },
           ];
-          const screenPoints = localCorners.map((p) => {
-            const stagePt = transform.point(p);
-            return {
-              x: stageBox.left + (stagePt.x + stagePos.x) * scaleX,
-              y: stageBox.top + (stagePt.y + stagePos.y) * scaleY,
-            };
-          });
-          const left = Math.min(...screenPoints.map((p) => p.x));
-          const top = Math.min(...screenPoints.map((p) => p.y));
-          const right = Math.max(...screenPoints.map((p) => p.x));
-          const bottom = Math.max(...screenPoints.map((p) => p.y));
-          const areaWidth = Math.max(100, right - left);
-          const areaHeight = Math.max(1, bottom - top);
-          const avgScale = (scaleX + scaleY) / 2;
+          const overlayRect = getOverlayRectFromLocalCorners(stage, transform, localCorners);
+          const areaWidth = Math.max(100, overlayRect.width);
 
           const textarea = document.createElement('textarea');
           textarea.className = 'sticky-note-edit-overlay';
@@ -118,12 +103,12 @@ export const TextElement = memo(
 
           textarea.value = text;
           textarea.style.position = 'fixed';
-          textarea.style.top = `${top}px`;
-          textarea.style.left = `${left}px`;
+          textarea.style.top = `${overlayRect.top}px`;
+          textarea.style.left = `${overlayRect.left}px`;
           textarea.style.width = `${areaWidth}px`;
           textarea.style.minWidth = '100px';
-          textarea.style.height = `${areaHeight}px`;
-          textarea.style.fontSize = `${fontSize * avgScale}px`;
+          textarea.style.height = `${overlayRect.height}px`;
+          textarea.style.fontSize = `${fontSize * overlayRect.avgScale}px`;
           textarea.style.border = 'none';
           textarea.style.padding = '0px';
           textarea.style.margin = '0px';

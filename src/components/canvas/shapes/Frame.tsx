@@ -3,6 +3,7 @@ import { forwardRef, useCallback, useRef, useState, useEffect, useMemo, memo } f
 import type { ReactElement } from 'react';
 import Konva from 'konva';
 import { useTheme } from '@/hooks/useTheme';
+import { getOverlayRectFromLocalCorners } from '@/lib/canvasOverlayPosition';
 
 interface IFrameProps {
   id: string;
@@ -61,7 +62,7 @@ export const Frame = memo(
         onDragEnd,
         dragBoundFunc,
         onTextChange,
-        onTransformEnd,
+        onTransformEnd: _onTransformEnd,
       },
       ref
     ): ReactElement => {
@@ -79,7 +80,9 @@ export const Frame = memo(
       const titleTextFill = useMemo(
         () =>
           (typeof document !== 'undefined'
-            ? getComputedStyle(document.documentElement).getPropertyValue('--color-muted-foreground').trim()
+            ? getComputedStyle(document.documentElement)
+                .getPropertyValue('--color-muted-foreground')
+                .trim()
             : '') || '#475569',
         [theme]
       );
@@ -97,13 +100,8 @@ export const Frame = memo(
         setIsEditing(true);
 
         requestAnimationFrame(() => {
-          const stageBox = stage.container().getBoundingClientRect();
-          const stagePos = stage.position();
-          const scaleX = stage.scaleX();
-          const scaleY = stage.scaleY();
           const transform = group.getAbsoluteTransform();
           const titleTop = (TITLE_HEIGHT - 14) / 2;
-          const titleWidth = width - TITLE_PADDING * 2;
           const titleHeight = 14;
           const localCorners = [
             { x: TITLE_PADDING, y: titleTop },
@@ -111,20 +109,7 @@ export const Frame = memo(
             { x: width - TITLE_PADDING, y: titleTop + titleHeight },
             { x: TITLE_PADDING, y: titleTop + titleHeight },
           ];
-          const screenPoints = localCorners.map((p) => {
-            const stagePt = transform.point(p);
-            return {
-              x: stageBox.left + (stagePt.x + stagePos.x) * scaleX,
-              y: stageBox.top + (stagePt.y + stagePos.y) * scaleY,
-            };
-          });
-          const left = Math.min(...screenPoints.map((p) => p.x));
-          const top = Math.min(...screenPoints.map((p) => p.y));
-          const right = Math.max(...screenPoints.map((p) => p.x));
-          const bottom = Math.max(...screenPoints.map((p) => p.y));
-          const areaWidth = Math.max(1, right - left);
-          const areaHeight = Math.max(1, bottom - top);
-          const avgScale = (scaleX + scaleY) / 2;
+          const overlayRect = getOverlayRectFromLocalCorners(stage, transform, localCorners);
 
           const input = document.createElement('input');
           input.className = 'sticky-note-edit-overlay';
@@ -133,11 +118,11 @@ export const Frame = memo(
 
           input.value = text;
           input.style.position = 'fixed';
-          input.style.top = `${top}px`;
-          input.style.left = `${left}px`;
-          input.style.width = `${areaWidth}px`;
-          input.style.height = `${areaHeight}px`;
-          input.style.fontSize = `${14 * avgScale}px`;
+          input.style.top = `${overlayRect.top}px`;
+          input.style.left = `${overlayRect.left}px`;
+          input.style.width = `${overlayRect.width}px`;
+          input.style.height = `${overlayRect.height}px`;
+          input.style.fontSize = `${14 * overlayRect.avgScale}px`;
           input.style.fontWeight = '600';
           input.style.border = 'none';
           input.style.padding = '0px';

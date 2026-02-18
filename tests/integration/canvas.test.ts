@@ -1706,8 +1706,8 @@ describe('Click-to-Create Operations', () => {
         scale: number
       ) => {
         return {
-          x: stageBox.left + (textPosition.x + stagePos.x) * scale,
-          y: stageBox.top + (textPosition.y + stagePos.y) * scale,
+          x: stageBox.left + textPosition.x * scale + stagePos.x,
+          y: stageBox.top + textPosition.y * scale + stagePos.y,
         };
       };
 
@@ -1738,8 +1738,8 @@ describe('Click-to-Create Operations', () => {
         { x: 50, y: 50 },
         2
       );
-      expect(pos3.x).toBe(300);
-      expect(pos3.y).toBe(300);
+      expect(pos3.x).toBe(250);
+      expect(pos3.y).toBe(250);
 
       // With stage container offset
       const pos4 = calculateTextareaPosition(
@@ -1748,8 +1748,8 @@ describe('Click-to-Create Operations', () => {
         { x: 50, y: 50 },
         1.5
       );
-      expect(pos4.x).toBe(200 + (100 + 50) * 1.5);
-      expect(pos4.y).toBe(100 + (100 + 50) * 1.5);
+      expect(pos4.x).toBe(200 + 100 * 1.5 + 50);
+      expect(pos4.y).toBe(100 + 100 * 1.5 + 50);
     });
 
     it('should position textarea correctly when canvas is panned', () => {
@@ -1761,8 +1761,8 @@ describe('Click-to-Create Operations', () => {
       const scale = 1;
 
       const areaPosition = {
-        x: stageBox.left + (textPosition.x + stagePos.x) * scale,
-        y: stageBox.top + (textPosition.y + stagePos.y) * scale,
+        x: stageBox.left + textPosition.x * scale + stagePos.x,
+        y: stageBox.top + textPosition.y * scale + stagePos.y,
       };
 
       // Should account for pan offset
@@ -1778,8 +1778,8 @@ describe('Click-to-Create Operations', () => {
       const scale = 2; // 200% zoom
 
       const areaPosition = {
-        x: stageBox.left + (textPosition.x + stagePos.x) * scale,
-        y: stageBox.top + (textPosition.y + stagePos.y) * scale,
+        x: stageBox.left + textPosition.x * scale + stagePos.x,
+        y: stageBox.top + textPosition.y * scale + stagePos.y,
       };
 
       expect(areaPosition.x).toBe(200);

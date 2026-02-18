@@ -187,7 +187,10 @@ export const BoardCanvas = memo(
     // Filter objects to only visible ones (viewport culling)
     const visibleObjects = useVisibleShapes({ objects, viewport });
     const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
-    const objectsById = useMemo(() => new Map(objects.map((object) => [object.id, object])), [objects]);
+    const objectsById = useMemo(
+      () => new Map(objects.map((object) => [object.id, object])),
+      [objects]
+    );
 
     // Linked connectors are excluded from transform (selectable for deletion only)
     const linkedConnectorIds = useMemo(
@@ -852,6 +855,7 @@ export const BoardCanvas = memo(
                 height={obj.height}
                 text={obj.text || ''}
                 fill={obj.fill}
+                textFill={obj.textFill}
                 fontSize={obj.fontSize}
                 opacity={obj.opacity ?? 1}
                 rotation={obj.rotation}
@@ -946,7 +950,8 @@ export const BoardCanvas = memo(
             );
 
           case 'connector': {
-            const fromObj = obj.fromObjectId != null ? objectsById.get(obj.fromObjectId) : undefined;
+            const fromObj =
+              obj.fromObjectId != null ? objectsById.get(obj.fromObjectId) : undefined;
             const toObj = obj.toObjectId != null ? objectsById.get(obj.toObjectId) : undefined;
             if (fromObj && toObj && obj.fromAnchor != null && obj.toAnchor != null) {
               const x = getAnchorPosition(fromObj, obj.fromAnchor).x;
@@ -1391,7 +1396,9 @@ export const BoardCanvas = memo(
             size='icon'
             className={cn(
               'h-9 w-9 rounded-md',
-              showGrid ? 'bg-primary text-primary-foreground' : 'text-card-foreground hover:bg-accent bg-card/80'
+              showGrid
+                ? 'bg-primary text-primary-foreground'
+                : 'text-card-foreground hover:bg-accent bg-card/80'
             )}
             onClick={() => setShowGrid(!showGrid)}
             title={showGrid ? 'Hide grid' : 'Show grid'}
@@ -1404,7 +1411,9 @@ export const BoardCanvas = memo(
             size='icon'
             className={cn(
               'h-9 w-9 rounded-md',
-              snapToGridEnabled ? 'bg-primary text-primary-foreground' : 'text-card-foreground hover:bg-accent bg-card/80'
+              snapToGridEnabled
+                ? 'bg-primary text-primary-foreground'
+                : 'text-card-foreground hover:bg-accent bg-card/80'
             )}
             onClick={() => setSnapToGridEnabled(!snapToGridEnabled)}
             title={snapToGridEnabled ? 'Disable snap to grid' : 'Enable snap to grid'}
