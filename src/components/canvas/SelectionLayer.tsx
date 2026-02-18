@@ -2,14 +2,7 @@ import { Rect } from 'react-konva';
 import { memo, useMemo } from 'react';
 import type { ReactElement } from 'react';
 import { useTheme } from '@/hooks/useTheme';
-
-interface ISelectionRect {
-  visible: boolean;
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-}
+import type { ISelectionRect } from '@/types';
 
 interface ISelectionLayerProps {
   selectionRect: ISelectionRect;
@@ -68,5 +61,3 @@ export const SelectionLayer = memo(
 );
 
 SelectionLayer.displayName = 'SelectionLayer';
-
-export type { ISelectionRect };

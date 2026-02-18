@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import type Konva from 'konva';
+import type { IKonvaDragEvent } from '@/types';
 
 interface IUseShapeDragHandlerOptions {
   offsetX?: number;
@@ -13,12 +13,12 @@ interface IUseShapeDragHandlerOptions {
 export const useShapeDragHandler = (
   onDragEnd?: (x: number, y: number) => void,
   options?: IUseShapeDragHandlerOptions
-): ((e: Konva.KonvaEventObject<DragEvent>) => void) => {
+): ((e: IKonvaDragEvent) => void) => {
   const offsetX = options?.offsetX ?? 0;
   const offsetY = options?.offsetY ?? 0;
 
   return useCallback(
-    (e: Konva.KonvaEventObject<DragEvent>) => {
+    (e: IKonvaDragEvent) => {
       onDragEnd?.(e.target.x() - offsetX, e.target.y() - offsetY);
     },
     [onDragEnd, offsetX, offsetY]

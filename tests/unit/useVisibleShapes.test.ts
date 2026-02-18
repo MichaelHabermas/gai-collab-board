@@ -2,7 +2,7 @@ import { renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { useVisibleShapes } from '@/hooks/useVisibleShapes';
 import type { IBoardObject } from '@/types';
-import type { IViewportState } from '@/hooks/useCanvasViewport';
+import type { IViewportState } from '@/types';
 
 const createViewport = (overrides: Partial<IViewportState> = {}): IViewportState => ({
   position: { x: 0, y: 0 },

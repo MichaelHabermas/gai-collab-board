@@ -5,6 +5,32 @@ export type ShapeType = 'sticky' | 'rectangle' | 'circle' | 'line' | 'text' | 'f
 
 export type ConnectorAnchor = 'top' | 'right' | 'bottom' | 'left';
 
+/** Parameters for creating a new board object. Used by objectService and toolExecutor. */
+export interface ICreateObjectParams {
+  type: ShapeType;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  fill: string;
+  stroke?: string;
+  strokeWidth?: number;
+  text?: string;
+  textFill?: string;
+  fontSize?: number;
+  opacity?: number;
+  rotation?: number;
+  points?: number[];
+  fromObjectId?: string;
+  toObjectId?: string;
+  fromAnchor?: ConnectorAnchor;
+  toAnchor?: ConnectorAnchor;
+  createdBy: string;
+}
+
+/** Partial updates for an existing board object (no id, createdBy, createdAt). */
+export type IUpdateObjectParams = Partial<Omit<IBoardObject, 'id' | 'createdBy' | 'createdAt'>>;
+
 export interface IBoardObject {
   id: string;
   type: ShapeType;

@@ -1,4 +1,4 @@
-import type { IPosition } from './utils';
+import type { IPosition } from './geometry';
 import type {
   ITransformEndLineAttrs,
   ITransformEndRectAttrs,

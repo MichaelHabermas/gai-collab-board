@@ -1,7 +1,7 @@
 import { memo, useMemo, type ReactElement } from 'react';
 import { Layer, Line } from 'react-konva';
 import { useTheme } from '@/hooks/useTheme';
-import type { IAlignmentGuides } from '@/lib/alignmentGuides';
+import type { IAlignmentGuides } from '@/types';
 
 const GUIDE_EXTENT = 50000;
 const GUIDE_STROKE_WIDTH = 1;

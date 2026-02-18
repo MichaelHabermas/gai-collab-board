@@ -1,16 +1,8 @@
-import { type ReactElement, type ReactNode } from 'react';
+import { type ReactElement } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PanelRightClose, PanelRightOpen, LayoutDashboard, Settings, Bot } from 'lucide-react';
-import type { SidebarTab } from '@/hooks/useBoardSettings';
-
-export interface IRightSidebarProps {
-  sidebarCollapsed: boolean;
-  setSidebarCollapsed: (v: boolean) => void;
-  sidebarTab: SidebarTab;
-  setSidebarTab: (v: SidebarTab) => void;
-  expandedContent: ReactNode;
-}
+import type { IRightSidebarProps } from '@/types';
 
 /**
  * Collapsible right panel: expanded (tabs + content) or collapsed icon rail.

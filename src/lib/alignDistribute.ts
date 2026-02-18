@@ -3,23 +3,9 @@
  * Used by both the align toolbar (UI) and the AI tool executor.
  */
 
-export type AlignOption = 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom';
+import type { AlignOption, DistributeDirection, ILayoutRect, IPositionUpdate } from '@/types';
 
-export type DistributeDirection = 'horizontal' | 'vertical';
-
-export interface ILayoutRect {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-export interface IPositionUpdate {
-  id: string;
-  x?: number;
-  y?: number;
-}
+export type { AlignOption, DistributeDirection, ILayoutRect, IPositionUpdate };
 
 /**
  * Computes position updates to align objects by the given option.

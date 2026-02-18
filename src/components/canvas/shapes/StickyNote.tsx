@@ -15,6 +15,7 @@ import {
   STICKY_NOTE_SHADOW_OPACITY_SELECTED,
 } from '@/lib/canvasShadows';
 import { getOverlayRectFromLocalCorners } from '@/lib/canvasOverlayPosition';
+import type { IDragBoundFunc, ITransformEndRectAttrs } from '@/types';
 
 // Sticky note color palette
 export const STICKY_COLORS = {
@@ -49,15 +50,9 @@ interface IStickyNoteProps {
   onSelect?: () => void;
   onDragStart?: () => void;
   onDragEnd?: (x: number, y: number) => void;
-  dragBoundFunc?: (pos: { x: number; y: number }) => { x: number; y: number };
+  dragBoundFunc?: IDragBoundFunc;
   onTextChange?: (text: string) => void;
-  onTransformEnd?: (attrs: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    rotation: number;
-  }) => void;
+  onTransformEnd?: (attrs: ITransformEndRectAttrs) => void;
 }
 
 /**

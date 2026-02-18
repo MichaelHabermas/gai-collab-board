@@ -16,7 +16,7 @@ import {
   type AlignOption,
   type DistributeDirection,
 } from '@/lib/alignDistribute';
-import type { IBoardObject } from '@/types';
+import type { IBoardObject, ILayoutRect } from '@/types';
 
 interface IAlignToolbarProps {
   objects: IBoardObject[];
@@ -25,13 +25,7 @@ interface IAlignToolbarProps {
   canEdit?: boolean;
 }
 
-function toRect(obj: IBoardObject): {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-} {
+function toRect(obj: IBoardObject): ILayoutRect {
   return { id: obj.id, x: obj.x, y: obj.y, width: obj.width, height: obj.height };
 }
 

@@ -1,20 +1,22 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import Konva from 'konva';
-import { computeViewportToFitBounds, type IBounds } from '@/lib/canvasBounds';
+import { computeViewportToFitBounds } from '@/lib/canvasBounds';
 import type {
   IPersistedViewport,
   IViewportPosition,
-  IViewportScale,
   IViewportState,
+  IBounds,
+  IKonvaWheelEvent,
+  IKonvaDragEvent,
+  IKonvaTouchEvent,
 } from '@/types';
-export type { IViewportPosition, IViewportScale, IViewportState };
+
 export type IViewportPersistState = IPersistedViewport;
 
 interface IUseCanvasViewportReturn {
   viewport: IViewportState;
-  handleWheel: (e: Konva.KonvaEventObject<WheelEvent>) => void;
-  handleDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => void;
-  handleTouchMove: (e: Konva.KonvaEventObject<TouchEvent>) => void;
+  handleWheel: (e: IKonvaWheelEvent) => void;
+  handleDragEnd: (e: IKonvaDragEvent) => void;
+  handleTouchMove: (e: IKonvaTouchEvent) => void;
   handleTouchEnd: () => void;
   zoomTo: (scale: number, center?: IViewportPosition) => void;
   panTo: (position: IViewportPosition) => void;
@@ -132,7 +134,7 @@ export const useCanvasViewport = (
   }, []);
 
   // Wheel zoom handler - zooms centered on cursor position
-  const handleWheel = useCallback((e: Konva.KonvaEventObject<WheelEvent>) => {
+  const handleWheel = useCallback((e: IKonvaWheelEvent) => {
     e.evt.preventDefault();
 
     const stage = e.target.getStage();
@@ -165,7 +167,7 @@ export const useCanvasViewport = (
   }, []);
 
   // Drag end handler for pan
-  const handleDragEnd = useCallback((e: Konva.KonvaEventObject<DragEvent>) => {
+  const handleDragEnd = useCallback((e: IKonvaDragEvent) => {
     const stage = e.target.getStage();
     if (!stage || e.target !== stage) return;
 
@@ -180,7 +182,7 @@ export const useCanvasViewport = (
 
   // Touch move handler for pinch-to-zoom
   const handleTouchMove = useCallback(
-    (e: Konva.KonvaEventObject<TouchEvent>) => {
+    (e: IKonvaTouchEvent) => {
       const touch1 = e.evt.touches[0];
       const touch2 = e.evt.touches[1];
 

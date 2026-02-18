@@ -6,6 +6,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useShapeDragHandler } from '@/hooks/useShapeDragHandler';
 import { getShapeShadowProps } from '@/lib/shapeShadowProps';
 import { getOverlayRectFromLocalCorners } from '@/lib/canvasOverlayPosition';
+import type { IDragBoundFunc, ITransformEndRectAttrs } from '@/types';
 
 interface IFrameProps {
   id: string;
@@ -24,15 +25,9 @@ interface IFrameProps {
   onSelect?: () => void;
   onDragStart?: () => void;
   onDragEnd?: (x: number, y: number) => void;
-  dragBoundFunc?: (pos: { x: number; y: number }) => { x: number; y: number };
+  dragBoundFunc?: IDragBoundFunc;
   onTextChange?: (text: string) => void;
-  onTransformEnd?: (attrs: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    rotation: number;
-  }) => void;
+  onTransformEnd?: (attrs: ITransformEndRectAttrs) => void;
 }
 
 const TITLE_HEIGHT = 32;

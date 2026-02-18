@@ -5,7 +5,8 @@ import type { User } from 'firebase/auth';
 import type { IBoardObject } from '@/types';
 import { useAI } from '@/hooks/useAI';
 import { AIError } from '@/modules/ai/errors';
-import { ViewportActionsContext, type IViewportActionsValue } from '@/contexts/ViewportActionsContext';
+import { ViewportActionsContext } from '@/contexts/ViewportActionsContext';
+import type { IViewportActionsValue } from '@/types';
 
 const {
   mockCreateObject,

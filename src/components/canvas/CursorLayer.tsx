@@ -1,7 +1,6 @@
 import { Layer, Circle, Text, Group } from 'react-konva';
 import { memo, type ReactElement } from 'react';
-import type { ICursorData } from '@/modules/sync/realtimeService';
-import type { Cursors } from '@/hooks/useCursors';
+import type { Cursors, ICursorData } from '@/types';
 
 interface ICursorLayerProps {
   cursors: Cursors;
@@ -59,7 +58,9 @@ Cursor.displayName = 'Cursor';
  * Uses listening={false} for performance since cursors don't need interaction.
  */
 export const CursorLayer = memo(({ cursors, currentUid }: ICursorLayerProps): ReactElement => {
-  const otherCursors = Object.values(cursors).filter((cursor) => cursor.uid !== currentUid);
+  const otherCursors: ICursorData[] = Object.values(cursors).filter(
+    (cursor) => cursor.uid !== currentUid
+  );
 
   return (
     <Layer listening={false}>

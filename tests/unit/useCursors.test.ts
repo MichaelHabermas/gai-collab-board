@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useCursors } from '@/hooks/useCursors';
-import type { Cursors } from '@/hooks/useCursors';
+import type { Cursors } from '@/types';
 import type { User } from 'firebase/auth';
 
 const {

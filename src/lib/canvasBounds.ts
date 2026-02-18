@@ -1,11 +1,6 @@
-import type { IBoardObject } from '@/types';
+import type { IBoardObject, IBounds, IViewportFitResult } from '@/types';
 
-export interface IBounds {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-}
+export type { IBounds, IViewportFitResult };
 
 const MIN_POINTS_BOUND_SIZE = 2;
 
@@ -118,11 +113,6 @@ export function getBoardBounds(objects: IBoardObject[]): IBounds | null {
 
 const VIEWPORT_MIN_SCALE = 0.1;
 const VIEWPORT_MAX_SCALE = 10;
-
-export interface IViewportFitResult {
-  scale: number;
-  position: { x: number; y: number };
-}
 
 /**
  * Computes scale and position so that the given bounds fit in the viewport with padding.

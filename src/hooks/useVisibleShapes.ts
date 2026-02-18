@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { IBoardObject } from '@/types';
-import type { IViewportState } from './useCanvasViewport';
+import type { IViewportState } from '@/types';
 
 // Padding around viewport to pre-render shapes slightly outside view
 const VIEWPORT_PADDING = 200;

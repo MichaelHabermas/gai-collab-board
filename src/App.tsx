@@ -38,7 +38,7 @@ import { ViewportActionsContext } from '@/contexts/ViewportActionsContext';
 import { SelectionProvider } from '@/contexts/SelectionProvider';
 import { PropertyInspector } from '@/components/canvas/PropertyInspector';
 import type { IBoard } from '@/types';
-import type { IViewportActionsValue } from '@/contexts/ViewportActionsContext';
+import type { IViewportActionsValue } from '@/types';
 
 const DEFAULT_BOARD_ID = 'dev-board-001';
 

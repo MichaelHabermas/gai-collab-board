@@ -13,7 +13,7 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { firestore } from '@/lib/firebase';
-import type { IBoardObject, ShapeType, ConnectorAnchor } from '@/types';
+import type { IBoardObject, ICreateObjectParams, IUpdateObjectParams } from '@/types';
 
 const OBJECTS_SUBCOLLECTION = 'objects';
 export type ObjectChangeType = 'added' | 'modified' | 'removed';
@@ -47,27 +47,7 @@ const getObjectRef = (boardId: string, objectId: string) => {
 // Object Creation
 // ============================================================================
 
-export interface ICreateObjectParams {
-  type: ShapeType;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  fill: string;
-  stroke?: string;
-  strokeWidth?: number;
-  text?: string;
-  textFill?: string;
-  fontSize?: number;
-  opacity?: number;
-  rotation?: number;
-  points?: number[];
-  fromObjectId?: string;
-  toObjectId?: string;
-  fromAnchor?: ConnectorAnchor;
-  toAnchor?: ConnectorAnchor;
-  createdBy: string;
-}
+export type { ICreateObjectParams, IUpdateObjectParams };
 
 /**
  * Creates a new object on the board.
@@ -185,8 +165,6 @@ export const createObjectsBatch = async (
 // ============================================================================
 // Object Updates
 // ============================================================================
-
-export type IUpdateObjectParams = Partial<Omit<IBoardObject, 'id' | 'createdBy' | 'createdAt'>>;
 
 /**
  * Updates an existing object on the board.

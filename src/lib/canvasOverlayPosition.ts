@@ -1,17 +1,7 @@
 import Konva from 'konva';
+import type { IPosition, IOverlayRect } from '@/types';
 
-interface IPoint {
-  x: number;
-  y: number;
-}
-
-export interface IOverlayRect {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-  avgScale: number;
-}
+export type { IOverlayRect };
 
 /**
  * Convert local-node corners into fixed-position screen bounds for DOM overlays.
@@ -20,7 +10,7 @@ export interface IOverlayRect {
 export const getOverlayRectFromLocalCorners = (
   stage: Konva.Stage,
   transform: Konva.Transform,
-  localCorners: IPoint[]
+  localCorners: IPosition[]
 ): IOverlayRect => {
   const stageBox = stage.container().getBoundingClientRect();
   const stagePos = stage.position();

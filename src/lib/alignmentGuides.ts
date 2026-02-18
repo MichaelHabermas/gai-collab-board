@@ -3,24 +3,17 @@
  * and return guide line positions plus optional snap position.
  */
 
-import type { IBounds } from './canvasBounds';
+import type {
+  IBounds,
+  IPosition,
+  IAlignmentGuides,
+  IAlignmentPositions,
+  IAlignmentCandidate,
+} from '@/types';
+
+export type { IAlignmentGuides, IAlignmentCandidate };
 
 const DEFAULT_THRESHOLD = 4;
-
-export interface IAlignmentGuides {
-  horizontal: number[];
-  vertical: number[];
-}
-
-interface IAlignmentPositions {
-  v: number[];
-  h: number[];
-}
-
-export interface IAlignmentCandidate {
-  bounds: IBounds;
-  positions: IAlignmentPositions;
-}
 
 /**
  * Key positions for alignment: left edge, center x, right edge, top edge, center y, bottom edge.
@@ -93,11 +86,11 @@ export function computeAlignmentGuidesWithCandidates(
  */
 export function computeSnappedPositionFromGuides(
   guides: IAlignmentGuides,
-  pos: { x: number; y: number },
+  pos: IPosition,
   width: number,
   height: number,
   threshold: number = DEFAULT_THRESHOLD
-): { x: number; y: number } {
+): IPosition {
   let x = pos.x;
   let y = pos.y;
 
@@ -148,11 +141,11 @@ export function computeSnappedPositionFromGuides(
 export function computeSnappedPosition(
   dragged: IBounds,
   others: IBounds[],
-  pos: { x: number; y: number },
+  pos: IPosition,
   width: number,
   height: number,
   threshold: number = DEFAULT_THRESHOLD
-): { x: number; y: number } {
+): IPosition {
   const guides = computeAlignmentGuides(dragged, others, threshold);
   return computeSnappedPositionFromGuides(guides, pos, width, height, threshold);
 }

@@ -1,15 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { User } from 'firebase/auth';
+import type { Cursors } from '@/types';
 import {
-  ICursorData,
   updateCursor,
   subscribeToCursors,
   removeCursor,
   setupCursorDisconnectHandler,
   getUserColor,
 } from '@/modules/sync/realtimeService';
-
-export type Cursors = Record<string, ICursorData>;
 
 interface IUseCursorsParams {
   boardId: string | null;

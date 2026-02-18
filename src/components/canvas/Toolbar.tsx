@@ -13,9 +13,7 @@ import {
 } from 'lucide-react';
 import { STICKY_COLORS } from './shapes/StickyNote';
 import { cn } from '@/lib/utils';
-import type { ShapeType } from '@/types';
-
-export type ToolMode = 'select' | 'pan' | ShapeType;
+import type { ToolMode } from '@/types';
 
 interface IToolbarProps {
   activeTool: ToolMode;

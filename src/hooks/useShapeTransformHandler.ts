@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import Konva from 'konva';
-import type { ITransformEndAttrsUnion } from '@/types';
+import type { ITransformEndAttrsUnion, IKonvaEvent } from '@/types';
 
 const MIN_SIZE = 10;
 const MIN_FONT_SIZE = 8;
@@ -23,11 +23,11 @@ export const useShapeTransformHandler = (
   kind: ShapeTransformKind,
   onTransformEnd: ((attrs: ITransformEndAttrsUnion) => void) | undefined,
   options?: IUseShapeTransformHandlerOptions
-): ((e: Konva.KonvaEventObject<Event>) => void) => {
+): ((e: IKonvaEvent) => void) => {
   const fontSize = options?.fontSize;
 
   return useCallback(
-    (e: Konva.KonvaEventObject<Event>) => {
+    (e: IKonvaEvent) => {
       const node = e.target;
       const scaleX = node.scaleX();
       const scaleY = node.scaleY();

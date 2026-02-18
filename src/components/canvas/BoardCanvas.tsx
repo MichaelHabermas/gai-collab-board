@@ -1,12 +1,12 @@
 import { Stage, Layer, Rect, Line } from 'react-konva';
 import { TransformHandler } from './TransformHandler';
-import { SelectionLayer, type ISelectionRect } from './SelectionLayer';
+import { SelectionLayer } from './SelectionLayer';
 import { useRef, useCallback, useState, useEffect, useMemo, memo, type ReactElement } from 'react';
 import Konva from 'konva';
 import { Wrench, Focus, Maximize2, Grid3X3, Magnet, Download } from 'lucide-react';
 import { useCanvasViewport } from '@/hooks/useCanvasViewport';
 import { CursorLayer } from './CursorLayer';
-import { Toolbar, type ToolMode } from './Toolbar';
+import { Toolbar } from './Toolbar';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { STICKY_COLORS } from './shapes';
@@ -23,6 +23,13 @@ import type {
   ITransformEndAttrs,
   IViewportPosition,
   IViewportState,
+  IAlignmentGuides,
+  IAlignmentCandidate,
+  ToolMode,
+  IKonvaMouseEvent,
+  ISelectionRect,
+  ExportImageFormat,
+  IViewportActionsValue,
 } from '@/types';
 import type { ICreateObjectParams } from '@/modules/sync/objectService';
 import { getAnchorPosition } from '@/lib/connectorAnchors';
@@ -31,8 +38,6 @@ import {
   computeAlignmentGuidesWithCandidates,
   getAlignmentPositions,
   computeSnappedPositionFromGuides,
-  type IAlignmentCandidate,
-  type IAlignmentGuides,
 } from '@/lib/alignmentGuides';
 import { cn } from '@/lib/utils';
 import { snapPositionToGrid, snapSizeToGrid } from '@/lib/snapToGrid';
@@ -42,7 +47,6 @@ import { AlignmentGuidesLayer } from './AlignmentGuidesLayer';
 import { useExportAsImage } from '@/hooks/useExportAsImage';
 import { useTheme, type Theme } from '@/hooks/useTheme';
 import { useBoardSettings } from '@/hooks/useBoardSettings';
-import type { ExportImageFormat, IViewportActionsValue } from '@/contexts/ViewportActionsContext';
 
 interface IBoardCanvasProps {
   boardId: string;
@@ -148,7 +152,7 @@ export const BoardCanvas = memo(
     const viewportPersistTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const [isMiddlePanning, setIsMiddlePanning] = useState<boolean>(false);
-    const middlePanStartClientRef = useRef<{ x: number; y: number } | null>(null);
+    const middlePanStartClientRef = useRef<IPosition | null>(null);
     const middlePanStartPositionRef = useRef<IViewportPosition | null>(null);
 
     const {
@@ -306,7 +310,7 @@ export const BoardCanvas = memo(
 
     // Handle mouse move for cursor sync and drawing
     const handleStageMouseMove = useCallback(
-      (e: Konva.KonvaEventObject<MouseEvent>) => {
+      (e: IKonvaMouseEvent) => {
         const stage = e.target.getStage();
         if (!stage) return;
 
@@ -360,7 +364,7 @@ export const BoardCanvas = memo(
     );
 
     // Check if click is on empty area (not on a shape)
-    const isEmptyAreaClick = useCallback((e: Konva.KonvaEventObject<MouseEvent>): boolean => {
+    const isEmptyAreaClick = useCallback((e: IKonvaMouseEvent): boolean => {
       const stage = e.target.getStage();
       if (!stage) {
         return false;
@@ -397,7 +401,7 @@ export const BoardCanvas = memo(
 
     // Handle mouse down for drawing start or selection start
     const handleStageMouseDown = useCallback(
-      (e: Konva.KonvaEventObject<MouseEvent>) => {
+      (e: IKonvaMouseEvent) => {
         const stage = e.target.getStage();
         if (!stage) return;
 
@@ -443,7 +447,7 @@ export const BoardCanvas = memo(
 
     // Handle mouse up for drawing end and selection completion
     const handleStageMouseUp = useCallback(
-      async (e: Konva.KonvaEventObject<MouseEvent>) => {
+      async (e: IKonvaMouseEvent) => {
         // Handle drawing completion if we were drawing
         if (drawingState.isDrawing && onObjectCreate) {
           const { startX, startY, currentX, currentY } = drawingState;
@@ -609,7 +613,7 @@ export const BoardCanvas = memo(
 
     // Handle stage click for object creation or deselection
     const handleStageClick = useCallback(
-      (e: Konva.KonvaEventObject<MouseEvent>) => {
+      (e: IKonvaMouseEvent) => {
         const stage = e.target.getStage();
         if (!stage) {
           return;
@@ -758,7 +762,7 @@ export const BoardCanvas = memo(
 
     // Handle object selection
     const handleObjectSelect = useCallback(
-      (objectId: string, e?: Konva.KonvaEventObject<MouseEvent>) => {
+      (objectId: string, e?: IKonvaMouseEvent) => {
         const metaPressed = e?.evt.shiftKey || e?.evt.ctrlKey || e?.evt.metaKey;
 
         if (metaPressed) {
@@ -807,10 +811,7 @@ export const BoardCanvas = memo(
     });
 
     const dragBoundFuncCacheRef = useRef<
-      Map<
-        string,
-        { width: number; height: number; fn: (pos: { x: number; y: number }) => IPosition }
-      >
+      Map<string, { width: number; height: number; fn: (pos: IPosition) => IPosition }>
     >(new Map());
     const guideCandidateBoundsRef = useRef<Array<{ id: string; candidate: IAlignmentCandidate }>>(
       []
@@ -840,7 +841,7 @@ export const BoardCanvas = memo(
         .filter((candidate) => candidate.id !== objectId)
         .map((candidate) => candidate.candidate);
 
-      const nextDragBoundFunc = (pos: { x: number; y: number }) => {
+      const nextDragBoundFunc = (pos: IPosition) => {
         const dragged = {
           x1: pos.x,
           y1: pos.y,
@@ -1130,7 +1131,7 @@ export const BoardCanvas = memo(
     const shouldHandlePointerMutations = activeTool !== 'pan';
 
     const handleStageMouseDownWithMiddlePan = useCallback(
-      (e: Konva.KonvaEventObject<MouseEvent>) => {
+      (e: IKonvaMouseEvent) => {
         if (e.evt.button === 1) {
           middlePanStartClientRef.current = {
             x: e.evt.clientX,
@@ -1149,7 +1150,7 @@ export const BoardCanvas = memo(
     );
 
     const handleStageMouseUpWithMiddlePan = useCallback(
-      (e: Konva.KonvaEventObject<MouseEvent>) => {
+      (e: IKonvaMouseEvent) => {
         if (e.evt.button === 1) {
           setIsMiddlePanning(false);
           return;

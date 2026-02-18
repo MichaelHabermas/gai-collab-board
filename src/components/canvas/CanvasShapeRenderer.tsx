@@ -1,6 +1,6 @@
 import { Rect } from 'react-konva';
 import { memo, type ReactElement } from 'react';
-import type { IBoardObject } from '@/types';
+import type { ICanvasShapeRendererProps } from '@/types';
 import { getAnchorPosition } from '@/lib/connectorAnchors';
 import {
   StickyNote,
@@ -11,24 +11,6 @@ import {
   TextElement,
   Frame,
 } from './shapes';
-
-export interface ICanvasShapeRendererProps {
-  object: IBoardObject;
-  isSelected: boolean;
-  canEdit: boolean;
-  objectsById: Map<string, IBoardObject>;
-  selectionColor: string;
-  getSelectHandler: (id: string) => () => void;
-  getDragEndHandler: (id: string) => (x: number, y: number) => void;
-  getTextChangeHandler: (id: string) => (text: string) => void;
-  getDragBoundFunc: (
-    id: string,
-    width: number,
-    height: number
-  ) => ((pos: { x: number; y: number }) => { x: number; y: number }) | undefined;
-  handleObjectSelect: (id: string) => void;
-  handleObjectDragEnd: (id: string, x: number, y: number) => void;
-}
 
 /**
  * Renders a single canvas object by type. Used by BoardCanvas to keep the shape switch isolated.

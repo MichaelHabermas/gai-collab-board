@@ -1,13 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { IPersistedViewport, IViewportPosition, IViewportScale } from '@/types';
+import type { IPersistedViewport, IViewportPosition, IViewportScale, SidebarTab } from '@/types';
 
-export type { IPersistedViewport, IViewportPosition, IViewportScale };
+export type { IPersistedViewport, IViewportPosition, IViewportScale, SidebarTab };
 
 const STORAGE_PREFIX = 'collabboard-board-';
 const STORAGE_SUFFIX = '-settings';
 const VIEWPORT_DEBOUNCE_MS = 400;
 
-export type SidebarTab = 'boards' | 'properties' | 'ai';
 export type BoardListFilter = 'all' | 'recent' | 'favorites';
 
 export interface IBoardSettings {

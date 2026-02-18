@@ -1,8 +1,7 @@
 import { Circle } from 'react-konva';
 import { memo, useCallback, type ReactElement } from 'react';
-import Konva from 'konva';
 import { getAnchorPosition, isConnectableShapeType } from '@/lib/connectorAnchors';
-import type { IBoardObject, ConnectorAnchor } from '@/types';
+import type { IBoardObject, ConnectorAnchor, IKonvaMouseEvent, IKonvaTouchEvent } from '@/types';
 
 const ANCHORS: ConnectorAnchor[] = ['top', 'right', 'bottom', 'left'];
 
@@ -24,11 +23,7 @@ interface IConnectionNodesLayerProps {
 export const ConnectionNodesLayer = memo(
   ({ shapes, onNodeClick }: IConnectionNodesLayerProps): ReactElement => {
     const handleNodeClick = useCallback(
-      (
-        e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
-        shapeId: string,
-        anchor: ConnectorAnchor
-      ) => {
+      (e: IKonvaMouseEvent | IKonvaTouchEvent, shapeId: string, anchor: ConnectorAnchor) => {
         e.cancelBubble = true;
         onNodeClick(shapeId, anchor);
       },

@@ -1,12 +1,14 @@
-export interface IViewportPosition {
-  x: number;
-  y: number;
-}
+/**
+ * Viewport state and persistence. Position and scale use IPosition for consistency.
+ */
 
-export interface IViewportScale {
-  x: number;
-  y: number;
-}
+import type { IPosition } from './geometry';
+
+/** Viewport position (same shape as IPosition; domain alias). */
+export type IViewportPosition = IPosition;
+
+/** Viewport scale x/y (same shape as IPosition; domain alias). */
+export type IViewportScale = IPosition;
 
 export interface IPersistedViewport {
   position: IViewportPosition;
@@ -18,4 +20,10 @@ export interface IViewportState {
   scale: IViewportScale;
   width: number;
   height: number;
+}
+
+/** Result of fitting bounds in viewport (scale + position). */
+export interface IViewportFitResult {
+  scale: number;
+  position: IPosition;
 }

@@ -1,19 +1,12 @@
 import { ref, set, onValue, onDisconnect, remove, Unsubscribe } from 'firebase/database';
 import { realtimeDb } from '@/lib/firebase';
-import type { Cursors } from '@/hooks/useCursors';
+import type { Cursors, ICursorData, IPresenceData } from '@/types';
+
+export type { ICursorData, IPresenceData };
 
 // ============================================================================
 // Cursor Types and Functions
 // ============================================================================
-
-export interface ICursorData {
-  uid: string;
-  x: number;
-  y: number;
-  displayName: string;
-  color: string;
-  lastUpdated: number;
-}
 
 /**
  * Updates the cursor position for a user in the Realtime Database.
@@ -72,15 +65,6 @@ export const setupCursorDisconnectHandler = (boardId: string, uid: string): void
 // ============================================================================
 // Presence Types and Functions
 // ============================================================================
-
-export interface IPresenceData {
-  uid: string;
-  displayName: string;
-  photoURL: string | null;
-  color: string;
-  online: boolean;
-  lastSeen: number;
-}
 
 /**
  * Updates the presence status for a user on a board.
