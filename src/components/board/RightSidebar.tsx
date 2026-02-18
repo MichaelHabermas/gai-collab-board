@@ -51,7 +51,10 @@ export const RightSidebar = ({
               variant={sidebarTab === 'boards' ? 'secondary' : 'ghost'}
               size='icon'
               className='h-9 w-9 shrink-0'
-              onClick={() => setSidebarTab('boards')}
+              onClick={() => {
+                setSidebarTab('boards');
+                setSidebarCollapsed(false);
+              }}
               title='Boards'
               aria-label='Boards'
               data-testid='sidebar-rail-tab-boards'
@@ -63,7 +66,10 @@ export const RightSidebar = ({
               variant={sidebarTab === 'properties' ? 'secondary' : 'ghost'}
               size='icon'
               className='h-9 w-9 shrink-0'
-              onClick={() => setSidebarTab('properties')}
+              onClick={() => {
+                setSidebarTab('properties');
+                setSidebarCollapsed(false);
+              }}
               title='Properties'
               aria-label='Properties'
               data-testid='sidebar-rail-tab-properties'
@@ -75,7 +81,10 @@ export const RightSidebar = ({
               variant={sidebarTab === 'ai' ? 'secondary' : 'ghost'}
               size='icon'
               className='h-9 w-9 shrink-0'
-              onClick={() => setSidebarTab('ai')}
+              onClick={() => {
+                setSidebarTab('ai');
+                setSidebarCollapsed(false);
+              }}
               title='AI'
               aria-label='AI'
               data-testid='sidebar-rail-tab-ai'

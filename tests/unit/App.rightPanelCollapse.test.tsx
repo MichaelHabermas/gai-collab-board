@@ -78,19 +78,18 @@ describe('Right panel collapse', () => {
     expect(within(sidebar).getByTestId('sidebar-collapse')).toBeInTheDocument();
   });
 
-  it('rail tab click updates active tab and expanding restores that tab content', async () => {
+  it('rail tab click expands panel and shows that tab content', async () => {
     render(<RightSidebarHarness />);
 
     const sidebar = screen.getByTestId('sidebar');
     await act(async () => {
       within(sidebar).getByTestId('sidebar-collapse').click();
     });
+    expect(sidebar).toHaveAttribute('aria-expanded', 'false');
     await act(async () => {
       within(sidebar).getByTestId('sidebar-rail-tab-properties').click();
     });
-    await act(async () => {
-      within(sidebar).getByTestId('sidebar-expand').click();
-    });
+    expect(sidebar).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByTestId('properties-tab-content')).toBeInTheDocument();
   });
 
