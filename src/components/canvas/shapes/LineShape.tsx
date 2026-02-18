@@ -1,10 +1,11 @@
 import { Line } from 'react-konva';
-import { forwardRef, useCallback, memo } from 'react';
+import { forwardRef, memo } from 'react';
 import type { ReactElement } from 'react';
 import Konva from 'konva';
 import { useShapeDragHandler } from '@/hooks/useShapeDragHandler';
+import { useShapeTransformHandler } from '@/hooks/useShapeTransformHandler';
 import { getShapeShadowProps } from '@/lib/shapeShadowProps';
-import type { ILineLikeShapeProps } from '@/types';
+import type { ILineLikeShapeProps, ITransformEndAttrsUnion } from '@/types';
 
 type ILineShapeProps = ILineLikeShapeProps;
 
@@ -35,30 +36,9 @@ export const LineShape = memo(
       ref
     ): ReactElement => {
       const handleDragEnd = useShapeDragHandler(onDragEnd);
-
-      // Handle transform end
-      const handleTransformEnd = useCallback(
-        (e: Konva.KonvaEventObject<Event>) => {
-          const node = e.target as Konva.Line;
-          const scaleX = node.scaleX();
-          const scaleY = node.scaleY();
-
-          // Scale points
-          const currentPoints = node.points();
-          const scaledPoints = currentPoints.map((p, i) => (i % 2 === 0 ? p * scaleX : p * scaleY));
-
-          // Reset scale
-          node.scaleX(1);
-          node.scaleY(1);
-
-          onTransformEnd?.({
-            x: node.x(),
-            y: node.y(),
-            points: scaledPoints,
-            rotation: node.rotation(),
-          });
-        },
-        [onTransformEnd]
+      const handleTransformEnd = useShapeTransformHandler(
+        'line',
+        onTransformEnd as ((attrs: ITransformEndAttrsUnion) => void) | undefined
       );
 
       return (

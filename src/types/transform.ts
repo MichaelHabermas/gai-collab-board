@@ -22,3 +22,8 @@ export interface ITransformEndTextAttrs {
 }
 
 export type ITransformEndAttrs = ITransformEndRectAttrs | ITransformEndLineAttrs;
+
+export type ITransformEndAttrsUnion =
+  | ITransformEndRectAttrs
+  | ITransformEndLineAttrs
+  | ITransformEndTextAttrs;

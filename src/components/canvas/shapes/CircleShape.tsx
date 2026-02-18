@@ -1,10 +1,11 @@
 import { Ellipse } from 'react-konva';
-import { forwardRef, useCallback, memo } from 'react';
+import { forwardRef, memo } from 'react';
 import type { ReactElement } from 'react';
 import Konva from 'konva';
 import { useShapeDragHandler } from '@/hooks/useShapeDragHandler';
+import { useShapeTransformHandler } from '@/hooks/useShapeTransformHandler';
 import { getShapeShadowProps } from '@/lib/shapeShadowProps';
-import type { IRectLikeShapeProps } from '@/types';
+import type { IRectLikeShapeProps, ITransformEndAttrsUnion } from '@/types';
 
 type ICircleShapeProps = IRectLikeShapeProps;
 
@@ -36,39 +37,16 @@ export const CircleShape = memo(
       },
       ref
     ): ReactElement => {
-      // Calculate radii from width/height
       const radiusX = width / 2;
       const radiusY = height / 2;
 
-      // Ellipse x,y is center, but persisted coordinates are top-left.
       const handleDragEnd = useShapeDragHandler(onDragEnd, {
         offsetX: radiusX,
         offsetY: radiusY,
       });
-
-      // Handle transform end
-      const handleTransformEnd = useCallback(
-        (e: Konva.KonvaEventObject<Event>) => {
-          const node = e.target as Konva.Ellipse;
-          const scaleX = node.scaleX();
-          const scaleY = node.scaleY();
-
-          // Reset scale
-          node.scaleX(1);
-          node.scaleY(1);
-
-          const newRadiusX = Math.max(10, node.radiusX() * scaleX);
-          const newRadiusY = Math.max(10, node.radiusY() * scaleY);
-
-          onTransformEnd?.({
-            x: node.x() - newRadiusX,
-            y: node.y() - newRadiusY,
-            width: newRadiusX * 2,
-            height: newRadiusY * 2,
-            rotation: node.rotation(),
-          });
-        },
-        [onTransformEnd]
+      const handleTransformEnd = useShapeTransformHandler(
+        'ellipse',
+        onTransformEnd as ((attrs: ITransformEndAttrsUnion) => void) | undefined
       );
 
       return (

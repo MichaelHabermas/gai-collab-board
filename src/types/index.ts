@@ -12,6 +12,7 @@ export type {
   ITransformEndLineAttrs,
   ITransformEndTextAttrs,
   ITransformEndAttrs,
+  ITransformEndAttrsUnion,
 } from './transform';
 export type {
   IDragBoundFunc,

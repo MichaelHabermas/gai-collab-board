@@ -4,9 +4,10 @@ import type { ReactElement } from 'react';
 import Konva from 'konva';
 import { useTheme } from '@/hooks/useTheme';
 import { useShapeDragHandler } from '@/hooks/useShapeDragHandler';
+import { useShapeTransformHandler } from '@/hooks/useShapeTransformHandler';
 import { getShapeShadowProps } from '@/lib/shapeShadowProps';
 import { getOverlayRectFromLocalCorners } from '@/lib/canvasOverlayPosition';
-import type { ITextLikeShapeProps } from '@/types';
+import type { ITextLikeShapeProps, ITransformEndAttrsUnion } from '@/types';
 
 type ITextElementProps = ITextLikeShapeProps;
 
@@ -133,27 +134,10 @@ export const TextElement = memo(
       const handleDragEnd = useShapeDragHandler(onDragEnd);
 
       // Handle transform end
-      const handleTransformEnd = useCallback(
-        (e: Konva.KonvaEventObject<Event>) => {
-          const node = e.target as Konva.Text;
-          const scaleX = node.scaleX();
-          const scaleY = node.scaleY();
-
-          // Reset scale and apply to font size/width
-          node.scaleX(1);
-          node.scaleY(1);
-
-          const newFontSize = Math.max(8, fontSize * Math.max(scaleX, scaleY));
-
-          onTransformEnd?.({
-            x: node.x(),
-            y: node.y(),
-            width: Math.max(50, node.width() * scaleX),
-            fontSize: newFontSize,
-            rotation: node.rotation(),
-          });
-        },
-        [fontSize, onTransformEnd]
+      const handleTransformEnd = useShapeTransformHandler(
+        'text',
+        onTransformEnd as ((attrs: ITransformEndAttrsUnion) => void) | undefined,
+        { fontSize }
       );
 
       // Combine refs

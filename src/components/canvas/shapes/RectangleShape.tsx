@@ -1,10 +1,11 @@
 import { Rect } from 'react-konva';
-import { forwardRef, useCallback, memo } from 'react';
+import { forwardRef, memo } from 'react';
 import type { ReactElement } from 'react';
 import Konva from 'konva';
 import { useShapeDragHandler } from '@/hooks/useShapeDragHandler';
+import { useShapeTransformHandler } from '@/hooks/useShapeTransformHandler';
 import { getShapeShadowProps } from '@/lib/shapeShadowProps';
-import type { IRectLikeShapeProps } from '@/types';
+import type { IRectLikeShapeProps, ITransformEndAttrsUnion } from '@/types';
 
 type IRectangleShapeProps = IRectLikeShapeProps;
 
@@ -36,27 +37,9 @@ export const RectangleShape = memo(
       ref
     ): ReactElement => {
       const handleDragEnd = useShapeDragHandler(onDragEnd);
-
-      // Handle transform end
-      const handleTransformEnd = useCallback(
-        (e: Konva.KonvaEventObject<Event>) => {
-          const node = e.target as Konva.Rect;
-          const scaleX = node.scaleX();
-          const scaleY = node.scaleY();
-
-          // Reset scale and apply to width/height
-          node.scaleX(1);
-          node.scaleY(1);
-
-          onTransformEnd?.({
-            x: node.x(),
-            y: node.y(),
-            width: Math.max(10, node.width() * scaleX),
-            height: Math.max(10, node.height() * scaleY),
-            rotation: node.rotation(),
-          });
-        },
-        [onTransformEnd]
+      const handleTransformEnd = useShapeTransformHandler(
+        'rect',
+        onTransformEnd as ((attrs: ITransformEndAttrsUnion) => void) | undefined
       );
 
       return (
