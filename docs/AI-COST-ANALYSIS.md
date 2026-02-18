@@ -1,12 +1,12 @@
-## Summary
+# Summary
 
 This document estimates and tracks AI-related costs. It separates development costs (optional) from production projections (monthly LLM cost at 100 / 1K / 10K / 100K users), documents assumptions (sessions per user, commands per session, token mix), and cites pricing sources. Its purpose is to make AI cost transparent and reproducible so that scaling and provider choices can be discussed with numbers.
 
 ---
 
-# AI Cost Analysis
+## AI Cost Analysis
 
-## Development Costs
+### Development Costs
 
 - **LLM API costs:** Track actual spend (e.g. OpenAI, Anthropic, Groq) during
   the project and fill in $X.XX
@@ -20,7 +20,7 @@ _Update these with real numbers from your billing or usage dashboards._
 Optional: Development was primarily Cursor ($20/month) plus browser LLMs; this
 is a fixed team cost and does not scale with end-user count.
 
-## Production Projections
+### Production Projections
 
 This section estimates **production** monthly cost: the LLM API cost to run the
 CollabBoard AI feature when 100, 1,000, 10,000, or 100,000 **end-users** use it.
@@ -36,7 +36,7 @@ It does not include Cursor or other development tooling.
 Costs scale linearly with commands per user per month. If usage doubles, costs
 double.
 
-## Pricing (sources)
+### Pricing (sources)
 
 - **Groq (Llama 3.3 70B Versatile):** $0.59 per 1M input tokens, $0.79 per 1M
   output tokens. Source: [Groq pricing](https://groq.com/pricing) (as of Feb 2026).
@@ -44,7 +44,7 @@ double.
 - **NVIDIA (Kimi 2.5):** $0.60 per 1M input tokens, $3.00 per 1M output tokens.
   Source: [PRD Appendix E](PRD.md) / [NVIDIA build](https://build.nvidia.com/moonshotai/kimi-k2.5) (as of Feb 2026).
 
-## Assumptions
+### Assumptions
 
 All of the following are documented so the table is reproducible.
 
@@ -59,9 +59,9 @@ All of the following are documented so the table is reproducible.
 - **Commands per user per month:** 10 (= sessions per user per month × commands
   per session; e.g. 4 × 2.5 = 10).
 
-**Token counts per command type:**
+### Token counts per command type
 
-| Type    | Input (tokens) | Output (tokens) | Share of commands |
+| Type    | Input (tokens) | Output (tokens) | Share of commands  |
 | ------- | -------------- | --------------- | ------------------ |
 | Simple  | 500            | 200             | 60%                |
 | Medium  | 1,000          | 400             | 30%                |

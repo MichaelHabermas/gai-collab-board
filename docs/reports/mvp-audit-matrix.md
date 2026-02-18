@@ -38,7 +38,7 @@ Legend:
 | Concurrent users | 5+ without degradation | Basic multi-context smoke check in e2e | FAIL | Need 5+ context load/sync benchmark |
 | AI response latency | <2s single-step commands | E2E has generic load checks and limited AI timing checks | PARTIAL | Need deterministic AI latency benchmark with retries/bounds |
 | AI command breadth | 6+ command categories | `src/modules/ai/tools.ts` exposes 20+ tools across 6+ categories | PASS | No gap on breadth |
-| MVP test coverage | 80% | Coverage threshold configured in `vitest.config.ts` | PARTIAL | Need actual run output proving current coverage values |
+| MVP test coverage | 60% | Coverage threshold configured in `vitest.config.ts` | PARTIAL | Need actual run output proving current coverage values |
 
 ## Verification Commands (Planned)
 

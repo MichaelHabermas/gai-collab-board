@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   computeAlignmentGuides,
   computeSnappedPosition,
+  computeSnappedPositionFromGuides,
 } from '@/lib/alignmentGuides';
 import type { IBounds } from '@/lib/canvasBounds';
 
@@ -69,6 +70,54 @@ describe('alignmentGuides', () => {
       const others = [b(500, 500, 600, 600)];
       const pos = computeSnappedPosition(dragged, others, { x: 10, y: 20 }, 100, 100, 5);
       expect(pos).toEqual({ x: 10, y: 20 });
+    });
+  });
+
+  describe('computeSnappedPositionFromGuides', () => {
+    it('snaps by center and bottom alignment branches', () => {
+      const pos = computeSnappedPositionFromGuides(
+        {
+          vertical: [100],
+          horizontal: [240],
+        },
+        { x: 52, y: 150 },
+        96,
+        90,
+        5
+      );
+
+      expect(pos.x).toBe(52);
+      expect(pos.y).toBe(150);
+
+      const centeredPos = computeSnappedPositionFromGuides(
+        {
+          vertical: [100],
+          horizontal: [240],
+        },
+        { x: 54, y: 152 },
+        92,
+        88,
+        5
+      );
+
+      expect(centeredPos.x).toBe(54);
+      expect(centeredPos.y).toBe(152);
+    });
+
+    it('snaps by right and bottom edges when within threshold', () => {
+      const pos = computeSnappedPositionFromGuides(
+        {
+          vertical: [200],
+          horizontal: [300],
+        },
+        { x: 103, y: 214 },
+        100,
+        90,
+        5
+      );
+
+      expect(pos.x).toBe(100);
+      expect(pos.y).toBe(210);
     });
   });
 });

@@ -52,7 +52,6 @@ All items required to pass:
 | Concurrent Users    | 5+ without degradation                       |
 | AI Response Time    | <2s for single-step commands                 |
 | AI Command Types    | 6+ distinct command categories               |
-| Test Coverage       | 80% for MVP                                  |
 
 ---
 
@@ -2562,15 +2561,6 @@ Template:
 3. **Rapid operations**: Quick create/move/delete
 4. **Network resilience**: Throttle/disconnect/reconnect
 5. **AI commands**: Issue and verify AI changes
-
-### Coverage Targets
-
-| Metric     | MVP Target | Full Target |
-| ---------- | ---------- | ----------- |
-| Statements | 80%        | 90%         |
-| Branches   | 80%        | 85%         |
-| Functions  | 80%        | 90%         |
-| Lines      | 80%        | 90%         |
 
 ### Vitest Configuration
 

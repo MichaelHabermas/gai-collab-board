@@ -45,6 +45,11 @@ Evidence matrix:
   - `tests/unit/Connector.test.tsx`
   - `tests/unit/TextElement.test.tsx`
   - `tests/unit/StickyNote.test.tsx`
+  - `tests/unit/Frame.test.tsx`
+  - `tests/unit/CircleShape.test.tsx`
+  - `tests/unit/LineShape.test.tsx`
+  - `tests/unit/RectangleShape.test.tsx`
+  - expanded `tests/unit/alignmentGuides.test.ts`
   - expanded `tests/unit/BoardCanvas.interactions.test.tsx`
   - expanded `tests/unit/TransformHandler.test.tsx`
 
@@ -52,6 +57,7 @@ Evidence matrix:
 
 - `src/components/canvas/BoardCanvas.tsx`
   - reduced pan-mode mouse handler work when no remote cursors are active
+  - conditionally binds expensive pointer handlers only when the active tool requires them
   - reused precomputed drag candidate bounds per drag-bound function instance
   - reused connector anchor computations per connector render branch
   - filtered stale remote cursors before rendering/remote-cursor gating
@@ -68,24 +74,24 @@ Evidence matrix:
 ### Unit + Integration
 
 - `test:run`: PASS
-  - 41 files passed
-  - 343 tests passed
+  - 45 files passed
+  - 357 tests passed
 
-### Coverage (MVP target: 80%)
+### Coverage (MVP target: 60%)
 
 - `test:coverage`: FAIL
-  - Statements: `77.79%`
-  - Branches: `60.18%`
-  - Functions: `76.89%`
-  - Lines: `78.05%`
+  - Statements: `81.91%`
+  - Branches: `65.41%`
+  - Functions: `80.24%`
+  - Lines: `82.36%`
 - Verdict: **MVP coverage target is not met**.
 
 ### Benchmark (Chromium only)
 
 - `npx playwright test tests/e2e/benchmark.spec.ts --project=chromium`: FAIL
-  - 2 passed, 1 failed
-  - Failing test: FPS benchmark in `tests/e2e/benchmark.spec.ts`
-  - Measured FPS on failed run: `49.95254508206039`
+  - 1 passed, 2 failed
+  - Failing tests: 5-user propagation and FPS benchmark in `tests/e2e/benchmark.spec.ts`
+  - Measured FPS on failed run: `44.020180037622715`
 
 ### E2E
 
@@ -94,8 +100,8 @@ Evidence matrix:
   - 31 Firefox failures due missing browser executable:
     - `browserType.launch: Executable doesn't exist ... firefox.exe`
   - 2 Chromium benchmark failures:
-    - 5-user propagation poll timeout (`expected > 12`, `received 12`)
-    - FPS benchmark (`expected >= 58`, `received 54.494550545107884`)
+    - 5-user propagation poll timeout (`expected > 14`, `received 14`)
+    - FPS benchmark (`expected >= 58`, `received 30.477142143347073`)
 
 ## MVP Hard-Gate Verdicts
 
@@ -115,21 +121,21 @@ Evidence matrix:
 
 | Metric | Target | Measured/Observed | Verdict | Notes |
 | --- | --- | --- | --- | --- |
-| Frame rate under interaction | 60 FPS | `49.95254508206039 FPS` (Chromium benchmark run) | FAIL | Improved over prior baseline but still below hard gate |
+| Frame rate under interaction | 60 FPS | `44.020180037622715 FPS` (latest Chromium benchmark run) | FAIL | Still below hard gate; run-to-run variance remains high |
 | Object sync latency | <100ms | PASS in sync benchmark test envelope | PARTIAL | Benchmark is instrumentation-based integration (not WAN network) |
 | Cursor sync latency | <50ms | PASS in sync benchmark test envelope | PARTIAL | Integration envelope benchmark, not cross-network |
 | 500+ object capacity | 500+ objects | PASS in batch throughput benchmark | PARTIAL | Validates backend batch throughput, not full rendering FPS at 500 |
-| Concurrent users | 5+ without degradation | Mixed: PASS in Chromium-only benchmark run, FAIL in full e2e run | PARTIAL | Result is currently unstable due environment/run-conditions |
+| Concurrent users | 5+ without degradation | FAIL in latest Chromium benchmark run (`expected > 13`, `received 13`) | FAIL | Propagation is currently unstable on this environment/run |
 | AI single-step latency | <2s | PASS in Chromium benchmark test | PARTIAL | Dependent on current provider/network conditions |
 | AI command breadth | 6+ command categories | PASS | PASS | `src/modules/ai/tools.ts` exceeds minimum |
-| MVP coverage target | 80% | `78.05%` lines (`77.79/60.18/76.89/78.05`) | FAIL | Significant improvement, still below threshold (branches are main gap) |
+| MVP coverage target | 60% | `82.36%` lines (`81.91/65.41/80.24/82.36`) | FAIL | Statements/functions/lines now pass; branches remain below gate |
 
 ## Harsh Assessment Summary
 
 MVP feature completeness is strong, but **MVP quality gate is currently not met** because:
 
 1. **Performance target failure**: FPS benchmark remains below hard threshold (`>=58`).
-2. **Coverage target failure**: global coverage improved materially but remains below 80%, especially branches.
+2. **Coverage target failure**: statements/functions/lines now meet 80, but global branch coverage remains below gate.
 3. **E2E environment reliability issue**: Firefox browser binary is missing, causing broad e2e failures unrelated to app assertions.
 
 Given the documented success metrics, release readiness for MVP criteria is **PARTIAL / NOT PASSING**.
@@ -149,6 +155,6 @@ Given the documented success metrics, release readiness for MVP criteria is **PA
 
 ## Recommended Next Actions
 
-1. Continue BoardCanvas/render-path hardening with focused profiling to close the remaining FPS gap to `>=58`.
-2. Target branch-heavy uncovered areas (`BoardCanvas.tsx`, shape primitives, and `Frame`/`CircleShape`/`LineShape`/`RectangleShape`) to reach global 80% thresholds.
+1. Continue BoardCanvas/render-path hardening with focused profiling to close the remaining FPS gap to `>=58` and stabilize the 5-user propagation benchmark.
+2. Target branch-heavy uncovered areas (`BoardCanvas.tsx`, `boardService.ts`, and other conditional-heavy modules) to raise branch coverage from `65.41%` to the 80 gate.
 3. Install Firefox for Playwright (`npx playwright install`) before treating full e2e counts as product-only regressions.

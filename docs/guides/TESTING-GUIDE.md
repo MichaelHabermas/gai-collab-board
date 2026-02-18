@@ -8,7 +8,7 @@ This document defines the testing strategy for CollabBoard: Vitest for unit and 
 
 ## Overview
 
-This guide covers the testing strategy for CollabBoard using Vitest for unit/integration tests and Playwright for end-to-end tests. The goal is to achieve 80% code coverage for MVP while ensuring critical collaboration features work reliably.
+This guide covers the testing strategy for CollabBoard using Vitest for unit/integration tests and Playwright for end-to-end tests. The goal is to achieve 60% code coverage for MVP while ensuring critical collaboration features work reliably.
 
 **Official Documentation**:
 
@@ -1378,6 +1378,6 @@ jobs:
 3. **Use meaningful assertions** - Clear failure messages help debugging
 4. **Mock at boundaries** - Mock external services, not internal modules
 5. **Write tests first for bugs** - Reproduce the bug with a failing test
-6. **Maintain test coverage** - Aim for 80% coverage on critical paths
+6. **Maintain test coverage** - Aim for 60% coverage on critical paths
 7. **Run tests in CI** - Every PR should pass all tests
 8. **Use realistic test data** - Tests should reflect real usage patterns

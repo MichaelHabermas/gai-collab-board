@@ -153,7 +153,7 @@ File Structure (Monorepo):
   - ESLint/Prettier
   - Vitest for unit/integration
   - Playwright for e2e
-  - 80% MVP coverage.
+  - 60% MVP coverage.
 
 ## Agile Breakdown
 

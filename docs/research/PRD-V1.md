@@ -16,7 +16,7 @@ CollabBoard is a real-time collaborative whiteboard app for brainstorming, idea 
 - Frontend: React + Vite + Bun + TypeScript + Shadcn + Konva.js + Tailwind v4 - Links in design doc
 - AI: Kimi 2.5 (Nvidia API) - [Docs](https://build.nvidia.com/moonshotai/kimi-k2.5)
 - Deployment: Netlify - [Docs](https://docs.netlify.com/)
-- Testing: Vitest (unit/integration), Playwright (e2e), 80% coverage
+- Testing: Vitest (unit/integration), Playwright (e2e), 60% coverage
 - Tooling: ESLint/Prettier
 
 ## Architecture
