@@ -3,15 +3,8 @@ import { forwardRef, useCallback, useRef, useState, useEffect, useMemo, memo } f
 import type { ReactElement } from 'react';
 import Konva from 'konva';
 import { useTheme } from '@/hooks/useTheme';
-import {
-  SHADOW_BLUR_DEFAULT,
-  SHADOW_BLUR_SELECTED,
-  SHADOW_COLOR,
-  SHADOW_FOR_STROKE_ENABLED,
-  SHADOW_OPACITY,
-  SHADOW_OFFSET_X,
-  SHADOW_OFFSET_Y,
-} from '@/lib/canvasShadows';
+import { useShapeDragHandler } from '@/hooks/useShapeDragHandler';
+import { getShapeShadowProps } from '@/lib/shapeShadowProps';
 import { getOverlayRectFromLocalCorners } from '@/lib/canvasOverlayPosition';
 
 interface IFrameProps {
@@ -172,13 +165,7 @@ export const Frame = memo(
         });
       }, [text, width, onTextChange]);
 
-      // Handle drag end
-      const handleDragEnd = useCallback(
-        (e: Konva.KonvaEventObject<DragEvent>) => {
-          onDragEnd?.(e.target.x(), e.target.y());
-        },
-        [onDragEnd]
-      );
+      const handleDragEnd = useShapeDragHandler(onDragEnd);
 
       // Transform end (resize/rotate) is handled only by TransformHandler; no duplicate handler here.
 
@@ -219,12 +206,7 @@ export const Frame = memo(
             stroke={isSelected ? selectionColor : stroke}
             strokeWidth={isSelected ? 2 : strokeWidth}
             cornerRadius={[6, 6, 0, 0]}
-            shadowColor={SHADOW_COLOR}
-            shadowBlur={isSelected ? SHADOW_BLUR_SELECTED : SHADOW_BLUR_DEFAULT}
-            shadowOpacity={SHADOW_OPACITY}
-            shadowOffsetX={SHADOW_OFFSET_X}
-            shadowOffsetY={SHADOW_OFFSET_Y}
-            shadowForStrokeEnabled={SHADOW_FOR_STROKE_ENABLED}
+            {...getShapeShadowProps(isSelected, { includeShadowForStrokeEnabled: true })}
             onDblClick={handleTitleDblClick}
             onDblTap={handleTitleDblClick}
             perfectDrawEnabled={false}
@@ -258,12 +240,7 @@ export const Frame = memo(
             strokeWidth={isSelected ? 2 : strokeWidth}
             cornerRadius={[0, 0, 6, 6]}
             dash={[4, 4]}
-            shadowColor={SHADOW_COLOR}
-            shadowBlur={isSelected ? SHADOW_BLUR_SELECTED : SHADOW_BLUR_DEFAULT}
-            shadowOpacity={SHADOW_OPACITY}
-            shadowOffsetX={SHADOW_OFFSET_X}
-            shadowOffsetY={SHADOW_OFFSET_Y}
-            shadowForStrokeEnabled={SHADOW_FOR_STROKE_ENABLED}
+            {...getShapeShadowProps(isSelected, { includeShadowForStrokeEnabled: true })}
             perfectDrawEnabled={false}
           />
         </Group>

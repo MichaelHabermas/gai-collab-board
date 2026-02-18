@@ -1,10 +1,10 @@
 import { Stage, Layer, Rect, Line } from 'react-konva';
-import { TransformHandler, type ITransformEndAttrs } from './TransformHandler';
+import { TransformHandler } from './TransformHandler';
 import { SelectionLayer, type ISelectionRect } from './SelectionLayer';
 import { useRef, useCallback, useState, useEffect, useMemo, memo, type ReactElement } from 'react';
 import Konva from 'konva';
 import { Wrench, Focus, Maximize2, Grid3X3, Magnet, Download } from 'lucide-react';
-import { useCanvasViewport, type IViewportState } from '@/hooks/useCanvasViewport';
+import { useCanvasViewport } from '@/hooks/useCanvasViewport';
 import { CursorLayer } from './CursorLayer';
 import { Toolbar, type ToolMode } from './Toolbar';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -24,7 +24,13 @@ import { useCanvasOperations } from '@/hooks/useCanvasOperations';
 import { useVisibleShapes } from '@/hooks/useVisibleShapes';
 import { useSelection } from '@/contexts/selectionContext';
 import type { User } from 'firebase/auth';
-import type { IBoardObject, ConnectorAnchor, IPosition } from '@/types';
+import type {
+  IBoardObject,
+  ConnectorAnchor,
+  IPosition,
+  ITransformEndAttrs,
+  IViewportState,
+} from '@/types';
 import type { ICreateObjectParams } from '@/modules/sync/objectService';
 import { getAnchorPosition } from '@/lib/connectorAnchors';
 import { getObjectBounds, getSelectionBounds, getBoardBounds } from '@/lib/canvasBounds';
@@ -238,18 +244,12 @@ export const BoardCanvas = memo(
       [activeCursors, user.uid]
     );
 
-    // Keep ref in sync with state
+    // Keep event-driven refs synced with render state.
     useEffect(() => {
       activeToolRef.current = activeTool;
-    }, [activeTool]);
-
-    useEffect(() => {
       drawingActiveRef.current = drawingState.isDrawing;
-    }, [drawingState.isDrawing]);
-
-    useEffect(() => {
       selectingActiveRef.current = isSelecting;
-    }, [isSelecting]);
+    }, [activeTool, drawingState.isDrawing, isSelecting]);
 
     // Clear selection helper
     const clearSelection = useCallback(() => {

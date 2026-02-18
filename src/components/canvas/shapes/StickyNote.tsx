@@ -4,6 +4,7 @@ import { forwardRef, useState, useRef, useCallback, useEffect, useMemo, memo } f
 import type { ReactElement } from 'react';
 import Konva from 'konva';
 import { useTheme } from '@/hooks/useTheme';
+import { useShapeDragHandler } from '@/hooks/useShapeDragHandler';
 import {
   STICKY_NOTE_SHADOW_BLUR_DEFAULT,
   STICKY_NOTE_SHADOW_BLUR_SELECTED,
@@ -189,13 +190,7 @@ export const StickyNote = memo(
         });
       }, [text, width, height, fontSize, onTextChange, textFillColor]);
 
-      // Handle drag end
-      const handleDragEnd = useCallback(
-        (e: Konva.KonvaEventObject<DragEvent>) => {
-          onDragEnd?.(e.target.x(), e.target.y());
-        },
-        [onDragEnd]
-      );
+      const handleDragEnd = useShapeDragHandler(onDragEnd);
 
       // Transform end (resize/rotate) is handled only by TransformHandler; no duplicate handler here.
 

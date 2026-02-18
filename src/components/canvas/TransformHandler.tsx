@@ -1,30 +1,13 @@
 import { Transformer } from 'react-konva';
 import { useRef, useEffect, memo } from 'react';
-import type { ReactElement } from 'react';
+import type { ReactElement, RefObject } from 'react';
 import Konva from 'konva';
-
-/** Attrs sent for rect-like shapes (rectangle, group/sticky, ellipse/circle). */
-export interface ITransformEndRectAttrs {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  rotation: number;
-}
-
-/** Attrs sent for line-like shapes (line, connector). */
-export interface ITransformEndLineAttrs {
-  x: number;
-  y: number;
-  points: number[];
-  rotation: number;
-}
-
-export type ITransformEndAttrs = ITransformEndRectAttrs | ITransformEndLineAttrs;
+import type { ITransformEndAttrs } from '@/types';
+export type { ITransformEndRectAttrs, ITransformEndLineAttrs, ITransformEndAttrs } from '@/types';
 
 interface ITransformHandlerProps {
   selectedIds: string[];
-  layerRef: React.RefObject<Konva.Layer | null>;
+  layerRef: RefObject<Konva.Layer | null>;
   /** IDs to exclude from transform (e.g. linked connectors); they stay selected but get no handles */
   excludedFromTransformIds?: string[];
   onTransformEnd?: (id: string, attrs: ITransformEndAttrs) => void;

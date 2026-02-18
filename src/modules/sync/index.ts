@@ -39,8 +39,6 @@ export {
   updateObjectsBatch,
   deleteObject,
   deleteObjectsBatch,
-  subscribeToObjects,
-  mergeObjectUpdates,
   type ICreateObjectParams,
   type IUpdateObjectParams,
 } from './objectService';

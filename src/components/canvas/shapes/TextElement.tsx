@@ -3,41 +3,12 @@ import { forwardRef, useCallback, useRef, useState, useMemo, memo } from 'react'
 import type { ReactElement } from 'react';
 import Konva from 'konva';
 import { useTheme } from '@/hooks/useTheme';
-import {
-  SHADOW_BLUR_DEFAULT,
-  SHADOW_BLUR_SELECTED,
-  SHADOW_COLOR,
-  SHADOW_OPACITY,
-  SHADOW_OFFSET_X,
-  SHADOW_OFFSET_Y,
-} from '@/lib/canvasShadows';
+import { useShapeDragHandler } from '@/hooks/useShapeDragHandler';
+import { getShapeShadowProps } from '@/lib/shapeShadowProps';
 import { getOverlayRectFromLocalCorners } from '@/lib/canvasOverlayPosition';
+import type { ITextLikeShapeProps } from '@/types';
 
-interface ITextElementProps {
-  id: string;
-  x: number;
-  y: number;
-  text: string;
-  fontSize?: number;
-  fill?: string;
-  width?: number;
-  opacity?: number;
-  rotation?: number;
-  isSelected?: boolean;
-  draggable?: boolean;
-  onSelect?: () => void;
-  onDragStart?: () => void;
-  onDragEnd?: (x: number, y: number) => void;
-  dragBoundFunc?: (pos: { x: number; y: number }) => { x: number; y: number };
-  onTextChange?: (text: string) => void;
-  onTransformEnd?: (attrs: {
-    x: number;
-    y: number;
-    width: number;
-    fontSize: number;
-    rotation: number;
-  }) => void;
-}
+type ITextElementProps = ITextLikeShapeProps;
 
 /**
  * TextElement component - standalone editable text on the canvas.
@@ -159,13 +130,7 @@ export const TextElement = memo(
         });
       }, [text, width, fontSize, onTextChange]);
 
-      // Handle drag end
-      const handleDragEnd = useCallback(
-        (e: Konva.KonvaEventObject<DragEvent>) => {
-          onDragEnd?.(e.target.x(), e.target.y());
-        },
-        [onDragEnd]
-      );
+      const handleDragEnd = useShapeDragHandler(onDragEnd);
 
       // Handle transform end
       const handleTransformEnd = useCallback(
@@ -221,11 +186,7 @@ export const TextElement = memo(
           opacity={opacity}
           rotation={rotation}
           lineHeight={1.4}
-          shadowColor={SHADOW_COLOR}
-          shadowBlur={isSelected ? SHADOW_BLUR_SELECTED : SHADOW_BLUR_DEFAULT}
-          shadowOpacity={SHADOW_OPACITY}
-          shadowOffsetX={SHADOW_OFFSET_X}
-          shadowOffsetY={SHADOW_OFFSET_Y}
+          {...getShapeShadowProps(isSelected)}
           draggable={draggable && !isEditing}
           onClick={onSelect}
           onTap={onSelect}

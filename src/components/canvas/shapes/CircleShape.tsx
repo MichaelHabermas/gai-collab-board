@@ -2,41 +2,11 @@ import { Ellipse } from 'react-konva';
 import { forwardRef, useCallback, memo } from 'react';
 import type { ReactElement } from 'react';
 import Konva from 'konva';
-import {
-  SHADOW_BLUR_DEFAULT,
-  SHADOW_BLUR_SELECTED,
-  SHADOW_COLOR,
-  SHADOW_FOR_STROKE_ENABLED,
-  SHADOW_OPACITY,
-  SHADOW_OFFSET_X,
-  SHADOW_OFFSET_Y,
-} from '@/lib/canvasShadows';
+import { useShapeDragHandler } from '@/hooks/useShapeDragHandler';
+import { getShapeShadowProps } from '@/lib/shapeShadowProps';
+import type { IRectLikeShapeProps } from '@/types';
 
-interface ICircleShapeProps {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  fill: string;
-  stroke?: string;
-  strokeWidth?: number;
-  opacity?: number;
-  rotation?: number;
-  isSelected?: boolean;
-  draggable?: boolean;
-  onSelect?: () => void;
-  onDragStart?: () => void;
-  onDragEnd?: (x: number, y: number) => void;
-  dragBoundFunc?: (pos: { x: number; y: number }) => { x: number; y: number };
-  onTransformEnd?: (attrs: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    rotation: number;
-  }) => void;
-}
+type ICircleShapeProps = IRectLikeShapeProps;
 
 /**
  * Circle/Ellipse shape component with selection and transformation support.
@@ -70,14 +40,11 @@ export const CircleShape = memo(
       const radiusX = width / 2;
       const radiusY = height / 2;
 
-      // Handle drag end - report center position adjusted to top-left for consistency
-      const handleDragEnd = useCallback(
-        (e: Konva.KonvaEventObject<DragEvent>) => {
-          // Ellipse x,y is center, but we store as top-left
-          onDragEnd?.(e.target.x() - radiusX, e.target.y() - radiusY);
-        },
-        [onDragEnd, radiusX, radiusY]
-      );
+      // Ellipse x,y is center, but persisted coordinates are top-left.
+      const handleDragEnd = useShapeDragHandler(onDragEnd, {
+        offsetX: radiusX,
+        offsetY: radiusY,
+      });
 
       // Handle transform end
       const handleTransformEnd = useCallback(
@@ -126,12 +93,7 @@ export const CircleShape = memo(
           onDragEnd={handleDragEnd}
           dragBoundFunc={dragBoundFunc}
           onTransformEnd={handleTransformEnd}
-          shadowColor={SHADOW_COLOR}
-          shadowBlur={isSelected ? SHADOW_BLUR_SELECTED : SHADOW_BLUR_DEFAULT}
-          shadowOpacity={SHADOW_OPACITY}
-          shadowOffsetX={SHADOW_OFFSET_X}
-          shadowOffsetY={SHADOW_OFFSET_Y}
-          shadowForStrokeEnabled={SHADOW_FOR_STROKE_ENABLED}
+          {...getShapeShadowProps(isSelected, { includeShadowForStrokeEnabled: true })}
           perfectDrawEnabled={false}
         />
       );

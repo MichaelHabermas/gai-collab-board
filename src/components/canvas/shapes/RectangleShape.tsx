@@ -2,41 +2,11 @@ import { Rect } from 'react-konva';
 import { forwardRef, useCallback, memo } from 'react';
 import type { ReactElement } from 'react';
 import Konva from 'konva';
-import {
-  SHADOW_BLUR_DEFAULT,
-  SHADOW_BLUR_SELECTED,
-  SHADOW_COLOR,
-  SHADOW_FOR_STROKE_ENABLED,
-  SHADOW_OFFSET_X,
-  SHADOW_OPACITY,
-  SHADOW_OFFSET_Y,
-} from '@/lib/canvasShadows';
+import { useShapeDragHandler } from '@/hooks/useShapeDragHandler';
+import { getShapeShadowProps } from '@/lib/shapeShadowProps';
+import type { IRectLikeShapeProps } from '@/types';
 
-interface IRectangleShapeProps {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  fill: string;
-  stroke?: string;
-  strokeWidth?: number;
-  opacity?: number;
-  rotation?: number;
-  isSelected?: boolean;
-  draggable?: boolean;
-  onSelect?: () => void;
-  onDragStart?: () => void;
-  onDragEnd?: (x: number, y: number) => void;
-  dragBoundFunc?: (pos: { x: number; y: number }) => { x: number; y: number };
-  onTransformEnd?: (attrs: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    rotation: number;
-  }) => void;
-}
+type IRectangleShapeProps = IRectLikeShapeProps;
 
 /**
  * Rectangle shape component with selection and transformation support.
@@ -65,13 +35,7 @@ export const RectangleShape = memo(
       },
       ref
     ): ReactElement => {
-      // Handle drag end
-      const handleDragEnd = useCallback(
-        (e: Konva.KonvaEventObject<DragEvent>) => {
-          onDragEnd?.(e.target.x(), e.target.y());
-        },
-        [onDragEnd]
-      );
+      const handleDragEnd = useShapeDragHandler(onDragEnd);
 
       // Handle transform end
       const handleTransformEnd = useCallback(
@@ -116,12 +80,7 @@ export const RectangleShape = memo(
           onDragEnd={handleDragEnd}
           dragBoundFunc={dragBoundFunc}
           onTransformEnd={handleTransformEnd}
-          shadowColor={SHADOW_COLOR}
-          shadowBlur={isSelected ? SHADOW_BLUR_SELECTED : SHADOW_BLUR_DEFAULT}
-          shadowOpacity={SHADOW_OPACITY}
-          shadowOffsetX={SHADOW_OFFSET_X}
-          shadowOffsetY={SHADOW_OFFSET_Y}
-          shadowForStrokeEnabled={SHADOW_FOR_STROKE_ENABLED}
+          {...getShapeShadowProps(isSelected, { includeShadowForStrokeEnabled: true })}
           perfectDrawEnabled={false}
         />
       );

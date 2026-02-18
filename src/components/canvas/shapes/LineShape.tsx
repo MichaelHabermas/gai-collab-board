@@ -2,32 +2,11 @@ import { Line } from 'react-konva';
 import { forwardRef, useCallback, memo } from 'react';
 import type { ReactElement } from 'react';
 import Konva from 'konva';
-import {
-  SHADOW_BLUR_DEFAULT,
-  SHADOW_BLUR_SELECTED,
-  SHADOW_COLOR,
-  SHADOW_OPACITY,
-  SHADOW_OFFSET_X,
-  SHADOW_OFFSET_Y,
-} from '@/lib/canvasShadows';
+import { useShapeDragHandler } from '@/hooks/useShapeDragHandler';
+import { getShapeShadowProps } from '@/lib/shapeShadowProps';
+import type { ILineLikeShapeProps } from '@/types';
 
-interface ILineShapeProps {
-  id: string;
-  x: number;
-  y: number;
-  points: number[];
-  stroke: string;
-  strokeWidth?: number;
-  opacity?: number;
-  rotation?: number;
-  isSelected?: boolean;
-  draggable?: boolean;
-  onSelect?: () => void;
-  onDragStart?: () => void;
-  onDragEnd?: (x: number, y: number) => void;
-  dragBoundFunc?: (pos: { x: number; y: number }) => { x: number; y: number };
-  onTransformEnd?: (attrs: { x: number; y: number; points: number[]; rotation: number }) => void;
-}
+type ILineShapeProps = ILineLikeShapeProps;
 
 /**
  * Line shape component with selection and transformation support.
@@ -55,13 +34,7 @@ export const LineShape = memo(
       },
       ref
     ): ReactElement => {
-      // Handle drag end
-      const handleDragEnd = useCallback(
-        (e: Konva.KonvaEventObject<DragEvent>) => {
-          onDragEnd?.(e.target.x(), e.target.y());
-        },
-        [onDragEnd]
-      );
+      const handleDragEnd = useShapeDragHandler(onDragEnd);
 
       // Handle transform end
       const handleTransformEnd = useCallback(
@@ -102,11 +75,7 @@ export const LineShape = memo(
           rotation={rotation}
           lineCap='round'
           lineJoin='round'
-          shadowColor={SHADOW_COLOR}
-          shadowBlur={isSelected ? SHADOW_BLUR_SELECTED : SHADOW_BLUR_DEFAULT}
-          shadowOpacity={SHADOW_OPACITY}
-          shadowOffsetX={SHADOW_OFFSET_X}
-          shadowOffsetY={SHADOW_OFFSET_Y}
+          {...getShapeShadowProps(isSelected)}
           hitStrokeWidth={Math.max(20, strokeWidth * 3)} // Larger hit area for easier selection
           draggable={draggable}
           onClick={onSelect}

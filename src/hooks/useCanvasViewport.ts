@@ -1,23 +1,14 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import Konva from 'konva';
 import { computeViewportToFitBounds, type IBounds } from '@/lib/canvasBounds';
-
-export interface IViewportPosition {
-  x: number;
-  y: number;
-}
-
-export interface IViewportScale {
-  x: number;
-  y: number;
-}
-
-export interface IViewportState {
-  position: IViewportPosition;
-  scale: IViewportScale;
-  width: number;
-  height: number;
-}
+import type {
+  IPersistedViewport,
+  IViewportPosition,
+  IViewportScale,
+  IViewportState,
+} from '@/types';
+export type { IViewportPosition, IViewportScale, IViewportState };
+export type IViewportPersistState = IPersistedViewport;
 
 interface IUseCanvasViewportReturn {
   viewport: IViewportState;
@@ -29,11 +20,6 @@ interface IUseCanvasViewportReturn {
   panTo: (position: IViewportPosition) => void;
   zoomToFitBounds: (bounds: IBounds, padding?: number) => void;
   resetViewport: () => void;
-}
-
-export interface IViewportPersistState {
-  position: IViewportPosition;
-  scale: IViewportScale;
 }
 
 interface IUseCanvasViewportOptions {

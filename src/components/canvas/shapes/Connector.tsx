@@ -1,33 +1,13 @@
 import { Arrow, Line } from 'react-konva';
-import { forwardRef, useCallback, memo } from 'react';
+import { forwardRef, useCallback, memo, type Ref } from 'react';
 import type { ReactElement } from 'react';
 import Konva from 'konva';
-import {
-  SHADOW_BLUR_DEFAULT,
-  SHADOW_BLUR_SELECTED,
-  SHADOW_COLOR,
-  SHADOW_OPACITY,
-  SHADOW_OFFSET_X,
-  SHADOW_OFFSET_Y,
-} from '@/lib/canvasShadows';
+import { useShapeDragHandler } from '@/hooks/useShapeDragHandler';
+import { getShapeShadowProps } from '@/lib/shapeShadowProps';
+import type { ILineLikeShapeProps } from '@/types';
 
-interface IConnectorProps {
-  id: string;
-  x: number;
-  y: number;
-  points: number[];
-  stroke: string;
-  strokeWidth?: number;
-  opacity?: number;
-  rotation?: number;
-  isSelected?: boolean;
-  draggable?: boolean;
+interface IConnectorProps extends ILineLikeShapeProps {
   hasArrow?: boolean;
-  onSelect?: () => void;
-  onDragStart?: () => void;
-  onDragEnd?: (x: number, y: number) => void;
-  dragBoundFunc?: (pos: { x: number; y: number }) => { x: number; y: number };
-  onTransformEnd?: (attrs: { x: number; y: number; points: number[]; rotation: number }) => void;
 }
 
 /**
@@ -57,13 +37,7 @@ export const Connector = memo(
       },
       ref
     ): ReactElement => {
-      // Handle drag end
-      const handleDragEnd = useCallback(
-        (e: Konva.KonvaEventObject<DragEvent>) => {
-          onDragEnd?.(e.target.x(), e.target.y());
-        },
-        [onDragEnd]
-      );
+      const handleDragEnd = useShapeDragHandler(onDragEnd);
 
       // Handle transform end
       const handleTransformEnd = useCallback(
@@ -91,7 +65,7 @@ export const Connector = memo(
       );
 
       const commonProps = {
-        ref: ref as React.Ref<Konva.Arrow>,
+        ref: ref as Ref<Konva.Arrow>,
         id,
         name: 'shape connector',
         x,
@@ -103,11 +77,7 @@ export const Connector = memo(
         rotation,
         lineCap: 'round' as const,
         lineJoin: 'round' as const,
-        shadowColor: SHADOW_COLOR,
-        shadowBlur: isSelected ? SHADOW_BLUR_SELECTED : SHADOW_BLUR_DEFAULT,
-        shadowOpacity: SHADOW_OPACITY,
-        shadowOffsetX: SHADOW_OFFSET_X,
-        shadowOffsetY: SHADOW_OFFSET_Y,
+        ...getShapeShadowProps(isSelected),
         hitStrokeWidth: Math.max(20, strokeWidth * 3),
         draggable,
         onClick: onSelect,
