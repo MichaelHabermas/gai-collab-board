@@ -196,7 +196,7 @@ export const PropertyInspector = ({
 
   return (
     <div
-      className='flex flex-1 min-h-0 flex-col gap-4 overflow-auto'
+      className='flex h-full min-h-0 flex-1 flex-col gap-4 overflow-auto'
       data-testid='property-inspector-panel'
     >
       <div className='text-xs text-muted-foreground'>

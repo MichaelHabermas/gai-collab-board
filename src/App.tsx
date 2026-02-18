@@ -288,7 +288,7 @@ const BoardView = ({
                   </TabsContent>
                   <TabsContent
                     value='properties'
-                    className='flex-1 min-h-0 mt-2 overflow-auto'
+                    className='flex flex-1 min-h-0 flex-col mt-2 overflow-auto'
                     data-testid='properties-tab-content'
                   >
                     <PropertyInspector objects={objects} onObjectUpdate={updateObject} />
