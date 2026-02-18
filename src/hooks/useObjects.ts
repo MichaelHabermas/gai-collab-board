@@ -81,7 +81,6 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
     async (params: Omit<ICreateObjectParams, 'createdBy'>): Promise<IBoardObject | null> => {
       if (!boardId || !user) {
         const errorMsg = 'Cannot create object: not connected to board';
-        console.error('[DEBUG] handleCreateObject failed:', errorMsg);
         setError(errorMsg);
         return null;
       }
@@ -94,7 +93,6 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         return newObject;
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to create object';
-        console.error('[DEBUG] handleCreateObject error:', err, errorMessage);
         setError(errorMessage);
         return null;
       }
