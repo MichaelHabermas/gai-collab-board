@@ -1,6 +1,6 @@
 ## Summary
 
-This log records how AI was used during development: tools (Cursor, Context7 MCP), workflows, effective prompts, and a rough split of AI-generated vs hand-written code. It also notes strengths, limitations, and learnings. It serves as both a submission artifact and a reference for improving future AI-assisted workflow and for explaining the development approach.
+This log records how AI was used during development: tools (Cursor, Context7 MCP), workflows, effective prompts, and a rough split of AI-generated vs hand-written code. It also notes strengths, limitations, learnings, and includes cost and deployment expectations with running totals. It serves as both a submission artifact and a reference for improving future AI-assisted workflow and for explaining the development approach.
 
 ---
 
@@ -43,3 +43,17 @@ This log records how AI was used during development: tools (Cursor, Context7 MCP
 - Breaking tasks into small, single-responsibility steps (per PRD commits) keeps AI output focused and reviewable.
 - Explicit types and interfaces (no `any`) reduce AI mistakes and improve refactor safety.
 - Running format and tests after each story catches drift early.
+
+## Cost & usage
+
+- **Development:** AI use during development was via Cursor (integrated AI) and Context7 MCP for docs. LLM API spend during dev: fill from billing (e.g. $0 if Cursor subscription only; or $X.XX if external APIs used). Optional: total input/output tokens and API call count — update from provider dashboards.
+- **Running total (development):** Cursor $20/mo; API $0. _Update as numbers are filled in._
+- **Deployment (expected):** See [AI-COST-ANALYSIS.md](AI-COST-ANALYSIS.md) for assumptions and sources. At 10 commands/user/month: ~$0.72–$1.44 (100 users), ~$7–$14 (1K), ~$72–$144 (10K), ~$725–$1,440 (100K) depending on provider (Groq vs NVIDIA).
+- **Running totals (deployment):** Update when assumptions change; keep in sync with AI-COST-ANALYSIS.md.
+
+| Users   | Groq (approx) | NVIDIA (approx) |
+| ------- | ------------- | --------------- |
+| 100     | $0.72/mo      | $1.44/mo        |
+| 1,000   | $7.25/mo      | $14.40/mo       |
+| 10,000  | $72.48/mo     | $144.00/mo      |
+| 100,000 | $724.80/mo    | $1,440.00/mo    |
