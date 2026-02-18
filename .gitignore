@@ -45,3 +45,7 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 .vite/
+
+.cursor/commands
+.cursor/plans
+.lbi
