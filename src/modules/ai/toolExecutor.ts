@@ -460,10 +460,17 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
         const updates = computeAlignUpdates(rects, alignment);
         for (const u of updates) {
           const payload: IUpdateObjectParams = {};
-          if (u.x) payload.x = u.x;
+          // x/y can be 0; must use !== undefined so first position is applied
+          /* eslint-disable local/prefer-falsy-over-explicit-nullish -- 0 is valid for x/y */
+          if (u.x !== undefined) {
+            payload.x = u.x;
+          }
 
-          if (u.y) payload.y = u.y;
+          if (u.y !== undefined) {
+            payload.y = u.y;
+          }
 
+          /* eslint-enable local/prefer-falsy-over-explicit-nullish */
           if (Object.keys(payload).length > 0) {
             await ctx.updateObject(boardId, u.id, payload);
           }
@@ -491,10 +498,17 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
         const updates = computeDistributeUpdates(rects, direction);
         for (const u of updates) {
           const payload: IUpdateObjectParams = {};
-          if (u.x) payload.x = u.x;
+          // x/y can be 0; must use !== undefined so first position is applied
+          /* eslint-disable local/prefer-falsy-over-explicit-nullish -- 0 is valid for x/y */
+          if (u.x !== undefined) {
+            payload.x = u.x;
+          }
 
-          if (u.y) payload.y = u.y;
+          if (u.y !== undefined) {
+            payload.y = u.y;
+          }
 
+          /* eslint-enable local/prefer-falsy-over-explicit-nullish */
           if (Object.keys(payload).length > 0) {
             await ctx.updateObject(boardId, u.id, payload);
           }

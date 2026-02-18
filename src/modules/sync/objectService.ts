@@ -85,7 +85,9 @@ export const createObject = async (
     object.strokeWidth = params.strokeWidth;
   }
 
-  if (params.text) {
+  // Empty string is valid for sticky/text; do not use truthy check
+  // eslint-disable-next-line local/prefer-falsy-over-explicit-nullish -- empty string must set text
+  if (params.text !== undefined) {
     object.text = params.text;
   }
 
