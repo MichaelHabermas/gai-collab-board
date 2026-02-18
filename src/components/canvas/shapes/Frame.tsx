@@ -212,6 +212,7 @@ export const Frame = memo(
             cornerRadius={[6, 6, 0, 0]}
             onDblClick={handleTitleDblClick}
             onDblTap={handleTitleDblClick}
+            perfectDrawEnabled={false}
           />
 
           {/* Title text */}
@@ -228,6 +229,7 @@ export const Frame = memo(
             ellipsis
             listening={false}
             visible={!isEditing}
+            perfectDrawEnabled={false}
           />
 
           {/* Frame body */}
@@ -241,6 +243,7 @@ export const Frame = memo(
             strokeWidth={isSelected ? 2 : strokeWidth}
             cornerRadius={[0, 0, 6, 6]}
             dash={[4, 4]}
+            perfectDrawEnabled={false}
           />
         </Group>
       );

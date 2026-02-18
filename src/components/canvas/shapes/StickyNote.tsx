@@ -20,6 +20,7 @@ export const STICKY_COLORS = {
 export type StickyColor = keyof typeof STICKY_COLORS;
 
 const DEFAULT_STICKY_FONT_SIZE = 14;
+const DEFAULT_STICKY_TEXT_COLOR = '#000000';
 
 interface IStickyNoteProps {
   id: string;
@@ -94,14 +95,8 @@ export const StickyNote = memo(
         if (textFill !== undefined && textFill !== '') {
           return textFill;
         }
-        return (
-          (typeof document !== 'undefined'
-            ? getComputedStyle(document.documentElement)
-                .getPropertyValue('--color-foreground')
-                .trim()
-            : '') || '#0f172a'
-        );
-      }, [theme, textFill]);
+        return DEFAULT_STICKY_TEXT_COLOR;
+      }, [textFill]);
 
       // Handle double-click to start editing. Position textarea from Group's screen rect
       // so it stays aligned for any rotation/zoom (avoids text "jumping" out of the note).
@@ -237,6 +232,8 @@ export const StickyNote = memo(
             cornerRadius={4}
             stroke={isSelected ? selectionColor : undefined}
             strokeWidth={isSelected ? 2 : 0}
+            shadowForStrokeEnabled={false}
+            perfectDrawEnabled={false}
           />
 
           {/* Fold effect in corner */}
@@ -247,6 +244,7 @@ export const StickyNote = memo(
             height={20}
             fill='rgba(0, 0, 0, 0.05)'
             listening={false}
+            perfectDrawEnabled={false}
           />
 
           {/* Text content */}
@@ -265,6 +263,7 @@ export const StickyNote = memo(
             ellipsis
             visible={!isEditing}
             listening={false}
+            perfectDrawEnabled={false}
           />
         </Group>
       );

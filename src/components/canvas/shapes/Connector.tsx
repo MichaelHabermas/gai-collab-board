@@ -103,6 +103,7 @@ export const Connector = memo(
         onDragEnd: handleDragEnd,
         dragBoundFunc,
         onTransformEnd: handleTransformEnd,
+        perfectDrawEnabled: false,
       };
 
       if (hasArrow) {

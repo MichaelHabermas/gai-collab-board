@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import type { IBoardObject } from '@/types';
 import type { IViewportState } from './useCanvasViewport';
 
@@ -19,6 +19,8 @@ interface IUseVisibleShapesProps {
  * @returns Array of objects that are within or near the visible viewport
  */
 export const useVisibleShapes = ({ objects, viewport }: IUseVisibleShapesProps): IBoardObject[] => {
+  const previousVisibleObjectsRef = useRef<IBoardObject[]>([]);
+
   return useMemo(() => {
     const { position, scale, width, height } = viewport;
 
@@ -29,7 +31,7 @@ export const useVisibleShapes = ({ objects, viewport }: IUseVisibleShapesProps):
     const viewBottom = (-position.y + height) / scale.y + VIEWPORT_PADDING;
 
     // Filter objects that intersect with the viewport
-    return objects.filter((obj) => {
+    const nextVisibleObjects = objects.filter((obj) => {
       let objLeft: number;
       let objRight: number;
       let objTop: number;
@@ -62,5 +64,17 @@ export const useVisibleShapes = ({ objects, viewport }: IUseVisibleShapesProps):
 
       return isVisible;
     });
+
+    const previousVisibleObjects = previousVisibleObjectsRef.current;
+    const isSameShapeSet =
+      previousVisibleObjects.length === nextVisibleObjects.length &&
+      previousVisibleObjects.every((object, index) => object === nextVisibleObjects[index]);
+
+    if (isSameShapeSet) {
+      return previousVisibleObjects;
+    }
+
+    previousVisibleObjectsRef.current = nextVisibleObjects;
+    return nextVisibleObjects;
   }, [objects, viewport]);
 };

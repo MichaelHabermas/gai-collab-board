@@ -107,13 +107,25 @@ export const useCanvasViewport = (
       return;
     }
     const timeoutId = window.setTimeout(() => {
-      setViewport((prev) => ({
-        ...prev,
-        position: initialViewport.position,
-        scale: initialViewport.scale,
-      }));
+      setViewport((prev) => {
+        const isSameViewport =
+          prev.position.x === initialViewport.position.x &&
+          prev.position.y === initialViewport.position.y &&
+          prev.scale.x === initialViewport.scale.x &&
+          prev.scale.y === initialViewport.scale.y;
+
+        if (isSameViewport) {
+          return prev;
+        }
+
+        skipNextNotifyRef.current = true;
+        return {
+          ...prev,
+          position: initialViewport.position,
+          scale: initialViewport.scale,
+        };
+      });
     }, 0);
-    skipNextNotifyRef.current = true;
     return () => {
       window.clearTimeout(timeoutId);
     };

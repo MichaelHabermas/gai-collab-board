@@ -4,7 +4,7 @@ import { SelectionLayer, type ISelectionRect } from './SelectionLayer';
 import { useRef, useCallback, useState, useEffect, useMemo, memo, type ReactElement } from 'react';
 import Konva from 'konva';
 import { Wrench, Focus, Maximize2, Grid3X3, Magnet, Download } from 'lucide-react';
-import { useCanvasViewport } from '@/hooks/useCanvasViewport';
+import { useCanvasViewport, type IViewportState } from '@/hooks/useCanvasViewport';
 import { CursorLayer } from './CursorLayer';
 import { Toolbar, type ToolMode } from './Toolbar';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -143,6 +143,7 @@ export const BoardCanvas = memo(
     const selectingActiveRef = useRef(false);
     const pendingPointerRef = useRef<IPosition | null>(null);
     const pointerFrameRef = useRef<number | null>(null);
+    const viewportPersistTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const {
       viewport: persistedViewport,
@@ -163,6 +164,23 @@ export const BoardCanvas = memo(
       [theme]
     );
 
+    const handleViewportPersist = useCallback(
+      (nextViewport: IViewportState) => {
+        if (viewportPersistTimeoutRef.current !== null) {
+          clearTimeout(viewportPersistTimeoutRef.current);
+        }
+
+        viewportPersistTimeoutRef.current = setTimeout(() => {
+          setPersistedViewport({
+            position: nextViewport.position,
+            scale: nextViewport.scale,
+          });
+          viewportPersistTimeoutRef.current = null;
+        }, 180);
+      },
+      [setPersistedViewport]
+    );
+
     const {
       viewport,
       handleWheel,
@@ -174,9 +192,7 @@ export const BoardCanvas = memo(
       resetViewport,
     } = useCanvasViewport({
       initialViewport: persistedViewport,
-      onViewportChange: (v) => {
-        setPersistedViewport({ position: v.position, scale: v.scale });
-      },
+      onViewportChange: handleViewportPersist,
     });
 
     const { exportViewport, exportFullBoard } = useExportAsImage({
@@ -186,6 +202,10 @@ export const BoardCanvas = memo(
 
     // Filter objects to only visible ones (viewport culling)
     const visibleObjects = useVisibleShapes({ objects, viewport });
+    const visibleObjectIdsKey = useMemo(
+      () => visibleObjects.map((object) => object.id).join('|'),
+      [visibleObjects]
+    );
     const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
     const objectsById = useMemo(
       () => new Map(objects.map((object) => [object.id, object])),
@@ -200,12 +220,15 @@ export const BoardCanvas = memo(
           .map((o) => o.id),
       [objects]
     );
-
     // Cursor synchronization
     const { cursors, handleMouseMove } = useCursors({
       boardId,
       user,
     });
+    const hasRemoteCursors = useMemo(
+      () => Object.keys(cursors).some((cursorId) => cursorId !== user.uid),
+      [cursors, user.uid]
+    );
 
     // Keep ref in sync with state
     useEffect(() => {
@@ -260,8 +283,10 @@ export const BoardCanvas = memo(
 
         const { x: canvasX, y: canvasY } = getCanvasCoords(stage, pointer);
 
-        // Update cursor position for multiplayer
-        handleMouseMove(canvasX, canvasY);
+        // Skip high-frequency cursor sync while actively panning to reduce event pressure.
+        if (!(activeToolRef.current === 'pan' && stage.isDragging())) {
+          handleMouseMove(canvasX, canvasY);
+        }
 
         if (!drawingActiveRef.current && !selectingActiveRef.current) {
           return;
@@ -533,6 +558,9 @@ export const BoardCanvas = memo(
         if (pointerFrameRef.current != null) {
           cancelAnimationFrame(pointerFrameRef.current);
         }
+        if (viewportPersistTimeoutRef.current !== null) {
+          clearTimeout(viewportPersistTimeoutRef.current);
+        }
       },
       []
     );
@@ -733,23 +761,52 @@ export const BoardCanvas = memo(
       };
     });
 
+    const dragBoundFuncCacheRef = useRef<
+      Map<string, { width: number; height: number; fn: (pos: { x: number; y: number }) => IPosition }>
+    >(new Map());
+    const guideCandidateBoundsRef = useRef<
+      Array<{ id: string; bounds: ReturnType<typeof getObjectBounds> }>
+    >([]);
+    useEffect(() => {
+      const candidateObjects = visibleObjects.length > 0 ? visibleObjects : objects;
+      guideCandidateBoundsRef.current = candidateObjects.map((object) => ({
+        id: object.id,
+        bounds: getObjectBounds(object),
+      }));
+      dragBoundFuncCacheRef.current.clear();
+    }, [objects, visibleObjectIdsKey]);
+
     const getDragBoundFunc = useCallback(
       (objectId: string, width: number, height: number) => {
-        return (pos: { x: number; y: number }) => {
+        const cached = dragBoundFuncCacheRef.current.get(objectId);
+        if (cached && cached.width === width && cached.height === height) {
+          return cached.fn;
+        }
+
+        const nextDragBoundFunc = (pos: { x: number; y: number }) => {
           const dragged = {
             x1: pos.x,
             y1: pos.y,
             x2: pos.x + width,
             y2: pos.y + height,
           };
-          const others = objects.filter((o) => o.id !== objectId).map((o) => getObjectBounds(o));
+          const others = guideCandidateBoundsRef.current
+            .filter((candidate) => candidate.id !== objectId)
+            .map((candidate) => candidate.bounds);
           const guides = computeAlignmentGuides(dragged, others);
           const snapped = computeSnappedPosition(dragged, others, pos, width, height);
           setGuidesThrottledRef.current(guides);
           return snapped;
         };
+
+        dragBoundFuncCacheRef.current.set(objectId, {
+          width,
+          height,
+          fn: nextDragBoundFunc,
+        });
+        return nextDragBoundFunc;
       },
-      [objects]
+      []
     );
 
     // Handle text change for sticky notes
@@ -759,6 +816,73 @@ export const BoardCanvas = memo(
       },
       [onObjectUpdate]
     );
+
+    const selectHandlerMapRef = useRef<Map<string, () => void>>(new Map());
+    const dragEndHandlerMapRef = useRef<Map<string, (x: number, y: number) => void>>(new Map());
+    const textChangeHandlerMapRef = useRef<Map<string, (text: string) => void>>(new Map());
+
+    const getSelectHandler = useCallback(
+      (objectId: string) => {
+        const existingHandler = selectHandlerMapRef.current.get(objectId);
+        if (existingHandler) {
+          return existingHandler;
+        }
+
+        const nextHandler = () => {
+          handleObjectSelect(objectId);
+        };
+        selectHandlerMapRef.current.set(objectId, nextHandler);
+        return nextHandler;
+      },
+      [handleObjectSelect]
+    );
+
+    const getDragEndHandler = useCallback(
+      (objectId: string) => {
+        const existingHandler = dragEndHandlerMapRef.current.get(objectId);
+        if (existingHandler) {
+          return existingHandler;
+        }
+
+        const nextHandler = (x: number, y: number) => {
+          handleObjectDragEnd(objectId, x, y);
+        };
+        dragEndHandlerMapRef.current.set(objectId, nextHandler);
+        return nextHandler;
+      },
+      [handleObjectDragEnd]
+    );
+
+    const getTextChangeHandler = useCallback(
+      (objectId: string) => {
+        const existingHandler = textChangeHandlerMapRef.current.get(objectId);
+        if (existingHandler) {
+          return existingHandler;
+        }
+
+        const nextHandler = (text: string) => {
+          handleTextChange(objectId, text);
+        };
+        textChangeHandlerMapRef.current.set(objectId, nextHandler);
+        return nextHandler;
+      },
+      [handleTextChange]
+    );
+
+    useEffect(() => {
+      const liveIds = new Set(objects.map((object) => object.id));
+      const pruneStaleHandlers = <THandler,>(handlerMap: Map<string, THandler>) => {
+        const staleIds = Array.from(handlerMap.keys()).filter((id) => !liveIds.has(id));
+        for (const staleId of staleIds) {
+          handlerMap.delete(staleId);
+        }
+      };
+
+      pruneStaleHandlers(selectHandlerMapRef.current);
+      pruneStaleHandlers(dragEndHandlerMapRef.current);
+      pruneStaleHandlers(textChangeHandlerMapRef.current);
+      pruneStaleHandlers(dragBoundFuncCacheRef.current);
+    }, [objects]);
 
     // Handle transform end from TransformHandler (shape-aware attrs: rect-like or points for line/connector)
     const handleTransformEnd = useCallback(
@@ -789,8 +913,11 @@ export const BoardCanvas = memo(
       [onObjectUpdate, snapToGridEnabled]
     );
 
-    // Calculate grid lines for visible area
-    const renderGrid = useCallback(() => {
+    const gridNodes = useMemo(() => {
+      if (!showGrid) {
+        return [];
+      }
+
       const { position, scale, width, height } = viewport;
       const gridLines: ReactElement[] = [];
 
@@ -835,8 +962,7 @@ export const BoardCanvas = memo(
       }
 
       return gridLines;
-    }, [viewport, gridColor]);
-    const gridNodes = useMemo(() => renderGrid(), [renderGrid]);
+    }, [showGrid, viewport, gridColor]);
 
     // Render shape based on type
     const renderShape = useCallback(
@@ -861,12 +987,12 @@ export const BoardCanvas = memo(
                 rotation={obj.rotation}
                 isSelected={isSelected}
                 draggable={canEdit}
-                onSelect={() => handleObjectSelect(obj.id)}
-                onDragEnd={(x, y) => handleObjectDragEnd(obj.id, x, y)}
+                onSelect={getSelectHandler(obj.id)}
+                onDragEnd={getDragEndHandler(obj.id)}
                 dragBoundFunc={
                   canEdit ? getDragBoundFunc(obj.id, obj.width, obj.height) : undefined
                 }
-                onTextChange={canEdit ? (text) => handleTextChange(obj.id, text) : undefined}
+                onTextChange={canEdit ? getTextChangeHandler(obj.id) : undefined}
               />
             );
 
@@ -886,8 +1012,8 @@ export const BoardCanvas = memo(
                 rotation={obj.rotation}
                 isSelected={isSelected}
                 draggable={canEdit}
-                onSelect={() => handleObjectSelect(obj.id)}
-                onDragEnd={(x, y) => handleObjectDragEnd(obj.id, x, y)}
+                onSelect={getSelectHandler(obj.id)}
+                onDragEnd={getDragEndHandler(obj.id)}
                 dragBoundFunc={getDragBoundFunc(obj.id, obj.width, obj.height)}
               />
             );
@@ -909,8 +1035,8 @@ export const BoardCanvas = memo(
                 rotation={obj.rotation}
                 isSelected={isSelected}
                 draggable={canEdit}
-                onSelect={() => handleObjectSelect(obj.id)}
-                onDragEnd={(x, y) => handleObjectDragEnd(obj.id, x, y)}
+                onSelect={getSelectHandler(obj.id)}
+                onDragEnd={getDragEndHandler(obj.id)}
                 dragBoundFunc={
                   boundFunc
                     ? (pos) => {
@@ -943,8 +1069,8 @@ export const BoardCanvas = memo(
                 rotation={obj.rotation}
                 isSelected={isSelected}
                 draggable={canEdit}
-                onSelect={() => handleObjectSelect(obj.id)}
-                onDragEnd={(x, y) => handleObjectDragEnd(obj.id, x, y)}
+                onSelect={getSelectHandler(obj.id)}
+                onDragEnd={getDragEndHandler(obj.id)}
                 dragBoundFunc={getDragBoundFunc(obj.id, obj.width, obj.height)}
               />
             );
@@ -976,8 +1102,8 @@ export const BoardCanvas = memo(
                   isSelected={isSelected}
                   draggable={false}
                   hasArrow={true}
-                  onSelect={() => handleObjectSelect(obj.id)}
-                  onDragEnd={(dx, dy) => handleObjectDragEnd(obj.id, dx, dy)}
+                  onSelect={getSelectHandler(obj.id)}
+                  onDragEnd={getDragEndHandler(obj.id)}
                 />
               );
             }
@@ -998,8 +1124,8 @@ export const BoardCanvas = memo(
                 isSelected={isSelected}
                 draggable={canEdit}
                 hasArrow={true}
-                onSelect={() => handleObjectSelect(obj.id)}
-                onDragEnd={(dx, dy) => handleObjectDragEnd(obj.id, dx, dy)}
+                onSelect={getSelectHandler(obj.id)}
+                onDragEnd={getDragEndHandler(obj.id)}
                 dragBoundFunc={getDragBoundFunc(obj.id, obj.width, obj.height)}
               />
             );
@@ -1020,10 +1146,10 @@ export const BoardCanvas = memo(
                 rotation={obj.rotation}
                 isSelected={isSelected}
                 draggable={canEdit}
-                onSelect={() => handleObjectSelect(obj.id)}
-                onDragEnd={(x, y) => handleObjectDragEnd(obj.id, x, y)}
+                onSelect={getSelectHandler(obj.id)}
+                onDragEnd={getDragEndHandler(obj.id)}
                 dragBoundFunc={getDragBoundFunc(obj.id, obj.width, obj.height)}
-                onTextChange={canEdit ? (text) => handleTextChange(obj.id, text) : undefined}
+                onTextChange={canEdit ? getTextChangeHandler(obj.id) : undefined}
               />
             );
 
@@ -1044,10 +1170,10 @@ export const BoardCanvas = memo(
                 rotation={obj.rotation}
                 isSelected={isSelected}
                 draggable={canEdit}
-                onSelect={() => handleObjectSelect(obj.id)}
-                onDragEnd={(x, y) => handleObjectDragEnd(obj.id, x, y)}
+                onSelect={getSelectHandler(obj.id)}
+                onDragEnd={getDragEndHandler(obj.id)}
                 dragBoundFunc={getDragBoundFunc(obj.id, obj.width, obj.height)}
-                onTextChange={canEdit ? (text) => handleTextChange(obj.id, text) : undefined}
+                onTextChange={canEdit ? getTextChangeHandler(obj.id) : undefined}
               />
             );
 
@@ -1079,11 +1205,15 @@ export const BoardCanvas = memo(
         canEdit,
         objectsById,
         selectionColor,
-        handleObjectSelect,
-        handleObjectDragEnd,
-        handleTextChange,
+        getSelectHandler,
+        getDragEndHandler,
+        getTextChangeHandler,
         getDragBoundFunc,
       ]
+    );
+    const visibleObjectNodes = useMemo(
+      () => visibleObjects.map((object) => renderShape(object)),
+      [visibleObjects, renderShape]
     );
 
     // Render drawing preview
@@ -1311,7 +1441,7 @@ export const BoardCanvas = memo(
           )}
 
           {/* Objects layer - main content (viewport culled) */}
-          <Layer ref={objectsLayerRef} name='objects'>
+          <Layer ref={objectsLayerRef} name='objects' listening={activeTool !== 'pan'}>
             {/* Background rect to catch clicks on empty areas - covers entire viewport */}
             <Rect
               x={-viewport.position.x / viewport.scale.x - 1000}
@@ -1324,7 +1454,7 @@ export const BoardCanvas = memo(
             />
             {/* dragBoundFunc only reads ref when user drags (event), not during render */}
             {/* eslint-disable-next-line react-hooks/refs */}
-            {visibleObjects.map(renderShape)}
+            {visibleObjectNodes}
           </Layer>
 
           {/* Connection nodes (when connector tool active) - above objects so node clicks are hit first */}
@@ -1344,15 +1474,16 @@ export const BoardCanvas = memo(
           </Layer>
 
           {/* Cursor layer - other users' cursors */}
-          <CursorLayer cursors={cursors} currentUid={user.uid} />
+          {hasRemoteCursors && <CursorLayer cursors={cursors} currentUid={user.uid} />}
 
           {/* Alignment guides - temporary lines during drag */}
-          <AlignmentGuidesLayer guides={alignmentGuides} />
+          {alignmentGuides != null && <AlignmentGuidesLayer guides={alignmentGuides} />}
 
           {/* Selection/Transform layer - listening enabled for Transformer, but clicks on Transformer are handled */}
-          <Layer
-            name='selection'
-            listening={true}
+          {activeTool !== 'pan' && (
+            <Layer
+              name='selection'
+              listening={selectedIds.length > 0}
             onClick={(e) => {
               // Prevent clicks on Transformer (anchors, borders, or Transformer itself) from propagating to stage
               const target = e.target;
@@ -1385,7 +1516,8 @@ export const BoardCanvas = memo(
               excludedFromTransformIds={linkedConnectorIds}
               onTransformEnd={handleTransformEnd}
             />
-          </Layer>
+            </Layer>
+          )}
         </Stage>
 
         {/* Status indicators and zoom controls */}

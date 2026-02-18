@@ -4,9 +4,9 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import type { IBoardObject } from '@/types';
 import type { IUpdateObjectParams } from '@/modules/sync/objectService';
-import { useTheme } from '@/hooks/useTheme';
 
 const MIXED_PLACEHOLDER = 'Mixed';
+const DEFAULT_STICKY_TEXT_COLOR = '#000000';
 
 interface IPropertyInspectorProps {
   objects: IBoardObject[];
@@ -45,14 +45,7 @@ export const PropertyInspector = ({
   onObjectUpdate,
 }: IPropertyInspectorProps): ReactElement | null => {
   const { selectedIds } = useSelection();
-  const { theme } = useTheme();
-  const defaultFontColor = useMemo(
-    () =>
-      (typeof document !== 'undefined'
-        ? getComputedStyle(document.documentElement).getPropertyValue('--color-foreground').trim()
-        : '') || '#0f172a',
-    [theme]
-  );
+  const defaultFontColor = DEFAULT_STICKY_TEXT_COLOR;
 
   const selectedObjects = useMemo(() => {
     if (selectedIds.length === 0) {
@@ -299,7 +292,9 @@ export const PropertyInspector = ({
               id='property-inspector-font-color'
               type='color'
               value={
-                fontColorValue === MIXED_PLACEHOLDER || !fontColorValue ? '#0f172a' : fontColorValue
+                fontColorValue === MIXED_PLACEHOLDER || !fontColorValue
+                  ? DEFAULT_STICKY_TEXT_COLOR
+                  : fontColorValue
               }
               onChange={(e) => handleFontColorChange(e.target.value)}
               disabled={fontColorValue === MIXED_PLACEHOLDER}

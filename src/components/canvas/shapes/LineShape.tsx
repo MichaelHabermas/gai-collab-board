@@ -102,6 +102,7 @@ export const LineShape = memo(
           onDragEnd={handleDragEnd}
           dragBoundFunc={dragBoundFunc}
           onTransformEnd={handleTransformEnd}
+          perfectDrawEnabled={false}
         />
       );
     }

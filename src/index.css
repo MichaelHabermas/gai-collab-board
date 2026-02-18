@@ -16,7 +16,7 @@
 
   /* Background */
   --color-background: #ffffff;
-  --color-foreground: #0f172a;
+  --color-foreground: #000000;
   --color-muted: #f1f5f9;
   --color-muted-foreground: #64748b;
 
@@ -67,6 +67,7 @@ html,
 body {
   height: 100%;
   overflow: hidden;
+  color: #000000;
 }
 
 body {
@@ -78,6 +79,7 @@ body {
     'Segoe UI',
     Roboto,
     sans-serif;
+  color: #000000;
 }
 
 #root {
@@ -85,9 +87,9 @@ body {
   overflow: hidden;
 }
 
-/* Sticky note edit overlay: theme-aware text color (appended to body, inherits from html) */
+/* Sticky note edit overlay uses the global default black text color. */
 .sticky-note-edit-overlay {
-  color: var(--color-foreground);
+  color: #000000;
 }
 
 .sticky-note-edit-overlay:focus-visible {

@@ -223,6 +223,7 @@ export const TextElement = memo(
           dragBoundFunc={dragBoundFunc}
           onTransformEnd={handleTransformEnd}
           visible={!isEditing}
+          perfectDrawEnabled={false}
         />
       );
     }

@@ -112,6 +112,8 @@ export const RectangleShape = memo(
           shadowOpacity={0.3}
           shadowOffsetX={2}
           shadowOffsetY={2}
+          shadowForStrokeEnabled={false}
+          perfectDrawEnabled={false}
         />
       );
     }
