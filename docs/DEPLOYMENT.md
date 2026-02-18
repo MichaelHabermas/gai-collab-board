@@ -16,6 +16,8 @@ This document describes how CollabBoard is deployed on **Render and Firebase**: 
 
 The app calls an AI proxy so the API key stays server-side. On Render there are no Netlify Functions, so you must run the included proxy server.
 
+If you see **"AI service returned an unexpected response"** on the deployed site, ensure the proxy Web Service is deployed and `VITE_AI_PROXY_URL` is set on the frontend, then redeploy the frontend (Vite inlines env at build time).
+
 ### Option A: Same origin (recommended)
 
 1. Deploy the **proxy server** as a **Web Service** on Render that handles both static and API:
@@ -25,14 +27,13 @@ The app calls an AI proxy so the API key stays server-side. On Render there are 
    - **Static Site**: publish `dist/` (no env for AI proxy URL).
    - **Web Service**: run `bun run proxy` (see below). Set env `VITE_AI_PROXY_URL` in the Static Site to the proxy service URL (e.g. `https://your-ai-proxy.onrender.com`).
 
-### Option B: Separate proxy service
+### Option B: Separate proxy service (two services)
 
-1. Create a second Render **Web Service** for the proxy only.
-2. **Build**: (none or `echo "no build"`).
-3. **Start**: `bun run proxy` (runs `server/index.ts`).
-4. Set env on the proxy service: `GROQ_API_KEY` or `NVIDIA_API_KEY`, optionally `AI_PROVIDER=groq|nvidia`.
-5. Set env on the **frontend** (Static Site): `VITE_AI_PROXY_URL=https://your-proxy-service.onrender.com` (the proxy base URL; the client will append `/api/ai/v1` to the origin, so the proxy must serve at `/api/ai/v1`). Actually the client uses `VITE_AI_PROXY_URL` as the full base URL, so set `VITE_AI_PROXY_URL=https://your-proxy-service.onrender.com/api/ai/v1`.
-6. Expose **PORT**: Render sets `PORT`; the proxy listens on `process.env.PORT ?? 3001`.
+1. Create a second Render **Web Service** for the proxy (or use the repo’s [render.yaml](../render.yaml) blueprint).
+2. **Build**: `bun install` (so Bun is available).
+3. **Start**: `bun run proxy` (runs [server/index.ts](../server/index.ts)).
+4. Set env on the proxy service: `GROQ_API_KEY` or `NVIDIA_API_KEY`, optionally `AI_PROVIDER=groq|nvidia`. Render sets `PORT` automatically.
+5. Set env on the **frontend** (Static Site): `VITE_AI_PROXY_URL=https://<your-proxy-service-name>.onrender.com/api/ai/v1` (full base URL including the path). Redeploy the frontend after setting this so the value is inlined at build time.
 
 ### Proxy server (in-repo)
 

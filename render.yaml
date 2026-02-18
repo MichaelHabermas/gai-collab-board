@@ -1,0 +1,15 @@
+# Render Blueprint: AI proxy Web Service for CollabBoard.
+# Use this to add the proxy via Dashboard (Blueprint) or as reference.
+# Frontend (Static Site) must be created separately and set VITE_AI_PROXY_URL to this service URL + /api/ai/v1.
+
+services:
+  - type: web
+    runtime: node
+    name: gai-collab-board-ai-proxy
+    buildCommand: bun install
+    startCommand: bun run proxy
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: AI_PROVIDER
+        value: groq
