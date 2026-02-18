@@ -84,6 +84,68 @@ const createLineNode = (): Konva.Node => {
   } as unknown as Konva.Node;
 };
 
+const createStickyGroupNode = (): Konva.Node => {
+  let scaleXValue = 1.5;
+  let scaleYValue = 2;
+
+  return {
+    id: () => 'sticky-1',
+    getClassName: () => 'Group',
+    name: () => 'shape sticky',
+    scaleX: (value?: number) => {
+      if (typeof value === 'number') {
+        scaleXValue = value;
+      }
+      return scaleXValue;
+    },
+    scaleY: (value?: number) => {
+      if (typeof value === 'number') {
+        scaleYValue = value;
+      }
+      return scaleYValue;
+    },
+    getClientRect: () => ({ width: 140, height: 90 }),
+    findOne: (selector: string) =>
+      selector === 'Rect'
+        ? ({
+            getClassName: () => 'Rect',
+            width: () => 100,
+            height: () => 60,
+          } as unknown as Konva.Rect)
+        : null,
+    x: () => 15,
+    y: () => 25,
+    rotation: () => 20,
+  } as unknown as Konva.Node;
+};
+
+const createEllipseNode = (): Konva.Node => {
+  let scaleXValue = 0.2;
+  let scaleYValue = 0.3;
+
+  return {
+    id: () => 'ellipse-1',
+    getClassName: () => 'Ellipse',
+    scaleX: (value?: number) => {
+      if (typeof value === 'number') {
+        scaleXValue = value;
+      }
+      return scaleXValue;
+    },
+    scaleY: (value?: number) => {
+      if (typeof value === 'number') {
+        scaleYValue = value;
+      }
+      return scaleYValue;
+    },
+    radiusX: () => 10,
+    radiusY: () => 8,
+    x: () => 200,
+    y: () => 120,
+    rotation: () => 45,
+  } as unknown as Konva.Node;
+};
+
 describe('TransformHandler', () => {
   beforeEach(() => {
     transformerProps = null;
@@ -165,6 +227,62 @@ describe('TransformHandler', () => {
       y: 12,
       points: [0, 0, 200, 100],
       rotation: 30,
+    });
+  });
+
+  it('handles sticky group transforms using first rect dimensions', () => {
+    const stickyNode = createStickyGroupNode();
+    const layerRef = {
+      current: {
+        findOne: vi.fn(() => stickyNode),
+      },
+    } as unknown as RefObject<Konva.Layer | null>;
+    const onTransformEnd = vi.fn();
+
+    render(
+      <TransformHandler
+        selectedIds={['sticky-1']}
+        layerRef={layerRef}
+        onTransformEnd={onTransformEnd}
+      />
+    );
+
+    transformerProps?.onTransformEnd?.();
+
+    expect(onTransformEnd).toHaveBeenCalledWith('sticky-1', {
+      x: 15,
+      y: 25,
+      width: 150,
+      height: 120,
+      rotation: 20,
+    });
+  });
+
+  it('handles ellipse transforms and enforces minimum dimensions', () => {
+    const ellipseNode = createEllipseNode();
+    const layerRef = {
+      current: {
+        findOne: vi.fn(() => ellipseNode),
+      },
+    } as unknown as RefObject<Konva.Layer | null>;
+    const onTransformEnd = vi.fn();
+
+    render(
+      <TransformHandler
+        selectedIds={['ellipse-1']}
+        layerRef={layerRef}
+        onTransformEnd={onTransformEnd}
+      />
+    );
+
+    transformerProps?.onTransformEnd?.();
+
+    expect(onTransformEnd).toHaveBeenCalledWith('ellipse-1', {
+      x: 195,
+      y: 115,
+      width: 10,
+      height: 10,
+      rotation: 45,
     });
   });
 });

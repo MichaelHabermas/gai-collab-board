@@ -37,44 +37,45 @@ export function computeAlignmentGuides(
   others: IBounds[],
   threshold: number = DEFAULT_THRESHOLD
 ): IAlignmentGuides {
-  const horizontal: number[] = [];
-  const vertical: number[] = [];
+  const horizontalSet = new Set<number>();
+  const verticalSet = new Set<number>();
   const draggedPos = getAlignmentPositions(dragged);
 
   for (const other of others) {
     const otherPos = getAlignmentPositions(other);
     for (const v of draggedPos.v) {
       for (const ov of otherPos.v) {
-        if (withinThreshold(v, ov, threshold) && !vertical.includes(ov)) {
-          vertical.push(ov);
+        if (withinThreshold(v, ov, threshold)) {
+          verticalSet.add(ov);
         }
       }
     }
     for (const h of draggedPos.h) {
       for (const oh of otherPos.h) {
-        if (withinThreshold(h, oh, threshold) && !horizontal.includes(oh)) {
-          horizontal.push(oh);
+        if (withinThreshold(h, oh, threshold)) {
+          horizontalSet.add(oh);
         }
       }
     }
   }
 
-  return { horizontal, vertical };
+  return {
+    horizontal: Array.from(horizontalSet),
+    vertical: Array.from(verticalSet),
+  };
 }
 
 /**
- * Snaps position so that the dragged rect (with given width/height) aligns
- * to the nearest guide from other bounds. Snaps x to vertical guides and y to horizontal guides.
+ * Snaps position from precomputed guides. Useful for drag handlers that already
+ * computed guides for rendering, so we avoid recalculating them for snapping.
  */
-export function computeSnappedPosition(
-  dragged: IBounds,
-  others: IBounds[],
+export function computeSnappedPositionFromGuides(
+  guides: IAlignmentGuides,
   pos: { x: number; y: number },
   width: number,
   height: number,
   threshold: number = DEFAULT_THRESHOLD
 ): { x: number; y: number } {
-  const guides = computeAlignmentGuides(dragged, others, threshold);
   let x = pos.x;
   let y = pos.y;
 
@@ -116,4 +117,20 @@ export function computeSnappedPosition(
   }
 
   return { x, y };
+}
+
+/**
+ * Snaps position so that the dragged rect (with given width/height) aligns
+ * to the nearest guide from other bounds. Snaps x to vertical guides and y to horizontal guides.
+ */
+export function computeSnappedPosition(
+  dragged: IBounds,
+  others: IBounds[],
+  pos: { x: number; y: number },
+  width: number,
+  height: number,
+  threshold: number = DEFAULT_THRESHOLD
+): { x: number; y: number } {
+  const guides = computeAlignmentGuides(dragged, others, threshold);
+  return computeSnappedPositionFromGuides(guides, pos, width, height, threshold);
 }

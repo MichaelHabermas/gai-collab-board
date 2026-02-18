@@ -87,6 +87,7 @@ const createStickyAtCenter = async (page: Page): Promise<void> => {
 };
 
 test.describe('MVP Benchmarks', () => {
+  test.describe.configure({ mode: 'default' });
   test.skip(({ browserName }) => browserName !== 'chromium', 'Benchmarks run on Chromium only');
 
   test('supports 5 concurrent users with shared object propagation', async ({ browser }) => {

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { User } from 'firebase/auth';
@@ -352,6 +352,102 @@ describe('BoardCanvas interactions', () => {
           toAnchor: 'bottom',
         })
       );
+    });
+  });
+
+  it('does not create rectangle when draw size is below threshold', async () => {
+    const onObjectCreate = vi.fn().mockResolvedValue(createObject({ id: 'rect-1', type: 'rectangle' }));
+
+    render(
+      <BoardCanvas
+        boardId='board-1'
+        boardName='Board'
+        user={createUser()}
+        objects={[]}
+        canEdit={true}
+        onObjectCreate={onObjectCreate}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId('set-tool-rectangle'));
+
+    await act(async () => {
+      latestStageProps.onMouseDown?.(createStageEvent({ x: 200, y: 200 }));
+    });
+
+    await act(async () => {
+      latestStageProps.onMouseMove?.(createStageEvent({ x: 203, y: 203 }));
+    });
+
+    await act(async () => {
+      await latestStageProps.onMouseUp?.(createStageEvent({ x: 203, y: 203 }));
+    });
+
+    expect(onObjectCreate).not.toHaveBeenCalled();
+  });
+
+  it('cancels connector flow when selecting the same shape twice', async () => {
+    const onObjectCreate = vi.fn().mockResolvedValue(createObject({ id: 'connector-2', type: 'connector' }));
+    const objects = [
+      createObject({ id: 'shape-a', type: 'rectangle', x: 100, y: 100 }),
+      createObject({ id: 'shape-b', type: 'rectangle', x: 300, y: 240 }),
+    ];
+
+    render(
+      <BoardCanvas
+        boardId='board-1'
+        boardName='Board'
+        user={createUser()}
+        objects={objects}
+        canEdit={true}
+        onObjectCreate={onObjectCreate}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId('set-tool-connector'));
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('connector-node-a'));
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('connector-node-a'));
+    });
+
+    expect(onObjectCreate).not.toHaveBeenCalled();
+  });
+
+  it('does not create sticky note when clicking on an existing shape target', async () => {
+    const onObjectCreate = vi.fn().mockResolvedValue(createObject({ id: 'new-sticky', type: 'sticky' }));
+
+    render(
+      <BoardCanvas
+        boardId='board-1'
+        boardName='Board'
+        user={createUser()}
+        objects={[createObject({ id: 'shape-a', type: 'rectangle' })]}
+        canEdit={true}
+        onObjectCreate={onObjectCreate}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId('set-tool-sticky'));
+
+    const stageEvent = createStageEvent({ x: 200, y: 200 });
+    const shapeTarget = {
+      ...stageEvent.target,
+      name: () => 'shape rectangle',
+      getClassName: () => 'Rect',
+      getParent: () => null,
+    };
+
+    latestStageProps.onClick?.({
+      ...stageEvent,
+      target: shapeTarget,
+    } as KonvaEvent);
+
+    await waitFor(() => {
+      expect(onObjectCreate).not.toHaveBeenCalled();
     });
   });
 });

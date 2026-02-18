@@ -30,7 +30,7 @@ import { getAnchorPosition } from '@/lib/connectorAnchors';
 import { getObjectBounds, getSelectionBounds, getBoardBounds } from '@/lib/canvasBounds';
 import {
   computeAlignmentGuides,
-  computeSnappedPosition,
+  computeSnappedPositionFromGuides,
   type IAlignmentGuides,
 } from '@/lib/alignmentGuides';
 import { cn } from '@/lib/utils';
@@ -62,6 +62,7 @@ const ZOOM_PRESETS = [0.5, 1, 2] as const;
 const GRID_SIZE = 20;
 const GRID_STROKE_WIDTH = 1;
 export const GRID_LINE_OPACITY = 0.5;
+const REMOTE_CURSOR_STALE_MS = 10_000;
 
 /** Board background colors driven only by app theme (ignore system/browser theme). */
 export const BOARD_CANVAS_BACKGROUND_LIGHT = '#ffffff';
@@ -225,9 +226,21 @@ export const BoardCanvas = memo(
       boardId,
       user,
     });
+    const activeCursors = useMemo(() => {
+      const now = Date.now();
+      return Object.fromEntries(
+        Object.entries(cursors).filter((entry) => {
+          const [cursorId, cursor] = entry;
+          if (cursorId === user.uid) {
+            return true;
+          }
+          return now - cursor.lastUpdated <= REMOTE_CURSOR_STALE_MS;
+        })
+      );
+    }, [cursors, user.uid]);
     const hasRemoteCursors = useMemo(
-      () => Object.keys(cursors).some((cursorId) => cursorId !== user.uid),
-      [cursors, user.uid]
+      () => Object.keys(activeCursors).some((cursorId) => cursorId !== user.uid),
+      [activeCursors, user.uid]
     );
 
     // Keep ref in sync with state
@@ -281,14 +294,21 @@ export const BoardCanvas = memo(
         const pointer = stage.getPointerPosition();
         if (!pointer) return;
 
+        const shouldTrackPointer = drawingActiveRef.current || selectingActiveRef.current;
+        const shouldBroadcastCursor =
+          hasRemoteCursors && !(activeToolRef.current === 'pan' && stage.isDragging());
+
+        if (!shouldTrackPointer && !shouldBroadcastCursor) {
+          return;
+        }
+
         const { x: canvasX, y: canvasY } = getCanvasCoords(stage, pointer);
 
-        // Skip high-frequency cursor sync while actively panning to reduce event pressure.
-        if (!(activeToolRef.current === 'pan' && stage.isDragging())) {
+        if (shouldBroadcastCursor) {
           handleMouseMove(canvasX, canvasY);
         }
 
-        if (!drawingActiveRef.current && !selectingActiveRef.current) {
+        if (!shouldTrackPointer) {
           return;
         }
 
@@ -318,7 +338,7 @@ export const BoardCanvas = memo(
           });
         }
       },
-      [handleMouseMove, getCanvasCoords]
+      [handleMouseMove, getCanvasCoords, hasRemoteCursors]
     );
 
     // Check if click is on empty area (not on a shape)
@@ -362,6 +382,10 @@ export const BoardCanvas = memo(
       (e: Konva.KonvaEventObject<MouseEvent>) => {
         const stage = e.target.getStage();
         if (!stage) return;
+
+        if (activeToolRef.current === 'pan') {
+          return;
+        }
 
         if (!isEmptyAreaClick(e)) return;
 
@@ -570,6 +594,9 @@ export const BoardCanvas = memo(
       (e: Konva.KonvaEventObject<MouseEvent>) => {
         const stage = e.target.getStage();
         if (!stage) {
+          return;
+        }
+        if (activeToolRef.current === 'pan') {
           return;
         }
         // Click that follows marquee release on empty area must not clear selection
@@ -783,6 +810,10 @@ export const BoardCanvas = memo(
           return cached.fn;
         }
 
+        const otherBounds = guideCandidateBoundsRef.current
+          .filter((candidate) => candidate.id !== objectId)
+          .map((candidate) => candidate.bounds);
+
         const nextDragBoundFunc = (pos: { x: number; y: number }) => {
           const dragged = {
             x1: pos.x,
@@ -790,11 +821,8 @@ export const BoardCanvas = memo(
             x2: pos.x + width,
             y2: pos.y + height,
           };
-          const others = guideCandidateBoundsRef.current
-            .filter((candidate) => candidate.id !== objectId)
-            .map((candidate) => candidate.bounds);
-          const guides = computeAlignmentGuides(dragged, others);
-          const snapped = computeSnappedPosition(dragged, others, pos, width, height);
+          const guides = computeAlignmentGuides(dragged, otherBounds);
+          const snapped = computeSnappedPositionFromGuides(guides, pos, width, height);
           setGuidesThrottledRef.current(guides);
           return snapped;
         };
@@ -1080,13 +1108,15 @@ export const BoardCanvas = memo(
               obj.fromObjectId != null ? objectsById.get(obj.fromObjectId) : undefined;
             const toObj = obj.toObjectId != null ? objectsById.get(obj.toObjectId) : undefined;
             if (fromObj && toObj && obj.fromAnchor != null && obj.toAnchor != null) {
-              const x = getAnchorPosition(fromObj, obj.fromAnchor).x;
-              const y = getAnchorPosition(fromObj, obj.fromAnchor).y;
+              const fromPos = getAnchorPosition(fromObj, obj.fromAnchor);
+              const toPos = getAnchorPosition(toObj, obj.toAnchor);
+              const x = fromPos.x;
+              const y = fromPos.y;
               const points: [number, number, number, number] = [
                 0,
                 0,
-                getAnchorPosition(toObj, obj.toAnchor).x - x,
-                getAnchorPosition(toObj, obj.toAnchor).y - y,
+                toPos.x - x,
+                toPos.y - y,
               ];
               return (
                 <Connector
@@ -1293,6 +1323,8 @@ export const BoardCanvas = memo(
 
     // Stage is draggable only in pan mode so marquee selection is not stolen by pan
     const isDraggable = activeTool === 'pan';
+    const shouldHandleMouseMove = hasRemoteCursors || drawingState.isDrawing || isSelecting;
+    const shouldHandlePointerMutations = activeTool !== 'pan';
 
     const handleZoomToSelection = useCallback(() => {
       const bounds = getSelectionBounds(objects, selectedIds);
@@ -1420,12 +1452,12 @@ export const BoardCanvas = memo(
           draggable={isDraggable}
           onWheel={handleWheel}
           onDragEnd={handleDragEnd}
-          onMouseMove={handleStageMouseMove}
-          onMouseDown={handleStageMouseDown}
-          onMouseUp={handleStageMouseUp}
+          onMouseMove={shouldHandleMouseMove ? handleStageMouseMove : undefined}
+          onMouseDown={shouldHandlePointerMutations ? handleStageMouseDown : undefined}
+          onMouseUp={shouldHandlePointerMutations ? handleStageMouseUp : undefined}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          onClick={handleStageClick}
+          onClick={shouldHandlePointerMutations ? handleStageClick : undefined}
           style={{
             backgroundColor: getBoardCanvasBackgroundColor(theme),
             forcedColorAdjust: 'none',
@@ -1474,7 +1506,7 @@ export const BoardCanvas = memo(
           </Layer>
 
           {/* Cursor layer - other users' cursors */}
-          {hasRemoteCursors && <CursorLayer cursors={cursors} currentUid={user.uid} />}
+          {hasRemoteCursors && <CursorLayer cursors={activeCursors} currentUid={user.uid} />}
 
           {/* Alignment guides - temporary lines during drag */}
           {alignmentGuides != null && <AlignmentGuidesLayer guides={alignmentGuides} />}
