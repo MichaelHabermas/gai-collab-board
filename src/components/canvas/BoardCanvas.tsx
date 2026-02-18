@@ -139,6 +139,10 @@ export const BoardCanvas = memo(
     } | null>(null);
     const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
     const [alignmentGuides, setAlignmentGuides] = useState<IAlignmentGuides | null>(null);
+    const drawingActiveRef = useRef(false);
+    const selectingActiveRef = useRef(false);
+    const pendingPointerRef = useRef<IPosition | null>(null);
+    const pointerFrameRef = useRef<number | null>(null);
 
     const {
       viewport: persistedViewport,
@@ -182,6 +186,8 @@ export const BoardCanvas = memo(
 
     // Filter objects to only visible ones (viewport culling)
     const visibleObjects = useVisibleShapes({ objects, viewport });
+    const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+    const objectsById = useMemo(() => new Map(objects.map((object) => [object.id, object])), [objects]);
 
     // Linked connectors are excluded from transform (selectable for deletion only)
     const linkedConnectorIds = useMemo(
@@ -202,6 +208,14 @@ export const BoardCanvas = memo(
     useEffect(() => {
       activeToolRef.current = activeTool;
     }, [activeTool]);
+
+    useEffect(() => {
+      drawingActiveRef.current = drawingState.isDrawing;
+    }, [drawingState.isDrawing]);
+
+    useEffect(() => {
+      selectingActiveRef.current = isSelecting;
+    }, [isSelecting]);
 
     // Clear selection helper
     const clearSelection = useCallback(() => {
@@ -246,25 +260,37 @@ export const BoardCanvas = memo(
         // Update cursor position for multiplayer
         handleMouseMove(canvasX, canvasY);
 
-        // Update drawing preview
-        if (drawingState.isDrawing) {
-          setDrawingState((prev) => ({
-            ...prev,
-            currentX: canvasX,
-            currentY: canvasY,
-          }));
+        if (!drawingActiveRef.current && !selectingActiveRef.current) {
+          return;
         }
 
-        // Update selection rectangle
-        if (isSelecting) {
-          setSelectionRect((prev) => ({
-            ...prev,
-            x2: canvasX,
-            y2: canvasY,
-          }));
+        pendingPointerRef.current = { x: canvasX, y: canvasY };
+
+        if (pointerFrameRef.current == null) {
+          pointerFrameRef.current = requestAnimationFrame(() => {
+            pointerFrameRef.current = null;
+            const pendingPointer = pendingPointerRef.current;
+            if (!pendingPointer) return;
+
+            if (drawingActiveRef.current) {
+              setDrawingState((prev) => ({
+                ...prev,
+                currentX: pendingPointer.x,
+                currentY: pendingPointer.y,
+              }));
+            }
+
+            if (selectingActiveRef.current) {
+              setSelectionRect((prev) => ({
+                ...prev,
+                x2: pendingPointer.x,
+                y2: pendingPointer.y,
+              }));
+            }
+          });
         }
       },
-      [handleMouseMove, drawingState.isDrawing, isSelecting, getCanvasCoords]
+      [handleMouseMove, getCanvasCoords]
     );
 
     // Check if click is on empty area (not on a shape)
@@ -481,6 +507,12 @@ export const BoardCanvas = memo(
             y2: 0,
           });
         }
+
+        if (pointerFrameRef.current != null) {
+          cancelAnimationFrame(pointerFrameRef.current);
+          pointerFrameRef.current = null;
+        }
+        pendingPointerRef.current = null;
       },
       [
         drawingState,
@@ -491,6 +523,15 @@ export const BoardCanvas = memo(
         getCanvasCoords,
         setSelectedIds,
       ]
+    );
+
+    useEffect(
+      () => () => {
+        if (pointerFrameRef.current != null) {
+          cancelAnimationFrame(pointerFrameRef.current);
+        }
+      },
+      []
     );
 
     // Handle stage click for object creation or deselection
@@ -792,11 +833,12 @@ export const BoardCanvas = memo(
 
       return gridLines;
     }, [viewport, gridColor]);
+    const gridNodes = useMemo(() => renderGrid(), [renderGrid]);
 
     // Render shape based on type
     const renderShape = useCallback(
       (obj: IBoardObject) => {
-        const isSelected = selectedIds.includes(obj.id);
+        const isSelected = selectedIdSet.has(obj.id);
 
         switch (obj.type) {
           case 'sticky':
@@ -904,10 +946,8 @@ export const BoardCanvas = memo(
             );
 
           case 'connector': {
-            const fromObj =
-              obj.fromObjectId != null ? objects.find((o) => o.id === obj.fromObjectId) : undefined;
-            const toObj =
-              obj.toObjectId != null ? objects.find((o) => o.id === obj.toObjectId) : undefined;
+            const fromObj = obj.fromObjectId != null ? objectsById.get(obj.fromObjectId) : undefined;
+            const toObj = obj.toObjectId != null ? objectsById.get(obj.toObjectId) : undefined;
             if (fromObj && toObj && obj.fromAnchor != null && obj.toAnchor != null) {
               const x = getAnchorPosition(fromObj, obj.fromAnchor).x;
               const y = getAnchorPosition(fromObj, obj.fromAnchor).y;
@@ -1030,9 +1070,9 @@ export const BoardCanvas = memo(
         }
       },
       [
-        selectedIds,
+        selectedIdSet,
         canEdit,
-        objects,
+        objectsById,
         selectionColor,
         handleObjectSelect,
         handleObjectDragEnd,
@@ -1261,7 +1301,7 @@ export const BoardCanvas = memo(
           {/* Background grid layer - static, no interaction; only when show grid is on */}
           {showGrid && (
             <Layer listening={false} name='grid'>
-              {renderGrid()}
+              {gridNodes}
             </Layer>
           )}
 
