@@ -18,6 +18,7 @@
     "test:e2e": "playwright test",
     "test:ai-connection": "bun run scripts/test-ai-connection.ts",
     "clear-boards": "bun run scripts/clear-boards.ts",
+    "proxy": "bun run server/index.ts",
     "validate": "bun run format && bun run typecheck && bun run lint && bun run test:run"
   },
   "devDependencies": {

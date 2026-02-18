@@ -179,3 +179,25 @@ This log records how AI was used during development: tools (Cursor, Context7 MCP
 - **Validation:** Format, typecheck, lint (with existing warnings); unit tests for share-link and routing pass; E2E share-link suite passes. Two pre-existing BoardListSidebar unit tests still fail (delete/switch and create-new callback flow); added missing `canUserManage` mock so remaining BoardListSidebar tests run.
 
 **Cost & usage (this session):** Development via Cursor; no additional external LLM API. Approximate token use: ~20k input / ~7k output (estimate). **Running total (development):** Cursor $20/mo; API $0. **Deployment (expected):** No change; UI/routing only, no new LLM or runtime cost.
+
+## AI proxy on Render / production fix (Feb 2026)
+
+**Scope:** Fix "Cannot read properties of undefined (reading '0')" when using AI commands (e.g. add a sticky note) on the deployed site (Render). Root causes: (1) production hardcoded `/.netlify/functions/ai-chat/v1` so requests on Render hit a non-existent path and returned a non-OpenAI response; (2) `aiService` read `response.choices[0]` without validating that `choices` existed, causing a TypeError.
+
+**Implementation:**
+
+- **Configurable AI base URL** ([src/lib/ai.ts](src/lib/ai.ts)): Added `VITE_AI_PROXY_URL` (full URL) and `VITE_AI_PROXY_PATH` (path on same origin). Production default path is now `/api/ai/v1` (Render-friendly). Exported `getProxyBaseURLFromEnv(env, origin)` for tests.
+- **Defensive response handling** ([src/modules/ai/aiService.ts](src/modules/ai/aiService.ts)): Introduced `getFirstAssistantMessage(response)` that validates `response?.choices` is a non-empty array before reading `[0]`; throws `AIError` with a clear message if not. Used for both initial and follow-up responses; follow-up uses a safe fallback string if the follow-up response is malformed.
+- **Render-ready AI proxy** ([server/](server/)): Extracted shared proxy logic into `server/ai-proxy-config.ts` and `server/ai-proxy-handler.ts`. Added `server/index.ts` (Node HTTP server) that serves `POST /api/ai/v1/*` and forwards to Groq/NVIDIA. Run with `bun run proxy`; env: `GROQ_API_KEY` or `NVIDIA_API_KEY`, optionally `AI_PROVIDER`. Documented in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+- **PRD:** Updated deployment to Render + Firebase; Story 5.2 refocused on Render, AI proxy options, and two verification checkboxes (AI proxy in production; malformed response handling). Appendix C (env) and D (checklist) updated; architecture diagram and stack rationale updated.
+- **Tests:** [tests/unit/aiService.test.ts](tests/unit/aiService.test.ts) — throw `AIError` when response has no `choices` or empty `choices`; safe fallback when follow-up has no `choices`. [tests/unit/ai.test.ts](tests/unit/ai.test.ts) — `getProxyBaseURLFromEnv` for full URL, path, default prod path, dev path, and trimming.
+
+**Cost & usage (this session):** Development via Cursor; no external LLM API. Approximate token use: ~40k input / ~14k output (estimate).
+
+**Running totals (development):**
+
+- Cursor subscription: $20/month
+- External API spend during development: $0
+- Approximate cumulative tokens across logged sessions: ~240k input / ~84k output (estimate)
+
+**Deployment impact (expected):** No change to per-command token economics or LLM cost. Fix is configuration (proxy URL/path) and resilience (defensive parsing). Production stack is Render + Firebase; AI proxy must run server-side; same Groq/NVIDIA and token assumptions as in AI-COST-ANALYSIS.md.

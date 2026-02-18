@@ -15,6 +15,28 @@ const REQUEST_TIMEOUT_MS = 90_000;
 /** Extra body for providers that support disabling thinking mode (e.g. some OpenAI-compatible APIs). */
 const PROVIDER_EXTRA_BODY = { thinking: { type: 'disabled' as const } };
 
+const UNEXPECTED_RESPONSE_MESSAGE =
+  'AI service returned an unexpected response. Check that the AI proxy is configured and reachable.';
+
+/** Returns the first assistant message from a completion response; throws AIError if shape is invalid. */
+function getFirstAssistantMessage(
+  response: { choices?: Array<{ message?: ChatCompletionMessage }> } | null | undefined
+): ChatCompletionMessage {
+  const choices = response?.choices;
+
+  if (!Array.isArray(choices) || choices.length === 0) {
+    throw new AIError(UNEXPECTED_RESPONSE_MESSAGE);
+  }
+
+  const first = choices[0]?.message;
+
+  if (!first) {
+    throw new AIError(UNEXPECTED_RESPONSE_MESSAGE);
+  }
+
+  return first;
+}
+
 const SYSTEM_PROMPT = `You are an AI assistant for CollabBoard, a collaborative whiteboard application.
 Your role is to help users manipulate the board through natural language commands.
 
@@ -98,11 +120,7 @@ export class AIService {
       )
     );
 
-    const assistantMessage = response.choices[0]?.message;
-
-    if (!assistantMessage) {
-      throw new Error('No response from AI');
-    }
+    const assistantMessage = getFirstAssistantMessage(response);
 
     if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
       return await this.handleToolCalls(messages, assistantMessage);
@@ -181,7 +199,13 @@ export class AIService {
       )
     );
 
-    const finalMessage = followUpResponse.choices[0]?.message?.content ?? '';
+    let finalMessage: string;
+    try {
+      const followUpMessage = getFirstAssistantMessage(followUpResponse);
+      finalMessage = followUpMessage?.content ?? '';
+    } catch {
+      finalMessage = "I ran the actions but couldn't get a final reply from the AI.";
+    }
 
     const lastUserContent = messages[messages.length - 1];
     const userContent =

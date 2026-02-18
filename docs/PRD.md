@@ -62,7 +62,7 @@ All items required to pass:
 ```mermaid
 graph TB
     subgraph Deployment[Deployment]
-        Netlify[Netlify CDN + Functions]
+        Render[Render - Static + AI Proxy]
     end
 
     subgraph Frontend[Frontend Layer]
@@ -91,7 +91,7 @@ graph TB
         Secondary[Secondary provider - optional]
     end
 
-    Netlify --> Frontend
+    Render --> Frontend
     Frontend --> Modules
     AuthMod --> FireAuth
     SyncMod --> Firestore
@@ -110,7 +110,7 @@ graph TB
 | **Canvas**     | Konva.js                              | High performance (60fps with 1000+ objects), layered structure, React integration         |
 | **UI**         | Shadcn/ui + Tailwind v4               | Customizable components, CSS-first approach, accessible by default                        |
 | **AI**         | Groq (default) or secondary provider | Groq: free tier, Llama 3.3 70B; secondary (e.g. NVIDIA): OpenAI-compatible, function calling |
-| **Deployment** | Netlify                               | Easy Git deploys, serverless functions, global CDN, free tier                             |
+| **Deployment** | Render + Firebase                     | Render: static site and/or Web Service for AI proxy; Firebase: auth, persistence, realtime |
 
 ### SOLID Principles Application
 
@@ -653,7 +653,7 @@ environment variables.
   VITE_FIREBASE_APP_ID=1:123456789:web:abc123
   VITE_FIREBASE_DATABASE_URL=https://your-project.firebaseio.com
 
-  # AI: Groq (free) or NVIDIA/Kimi 2.5. Production: set GROQ_API_KEY or NVIDIA_API_KEY in Netlify.
+  # AI: Groq (free) or NVIDIA/Kimi 2.5. Production: set GROQ_API_KEY or NVIDIA_API_KEY on the AI proxy (e.g. Render).
   VITE_AI_PROVIDER=groq
   VITE_GROQ_API_KEY=gsk_xxxx
   VITE_NVIDIA_API_KEY=nvapi-xxxx-xxxx-xxxx
@@ -2422,7 +2422,7 @@ sequenceDiagram
 
 ### Intent for Epic 5
 
-Create a responsive, modern UI with Shadcn/ui components, deploy to Netlify, and
+Create a responsive, modern UI with Shadcn/ui components, deploy to Render (and Firebase), and
 document the AI development process.
 
 ### Story 5.1: UI Components
@@ -2470,15 +2470,28 @@ document the AI development process.
 - [ ] After collapsing and refreshing the page, the panel remains collapsed (persisted state).
 - [ ] Switching to another board and back restores that board's collapse state.
 
-### Story 5.2: Netlify Deployment
+### Story 5.2: Production Deployment (Render + Firebase)
 
-**As a developer**, the app is deployed to Netlify with CI/CD.
+**As a developer**, the app is deployed to Render with Firebase for auth and persistence. AI commands require a server-side proxy (API key must not be in the client).
 
-**Branch**: `feature/deploy-netlify`
+**Branch**: `feature/deploy-render` (or equivalent)
 
-#### Commit 1: Netlify Configuration
+#### Deployment scope
 
-- **Subtask 1**: Create `netlify.toml`
+- **Frontend**: Build `bun run build`; publish `dist/` as a Render Static Site (or serve from a Web Service).
+- **AI proxy**: Must run server-side. Options: (1) Same origin: serve static and proxy at `/api/ai/v1` from one Render Web Service; (2) Separate service: run `bun run proxy` (see `server/index.ts`) as a second Web Service and set `VITE_AI_PROXY_URL` on the frontend to that service base URL (e.g. `https://your-proxy.onrender.com/api/ai/v1`).
+- **Environment variables**: Firebase `VITE_*` on frontend; `GROQ_API_KEY` or `NVIDIA_API_KEY` (and optionally `AI_PROVIDER`) on the proxy service. Optional frontend: `VITE_AI_PROXY_URL`, `VITE_AI_PROXY_PATH`, `VITE_AI_PROVIDER`.
+
+#### Expected behaviour (verify before checking)
+
+- [ ] **AI proxy in production:** With the proxy correctly configured (URL or path) and API keys set on the server, AI commands (e.g. "add a sticky note") complete successfully on the deployed site.
+- [ ] **Malformed AI response:** If the AI endpoint returns a response without a valid `choices` array, the app shows a clear error message and does not throw "Cannot read properties of undefined (reading '0')".
+
+(Check the boxes only after manual verification on Render and after tests pass.)
+
+#### Optional: Netlify
+
+- **Subtask 1**: Create `netlify.toml` (if using Netlify)
 
   ```toml
   [build]
@@ -2501,7 +2514,7 @@ document the AI development process.
   ```
 
 - **Subtask 2**: Link GitHub repository
-- **Subtask 3**: Configure environment variables
+- **Subtask 3**: Configure environment variables (including `VITE_AI_PROXY_PATH=/.netlify/functions/ai-chat/v1` for production AI)
 
 ### Story 5.3: Documentation
 
@@ -2580,15 +2593,15 @@ Template:
 
 - [x] Story 5.1: UI Components – toolbar, sidebar (board list, AI chat),
       theme/dark mode
-- [x] Story 5.2: Netlify Deployment – netlify.toml, GitHub link, env vars
+- [x] Story 5.2: Production Deployment (Render + Firebase) – build, AI proxy, env vars
 - [x] Story 5.3: Documentation – AI development log, cost analysis
 
 ### Epic 5: Test
 
 - [x] Toolbar and sidebar render and work on desktop and mobile
 - [x] Dark mode toggle and theme persist
-- [x] Build passes and app deploys to Netlify
-- [x] Environment variables configured in Netlify
+- [x] Build passes and app deploys to Render
+- [x] Environment variables configured in Render (and AI proxy service if separate)
 - [x] AI development log and cost analysis docs present
 
 ---
@@ -2784,12 +2797,15 @@ interface IPresenceData {
 | `VITE_FIREBASE_APP_ID`              | Yes         | Firebase app ID                         |
 | `VITE_FIREBASE_DATABASE_URL`        | Yes         | Realtime Database URL                   |
 | `VITE_AI_PROVIDER`                  | No          | `groq` (default) or `nvidia`            |
-| `VITE_GROQ_API_KEY`                 | Yes (Groq)  | Groq API key (free at console.groq.com) |
-| `VITE_NVIDIA_API_KEY`               | No (Nvidia) | Nvidia API key for Kimi 2.5             |
+| `VITE_AI_PROXY_URL`                 | No (prod)   | Full URL of AI proxy when on another host (e.g. Render Web Service) |
+| `VITE_AI_PROXY_PATH`                | No (prod)   | Path on same origin (default `/api/ai/v1`); e.g. `/.netlify/functions/ai-chat/v1` for Netlify |
+| `VITE_GROQ_API_KEY`                 | Yes (Groq, dev) | Groq API key (dev); production uses server-side `GROQ_API_KEY` on proxy |
+| `VITE_NVIDIA_API_KEY`               | No (Nvidia) | Nvidia API key for Kimi 2.5 (dev); production uses server-side `NVIDIA_API_KEY` on proxy |
 
 ### Appendix D: Deployment Checklist
 
-- [ ] Environment variables configured in Netlify
+- [ ] Environment variables configured in Render (and, if applicable, AI proxy service)
+- [ ] AI proxy URL/path and API keys configured for production (so AI commands work on deployed site)
 - [ ] Firebase security rules deployed
 - [ ] Realtime Database rules deployed
 - [ ] Build passes locally
