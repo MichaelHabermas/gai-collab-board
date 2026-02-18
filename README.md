@@ -22,7 +22,7 @@ with an AI-first development approach.
 
 ### Real-Time Collaboration
 
-- **Multiplayer Cursors** — See other users' cursors with name labels in
+- **Multiplayer Cursors** — See other users' cursors with Name labels in
   real-time
 - **Presence Awareness** — Know who's currently on the board
 - **Instant Sync** — Object changes appear for all users (<100ms latency)
