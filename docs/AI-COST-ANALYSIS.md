@@ -65,3 +65,25 @@ Collapsible right panel (icon rail when collapsed, full panel when expanded, sta
 ### Canvas object shadow (Feb 2026) — production relevance
 
 Canvas object shadow (shared constants, slight shadow on all object types: sticky note, shapes, frame, text, line, connector) is UI-only. No change to LLM usage, API calls, or deployment cost. Production cost assumptions unchanged.
+
+### Performance benchmark refactor (Feb 2026) — production relevance
+
+Performance work in this cycle targeted client-side render churn, Konva drag/alignment computation cost, and Firebase listener/update efficiency. The implementation introduced no new AI endpoints, no additional model calls, and no change to provider selection (Groq/NVIDIA assumptions remain unchanged).
+
+Key cost implications:
+
+- **LLM cost:** unchanged (same command volume and token mix assumptions).
+- **Infra/runtime:** potentially lower non-LLM cost at scale due to reduced redundant client updates/listener churn, but this is outside the LLM budget table and should be measured in hosting/Firebase dashboards.
+- **Testing/benchmarking overhead:** dev-time only; no material recurring production cost.
+
+Operational note: continue tracking real production command mix and commands-per-user before revising LLM projections; performance refactors improve responsiveness but do not change per-command token economics.
+
+### Benchmark hardening follow-up (Feb 2026) — cost relevance
+
+Follow-up changes focused on benchmark reliability (fresh-board setup in E2E benchmarks, deterministic propagation triggering) and reduced pan-mode cursor event overhead. These updates:
+
+- do **not** add new production AI calls,
+- do **not** change provider/model routing,
+- do **not** change token-per-command assumptions.
+
+Result: projected production LLM costs remain the same as the table above. Any cost benefit is expected in non-LLM infrastructure efficiency (fewer unnecessary realtime updates), which should be measured separately in Firebase and hosting telemetry.

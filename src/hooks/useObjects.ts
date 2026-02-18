@@ -5,8 +5,10 @@ import {
   createObject,
   updateObject,
   deleteObject,
-  subscribeToObjects,
+  subscribeToObjectsWithChanges,
   mergeObjectUpdates,
+  type IObjectChange,
+  type IObjectsSnapshotUpdate,
   ICreateObjectParams,
   IUpdateObjectParams,
 } from '@/modules/sync/objectService';
@@ -36,45 +38,130 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
 
   // Keep track of pending updates for rollback
   const pendingUpdatesRef = useRef<Map<string, IBoardObject>>(new Map());
+  const objectsByIdRef = useRef<Map<string, IBoardObject>>(new Map());
   // Track if this is the first callback after subscription to handle reset
   const isFirstCallbackRef = useRef<boolean>(true);
+
+  const getObjectTimestamp = useCallback((object: IBoardObject): number => {
+    return object.updatedAt?.toMillis?.() ?? 0;
+  }, []);
+
+  const isObjectVersionUnchanged = useCallback(
+    (previousObject: IBoardObject, nextObject: IBoardObject): boolean => {
+      return getObjectTimestamp(previousObject) === getObjectTimestamp(nextObject);
+    },
+    [getObjectTimestamp]
+  );
+
+  const applyIncrementalChanges = useCallback(
+    (prevObjects: IBoardObject[], changes: IObjectChange[]): IBoardObject[] => {
+      if (changes.length === 0) {
+        return prevObjects;
+      }
+
+      const workingById = new Map(objectsByIdRef.current);
+      let didMutate = false;
+
+      for (const change of changes) {
+        const pendingLocalObject = pendingUpdatesRef.current.get(change.object.id);
+        const mergedObject = pendingLocalObject
+          ? mergeObjectUpdates(pendingLocalObject, change.object)
+          : change.object;
+        const existingObject = workingById.get(mergedObject.id);
+
+        if (change.type === 'removed') {
+          if (existingObject) {
+            workingById.delete(mergedObject.id);
+            didMutate = true;
+          }
+          continue;
+        }
+
+        if (!existingObject || !isObjectVersionUnchanged(existingObject, mergedObject)) {
+          workingById.set(mergedObject.id, mergedObject);
+          didMutate = true;
+        }
+      }
+
+      if (!didMutate) {
+        return prevObjects;
+      }
+
+      const nextObjects = prevObjects
+        .map((object) => workingById.get(object.id))
+        .filter((object): object is IBoardObject => object !== undefined);
+
+      for (const change of changes) {
+        if (change.type !== 'added') {
+          continue;
+        }
+        const alreadyInOrder = nextObjects.some((object) => object.id === change.object.id);
+        if (!alreadyInOrder) {
+          const pendingLocalObject = pendingUpdatesRef.current.get(change.object.id);
+          nextObjects.push(pendingLocalObject ?? change.object);
+        }
+      }
+
+      objectsByIdRef.current = new Map(nextObjects.map((object) => [object.id, object]));
+      return nextObjects;
+    },
+    [isObjectVersionUnchanged]
+  );
+
+  const applySnapshotUpdate = useCallback(
+    (prevObjects: IBoardObject[], update: IObjectsSnapshotUpdate): IBoardObject[] => {
+      if (update.isInitialSnapshot) {
+        const initialObjects = update.objects.map((remoteObject) => {
+          const pendingLocalObject = pendingUpdatesRef.current.get(remoteObject.id);
+          return pendingLocalObject
+            ? mergeObjectUpdates(pendingLocalObject, remoteObject)
+            : remoteObject;
+        });
+        objectsByIdRef.current = new Map(initialObjects.map((object) => [object.id, object]));
+        return initialObjects;
+      }
+
+      const nextObjects = applyIncrementalChanges(prevObjects, update.changes);
+      if (nextObjects === prevObjects && update.objects.length !== prevObjects.length) {
+        const refreshedObjects = update.objects.map((remoteObject) => {
+          const pendingLocalObject = pendingUpdatesRef.current.get(remoteObject.id);
+          return pendingLocalObject
+            ? mergeObjectUpdates(pendingLocalObject, remoteObject)
+            : remoteObject;
+        });
+        objectsByIdRef.current = new Map(refreshedObjects.map((object) => [object.id, object]));
+        return refreshedObjects;
+      }
+      return nextObjects;
+    },
+    [applyIncrementalChanges]
+  );
 
   // Subscribe to objects
   useEffect(() => {
     if (!boardId) {
+      objectsByIdRef.current.clear();
       return;
     }
 
     // Mark that we're waiting for first callback to reset state
     isFirstCallbackRef.current = true;
 
-    const unsubscribe = subscribeToObjects(boardId, (remoteObjects) => {
+    const unsubscribe = subscribeToObjectsWithChanges(boardId, (update) => {
       // Reset error on first callback after subscription
       if (isFirstCallbackRef.current) {
         isFirstCallbackRef.current = false;
         setError('');
       }
 
-      setObjects(() => {
-        // Merge remote objects with any pending local updates
-        const mergedObjects = remoteObjects.map((remoteObj) => {
-          const pendingLocal = pendingUpdatesRef.current.get(remoteObj.id);
-          if (pendingLocal) {
-            // Use last-write-wins to resolve conflicts
-            return mergeObjectUpdates(pendingLocal, remoteObj);
-          }
-          return remoteObj;
-        });
-
-        return mergedObjects;
-      });
+      setObjects((prevObjects) => applySnapshotUpdate(prevObjects, update));
       setLoading(false);
     });
 
     return () => {
       unsubscribe();
     };
-  }, [boardId]);
+  }, [applySnapshotUpdate, boardId]);
 
   // Create object with optimistic update
   const handleCreateObject = useCallback(

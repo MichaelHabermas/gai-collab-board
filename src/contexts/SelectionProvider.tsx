@@ -1,4 +1,4 @@
-import { useState, type ReactElement, type ReactNode } from 'react';
+import { useMemo, useState, type ReactElement, type ReactNode } from 'react';
 import { SelectionContext } from './selectionContext';
 
 interface ISelectionProviderProps {
@@ -7,9 +7,15 @@ interface ISelectionProviderProps {
 
 export const SelectionProvider = ({ children }: ISelectionProviderProps): ReactElement => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const selectionContextValue = useMemo(
+    () => ({
+      selectedIds,
+      setSelectedIds,
+    }),
+    [selectedIds]
+  );
+
   return (
-    <SelectionContext.Provider value={{ selectedIds, setSelectedIds }}>
-      {children}
-    </SelectionContext.Provider>
+    <SelectionContext.Provider value={selectionContextValue}>{children}</SelectionContext.Provider>
   );
 };

@@ -12,10 +12,20 @@ export interface IAlignmentGuides {
   vertical: number[];
 }
 
+interface IAlignmentPositions {
+  v: number[];
+  h: number[];
+}
+
+export interface IAlignmentCandidate {
+  bounds: IBounds;
+  positions: IAlignmentPositions;
+}
+
 /**
  * Key positions for alignment: left edge, center x, right edge, top edge, center y, bottom edge.
  */
-function getAlignmentPositions(b: IBounds): { v: number[]; h: number[] } {
+export function getAlignmentPositions(b: IBounds): IAlignmentPositions {
   const centerX = (b.x1 + b.x2) / 2;
   const centerY = (b.y1 + b.y2) / 2;
   return {
@@ -37,12 +47,24 @@ export function computeAlignmentGuides(
   others: IBounds[],
   threshold: number = DEFAULT_THRESHOLD
 ): IAlignmentGuides {
+  const candidates: IAlignmentCandidate[] = others.map((bounds) => ({
+    bounds,
+    positions: getAlignmentPositions(bounds),
+  }));
+  return computeAlignmentGuidesWithCandidates(dragged, candidates, threshold);
+}
+
+export function computeAlignmentGuidesWithCandidates(
+  dragged: IBounds,
+  others: IAlignmentCandidate[],
+  threshold: number = DEFAULT_THRESHOLD
+): IAlignmentGuides {
   const horizontalSet = new Set<number>();
   const verticalSet = new Set<number>();
   const draggedPos = getAlignmentPositions(dragged);
 
   for (const other of others) {
-    const otherPos = getAlignmentPositions(other);
+    const otherPos = other.positions;
     for (const v of draggedPos.v) {
       for (const ov of otherPos.v) {
         if (withinThreshold(v, ov, threshold)) {

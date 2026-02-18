@@ -36,6 +36,11 @@ export const useAI = ({ boardId, user, objects }: IUseAIParams): IUseAIReturn =>
   objectsRef.current = objects;
 
   const viewportActions = useContext(ViewportActionsContext);
+  const zoomToFitAll = viewportActions?.zoomToFitAll;
+  const zoomToSelection = viewportActions?.zoomToSelection;
+  const setZoomLevel = viewportActions?.setZoomLevel;
+  const exportViewport = viewportActions?.exportViewport;
+  const exportFullBoard = viewportActions?.exportFullBoard;
 
   const executorContext = useMemo(() => {
     if (!boardId || !user) return null;
@@ -47,15 +52,21 @@ export const useAI = ({ boardId, user, objects }: IUseAIParams): IUseAIReturn =>
       createObject,
       updateObject,
       deleteObject,
-      ...(viewportActions && {
-        onZoomToFitAll: viewportActions.zoomToFitAll,
-        onZoomToSelection: viewportActions.zoomToSelection,
-        onSetZoomLevel: viewportActions.setZoomLevel,
-        onExportViewport: viewportActions.exportViewport,
-        onExportFullBoard: viewportActions.exportFullBoard,
+      ...(zoomToFitAll &&
+        zoomToSelection &&
+        setZoomLevel && {
+          onZoomToFitAll: zoomToFitAll,
+          onZoomToSelection: zoomToSelection,
+          onSetZoomLevel: setZoomLevel,
+        }),
+      ...(exportViewport && {
+        onExportViewport: exportViewport,
+      }),
+      ...(exportFullBoard && {
+        onExportFullBoard: exportFullBoard,
       }),
     };
-  }, [boardId, user, viewportActions]);
+  }, [boardId, user, zoomToFitAll, zoomToSelection, setZoomLevel, exportViewport, exportFullBoard]);
 
   const executor = useMemo(() => {
     if (!executorContext) return null;

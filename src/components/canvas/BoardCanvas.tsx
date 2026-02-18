@@ -29,8 +29,10 @@ import type { ICreateObjectParams } from '@/modules/sync/objectService';
 import { getAnchorPosition } from '@/lib/connectorAnchors';
 import { getObjectBounds, getSelectionBounds, getBoardBounds } from '@/lib/canvasBounds';
 import {
-  computeAlignmentGuides,
+  computeAlignmentGuidesWithCandidates,
+  getAlignmentPositions,
   computeSnappedPositionFromGuides,
+  type IAlignmentCandidate,
   type IAlignmentGuides,
 } from '@/lib/alignmentGuides';
 import { cn } from '@/lib/utils';
@@ -41,7 +43,7 @@ import { AlignmentGuidesLayer } from './AlignmentGuidesLayer';
 import { useExportAsImage } from '@/hooks/useExportAsImage';
 import { useTheme, type Theme } from '@/hooks/useTheme';
 import { useBoardSettings } from '@/hooks/useBoardSettings';
-import type { IViewportActionsValue } from '@/contexts/ViewportActionsContext';
+import type { ExportImageFormat, IViewportActionsValue } from '@/contexts/ViewportActionsContext';
 
 interface IBoardCanvasProps {
   boardId: string;
@@ -62,7 +64,6 @@ const ZOOM_PRESETS = [0.5, 1, 2] as const;
 const GRID_SIZE = 20;
 const GRID_STROKE_WIDTH = 1;
 export const GRID_LINE_OPACITY = 0.5;
-const REMOTE_CURSOR_STALE_MS = 10_000;
 
 /** Board background colors driven only by app theme (ignore system/browser theme). */
 export const BOARD_CANVAS_BACKGROUND_LIGHT = '#ffffff';
@@ -140,6 +141,7 @@ export const BoardCanvas = memo(
     } | null>(null);
     const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
     const [alignmentGuides, setAlignmentGuides] = useState<IAlignmentGuides | null>(null);
+    const objectsRef = useRef<IBoardObject[]>(objects);
     const drawingActiveRef = useRef(false);
     const selectingActiveRef = useRef(false);
     const pendingPointerRef = useRef<IPosition | null>(null);
@@ -164,6 +166,10 @@ export const BoardCanvas = memo(
           : '') || '#3b82f6',
       [theme]
     );
+
+    useEffect(() => {
+      objectsRef.current = objects;
+    }, [objects]);
 
     const handleViewportPersist = useCallback(
       (nextViewport: IViewportState) => {
@@ -226,18 +232,7 @@ export const BoardCanvas = memo(
       boardId,
       user,
     });
-    const activeCursors = useMemo(() => {
-      const now = Date.now();
-      return Object.fromEntries(
-        Object.entries(cursors).filter((entry) => {
-          const [cursorId, cursor] = entry;
-          if (cursorId === user.uid) {
-            return true;
-          }
-          return now - cursor.lastUpdated <= REMOTE_CURSOR_STALE_MS;
-        })
-      );
-    }, [cursors, user.uid]);
+    const activeCursors = cursors;
     const hasRemoteCursors = useMemo(
       () => Object.keys(activeCursors).some((cursorId) => cursorId !== user.uid),
       [activeCursors, user.uid]
@@ -295,8 +290,7 @@ export const BoardCanvas = memo(
         if (!pointer) return;
 
         const shouldTrackPointer = drawingActiveRef.current || selectingActiveRef.current;
-        const shouldBroadcastCursor =
-          hasRemoteCursors && !(activeToolRef.current === 'pan' && stage.isDragging());
+        const shouldBroadcastCursor = hasRemoteCursors && activeToolRef.current !== 'pan';
 
         if (!shouldTrackPointer && !shouldBroadcastCursor) {
           return;
@@ -794,17 +788,23 @@ export const BoardCanvas = memo(
         { width: number; height: number; fn: (pos: { x: number; y: number }) => IPosition }
       >
     >(new Map());
-    const guideCandidateBoundsRef = useRef<
-      Array<{ id: string; bounds: ReturnType<typeof getObjectBounds> }>
-    >([]);
+    const guideCandidateBoundsRef = useRef<Array<{ id: string; candidate: IAlignmentCandidate }>>(
+      []
+    );
     useEffect(() => {
       const candidateObjects = visibleObjects.length > 0 ? visibleObjects : objects;
       guideCandidateBoundsRef.current = candidateObjects.map((object) => ({
         id: object.id,
-        bounds: getObjectBounds(object),
+        candidate: (() => {
+          const bounds = getObjectBounds(object);
+          return {
+            bounds,
+            positions: getAlignmentPositions(bounds),
+          };
+        })(),
       }));
       dragBoundFuncCacheRef.current.clear();
-    }, [objects, visibleObjectIdsKey]);
+    }, [objects, visibleObjectIdsKey, visibleObjects]);
 
     const getDragBoundFunc = useCallback((objectId: string, width: number, height: number) => {
       const cached = dragBoundFuncCacheRef.current.get(objectId);
@@ -812,9 +812,9 @@ export const BoardCanvas = memo(
         return cached.fn;
       }
 
-      const otherBounds = guideCandidateBoundsRef.current
+      const otherCandidates = guideCandidateBoundsRef.current
         .filter((candidate) => candidate.id !== objectId)
-        .map((candidate) => candidate.bounds);
+        .map((candidate) => candidate.candidate);
 
       const nextDragBoundFunc = (pos: { x: number; y: number }) => {
         const dragged = {
@@ -823,7 +823,7 @@ export const BoardCanvas = memo(
           x2: pos.x + width,
           y2: pos.y + height,
         };
-        const guides = computeAlignmentGuides(dragged, otherBounds);
+        const guides = computeAlignmentGuidesWithCandidates(dragged, otherCandidates);
         const snapped = computeSnappedPositionFromGuides(guides, pos, width, height);
         setGuidesThrottledRef.current(guides);
         return snapped;
@@ -1236,10 +1236,13 @@ export const BoardCanvas = memo(
         getDragBoundFunc,
       ]
     );
+    // dragBoundFunc reads refs only during Konva drag events, not during React render.
+    /* eslint-disable react-hooks/refs */
     const visibleObjectNodes = useMemo(
       () => visibleObjects.map((object) => renderShape(object)),
       [visibleObjects, renderShape]
     );
+    /* eslint-enable react-hooks/refs */
 
     // Render drawing preview
     const renderDrawingPreview = useCallback(() => {
@@ -1343,6 +1346,12 @@ export const BoardCanvas = memo(
       },
       [zoomTo]
     );
+    const handleSetZoomLevel = useCallback(
+      (percent: number) => {
+        handleZoomPreset(percent / 100);
+      },
+      [handleZoomPreset]
+    );
 
     const handleZoomToObjectIds = useCallback(
       (objectIds: string[]) => {
@@ -1353,31 +1362,44 @@ export const BoardCanvas = memo(
       },
       [objects, zoomToFitBounds]
     );
+    const handleExportViewport = useCallback(
+      (format?: ExportImageFormat) => {
+        exportViewport(format ?? 'png');
+      },
+      [exportViewport]
+    );
+    const handleExportFullBoard = useCallback(
+      (format?: ExportImageFormat) => {
+        exportFullBoard(objectsRef.current, zoomToFitBounds, format ?? 'png');
+      },
+      [exportFullBoard, zoomToFitBounds]
+    );
+    const viewportActions = useMemo<IViewportActionsValue>(
+      () => ({
+        zoomToFitAll: handleZoomToFitAll,
+        zoomToSelection: handleZoomToObjectIds,
+        setZoomLevel: handleSetZoomLevel,
+        exportViewport: handleExportViewport,
+        exportFullBoard: handleExportFullBoard,
+      }),
+      [
+        handleZoomToFitAll,
+        handleZoomToObjectIds,
+        handleSetZoomLevel,
+        handleExportViewport,
+        handleExportFullBoard,
+      ]
+    );
 
     useEffect(() => {
       if (!onViewportActionsReady) {
         return;
       }
-      onViewportActionsReady({
-        zoomToFitAll: handleZoomToFitAll,
-        zoomToSelection: handleZoomToObjectIds,
-        setZoomLevel: (percent: number) => handleZoomPreset(percent / 100),
-        exportViewport: (format) => exportViewport(format ?? 'png'),
-        exportFullBoard: (format) => exportFullBoard(objects, zoomToFitBounds, format ?? 'png'),
-      });
+      onViewportActionsReady(viewportActions);
       return () => {
         onViewportActionsReady(null);
       };
-    }, [
-      onViewportActionsReady,
-      handleZoomToFitAll,
-      handleZoomToObjectIds,
-      handleZoomPreset,
-      exportViewport,
-      exportFullBoard,
-      objects,
-      zoomToFitBounds,
-    ]);
+    }, [onViewportActionsReady, viewportActions]);
 
     return (
       <div
@@ -1479,8 +1501,6 @@ export const BoardCanvas = memo(
               name='background'
               listening={true}
             />
-            {/* dragBoundFunc only reads ref when user drags (event), not during render */}
-            {/* eslint-disable-next-line react-hooks/refs */}
             {visibleObjectNodes}
           </Layer>
 

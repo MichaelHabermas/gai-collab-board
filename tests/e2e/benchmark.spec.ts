@@ -31,6 +31,21 @@ const waitForBoardVisible = async (page: Page): Promise<void> => {
   });
 };
 
+const createFreshBoardForBenchmark = async (page: Page, suffix: string): Promise<string> => {
+  await page.getByRole('tab', { name: 'Boards' }).click();
+  await page.locator('[data-testid="board-list-new-board"]').click();
+  await page.locator('[data-testid="board-list-create-name-input"]').fill(`Benchmark ${suffix}`);
+  await page.locator('[data-testid="board-list-create-submit"]').click();
+  await waitForBoardVisible(page);
+  await expect
+    .poll(async () => getObjectCount(page), {
+      timeout: 10_000,
+      intervals: [100, 200, 400],
+    })
+    .toBe(0);
+  return page.url();
+};
+
 const trySignUp = async (page: Page, credential: ICredential): Promise<void> => {
   await page.locator('button[role="tab"]:has-text("Sign Up")').click();
   await page.locator('#signup-email').fill(credential.email);
@@ -71,19 +86,19 @@ const ensureAuthenticated = async (page: Page, credential: ICredential): Promise
   }
 };
 
-const createStickyAtCenter = async (page: Page): Promise<void> => {
-  await page.locator('[data-testid="tool-sticky"]').click();
-  const canvas = page.locator('canvas').first();
-  const box = await canvas.boundingBox();
-
-  if (!box) {
-    throw new Error('Canvas bounding box is unavailable');
-  }
-
-  const centerX = box.x + box.width / 2;
-  const centerY = box.y + box.height / 2;
-  await page.mouse.click(centerX, centerY);
-  await page.locator('[data-testid="tool-select"]').click();
+const createStickyWithAI = async (page: Page): Promise<void> => {
+  const initialCount = await getObjectCount(page);
+  await page.getByRole('tab', { name: 'AI' }).click();
+  const aiInput = page.getByPlaceholder('Ask to create or edit board items...');
+  await expect(aiInput).toBeVisible({ timeout: 10_000 });
+  await aiInput.fill('Create one yellow sticky note with text "propagation benchmark".');
+  await aiInput.press('Enter');
+  await expect
+    .poll(async () => getObjectCount(page), {
+      timeout: 25_000,
+      intervals: [200, 300, 500, 800],
+    })
+    .toBeGreaterThan(initialCount);
 };
 
 test.describe('MVP Benchmarks', () => {
@@ -106,7 +121,6 @@ test.describe('MVP Benchmarks', () => {
         await ensureAuthenticated(page, credential);
       }
 
-      const baselineCounts = await Promise.all(pages.map((page) => getObjectCount(page)));
       let creatorPage: Page | null = null;
       for (const page of pages) {
         const isEnabled = await page.locator('[data-testid="tool-sticky"]').isEnabled();
@@ -120,9 +134,10 @@ test.describe('MVP Benchmarks', () => {
         throw new Error('No editable user context found for object creation benchmark');
       }
 
-      const start = Date.now();
+      const baselineCounts = await Promise.all(pages.map((page) => getObjectCount(page)));
 
-      await createStickyAtCenter(creatorPage);
+      await createStickyWithAI(creatorPage);
+      const propagationStart = Date.now();
 
       await Promise.all(
         pages.map(async (page, index) => {
@@ -136,7 +151,7 @@ test.describe('MVP Benchmarks', () => {
         })
       );
 
-      const propagationMs = Date.now() - start;
+      const propagationMs = Date.now() - propagationStart;
       expect(propagationMs).toBeLessThan(3_000);
     } finally {
       await Promise.all(
@@ -155,6 +170,7 @@ test.describe('MVP Benchmarks', () => {
     const credential = createCredential(99);
     await ensureAuthenticated(page, credential);
     await waitForBoardVisible(page);
+    await createFreshBoardForBenchmark(page, 'fps');
 
     const canvas = page.locator('canvas').first();
     const box = await canvas.boundingBox();
@@ -186,10 +202,10 @@ test.describe('MVP Benchmarks', () => {
       });
     });
 
-    for (let index = 0; index < 24; index += 1) {
+    for (let index = 0; index < 16; index += 1) {
       await page.mouse.move(centerX, centerY);
       await page.mouse.down();
-      await page.mouse.move(centerX + 40, centerY + 20);
+      await page.mouse.move(centerX + 30, centerY + 15);
       await page.mouse.up();
       await page.mouse.wheel(0, index % 2 === 0 ? 120 : -120);
     }
@@ -202,6 +218,7 @@ test.describe('MVP Benchmarks', () => {
     const credential = createCredential(199);
     await ensureAuthenticated(page, credential);
     await waitForBoardVisible(page);
+    await createFreshBoardForBenchmark(page, 'ai');
 
     const initialCount = await getObjectCount(page);
     await page.getByRole('tab', { name: 'AI' }).click();

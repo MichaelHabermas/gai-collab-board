@@ -1,5 +1,6 @@
 import {
   collection,
+  type DocumentChange,
   doc,
   setDoc,
   updateDoc,
@@ -15,6 +16,18 @@ import { firestore } from '@/lib/firebase';
 import type { IBoardObject, ShapeType, ConnectorAnchor } from '@/types';
 
 const OBJECTS_SUBCOLLECTION = 'objects';
+export type ObjectChangeType = 'added' | 'modified' | 'removed';
+
+export interface IObjectChange {
+  type: ObjectChangeType;
+  object: IBoardObject;
+}
+
+export interface IObjectsSnapshotUpdate {
+  objects: IBoardObject[];
+  changes: IObjectChange[];
+  isInitialSnapshot: boolean;
+}
 
 /**
  * Gets the reference to the objects subcollection for a board.
@@ -250,15 +263,51 @@ export const subscribeToObjects = (
   boardId: string,
   callback: (objects: IBoardObject[]) => void
 ): Unsubscribe => {
+  return subscribeToObjectsWithChanges(boardId, (update) => {
+    callback(update.objects);
+  });
+};
+
+/**
+ * Subscribes to real-time updates for all objects on a board and returns
+ * both the full object list and incremental document changes.
+ */
+export const subscribeToObjectsWithChanges = (
+  boardId: string,
+  callback: (update: IObjectsSnapshotUpdate) => void
+): Unsubscribe => {
   const objectsRef = getObjectsCollection(boardId);
   const objectsQuery = query(objectsRef, orderBy('createdAt', 'asc'));
+  let isFirstSnapshot = true;
 
   return onSnapshot(objectsQuery, (snapshot) => {
-    const objects: IBoardObject[] = [];
-    snapshot.forEach((doc) => {
-      objects.push(doc.data() as IBoardObject);
+    const objects: IBoardObject[] =
+      'docs' in snapshot && Array.isArray(snapshot.docs)
+        ? snapshot.docs.map((snapshotDoc) => snapshotDoc.data() as IBoardObject)
+        : (() => {
+            const nextObjects: IBoardObject[] = [];
+            snapshot.forEach((snapshotDoc) => {
+              nextObjects.push(snapshotDoc.data() as IBoardObject);
+            });
+            return nextObjects;
+          })();
+
+    const changes: IObjectChange[] =
+      typeof snapshot.docChanges === 'function'
+        ? snapshot.docChanges().map(
+            (change: DocumentChange): IObjectChange => ({
+              type: change.type as ObjectChangeType,
+              object: change.doc.data() as IBoardObject,
+            })
+          )
+        : [];
+
+    callback({
+      objects,
+      changes,
+      isInitialSnapshot: isFirstSnapshot,
     });
-    callback(objects);
+    isFirstSnapshot = false;
   });
 };
 

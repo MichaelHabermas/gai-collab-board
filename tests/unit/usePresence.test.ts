@@ -131,4 +131,35 @@ describe('usePresence', () => {
 
     expect(mockUpdatePresence).toHaveBeenCalledWith('board-2', 'user-1', 'Anonymous', null, '#123456');
   });
+
+  it('does not resubscribe when user profile fields change', () => {
+    const unsubscribe = vi.fn();
+    mockSubscribeToPresence.mockReturnValue(unsubscribe);
+
+    const { rerender, unmount } = renderHook(
+      ({ user }) =>
+        usePresence({
+          boardId: 'board-1',
+          user,
+        }),
+      {
+        initialProps: {
+          user: buildUser({ displayName: 'First Name', email: 'first@example.com' }),
+        },
+      }
+    );
+
+    expect(mockSubscribeToPresence).toHaveBeenCalledTimes(1);
+    expect(mockUpdatePresence).toHaveBeenCalledTimes(1);
+
+    rerender({
+      user: buildUser({ displayName: 'Updated Name', email: 'updated@example.com' }),
+    });
+
+    expect(mockSubscribeToPresence).toHaveBeenCalledTimes(1);
+    expect(mockUpdatePresence).toHaveBeenCalledTimes(2);
+
+    unmount();
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
+  });
 });

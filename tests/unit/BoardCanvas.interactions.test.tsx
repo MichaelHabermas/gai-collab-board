@@ -450,4 +450,48 @@ describe('BoardCanvas interactions', () => {
       expect(onObjectCreate).not.toHaveBeenCalled();
     });
   });
+
+  it('keeps drag bound behavior stable across rerenders for unchanged shapes', () => {
+    const objects = [createObject({ id: 'shape-a', type: 'rectangle', x: 120, y: 140 })];
+    const { rerender } = render(
+      <BoardCanvas
+        boardId='board-1'
+        boardName='Board'
+        user={createUser()}
+        objects={objects}
+        canEdit={true}
+      />
+    );
+
+    const firstProps = shapePropsById.get('shape-a');
+    const firstDragBoundFunc = firstProps?.dragBoundFunc;
+    expect(typeof firstDragBoundFunc).toBe('function');
+
+    rerender(
+      <BoardCanvas
+        boardId='board-1'
+        boardName='Board'
+        user={createUser()}
+        objects={objects}
+        canEdit={true}
+      />
+    );
+
+    const secondProps = shapePropsById.get('shape-a');
+    const secondDragBoundFunc = secondProps?.dragBoundFunc as
+      | ((pos: { x: number; y: number }) => { x: number; y: number })
+      | undefined;
+    expect(typeof secondDragBoundFunc).toBe('function');
+    const sampleInput = { x: 180, y: 200 };
+    let firstResult: { x: number; y: number } | undefined;
+    let secondResult: { x: number; y: number } | undefined;
+    act(() => {
+      firstResult = (
+        firstDragBoundFunc as (pos: { x: number; y: number }) => { x: number; y: number }
+      )(sampleInput);
+      secondResult = secondDragBoundFunc?.(sampleInput);
+    });
+
+    expect(secondResult).toEqual(firstResult);
+  });
 });

@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Timestamp } from 'firebase/firestore';
-import { mergeObjectUpdates } from '@/modules/sync/objectService';
+import {
+  mergeObjectUpdates,
+  subscribeToObjects,
+  subscribeToObjectsWithChanges,
+} from '@/modules/sync/objectService';
 import type { IBoardObject } from '@/types';
 
 // Mock Firebase Firestore
@@ -242,6 +246,78 @@ describe('objectService', () => {
 
       // Remote has a timestamp, local doesn't, so remote wins
       expect(result).toBe(remoteObj);
+    });
+  });
+
+  describe('subscribeToObjectsWithChanges', () => {
+    it('provides full objects plus incremental changes', () => {
+      const callback = vi.fn();
+      subscribeToObjectsWithChanges('board-1', callback);
+
+      const snapshotCallback = mockOnSnapshot.mock.calls[0]?.[1] as
+        | ((snapshot: {
+            docs: Array<{ data: () => IBoardObject }>;
+            docChanges: () => Array<{ type: 'added' | 'modified' | 'removed'; doc: { data: () => IBoardObject } }>;
+          }) => void)
+        | undefined;
+
+      const objectA = {
+        id: 'obj-a',
+        type: 'sticky',
+        x: 10,
+        y: 10,
+        width: 100,
+        height: 100,
+        rotation: 0,
+        fill: '#fef08a',
+        createdBy: 'user-1',
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      } as IBoardObject;
+
+      snapshotCallback?.({
+        docs: [{ data: () => objectA }],
+        docChanges: () => [{ type: 'added', doc: { data: () => objectA } }],
+      });
+
+      expect(callback).toHaveBeenCalledWith({
+        objects: [objectA],
+        changes: [{ type: 'added', object: objectA }],
+        isInitialSnapshot: true,
+      });
+    });
+
+    it('keeps subscribeToObjects backward compatible with object array callback', () => {
+      const callback = vi.fn();
+      subscribeToObjects('board-1', callback);
+
+      const snapshotCallback = mockOnSnapshot.mock.calls[0]?.[1] as
+        | ((snapshot: {
+            docs: Array<{ data: () => IBoardObject }>;
+            docChanges: () => Array<{ type: 'added' | 'modified' | 'removed'; doc: { data: () => IBoardObject } }>;
+          }) => void)
+        | undefined;
+
+      const objectA = {
+        id: 'obj-a',
+        type: 'sticky',
+        x: 10,
+        y: 10,
+        width: 100,
+        height: 100,
+        rotation: 0,
+        fill: '#fef08a',
+        createdBy: 'user-1',
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      } as IBoardObject;
+
+      snapshotCallback?.({
+        docs: [{ data: () => objectA }],
+        docChanges: () => [{ type: 'added', doc: { data: () => objectA } }],
+      });
+
+      expect(callback).toHaveBeenCalledWith([objectA]);
     });
   });
 });

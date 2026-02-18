@@ -7,14 +7,14 @@ import { useObjects } from '@/hooks/useObjects';
 const mockCreateObject = vi.fn();
 const mockUpdateObject = vi.fn();
 const mockDeleteObject = vi.fn();
-const mockSubscribeToObjects = vi.fn();
+const mockSubscribeToObjectsWithChanges = vi.fn();
 const mockMergeObjectUpdates = vi.fn();
 
 vi.mock('@/modules/sync/objectService', () => ({
   createObject: (...args: unknown[]) => mockCreateObject(...args),
   updateObject: (...args: unknown[]) => mockUpdateObject(...args),
   deleteObject: (...args: unknown[]) => mockDeleteObject(...args),
-  subscribeToObjects: (...args: unknown[]) => mockSubscribeToObjects(...args),
+  subscribeToObjectsWithChanges: (...args: unknown[]) => mockSubscribeToObjectsWithChanges(...args),
   mergeObjectUpdates: (...args: unknown[]) => mockMergeObjectUpdates(...args),
 }));
 
@@ -56,7 +56,13 @@ const createUser = (uid: string = 'user-1'): User =>
   }) as User;
 
 describe('useObjects', () => {
-  let subscriptionCallback: ((objects: IBoardObject[]) => void) | null = null;
+  let subscriptionCallback:
+    | ((update: {
+        objects: IBoardObject[];
+        changes: Array<{ type: 'added' | 'modified' | 'removed'; object: IBoardObject }>;
+        isInitialSnapshot: boolean;
+      }) => void)
+    | null = null;
   let unsubscribeSpy: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
@@ -64,10 +70,19 @@ describe('useObjects', () => {
     subscriptionCallback = null;
     unsubscribeSpy = vi.fn();
 
-    mockSubscribeToObjects.mockImplementation((_boardId: string, callback: (objects: IBoardObject[]) => void) => {
-      subscriptionCallback = callback;
-      return unsubscribeSpy;
-    });
+    mockSubscribeToObjectsWithChanges.mockImplementation(
+      (
+        _boardId: string,
+        callback: (update: {
+          objects: IBoardObject[];
+          changes: Array<{ type: 'added' | 'modified' | 'removed'; object: IBoardObject }>;
+          isInitialSnapshot: boolean;
+        }) => void
+      ) => {
+        subscriptionCallback = callback;
+        return unsubscribeSpy;
+      }
+    );
 
     mockMergeObjectUpdates.mockImplementation((local: IBoardObject, remote: IBoardObject) => {
       const localMillis = local.updatedAt?.toMillis?.() ?? 0;
@@ -89,11 +104,15 @@ describe('useObjects', () => {
     );
 
     expect(result.current.loading).toBe(true);
-    expect(mockSubscribeToObjects).toHaveBeenCalledWith('board-1', expect.any(Function));
+    expect(mockSubscribeToObjectsWithChanges).toHaveBeenCalledWith('board-1', expect.any(Function));
 
     const remoteObjects = [createBoardObject()];
     act(() => {
-      subscriptionCallback?.(remoteObjects);
+      subscriptionCallback?.({
+        objects: remoteObjects,
+        changes: [{ type: 'added', object: remoteObjects[0] as IBoardObject }],
+        isInitialSnapshot: true,
+      });
     });
 
     expect(result.current.loading).toBe(false);
@@ -141,7 +160,11 @@ describe('useObjects', () => {
     );
 
     act(() => {
-      subscriptionCallback?.([baseObject]);
+      subscriptionCallback?.({
+        objects: [baseObject],
+        changes: [{ type: 'added', object: baseObject }],
+        isInitialSnapshot: true,
+      });
     });
 
     await act(async () => {
@@ -166,7 +189,11 @@ describe('useObjects', () => {
     );
 
     act(() => {
-      subscriptionCallback?.([baseObject]);
+      subscriptionCallback?.({
+        objects: [baseObject],
+        changes: [{ type: 'added', object: baseObject }],
+        isInitialSnapshot: true,
+      });
     });
 
     await act(async () => {
@@ -216,7 +243,11 @@ describe('useObjects', () => {
     );
 
     act(() => {
-      subscriptionCallback?.([originalObject]);
+      subscriptionCallback?.({
+        objects: [originalObject],
+        changes: [{ type: 'added', object: originalObject }],
+        isInitialSnapshot: true,
+      });
     });
 
     act(() => {
@@ -224,7 +255,11 @@ describe('useObjects', () => {
     });
 
     act(() => {
-      subscriptionCallback?.([remoteObject]);
+      subscriptionCallback?.({
+        objects: [remoteObject],
+        changes: [{ type: 'modified', object: remoteObject }],
+        isInitialSnapshot: false,
+      });
     });
 
     expect(mockMergeObjectUpdates).toHaveBeenCalledTimes(1);
@@ -234,5 +269,81 @@ describe('useObjects', () => {
     await act(async () => {
       await Promise.resolve();
     });
+  });
+
+  it('keeps object references stable when a snapshot has no changes', () => {
+    const baseObject = createBoardObject({ id: 'stable-1', updatedAt: createTimestamp(1000) });
+
+    const { result } = renderHook(() =>
+      useObjects({
+        boardId: 'board-1',
+        user: createUser(),
+      })
+    );
+
+    act(() => {
+      subscriptionCallback?.({
+        objects: [baseObject],
+        changes: [{ type: 'added', object: baseObject }],
+        isInitialSnapshot: true,
+      });
+    });
+
+    const firstReference = result.current.objects[0];
+    expect(firstReference).toBeDefined();
+
+    const freshSnapshotObject = createBoardObject({
+      id: 'stable-1',
+      updatedAt: createTimestamp(1000),
+      text: 'same-version',
+    });
+    act(() => {
+      subscriptionCallback?.({
+        objects: [freshSnapshotObject],
+        changes: [],
+        isInitialSnapshot: false,
+      });
+    });
+
+    expect(result.current.objects[0]).toBe(firstReference);
+  });
+
+  it('updates only changed objects for incremental snapshot changes', () => {
+    const objectA = createBoardObject({ id: 'obj-a', text: 'A', updatedAt: createTimestamp(1000) });
+    const objectB = createBoardObject({ id: 'obj-b', text: 'B', updatedAt: createTimestamp(1000) });
+
+    const { result } = renderHook(() =>
+      useObjects({
+        boardId: 'board-1',
+        user: createUser(),
+      })
+    );
+
+    act(() => {
+      subscriptionCallback?.({
+        objects: [objectA, objectB],
+        changes: [
+          { type: 'added', object: objectA },
+          { type: 'added', object: objectB },
+        ],
+        isInitialSnapshot: true,
+      });
+    });
+
+    const firstA = result.current.objects[0];
+    const firstB = result.current.objects[1];
+
+    const updatedB = createBoardObject({ id: 'obj-b', text: 'B2', updatedAt: createTimestamp(2000) });
+    act(() => {
+      subscriptionCallback?.({
+        objects: [objectA, updatedB],
+        changes: [{ type: 'modified', object: updatedB }],
+        isInitialSnapshot: false,
+      });
+    });
+
+    expect(result.current.objects[0]).toBe(firstA);
+    expect(result.current.objects[1]).not.toBe(firstB);
+    expect(result.current.objects[1]?.text).toBe('B2');
   });
 });

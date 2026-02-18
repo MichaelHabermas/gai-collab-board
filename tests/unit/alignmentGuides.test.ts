@@ -120,4 +120,24 @@ describe('alignmentGuides', () => {
       expect(pos.y).toBe(210);
     });
   });
+
+  describe('performance instrumentation', () => {
+    it('computes guides within interactive latency budget for medium object counts', () => {
+      const dragged = b(100, 100, 220, 220);
+      const others: IBounds[] = Array.from({ length: 150 }, (_, index) => {
+        const offset = index * 7;
+        return b(offset, offset, offset + 120, offset + 120);
+      });
+
+      const startMs = performance.now();
+      for (let runIndex = 0; runIndex < 40; runIndex += 1) {
+        computeAlignmentGuides(dragged, others, 4);
+      }
+      const durationMs = performance.now() - startMs;
+      const avgDurationMs = durationMs / 40;
+
+      // Tracking guardrail for drag interaction path (non-flaky budget in CI/jsdom).
+      expect(avgDurationMs).toBeLessThan(8);
+    });
+  });
 });

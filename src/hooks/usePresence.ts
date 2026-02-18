@@ -32,20 +32,14 @@ export const usePresence = ({ boardId, user }: IUsePresenceParams): IUsePresence
     return userId ? getUserColor(userId) : '#6b7280';
   }, [userId]);
 
-  // Subscribe to presence updates and set up own presence
+  // Subscribe to presence updates and set up disconnect cleanup once per board/user
   useEffect(() => {
     if (!boardId || !user?.uid) {
       return;
     }
 
-    const displayName = user.displayName || user.email?.split('@')[0] || 'Anonymous';
-    const photoURL = user.photoURL;
-
     // Setup disconnect handler so presence is removed if user disconnects
     setupPresenceDisconnectHandler(boardId, user.uid);
-
-    // Update own presence
-    updatePresence(boardId, user.uid, displayName, photoURL, currentUserColor);
 
     // Subscribe to all presence on the board
     // The subscription callback will replace the entire presence state,
@@ -59,6 +53,21 @@ export const usePresence = ({ boardId, user }: IUsePresenceParams): IUsePresence
       unsubscribe();
       removePresence(boardId, user.uid);
     };
+  }, [boardId, user?.uid]);
+
+  // Update own presence when mutable user profile details change
+  useEffect(() => {
+    if (!boardId || !user?.uid) {
+      return;
+    }
+
+    const displayName = user.displayName || user.email?.split('@')[0] || 'Anonymous';
+    const photoURL = user.photoURL;
+    Promise.resolve(
+      updatePresence(boardId, user.uid, displayName, photoURL, currentUserColor)
+    ).catch(() => {
+      // Presence updates are best-effort; subscription remains active for retries on next change.
+    });
   }, [boardId, user?.uid, user?.displayName, user?.email, user?.photoURL, currentUserColor]);
 
   // Convert presence map to sorted array of online users

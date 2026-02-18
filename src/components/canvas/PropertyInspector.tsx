@@ -46,13 +46,19 @@ export const PropertyInspector = ({
 }: IPropertyInspectorProps): ReactElement | null => {
   const { selectedIds } = useSelection();
   const defaultFontColor = DEFAULT_STICKY_TEXT_COLOR;
+  const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const objectsById = useMemo(() => {
+    return new Map(objects.map((obj) => [obj.id, obj]));
+  }, [objects]);
 
   const selectedObjects = useMemo(() => {
     if (selectedIds.length === 0) {
       return [];
     }
-    return objects.filter((obj) => selectedIds.includes(obj.id));
-  }, [objects, selectedIds]);
+    return selectedIds
+      .map((id) => objectsById.get(id))
+      .filter((obj): obj is IBoardObject => obj !== undefined);
+  }, [objectsById, selectedIds]);
 
   const hasSelection = selectedObjects.length >= 1;
   const showFill = hasSelection && selectedObjects.some((o) => supportsFill(o.type));
@@ -113,6 +119,9 @@ export const PropertyInspector = ({
       ? String(Math.round((opacities[0] ?? 1) * 100))
       : MIXED_PLACEHOLDER;
   }, [selectedObjects]);
+  const selectedShapeCount = useMemo(() => {
+    return objects.reduce((count, obj) => (selectedIdSet.has(obj.id) ? count + 1 : count), 0);
+  }, [objects, selectedIdSet]);
 
   const handleFillChange = (value: string) => {
     if (value === MIXED_PLACEHOLDER || !value) return;
@@ -191,7 +200,7 @@ export const PropertyInspector = ({
       data-testid='property-inspector-panel'
     >
       <div className='text-xs text-muted-foreground'>
-        {selectedObjects.length} object{selectedObjects.length !== 1 ? 's' : ''} selected
+        {selectedShapeCount} object{selectedShapeCount !== 1 ? 's' : ''} selected
       </div>
 
       {showFill && (

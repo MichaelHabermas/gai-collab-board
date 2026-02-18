@@ -251,4 +251,45 @@ describe('useAI', () => {
     expect(result.current.error).toBe('');
     expect(result.current.messages).toEqual([]);
   });
+
+  it('does not recreate AI service when viewport context value identity changes only', () => {
+    const zoomToFitAll = vi.fn();
+    const zoomToSelection = vi.fn();
+    const setZoomLevel = vi.fn();
+    const exportViewport = vi.fn();
+    const exportFullBoard = vi.fn();
+
+    let viewportContextValue: IViewportActionsValue = {
+      zoomToFitAll,
+      zoomToSelection,
+      setZoomLevel,
+      exportViewport,
+      exportFullBoard,
+    };
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(ViewportActionsContext.Provider, { value: viewportContextValue }, children);
+
+    const { rerender } = renderHook(
+      () =>
+        useAI({
+          boardId: 'board-1',
+          user: buildUser(),
+          objects: [buildObject()],
+        }),
+      { wrapper }
+    );
+
+    expect(mockAIServiceConstructor).toHaveBeenCalledTimes(1);
+
+    viewportContextValue = {
+      zoomToFitAll,
+      zoomToSelection,
+      setZoomLevel,
+      exportViewport,
+      exportFullBoard,
+    };
+    rerender();
+
+    expect(mockAIServiceConstructor).toHaveBeenCalledTimes(1);
+  });
 });

@@ -1903,6 +1903,22 @@ All canvas objects (sticky notes, rectangles, circles, lines, connectors, frames
 - **Subtask 1**: 500+ object benchmark
 - **Subtask 2**: 5+ user simulation
 
+**Expected behaviour (performance baseline and regressions):**
+
+- Context-driven selection and viewport actions do not trigger avoidable downstream rerenders when data is unchanged.
+- Firestore object subscriptions apply incremental updates and preserve unchanged object identities where possible to reduce render churn.
+- Drag alignment guides remain responsive under medium/high object density and stay within interactive latency budgets.
+- Presence subscriptions do not tear down and recreate listeners for profile-only field changes.
+- Benchmark gates remain enforced: FPS, sync latency, and multi-user propagation checks run as part of validation.
+
+**Verification (do not check until confirmed in benchmark runs):**
+
+- [ ] Chromium benchmark `maintains high frame throughput during pan and zoom interactions` meets the PRD target (`>=58 FPS`).
+- [ ] Multi-user benchmark `supports 5 concurrent users with shared object propagation` passes reliably in repeated runs.
+- [ ] Sync latency integration benchmarks remain within target envelopes (`<50ms` cursor write, `<100ms` object update).
+- [ ] Incremental object sync preserves unchanged object references in unit regression tests.
+- [ ] Presence and context regression tests confirm no unnecessary subscription churn or rerender cascades.
+
 ---
 
 ## Epic 4: AI Integration and Board Agent
