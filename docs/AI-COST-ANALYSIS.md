@@ -57,3 +57,7 @@ Production scope only (monthly LLM cost for end-users). One **session** = one bo
 ### Theme fix (Feb 2026) — production relevance
 
 Dark/light theme fix (root background and token application, browser-override behaviour) is UI-only. No change to LLM usage, API calls, or deployment cost. The production projections and assumptions above remain the source of truth for what the app actually uses and is likely to use in production. No new monitoring or testing overhead is material to cost.
+
+### Right panel collapse (Feb 2026) — production relevance
+
+Collapsible right panel (icon rail when collapsed, full panel when expanded, state persisted per board in localStorage) is UI-only. No change to LLM usage, API calls, or deployment cost. Production projections and token mix remain unchanged. Focus production cost tracking on what is actually used: AI chat commands (Groq/NVIDIA), session and command-per-user assumptions, and the token mix table above.

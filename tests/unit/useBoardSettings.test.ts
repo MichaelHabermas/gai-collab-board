@@ -24,6 +24,7 @@ describe('useBoardSettings', () => {
     expect(result.current.showGrid).toBe(false);
     expect(result.current.snapToGrid).toBe(false);
     expect(result.current.sidebarTab).toBe('boards');
+    expect(result.current.sidebarCollapsed).toBe(false);
     expect(result.current.boardListFilter).toBe('all');
   });
 
@@ -34,6 +35,7 @@ describe('useBoardSettings', () => {
       result.current.setShowGrid(true);
       result.current.setSnapToGrid(true);
       result.current.setSidebarTab('ai');
+      result.current.setSidebarCollapsed(true);
       result.current.setBoardListFilter('favorites');
     });
 
@@ -44,6 +46,7 @@ describe('useBoardSettings', () => {
     expect(parsed.showGrid).toBe(true);
     expect(parsed.snapToGrid).toBe(true);
     expect(parsed.sidebarTab).toBe('ai');
+    expect(parsed.sidebarCollapsed).toBe(true);
     expect(parsed.boardListFilter).toBe('favorites');
   });
 
@@ -84,18 +87,21 @@ describe('useBoardSettings', () => {
       storageKey('board-invalid-values'),
       JSON.stringify({
         sidebarTab: 'invalid-tab',
+        sidebarCollapsed: 'not-a-boolean',
         boardListFilter: 'invalid-filter',
       })
     );
 
     const { result: invalidJsonResult } = renderHook(() => useBoardSettings('board-invalid-json'));
     expect(invalidJsonResult.current.sidebarTab).toBe('boards');
+    expect(invalidJsonResult.current.sidebarCollapsed).toBe(false);
     expect(invalidJsonResult.current.boardListFilter).toBe('all');
 
     const { result: invalidValuesResult } = renderHook(() =>
       useBoardSettings('board-invalid-values')
     );
     expect(invalidValuesResult.current.sidebarTab).toBe('boards');
+    expect(invalidValuesResult.current.sidebarCollapsed).toBe(false);
     expect(invalidValuesResult.current.boardListFilter).toBe('all');
   });
 
@@ -110,6 +116,7 @@ describe('useBoardSettings', () => {
         showGrid: true,
         snapToGrid: true,
         sidebarTab: 'properties',
+        sidebarCollapsed: false,
         boardListFilter: 'recent',
       })
     );
@@ -124,6 +131,7 @@ describe('useBoardSettings', () => {
         showGrid: false,
         snapToGrid: false,
         sidebarTab: 'ai',
+        sidebarCollapsed: true,
         boardListFilter: 'favorites',
       })
     );
@@ -133,11 +141,13 @@ describe('useBoardSettings', () => {
     });
 
     expect(result.current.sidebarTab).toBe('properties');
+    expect(result.current.sidebarCollapsed).toBe(false);
     expect(result.current.boardListFilter).toBe('recent');
 
     rerender({ boardId: 'board-b' });
 
     expect(result.current.sidebarTab).toBe('ai');
+    expect(result.current.sidebarCollapsed).toBe(true);
     expect(result.current.boardListFilter).toBe('favorites');
     expect(result.current.viewport).toEqual({
       position: { x: -5, y: -10 },

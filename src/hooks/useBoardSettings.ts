@@ -27,6 +27,7 @@ export interface IBoardSettings {
   showGrid: boolean;
   snapToGrid: boolean;
   sidebarTab: SidebarTab;
+  sidebarCollapsed: boolean;
   boardListFilter: BoardListFilter;
 }
 
@@ -40,6 +41,7 @@ const DEFAULT_SETTINGS: IBoardSettings = {
   showGrid: false,
   snapToGrid: false,
   sidebarTab: 'boards',
+  sidebarCollapsed: false,
   boardListFilter: 'all',
 };
 
@@ -68,6 +70,10 @@ function loadSettings(boardId: string): IBoardSettings {
         parsed.sidebarTab && ['boards', 'properties', 'ai'].includes(parsed.sidebarTab)
           ? parsed.sidebarTab
           : DEFAULT_SETTINGS.sidebarTab,
+      sidebarCollapsed:
+        typeof parsed.sidebarCollapsed === 'boolean'
+          ? parsed.sidebarCollapsed
+          : DEFAULT_SETTINGS.sidebarCollapsed,
       boardListFilter:
         parsed.boardListFilter && ['all', 'recent', 'favorites'].includes(parsed.boardListFilter)
           ? parsed.boardListFilter
@@ -98,6 +104,8 @@ export interface IUseBoardSettingsReturn {
   setSnapToGrid: (v: boolean) => void;
   sidebarTab: SidebarTab;
   setSidebarTab: (v: SidebarTab) => void;
+  sidebarCollapsed: boolean;
+  setSidebarCollapsed: (v: boolean) => void;
   boardListFilter: BoardListFilter;
   setBoardListFilter: (v: BoardListFilter) => void;
 }
@@ -166,6 +174,17 @@ export const useBoardSettings = (boardId: string): IUseBoardSettingsReturn => {
     [boardId]
   );
 
+  const setSidebarCollapsed = useCallback(
+    (v: boolean) => {
+      setSettings((prev) => {
+        const next = { ...prev, sidebarCollapsed: v };
+        saveSettings(boardId, next);
+        return next;
+      });
+    },
+    [boardId]
+  );
+
   const setBoardListFilter = useCallback(
     (v: BoardListFilter) => {
       setSettings((prev) => {
@@ -195,6 +214,8 @@ export const useBoardSettings = (boardId: string): IUseBoardSettingsReturn => {
     setSnapToGrid,
     sidebarTab: settings.sidebarTab,
     setSidebarTab,
+    sidebarCollapsed: settings.sidebarCollapsed,
+    setSidebarCollapsed,
     boardListFilter: settings.boardListFilter,
     setBoardListFilter,
   };

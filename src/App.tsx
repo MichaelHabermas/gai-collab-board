@@ -4,6 +4,7 @@ import { AuthPage } from '@/components/auth/AuthPage';
 import { Button } from '@/components/ui/button';
 import { ShareDialog } from '@/components/board/ShareDialog';
 import { BoardListSidebar } from '@/components/board/BoardListSidebar';
+import { RightSidebar } from '@/components/board/RightSidebar';
 import { LogOut, Loader2, Share2, Sun, Moon, Pencil } from 'lucide-react';
 import { BoardCanvas } from '@/components/canvas/BoardCanvas';
 import { useObjects } from '@/hooks/useObjects';
@@ -20,7 +21,7 @@ import { ConnectionStatus } from '@/components/ui/ConnectionStatus';
 import { PresenceAvatars } from '@/components/presence/PresenceAvatars';
 import { usePresence } from '@/hooks/usePresence';
 import { AIChatPanel } from '@/components/ai/AIChatPanel';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TabsContent } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
@@ -77,7 +78,8 @@ const BoardView = ({
 
   const { onlineUsers } = usePresence({ boardId, user });
   const ai = useAI({ boardId, user, objects });
-  const { sidebarTab, setSidebarTab } = useBoardSettings(boardId);
+  const { sidebarTab, setSidebarTab, sidebarCollapsed, setSidebarCollapsed } =
+    useBoardSettings(boardId);
 
   // Subscribe to board data
   useEffect(() => {
@@ -269,69 +271,44 @@ const BoardView = ({
             />
           </div>
           {canEdit && (
-            <aside
-              className='shrink-0 w-80 border-l border-border bg-card p-2 flex flex-col min-h-0 overflow-hidden'
-              data-testid='sidebar'
-            >
-              <Tabs
-                value={sidebarTab}
-                onValueChange={(value) => {
-                  if (value === 'boards' || value === 'properties' || value === 'ai') {
-                    setSidebarTab(value);
-                  }
-                }}
-                className='flex flex-col min-h-0 flex-1 overflow-hidden'
-              >
-                <TabsList className='w-full grid grid-cols-3 bg-muted'>
-                  <TabsTrigger
-                    value='boards'
-                    className='text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground'
-                  >
-                    Boards
-                  </TabsTrigger>
-                  <TabsTrigger
+            <RightSidebar
+              sidebarCollapsed={sidebarCollapsed}
+              setSidebarCollapsed={setSidebarCollapsed}
+              sidebarTab={sidebarTab}
+              setSidebarTab={setSidebarTab}
+              expandedContent={
+                <>
+                  <TabsContent value='boards' className='flex-1 min-h-0 mt-2 overflow-auto'>
+                    <BoardListSidebar
+                      user={user}
+                      currentBoardId={boardId}
+                      onSelectBoard={onSelectBoard}
+                      onCreateNewBoard={onCreateNewBoard}
+                    />
+                  </TabsContent>
+                  <TabsContent
                     value='properties'
-                    className='text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground'
+                    className='flex-1 min-h-0 mt-2 overflow-auto'
+                    data-testid='properties-tab-content'
                   >
-                    Properties
-                  </TabsTrigger>
-                  <TabsTrigger
+                    <PropertyInspector objects={objects} onObjectUpdate={updateObject} />
+                  </TabsContent>
+                  <TabsContent
                     value='ai'
-                    className='text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground'
+                    className='flex-1 min-h-0 mt-2 overflow-hidden flex flex-col'
                   >
-                    AI
-                  </TabsTrigger>
-                </TabsList>
-                <TabsContent value='boards' className='flex-1 min-h-0 mt-2 overflow-auto'>
-                  <BoardListSidebar
-                    user={user}
-                    currentBoardId={boardId}
-                    onSelectBoard={onSelectBoard}
-                    onCreateNewBoard={onCreateNewBoard}
-                  />
-                </TabsContent>
-                <TabsContent
-                  value='properties'
-                  className='flex-1 min-h-0 mt-2 overflow-auto'
-                  data-testid='properties-tab-content'
-                >
-                  <PropertyInspector objects={objects} onObjectUpdate={updateObject} />
-                </TabsContent>
-                <TabsContent
-                  value='ai'
-                  className='flex-1 min-h-0 mt-2 overflow-hidden flex flex-col'
-                >
-                  <AIChatPanel
-                    messages={ai.messages}
-                    loading={ai.loading}
-                    error={ai.error}
-                    onSend={ai.processCommand}
-                    onClearError={ai.clearError}
-                    onClearMessages={ai.clearMessages}
-                  />
-                </TabsContent>
-              </Tabs>
-            </aside>
+                    <AIChatPanel
+                      messages={ai.messages}
+                      loading={ai.loading}
+                      error={ai.error}
+                      onSend={ai.processCommand}
+                      onClearError={ai.clearError}
+                      onClearMessages={ai.clearMessages}
+                    />
+                  </TabsContent>
+                </>
+              }
+            />
           )}
         </SelectionProvider>
       </main>

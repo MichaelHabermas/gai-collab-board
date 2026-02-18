@@ -2416,6 +2416,19 @@ document the AI development process.
 - [ ] Toggling theme in Edge, Chrome, and Brave changes the visible background and chrome; no “no visible change” behaviour.
 - [ ] With a stored dark or light preference, the app does not revert to system/browser theme on load or refresh.
 
+**Expected behaviour (right panel collapse):**
+
+- The right panel (Boards, Properties, AI) can be collapsed to a slim icon rail; it does not disappear entirely.
+- Collapsed state shows vertically stacked icon buttons for Boards, Properties, and AI; the active tab is visually indicated.
+- A control (e.g. chevron or panel icon) collapses the panel to the rail and expands it back to full width.
+- Collapse state is persisted per board (e.g. in localStorage) and restored on reload or when switching boards.
+
+**Verification (do not check until confirmed in browser):**
+
+- [ ] Collapsing the right panel shows the icon rail; expanding restores the full panel with the correct active tab.
+- [ ] After collapsing and refreshing the page, the panel remains collapsed (persisted state).
+- [ ] Switching to another board and back restores that board's collapse state.
+
 ### Story 5.2: Netlify Deployment
 
 **As a developer**, the app is deployed to Netlify with CI/CD.
