@@ -100,4 +100,46 @@ test.describe('Share link / deep-linking', () => {
 
     await incognito.close();
   });
+
+  test('refreshing the page on a board URL keeps user on that board', async ({ page }) => {
+    const credential = createCredential();
+
+    await page.goto('/');
+    await page.waitForLoadState('load');
+
+    await signUp(page, credential);
+    await waitForBoardVisible(page);
+
+    const urlBefore = page.url();
+    expect(urlBefore).toMatch(/\/board\/[^/]+/);
+
+    await page.reload();
+    await page.waitForLoadState('load');
+
+    await expect(page.locator('[data-testid="board-canvas"]')).toBeVisible({
+      timeout: BOARD_TIMEOUT_MS,
+    });
+    await expect(page).toHaveURL(urlBefore);
+  });
+
+  test('visiting / when authenticated redirects to active board', async ({ page }) => {
+    const credential = createCredential();
+
+    await page.goto('/');
+    await page.waitForLoadState('load');
+
+    await signUp(page, credential);
+    await waitForBoardVisible(page);
+
+    const boardUrlAfterSignUp = page.url();
+    expect(boardUrlAfterSignUp).toMatch(/\/board\/[^/]+/);
+
+    await page.goto('/');
+    await page.waitForLoadState('load');
+
+    await expect(page.locator('[data-testid="board-canvas"]')).toBeVisible({
+      timeout: BOARD_TIMEOUT_MS,
+    });
+    await expect(page).toHaveURL(/\/board\/[^/]+/);
+  });
 });

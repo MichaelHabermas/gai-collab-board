@@ -12,6 +12,20 @@ This document describes how CollabBoard is deployed on **Render and Firebase**: 
 2. On Render, create a **Static Site** (or Web Service that serves `dist/`).
 3. Set **root directory** and **publish directory** to `dist` (or point your server to `dist`).
 
+### SPA client-side routing (required to fix "Not Found" on refresh)
+
+The app uses client-side routing (e.g. `/board/{boardId}`). If you deploy as a **Static Site**, requests to those paths hit the server; without a rewrite, Render returns 404 because no file exists at that path.
+
+**Fix:** In the Render Dashboard, open your Static Site → **Redirects/Rewrites**, and add a **Rewrite** (not Redirect):
+
+- **Source:** `/*`
+- **Destination:** `/index.html`
+- **Action:** Rewrite
+
+Then all paths serve `index.html`; the SPA loads and React Router handles the route. Refreshing the browser on `/board/{id}` will show the board instead of "Not Found".
+
+If you serve the app from a **Web Service** (one service serving `dist/` and the AI proxy), that server must serve `index.html` for non-API routes (e.g. any path that does not start with `/api/ai/v1`) instead of returning 404.
+
 ## AI Proxy (required for AI commands in production)
 
 The app calls an AI proxy so the API key stays server-side. On Render there are no Netlify Functions, so you must run the included proxy server.

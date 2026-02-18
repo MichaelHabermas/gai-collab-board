@@ -14,12 +14,34 @@ import { handleProxyRequest } from './ai-proxy-handler.js';
 const PORT = Number(process.env.PORT ?? 3001);
 const PREFIX = '/api/ai/v1';
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Max-Age': '86400',
+};
+
 const server = createServer(async (req, res) => {
   const url = req.url ?? '/';
   const method = req.method ?? 'GET';
 
-  if (!url.startsWith(PREFIX) || method !== 'POST') {
-    res.writeHead(404, { 'Content-Type': 'application/json' });
+  if (!url.startsWith(PREFIX)) {
+    res.writeHead(404, { 'Content-Type': 'application/json', ...CORS_HEADERS });
+    res.end(JSON.stringify({ error: { message: 'Not found' } }));
+    return;
+  }
+
+  if (method === 'OPTIONS') {
+    res.writeHead(200, {
+      ...CORS_HEADERS,
+      'Content-Length': '0',
+    });
+    res.end();
+    return;
+  }
+
+  if (method !== 'POST') {
+    res.writeHead(404, { 'Content-Type': 'application/json', ...CORS_HEADERS });
     res.end(JSON.stringify({ error: { message: 'Not found' } }));
     return;
   }
@@ -36,7 +58,7 @@ const server = createServer(async (req, res) => {
 
   const result = await handleProxyRequest(method, pathSuffix, body || undefined, requestHeaders);
 
-  res.writeHead(result.statusCode, result.headers);
+  res.writeHead(result.statusCode, { ...result.headers, ...CORS_HEADERS });
   res.end(result.body);
 });
 

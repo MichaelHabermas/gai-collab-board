@@ -3,11 +3,9 @@ import { render, screen } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { MemoryRouter, Routes, Route, useParams } from 'react-router-dom';
 
-const DEFAULT_BOARD_ID = 'dev-board-001';
-
 function BoardIdDisplay(): ReactElement {
   const { boardId } = useParams<{ boardId: string }>();
-  return <div data-testid='route-board-id'>{boardId ?? DEFAULT_BOARD_ID}</div>;
+  return <div data-testid='route-board-id'>{boardId ?? 'no-id'}</div>;
 }
 
 function RoutingHarness({ initialEntry }: { initialEntry: string }): ReactElement {

@@ -201,3 +201,25 @@ This log records how AI was used during development: tools (Cursor, Context7 MCP
 - Approximate cumulative tokens across logged sessions: ~240k input / ~84k output (estimate)
 
 **Deployment impact (expected):** No change to per-command token economics or LLM cost. Fix is configuration (proxy URL/path) and resilience (defensive parsing). Production stack is Render + Firebase; AI proxy must run server-side; same Groq/NVIDIA and token assumptions as in AI-COST-ANALYSIS.md.
+
+## Render refresh and active board (Feb 2026)
+
+**Scope:** Fix "Not Found" on refresh when deployed on Render (SPA routing), remove hardcoded default board id (`dev-board-001`), and implement per-user active board resolution (last-visited owned board; create one if none) with unique board IDs.
+
+**Implementation:**
+
+- **Deployment:** Documented in [docs/DEPLOYMENT.md](DEPLOYMENT.md) that Render Static Site must add a Rewrite rule: Source `/*`, Destination `/index.html`, Action Rewrite, so client routes serve the SPA and refresh on `/board/{id}` does not return 404.
+- **Active board helper:** Added `src/lib/activeBoard.ts` with `getActiveBoardId(boards, preferences, userId)` (prefer last-visited owned, then last-visited, then first owned; null if no boards). Unit tests in `tests/unit/activeBoard.test.ts`.
+- **Routing:** Added `ResolveActiveBoardRoute` that fetches preferences and user boards, resolves active id (or creates a board if none), and navigates to `/board/{id}`. Routes `/` and `*` now use it; `/board/:boardId` unchanged. Removed `DEFAULT_BOARD_ID` and `defaultBoardId` from `BoardView`; removed effect that auto-created the dev board. "Leave board" now navigates to `/` so the user lands on their active board.
+- **PRD:** Added "Board routing and active board" subsection with expected behaviour and four verification checkboxes (refresh on board, root → active board, leave board → active board, no hardcoded default id).
+- **Tests:** Unit tests updated (shareLink and App.shareLinkRouting no longer reference `dev-board-001`). E2E tests added: refresh on board URL keeps user on board; visiting `/` when authenticated redirects to active board. E2E require Playwright browsers installed (`npx playwright install`).
+
+**Cost & usage (this session):** Development via Cursor; no external LLM API. Approximate token use: ~30k input / ~11k output (estimate).
+
+**Running totals (development):**
+
+- Cursor subscription: $20/month
+- External API spend during development: $0
+- Approximate cumulative tokens across logged sessions: ~270k input / ~95k output (estimate)
+
+**Deployment impact (expected):** Routing and deployment-config only; no change to LLM usage, API calls, or production cost. Production projections and token mix unchanged.

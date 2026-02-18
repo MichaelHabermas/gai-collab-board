@@ -95,3 +95,7 @@ Share-link and deep-linking work is UI/routing only: PRD documentation, share-li
 ### AI proxy on Render (Feb 2026) — production relevance
 
 Production stack is **Render + Firebase** (not Netlify). AI must be fronted by a server-side proxy so the API key is not in the client. The app supports configurable `VITE_AI_PROXY_URL` (full URL) or `VITE_AI_PROXY_PATH` (default `/api/ai/v1`). An in-repo proxy server (`bun run proxy`) can be deployed as a Render Web Service. Defensive handling ensures malformed proxy responses (e.g. no `choices` array) show a clear error instead of a TypeError. **LLM cost:** unchanged; same command volume, token mix, and provider assumptions (Groq/NVIDIA). What we actually use in production: same per-command economics; proxy deployment is configuration and resilience only.
+
+### Render refresh and active board (Feb 2026) — production relevance
+
+Fix for "Not Found" on refresh (Render Static Site rewrite `/*` → `/index.html`) and per-user active board resolution (no default board id; boards have unique Firestore-generated ids) is routing and deployment-config only. No new AI endpoints, no change to command volume or token mix. **LLM cost:** unchanged. Production cost remains driven by AI command volume and provider (Groq/NVIDIA) as in the table above.

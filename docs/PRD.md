@@ -926,6 +926,22 @@ Share links allow opening a specific board by URL. Deep-linking must work when t
 - [x] Opening `{origin}/board/{boardId}` while logged out shows auth; after login, user is on that board.
 - [x] Copy link from Share dialog and open in new tab/window; same board is shown.
 
+#### Board routing and active board
+
+Share link format remains `{origin}/board/{boardId}`; deep-link and post-login behaviour unchanged. In addition:
+
+- Each user has an **active** board: the board they **own** that they were on last; if none, the last board they visited (any role); if none, the first board they own; if they have no boards, a new board is created and they are taken to it.
+- No default board id (e.g. `dev-board-001`) in the app; all boards have unique ids (e.g. Firestore-generated).
+- Visiting `{origin}/` when authenticated resolves to the active board and redirects to `/board/{activeBoardId}`.
+- Refreshing the browser on a board URL keeps the user on that board; this requires the deployment to serve the SPA for all routes (e.g. Render: Rewrite `/*` → `/index.html`). See [DEPLOYMENT.md](DEPLOYMENT.md).
+
+**Verification (do not check until confirmed in browser or via E2E)**:
+
+- [ ] Refreshing the browser on `{origin}/board/{boardId}` keeps the user on that board (no "Not Found").
+- [ ] Visiting `{origin}/` when authenticated lands the user on their active board (last-visited owned, or last-visited, or first owned, or a newly created board).
+- [ ] "Leave board" sends the user to `/` and they land on their active board.
+- [ ] No hardcoded default board id in code; new boards get unique ids.
+
 **Branch**: `feature/auth-rbac`
 
 #### Commit 1: Role Types and Schema

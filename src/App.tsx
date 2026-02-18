@@ -13,12 +13,14 @@ import { useAI } from '@/hooks/useAI';
 import {
   createBoard,
   subscribeToBoard,
+  subscribeToUserBoards,
   canUserEdit,
   canUserManage,
   addBoardMember,
   updateBoardName,
 } from '@/modules/sync/boardService';
-import { updateRecentBoardIds } from '@/modules/sync/userPreferencesService';
+import { updateRecentBoardIds, getUserPreferences } from '@/modules/sync/userPreferencesService';
+import { getActiveBoardId } from '@/lib/activeBoard';
 import { ConnectionStatus } from '@/components/ui/ConnectionStatus';
 import { PresenceAvatars } from '@/components/presence/PresenceAvatars';
 import { usePresence } from '@/hooks/usePresence';
@@ -39,17 +41,13 @@ import { useBoardSettings } from '@/hooks/useBoardSettings';
 import { ViewportActionsContext } from '@/contexts/ViewportActionsContext';
 import { SelectionProvider } from '@/contexts/SelectionProvider';
 import { PropertyInspector } from '@/components/canvas/PropertyInspector';
-import type { IBoard } from '@/types';
-import type { IViewportActionsValue } from '@/types';
-
-const DEFAULT_BOARD_ID = 'dev-board-001';
+import type { IBoard, IUserPreferences, IViewportActionsValue } from '@/types';
 
 interface IBoardViewProps {
   boardId: string;
   onSelectBoard: (boardId: string) => void;
   onCreateNewBoard: (name?: string) => Promise<IBoard>;
   onLeaveBoard: () => void;
-  defaultBoardId: string;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
   onViewportActionsReady: (actions: IViewportActionsValue | null) => void;
@@ -60,7 +58,6 @@ const BoardView = ({
   onSelectBoard,
   onCreateNewBoard,
   onLeaveBoard,
-  defaultBoardId,
   theme,
   onToggleTheme,
   onViewportActionsReady,
@@ -97,24 +94,6 @@ const BoardView = ({
 
     return () => unsubscribe();
   }, [boardId]);
-
-  // Create board if it doesn't exist (only for the default dev board; do not overwrite newly created boards)
-  useEffect(() => {
-    const initBoard = async () => {
-      if (boardId === defaultBoardId && !boardLoading && !board && user) {
-        try {
-          await createBoard({
-            id: boardId,
-            name: 'Development Board',
-            ownerId: user.uid,
-          });
-        } catch {
-          // Board might already exist or creation failed
-        }
-      }
-    };
-    initBoard();
-  }, [boardId, defaultBoardId, boardLoading, board, user]);
 
   // When opening a board the user is not a member of, add them as viewer
   useEffect(() => {
@@ -324,14 +303,70 @@ const BoardView = ({
   );
 };
 
+const ResolveActiveBoardRoute = (): ReactElement => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [preferences, setPreferences] = useState<IUserPreferences | null>(null);
+  const [boards, setBoards] = useState<IBoard[] | null>(null);
+  const navigatedRef = useRef(false);
+
+  useEffect(() => {
+    if (!user) return;
+
+    getUserPreferences(user.uid).then(setPreferences);
+    const unsubscribe = subscribeToUserBoards(user.uid, (boardList) => {
+      setBoards(boardList);
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  useEffect(() => {
+    if (!preferences || !boards || !user || navigatedRef.current) {
+      return;
+    }
+
+    const activeId = getActiveBoardId(boards, preferences, user.uid);
+    navigatedRef.current = true;
+
+    if (activeId) {
+      navigate(`/board/${activeId}`, { replace: true });
+      return;
+    }
+
+    if (boards.length === 0) {
+      createBoard({ name: 'Untitled Board', ownerId: user.uid })
+        .then((board) => {
+          navigate(`/board/${board.id}`, { replace: true });
+        })
+        .catch(() => {
+          navigatedRef.current = false;
+        });
+      return;
+    }
+
+    const firstBoard = boards[0];
+    if (firstBoard) {
+      navigate(`/board/${firstBoard.id}`, { replace: true });
+    }
+  }, [preferences, boards, user, navigate]);
+
+  return (
+    <div className='min-h-screen flex items-center justify-center bg-background'>
+      <div className='text-center'>
+        <Loader2 className='h-8 w-8 animate-spin text-primary mx-auto mb-4' />
+        <p className='text-muted-foreground'>Loading...</p>
+      </div>
+    </div>
+  );
+};
+
 const BoardViewRoute = (): ReactElement => {
   const { boardId: paramBoardId } = useParams<{ boardId: string }>();
+  const boardId = paramBoardId ?? '';
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [viewportActions, setViewportActions] = useState<IViewportActionsValue | null>(null);
-
-  const boardId = paramBoardId ?? DEFAULT_BOARD_ID;
 
   // Update recent boards when user opens a board (navigates to it)
   useEffect(() => {
@@ -367,7 +402,7 @@ const BoardViewRoute = (): ReactElement => {
   );
 
   const handleLeaveBoard = useCallback(() => {
-    navigate(`/board/${DEFAULT_BOARD_ID}`, { replace: false });
+    navigate('/', { replace: false });
   }, [navigate]);
 
   if (loading) {
@@ -385,6 +420,10 @@ const BoardViewRoute = (): ReactElement => {
     return <div />;
   }
 
+  if (!paramBoardId) {
+    return <Navigate to='/' replace />;
+  }
+
   return (
     <ViewportActionsContext.Provider value={viewportActions}>
       <BoardView
@@ -392,7 +431,6 @@ const BoardViewRoute = (): ReactElement => {
         onSelectBoard={handleSelectBoard}
         onCreateNewBoard={handleCreateNewBoard}
         onLeaveBoard={handleLeaveBoard}
-        defaultBoardId={DEFAULT_BOARD_ID}
         theme={theme}
         onToggleTheme={toggleTheme}
         onViewportActionsReady={setViewportActions}
@@ -422,8 +460,8 @@ export const App = (): ReactElement => {
   return (
     <Routes>
       <Route path='/board/:boardId' element={<BoardViewRoute />} />
-      <Route path='/' element={<Navigate to={`/board/${DEFAULT_BOARD_ID}`} replace />} />
-      <Route path='*' element={<Navigate to={`/board/${DEFAULT_BOARD_ID}`} replace />} />
+      <Route path='/' element={<ResolveActiveBoardRoute />} />
+      <Route path='*' element={<ResolveActiveBoardRoute />} />
     </Routes>
   );
 };

@@ -15,8 +15,8 @@ describe('getBoardShareLink', () => {
   });
 
   it('works with localhost', () => {
-    expect(getBoardShareLink('http://localhost:5173', 'dev-board-001')).toBe(
-      'http://localhost:5173/board/dev-board-001'
+    expect(getBoardShareLink('http://localhost:5173', 'abc-123')).toBe(
+      'http://localhost:5173/board/abc-123'
     );
   });
 });
