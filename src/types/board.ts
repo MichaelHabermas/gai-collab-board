@@ -17,6 +17,8 @@ export interface IBoardObject {
   stroke?: string;
   strokeWidth?: number;
   text?: string;
+  /** Text font color for objects that support independent text styling (e.g. sticky notes). */
+  textFill?: string;
   fontSize?: number;
   /** Opacity 0–1; default 1 when undefined for backward compatibility */
   opacity?: number;

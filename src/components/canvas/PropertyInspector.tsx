@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import type { IBoardObject } from '@/types';
 import type { IUpdateObjectParams } from '@/modules/sync/objectService';
+import { useTheme } from '@/hooks/useTheme';
 
 const MIXED_PLACEHOLDER = 'Mixed';
 
@@ -13,7 +14,7 @@ interface IPropertyInspectorProps {
 }
 
 const supportsFill = (type: IBoardObject['type']): boolean => {
-  return ['sticky', 'rectangle', 'circle', 'line', 'text', 'frame'].includes(type);
+  return ['sticky', 'rectangle', 'circle', 'line', 'frame'].includes(type);
 };
 
 const supportsStroke = (type: IBoardObject['type']): boolean => {
@@ -22,6 +23,17 @@ const supportsStroke = (type: IBoardObject['type']): boolean => {
 
 const supportsFontSize = (type: IBoardObject['type']): boolean => {
   return ['sticky', 'text'].includes(type);
+};
+
+const supportsFontColor = (type: IBoardObject['type']): boolean => {
+  return ['sticky', 'text'].includes(type);
+};
+
+const getObjectFontColor = (object: IBoardObject, defaultFontColor: string): string => {
+  if (object.type === 'sticky') {
+    return object.textFill ?? defaultFontColor;
+  }
+  return object.fill;
 };
 
 /**
@@ -33,6 +45,14 @@ export const PropertyInspector = ({
   onObjectUpdate,
 }: IPropertyInspectorProps): ReactElement | null => {
   const { selectedIds } = useSelection();
+  const { theme } = useTheme();
+  const defaultFontColor = useMemo(
+    () =>
+      (typeof document !== 'undefined'
+        ? getComputedStyle(document.documentElement).getPropertyValue('--color-foreground').trim()
+        : '') || '#0f172a',
+    [theme]
+  );
 
   const selectedObjects = useMemo(() => {
     if (selectedIds.length === 0) {
@@ -45,6 +65,7 @@ export const PropertyInspector = ({
   const showFill = hasSelection && selectedObjects.some((o) => supportsFill(o.type));
   const showStroke = hasSelection && selectedObjects.some((o) => supportsStroke(o.type));
   const showFontSize = hasSelection && selectedObjects.some((o) => supportsFontSize(o.type));
+  const showFontColor = hasSelection && selectedObjects.some((o) => supportsFontColor(o.type));
 
   const fillValue = useMemo(() => {
     if (selectedObjects.length === 0) return '';
@@ -83,6 +104,14 @@ export const PropertyInspector = ({
     const sizes = [...new Set(textObjects.map((o) => (o.fontSize != null ? o.fontSize : 14)))];
     return sizes.length === 1 ? String(sizes[0]) : MIXED_PLACEHOLDER;
   }, [selectedObjects]);
+
+  const fontColorValue = useMemo(() => {
+    if (selectedObjects.length === 0) return '';
+    const textObjects = selectedObjects.filter((o) => supportsFontColor(o.type));
+    if (textObjects.length === 0) return '';
+    const colors = [...new Set(textObjects.map((o) => getObjectFontColor(o, defaultFontColor)))];
+    return colors.length === 1 ? (colors[0] ?? '') : MIXED_PLACEHOLDER;
+  }, [defaultFontColor, selectedObjects]);
 
   const opacityValue = useMemo(() => {
     if (selectedObjects.length === 0) return '';
@@ -132,6 +161,16 @@ export const PropertyInspector = ({
     });
   };
 
+  const handleFontColorChange = (value: string) => {
+    if (value === MIXED_PLACEHOLDER || value === '') return;
+    selectedObjects.forEach((obj) => {
+      if (!supportsFontColor(obj.type)) return;
+      const updates: IUpdateObjectParams =
+        obj.type === 'sticky' ? { textFill: value } : { fill: value };
+      onObjectUpdate(obj.id, updates);
+    });
+  };
+
   const handleOpacityChange = (value: string) => {
     if (value === MIXED_PLACEHOLDER) return;
     const num = Number(value);
@@ -154,7 +193,10 @@ export const PropertyInspector = ({
   }
 
   return (
-    <div className='flex flex-1 min-h-0 flex-col gap-4 overflow-auto' data-testid='property-inspector-panel'>
+    <div
+      className='flex flex-1 min-h-0 flex-col gap-4 overflow-auto'
+      data-testid='property-inspector-panel'
+    >
       <div className='text-xs text-muted-foreground'>
         {selectedObjects.length} object{selectedObjects.length !== 1 ? 's' : ''} selected
       </div>
@@ -244,6 +286,34 @@ export const PropertyInspector = ({
             className='font-mono'
             data-testid='property-inspector-font-size'
           />
+        </div>
+      )}
+
+      {showFontColor && (
+        <div className='space-y-2'>
+          <Label htmlFor='property-inspector-font-color' className='text-foreground'>
+            Font color
+          </Label>
+          <div className='flex gap-2 items-center'>
+            <input
+              id='property-inspector-font-color'
+              type='color'
+              value={
+                fontColorValue === MIXED_PLACEHOLDER || !fontColorValue ? '#0f172a' : fontColorValue
+              }
+              onChange={(e) => handleFontColorChange(e.target.value)}
+              disabled={fontColorValue === MIXED_PLACEHOLDER}
+              className='h-9 w-12 rounded border border-border bg-muted cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring'
+              data-testid='property-inspector-font-color-color'
+            />
+            <Input
+              value={fontColorValue}
+              onChange={(e) => handleFontColorChange(e.target.value)}
+              disabled={fontColorValue === MIXED_PLACEHOLDER}
+              className='flex-1 font-mono text-sm'
+              data-testid='property-inspector-font-color-input'
+            />
+          </div>
         </div>
       )}
 

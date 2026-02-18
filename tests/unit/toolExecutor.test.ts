@@ -93,6 +93,29 @@ describe('toolExecutor', () => {
       });
     });
 
+    it('passes textFill when fontColor is provided', async () => {
+      const { execute } = createToolExecutor(createContext());
+      await execute({
+        name: 'createStickyNote',
+        arguments: {
+          text: 'Sticky with color',
+          x: 100,
+          y: 100,
+          color: '#93c5fd',
+          fontColor: '#ef4444',
+        },
+      });
+      expect(mockCreateObject).toHaveBeenCalledWith(
+        mockBoardId,
+        expect.objectContaining({
+          type: 'sticky',
+          fill: '#93c5fd',
+          textFill: '#ef4444',
+          text: 'Sticky with color',
+        })
+      );
+    });
+
     it('clamps fontSize to 8–72 and opacity to 0–1 when out of range', async () => {
       const { execute } = createToolExecutor(createContext());
       await execute({
@@ -565,6 +588,87 @@ describe('toolExecutor', () => {
       expect(resultTooLarge).toEqual({
         success: false,
         message: 'Font size must be between 8 and 72',
+      });
+    });
+  });
+
+  describe('setFontColor', () => {
+    it('updates sticky note textFill', async () => {
+      const objects: IBoardObject[] = [
+        {
+          id: 'sticky-1',
+          type: 'sticky',
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+          rotation: 0,
+          fill: '#fef08a',
+          createdBy: 'u',
+          createdAt: now,
+          updatedAt: now,
+        },
+      ];
+      const { execute } = createToolExecutor(createContext(objects));
+      const result = await execute({
+        name: 'setFontColor',
+        arguments: { objectId: 'sticky-1', color: '#3b82f6' },
+      });
+      expect(mockUpdateObject).toHaveBeenCalledWith(mockBoardId, 'sticky-1', { textFill: '#3b82f6' });
+      expect(result).toEqual({ success: true, message: 'Set font color to #3b82f6' });
+    });
+
+    it('updates text fill color', async () => {
+      const objects: IBoardObject[] = [
+        {
+          id: 'text-1',
+          type: 'text',
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 20,
+          rotation: 0,
+          fill: '#1e293b',
+          text: 'Hello',
+          createdBy: 'u',
+          createdAt: now,
+          updatedAt: now,
+        },
+      ];
+      const { execute } = createToolExecutor(createContext(objects));
+      const result = await execute({
+        name: 'setFontColor',
+        arguments: { objectId: 'text-1', color: '#ef4444' },
+      });
+      expect(mockUpdateObject).toHaveBeenCalledWith(mockBoardId, 'text-1', { fill: '#ef4444' });
+      expect(result).toEqual({ success: true, message: 'Set font color to #ef4444' });
+    });
+
+    it('returns failure for unsupported object type', async () => {
+      const objects: IBoardObject[] = [
+        {
+          id: 'rect-1',
+          type: 'rectangle',
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+          rotation: 0,
+          fill: '#93c5fd',
+          createdBy: 'u',
+          createdAt: now,
+          updatedAt: now,
+        },
+      ];
+      const { execute } = createToolExecutor(createContext(objects));
+      const result = await execute({
+        name: 'setFontColor',
+        arguments: { objectId: 'rect-1', color: '#ef4444' },
+      });
+      expect(mockUpdateObject).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        success: false,
+        message: 'Font color can only be set on sticky notes and text.',
       });
     });
   });

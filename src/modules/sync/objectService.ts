@@ -44,6 +44,7 @@ export interface ICreateObjectParams {
   stroke?: string;
   strokeWidth?: number;
   text?: string;
+  textFill?: string;
   fontSize?: number;
   opacity?: number;
   rotation?: number;
@@ -91,6 +92,9 @@ export const createObject = async (
   }
   if (params.text !== undefined) {
     object.text = params.text;
+  }
+  if (params.textFill !== undefined) {
+    object.textFill = params.textFill;
   }
   if (params.fontSize !== undefined) {
     object.fontSize = params.fontSize;
@@ -146,6 +150,7 @@ export const createObjectsBatch = async (
       stroke: params.stroke,
       strokeWidth: params.strokeWidth,
       text: params.text,
+      textFill: params.textFill,
       fontSize: params.fontSize,
       points: params.points,
       createdBy: params.createdBy,

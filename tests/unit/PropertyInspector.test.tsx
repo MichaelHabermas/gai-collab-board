@@ -111,6 +111,47 @@ describe('PropertyInspector', () => {
     expect(mockOnObjectUpdate).toHaveBeenCalledWith('sticky-1', { fontSize: 18 });
   });
 
+  it('shows Font color control for sticky note and updates textFill', () => {
+    const sticky = createMockObject({
+      id: 'sticky-1',
+      type: 'sticky',
+      fill: '#fef08a',
+      textFill: '#1e293b',
+    });
+    render(
+      <TestSelectionWrapper selectedIds={['sticky-1']}>
+        <PropertyInspector objects={[sticky]} onObjectUpdate={mockOnObjectUpdate} />
+      </TestSelectionWrapper>
+    );
+
+    expect(screen.getByText('Font color')).toBeInTheDocument();
+    const fontColorInput = screen.getByTestId('property-inspector-font-color-input');
+    expect(fontColorInput).toHaveValue('#1e293b');
+    fireEvent.change(fontColorInput, { target: { value: '#ef4444' } });
+    expect(mockOnObjectUpdate).toHaveBeenCalledWith('sticky-1', { textFill: '#ef4444' });
+  });
+
+  it('shows Font color control for text element and updates fill', () => {
+    const textObject = createMockObject({
+      id: 'text-1',
+      type: 'text',
+      fill: '#334155',
+      text: 'Text item',
+      fontSize: 16,
+    });
+    render(
+      <TestSelectionWrapper selectedIds={['text-1']}>
+        <PropertyInspector objects={[textObject]} onObjectUpdate={mockOnObjectUpdate} />
+      </TestSelectionWrapper>
+    );
+
+    expect(screen.getByText('Font color')).toBeInTheDocument();
+    const fontColorInput = screen.getByTestId('property-inspector-font-color-input');
+    expect(fontColorInput).toHaveValue('#334155');
+    fireEvent.change(fontColorInput, { target: { value: '#3b82f6' } });
+    expect(mockOnObjectUpdate).toHaveBeenCalledWith('text-1', { fill: '#3b82f6' });
+  });
+
   it('changing fill calls onObjectUpdate', () => {
     const obj = createMockObject({ id: 'obj-1', type: 'rectangle', fill: '#93c5fd' });
     render(
