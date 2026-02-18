@@ -39,7 +39,7 @@ import { ConnectionNodesLayer } from './ConnectionNodesLayer';
 import { AlignToolbar } from './AlignToolbar';
 import { AlignmentGuidesLayer } from './AlignmentGuidesLayer';
 import { useExportAsImage } from '@/hooks/useExportAsImage';
-import { useTheme } from '@/hooks/useTheme';
+import { useTheme, type Theme } from '@/hooks/useTheme';
 import { useBoardSettings } from '@/hooks/useBoardSettings';
 import type { IViewportActionsValue } from '@/contexts/ViewportActionsContext';
 
@@ -61,10 +61,24 @@ const ZOOM_PRESETS = [0.5, 1, 2] as const;
 // Grid pattern configuration (display and snap use same size per PRD)
 const GRID_SIZE = 20;
 const GRID_STROKE_WIDTH = 1;
+export const GRID_LINE_OPACITY = 0.5;
 
-/** Board canvas container class; uses theme-aware background so dark/light mode is visible. */
-export const BOARD_CANVAS_CONTAINER_CLASS =
-  'w-full h-full overflow-hidden bg-background relative';
+/** Board background colors driven only by app theme (ignore system/browser theme). */
+export const BOARD_CANVAS_BACKGROUND_LIGHT = '#ffffff';
+export const BOARD_CANVAS_BACKGROUND_DARK = '#1e293b';
+export const BOARD_GRID_COLOR_LIGHT = '#94a3b8';
+export const BOARD_GRID_COLOR_DARK = '#334155';
+
+export function getBoardCanvasBackgroundColor(theme: Theme): string {
+  return theme === 'dark' ? BOARD_CANVAS_BACKGROUND_DARK : BOARD_CANVAS_BACKGROUND_LIGHT;
+}
+
+export function getBoardGridColor(theme: Theme): string {
+  return theme === 'dark' ? BOARD_GRID_COLOR_DARK : BOARD_GRID_COLOR_LIGHT;
+}
+
+/** Board canvas container class; background is set via inline style from app theme. */
+export const BOARD_CANVAS_CONTAINER_CLASS = 'w-full h-full overflow-hidden relative';
 
 // Default sizes for new objects
 const DEFAULT_STICKY_SIZE = { width: 200, height: 200 };
@@ -136,13 +150,7 @@ export const BoardCanvas = memo(
     } = useBoardSettings(boardId);
 
     const { theme } = useTheme();
-    const gridColor = useMemo(
-      () =>
-        (typeof document !== 'undefined'
-          ? getComputedStyle(document.documentElement).getPropertyValue('--color-border').trim()
-          : '') || '#e2e8f0',
-      [theme]
-    );
+    const gridColor = useMemo(() => getBoardGridColor(theme), [theme]);
     const selectionColor = useMemo(
       () =>
         (typeof document !== 'undefined'
@@ -758,6 +766,7 @@ export const BoardCanvas = memo(
             width={GRID_STROKE_WIDTH / scale.x}
             height={endY - startY}
             fill={gridColor}
+            opacity={GRID_LINE_OPACITY}
             listening={false}
             perfectDrawEnabled={false}
           />
@@ -774,6 +783,7 @@ export const BoardCanvas = memo(
             width={endX - startX}
             height={GRID_STROKE_WIDTH / scale.y}
             fill={gridColor}
+            opacity={GRID_LINE_OPACITY}
             listening={false}
             perfectDrawEnabled={false}
           />
@@ -1170,6 +1180,11 @@ export const BoardCanvas = memo(
     return (
       <div
         className={BOARD_CANVAS_CONTAINER_CLASS}
+        style={{
+          backgroundColor: getBoardCanvasBackgroundColor(theme),
+          forcedColorAdjust: 'none',
+          colorScheme: theme,
+        }}
         data-testid='board-canvas'
         data-selected-count={selectedIds.length}
         data-selected-ids={selectedIds.join(',')}
@@ -1237,6 +1252,8 @@ export const BoardCanvas = memo(
           onTouchEnd={handleTouchEnd}
           onClick={handleStageClick}
           style={{
+            backgroundColor: getBoardCanvasBackgroundColor(theme),
+            forcedColorAdjust: 'none',
             cursor:
               activeTool === 'pan' ? 'grab' : activeTool === 'select' ? 'default' : 'crosshair',
           }}

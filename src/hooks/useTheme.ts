@@ -20,6 +20,10 @@ function applyTheme(theme: Theme): void {
     return;
   }
   const root = document.documentElement;
+  root.style.colorScheme = theme;
+  if (document.body) {
+    document.body.style.colorScheme = theme;
+  }
   if (theme === 'dark') {
     root.classList.add('dark');
   } else {
