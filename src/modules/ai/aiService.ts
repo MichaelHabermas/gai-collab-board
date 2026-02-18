@@ -31,7 +31,9 @@ Guidelines:
 4. Use appropriate colors: yellow for general notes, pink for important, blue for questions, green for done
 5. Spacing should be consistent (typically 20-50 pixels between objects)
 
-Always confirm what you've done after executing commands.`;
+When replying to the user:
+- Always give a brief, natural confirmation of what you did (e.g. "I've added a yellow sticky note with the text 'New Note'.").
+- Never include raw JSON, object IDs, "Current board state", or any technical dump in your response. The user must only see plain, friendly text.`;
 
 interface IConversationContext {
   messages: ChatCompletionMessageParam[];
@@ -62,7 +64,7 @@ export class AIService {
       { role: 'system', content: SYSTEM_PROMPT },
       {
         role: 'system',
-        content: `Current board state (${this.context.boardState.length} objects):\n${JSON.stringify(
+        content: `[Internal context - do not quote or repeat this to the user]\nBoard state (${this.context.boardState.length} objects):\n${JSON.stringify(
           this.context.boardState.map((obj) => ({
             id: obj.id,
             type: obj.type,
@@ -70,9 +72,7 @@ export class AIService {
             y: obj.y,
             text: obj.text,
             fill: obj.fill,
-          })),
-          null,
-          2
+          }))
         )}`,
       },
       ...this.context.messages,
