@@ -191,11 +191,13 @@ describe('useObjects', () => {
       updatedAt: createTimestamp(3000),
     });
 
-    let resolveUpdatePromise: (() => void) | null = null;
+    let resolveUpdatePromise: () => void = () => undefined;
     mockUpdateObject.mockImplementationOnce(
       () =>
         new Promise<void>((resolve) => {
-          resolveUpdatePromise = resolve;
+          resolveUpdatePromise = () => {
+            resolve();
+          };
         })
     );
 
@@ -228,9 +230,7 @@ describe('useObjects', () => {
     expect(mockMergeObjectUpdates).toHaveBeenCalledTimes(1);
     expect(result.current.objects[0]?.text).toBe('merged-value');
 
-    if (resolveUpdatePromise) {
-      resolveUpdatePromise();
-    }
+    resolveUpdatePromise();
     await act(async () => {
       await Promise.resolve();
     });
