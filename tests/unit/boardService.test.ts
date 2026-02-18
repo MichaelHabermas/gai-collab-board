@@ -126,13 +126,13 @@ describe('boardService - deleteBoard', () => {
   });
 
   it('should throw when userId is provided and board does not exist', async () => {
-    vi.mocked(getDoc).mockResolvedValue(mockGetDocSnapshot(null) as ReturnType<typeof getDoc>);
+    vi.mocked(getDoc).mockResolvedValue(mockGetDocSnapshot(null) as Awaited<ReturnType<typeof getDoc>>);
     await expect(deleteBoard('missing-id', 'owner-user')).rejects.toThrow('Board not found');
     expect(deleteDoc).not.toHaveBeenCalled();
   });
 
   it('should throw when userId is provided and user is not owner', async () => {
-    vi.mocked(getDoc).mockResolvedValue(mockGetDocSnapshot(mockBoard) as ReturnType<typeof getDoc>);
+    vi.mocked(getDoc).mockResolvedValue(mockGetDocSnapshot(mockBoard) as Awaited<ReturnType<typeof getDoc>>);
     await expect(deleteBoard('board-123', 'editor-user')).rejects.toThrow(
       'Only the board owner can delete the board'
     );
@@ -140,7 +140,7 @@ describe('boardService - deleteBoard', () => {
   });
 
   it('should call deleteDoc when userId is provided and user is owner', async () => {
-    vi.mocked(getDoc).mockResolvedValue(mockGetDocSnapshot(mockBoard) as ReturnType<typeof getDoc>);
+    vi.mocked(getDoc).mockResolvedValue(mockGetDocSnapshot(mockBoard) as Awaited<ReturnType<typeof getDoc>>);
     vi.mocked(deleteDoc).mockResolvedValue(undefined as never);
     await deleteBoard('board-123', 'owner-user');
     expect(getDoc).toHaveBeenCalled();
