@@ -53,3 +53,7 @@ Production scope only (monthly LLM cost for end-users). One **session** = one bo
 - **Dev cost** is dominated by Cursor; production cost scales with user count and commands per user.
 - **Groq is roughly half the cost** of NVIDIA at this token mix; choose by capability vs. budget.
 - **Document actual usage** (commands per user, mix of simple/medium/complex) to refine projections; doubling commands per user doubles cost.
+
+### Theme fix (Feb 2026) — production relevance
+
+Dark/light theme fix (root background and token application, browser-override behaviour) is UI-only. No change to LLM usage, API calls, or deployment cost. The production projections and assumptions above remain the source of truth for what the app actually uses and is likely to use in production. No new monitoring or testing overhead is material to cost.

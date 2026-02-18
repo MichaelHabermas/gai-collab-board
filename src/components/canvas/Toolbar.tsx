@@ -53,7 +53,9 @@ const ToolButton = memo(
       data-testid={testId}
       className={cn(
         'w-10 h-10 relative group',
-        isActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+        isActive
+          ? 'bg-primary text-primary-foreground'
+          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
         disabled && 'opacity-50 cursor-not-allowed'
       )}
       title={label}

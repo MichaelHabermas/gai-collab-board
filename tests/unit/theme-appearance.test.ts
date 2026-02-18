@@ -8,7 +8,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
  * but it does apply .dark and .dark * so we assert the dark case.)
  */
 describe('theme appearance', () => {
-  const DARK_BG = '#0f172a';
+  const DARK_BG = '#1e293b';
   const LIGHT_BG = '#ffffff';
 
   let styleEl: HTMLStyleElement;

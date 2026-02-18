@@ -789,7 +789,10 @@ export const BoardCanvas = memo(
     });
 
     const dragBoundFuncCacheRef = useRef<
-      Map<string, { width: number; height: number; fn: (pos: { x: number; y: number }) => IPosition }>
+      Map<
+        string,
+        { width: number; height: number; fn: (pos: { x: number; y: number }) => IPosition }
+      >
     >(new Map());
     const guideCandidateBoundsRef = useRef<
       Array<{ id: string; bounds: ReturnType<typeof getObjectBounds> }>
@@ -803,39 +806,36 @@ export const BoardCanvas = memo(
       dragBoundFuncCacheRef.current.clear();
     }, [objects, visibleObjectIdsKey]);
 
-    const getDragBoundFunc = useCallback(
-      (objectId: string, width: number, height: number) => {
-        const cached = dragBoundFuncCacheRef.current.get(objectId);
-        if (cached && cached.width === width && cached.height === height) {
-          return cached.fn;
-        }
+    const getDragBoundFunc = useCallback((objectId: string, width: number, height: number) => {
+      const cached = dragBoundFuncCacheRef.current.get(objectId);
+      if (cached && cached.width === width && cached.height === height) {
+        return cached.fn;
+      }
 
-        const otherBounds = guideCandidateBoundsRef.current
-          .filter((candidate) => candidate.id !== objectId)
-          .map((candidate) => candidate.bounds);
+      const otherBounds = guideCandidateBoundsRef.current
+        .filter((candidate) => candidate.id !== objectId)
+        .map((candidate) => candidate.bounds);
 
-        const nextDragBoundFunc = (pos: { x: number; y: number }) => {
-          const dragged = {
-            x1: pos.x,
-            y1: pos.y,
-            x2: pos.x + width,
-            y2: pos.y + height,
-          };
-          const guides = computeAlignmentGuides(dragged, otherBounds);
-          const snapped = computeSnappedPositionFromGuides(guides, pos, width, height);
-          setGuidesThrottledRef.current(guides);
-          return snapped;
+      const nextDragBoundFunc = (pos: { x: number; y: number }) => {
+        const dragged = {
+          x1: pos.x,
+          y1: pos.y,
+          x2: pos.x + width,
+          y2: pos.y + height,
         };
+        const guides = computeAlignmentGuides(dragged, otherBounds);
+        const snapped = computeSnappedPositionFromGuides(guides, pos, width, height);
+        setGuidesThrottledRef.current(guides);
+        return snapped;
+      };
 
-        dragBoundFuncCacheRef.current.set(objectId, {
-          width,
-          height,
-          fn: nextDragBoundFunc,
-        });
-        return nextDragBoundFunc;
-      },
-      []
-    );
+      dragBoundFuncCacheRef.current.set(objectId, {
+        width,
+        height,
+        fn: nextDragBoundFunc,
+      });
+      return nextDragBoundFunc;
+    }, []);
 
     // Handle text change for sticky notes
     const handleTextChange = useCallback(
@@ -1112,12 +1112,7 @@ export const BoardCanvas = memo(
               const toPos = getAnchorPosition(toObj, obj.toAnchor);
               const x = fromPos.x;
               const y = fromPos.y;
-              const points: [number, number, number, number] = [
-                0,
-                0,
-                toPos.x - x,
-                toPos.y - y,
-              ];
+              const points: [number, number, number, number] = [0, 0, toPos.x - x, toPos.y - y];
               return (
                 <Connector
                   key={obj.id}
@@ -1516,38 +1511,38 @@ export const BoardCanvas = memo(
             <Layer
               name='selection'
               listening={selectedIds.length > 0}
-            onClick={(e) => {
-              // Prevent clicks on Transformer (anchors, borders, or Transformer itself) from propagating to stage
-              const target = e.target;
-              const className = target.getClassName();
+              onClick={(e) => {
+                // Prevent clicks on Transformer (anchors, borders, or Transformer itself) from propagating to stage
+                const target = e.target;
+                const className = target.getClassName();
 
-              // If clicking directly on Transformer, prevent propagation
-              if (className === 'Transformer') {
-                e.cancelBubble = true;
-                return;
-              }
-
-              // Transformer creates Circle nodes for anchors and Line nodes for borders
-              // Check if the click is on a Transformer element
-              if (className === 'Circle' || className === 'Line') {
-                // Check if it's part of a Transformer by looking for parent Transformer
-                let node: Konva.Node | null = target;
-                while (node) {
-                  if (node.getClassName() === 'Transformer') {
-                    e.cancelBubble = true;
-                    return;
-                  }
-                  node = node.getParent();
+                // If clicking directly on Transformer, prevent propagation
+                if (className === 'Transformer') {
+                  e.cancelBubble = true;
+                  return;
                 }
-              }
-            }}
-          >
-            <TransformHandler
-              selectedIds={selectedIds}
-              layerRef={objectsLayerRef}
-              excludedFromTransformIds={linkedConnectorIds}
-              onTransformEnd={handleTransformEnd}
-            />
+
+                // Transformer creates Circle nodes for anchors and Line nodes for borders
+                // Check if the click is on a Transformer element
+                if (className === 'Circle' || className === 'Line') {
+                  // Check if it's part of a Transformer by looking for parent Transformer
+                  let node: Konva.Node | null = target;
+                  while (node) {
+                    if (node.getClassName() === 'Transformer') {
+                      e.cancelBubble = true;
+                      return;
+                    }
+                    node = node.getParent();
+                  }
+                }
+              }}
+            >
+              <TransformHandler
+                selectedIds={selectedIds}
+                layerRef={objectsLayerRef}
+                excludedFromTransformIds={linkedConnectorIds}
+                onTransformEnd={handleTransformEnd}
+              />
             </Layer>
           )}
         </Stage>

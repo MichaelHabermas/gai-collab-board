@@ -37,7 +37,7 @@
 }
 
 @theme dark {
-  --color-background: #0f172a;
+  --color-background: #1e293b;
   --color-foreground: #f8fafc;
   --color-muted: #1e293b;
   --color-muted-foreground: #94a3b8;
@@ -51,7 +51,7 @@
 
 /* Apply dark palette when .dark is on document so theme tokens switch (Tailwind v4 @theme dark does not auto-apply to class). Set on html so all descendants inherit. */
 html.dark {
-  --color-background: #0f172a;
+  --color-background: #1e293b;
   --color-foreground: #f8fafc;
   --color-muted: #1e293b;
   --color-muted-foreground: #94a3b8;
@@ -67,7 +67,8 @@ html,
 body {
   height: 100%;
   overflow: hidden;
-  color: #000000;
+  color: var(--color-foreground);
+  background-color: var(--color-background);
 }
 
 body {
@@ -79,12 +80,13 @@ body {
     'Segoe UI',
     Roboto,
     sans-serif;
-  color: #000000;
 }
 
 #root {
   height: 100%;
   overflow: hidden;
+  color: var(--color-foreground);
+  background-color: var(--color-background);
 }
 
 /* Sticky note edit overlay uses the global default black text color. */

@@ -2406,6 +2406,16 @@ document the AI development process.
 - **Subtask 1**: Implement dark mode toggle
 - **Subtask 2**: CSS variables for theming
 
+**Expected behaviour (theme):**
+
+- Manual light/dark toggle must produce a visible full-app background and text color change (e.g. `html`, `body`, and `#root` use theme tokens so the viewport reflects the chosen theme in all supported browsers).
+- App theme must take precedence over browser or system preference: when the user has set a stored preference (localStorage), that preference applies regardless of `prefers-color-scheme` or browser settings.
+
+**Verification (do not check until confirmed in browser):**
+
+- [ ] Toggling theme in Edge, Chrome, and Brave changes the visible background and chrome; no “no visible change” behaviour.
+- [ ] With a stored dark or light preference, the app does not revert to system/browser theme on load or refresh.
+
 ### Story 5.2: Netlify Deployment
 
 **As a developer**, the app is deployed to Netlify with CI/CD.
