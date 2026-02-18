@@ -76,6 +76,7 @@ If the frontend is on the same origin as the proxy, you do not need `VITE_AI_PRO
 - `GROQ_API_KEY` and/or `NVIDIA_API_KEY` (server-side; not prefixed with `VITE_`).
 - `AI_PROVIDER`: optional, `groq` or `nvidia`.
 - `PORT`: set by Render.
+- **CORS:** Set `CORS_ALLOWED_ORIGINS=https://gai-collab-board.onrender.com` (or your static site origin) so the proxy only allows that origin. If unset, the proxy uses `Access-Control-Allow-Origin: *`. Redeploy the proxy after changing this.
 
 Use the same Firebase values as in your local `.env`. Redeploy after changing variables.
 

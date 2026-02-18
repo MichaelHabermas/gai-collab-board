@@ -6,34 +6,42 @@
  * Or:  set PORT=3001 && bun run server/index.ts (Windows)
  *
  * Env: GROQ_API_KEY or NVIDIA_API_KEY, optionally AI_PROVIDER=groq|nvidia
+ *      CORS_ALLOWED_ORIGINS (optional, comma-separated) for strict origin allowlist.
  */
 
 import { createServer } from 'http';
 import { handleProxyRequest } from './ai-proxy-handler.js';
+import { getCorsHeaders } from './cors.js';
 
 const PORT = Number(process.env.PORT ?? 3001);
 const PREFIX = '/api/ai/v1';
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  'Access-Control-Max-Age': '86400',
-};
+function getRequestOrigin(req: { headers: NodeJS.Dict<string | string[]> }): string | undefined {
+  const origin = req.headers.origin ?? req.headers.Origin;
+  return typeof origin === 'string' ? origin : Array.isArray(origin) ? origin[0] : undefined;
+}
+
+function getRequestedHeaders(req: { headers: NodeJS.Dict<string | string[]> }): string | undefined {
+  const h = req.headers['access-control-request-headers'] ?? req.headers['Access-Control-Request-Headers'];
+  return typeof h === 'string' ? h : Array.isArray(h) ? h[0] : undefined;
+}
 
 const server = createServer(async (req, res) => {
   const url = req.url ?? '/';
   const method = req.method ?? 'GET';
+  const origin = getRequestOrigin(req);
+  const requestedHeaders = getRequestedHeaders(req);
+  const cors = getCorsHeaders(origin, requestedHeaders);
 
   if (!url.startsWith(PREFIX)) {
-    res.writeHead(404, { 'Content-Type': 'application/json', ...CORS_HEADERS });
+    res.writeHead(404, { 'Content-Type': 'application/json', ...cors });
     res.end(JSON.stringify({ error: { message: 'Not found' } }));
     return;
   }
 
   if (method === 'OPTIONS') {
-    res.writeHead(200, {
-      ...CORS_HEADERS,
+    res.writeHead(204, {
+      ...cors,
       'Content-Length': '0',
     });
     res.end();
@@ -41,7 +49,7 @@ const server = createServer(async (req, res) => {
   }
 
   if (method !== 'POST') {
-    res.writeHead(404, { 'Content-Type': 'application/json', ...CORS_HEADERS });
+    res.writeHead(404, { 'Content-Type': 'application/json', ...cors });
     res.end(JSON.stringify({ error: { message: 'Not found' } }));
     return;
   }
@@ -58,7 +66,7 @@ const server = createServer(async (req, res) => {
 
   const result = await handleProxyRequest(method, pathSuffix, body || undefined, requestHeaders);
 
-  res.writeHead(result.statusCode, { ...result.headers, ...CORS_HEADERS });
+  res.writeHead(result.statusCode, { ...result.headers, ...cors });
   res.end(result.body);
 });
 
