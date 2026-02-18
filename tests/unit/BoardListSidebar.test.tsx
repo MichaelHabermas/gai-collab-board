@@ -21,6 +21,7 @@ vi.mock('@/modules/sync/boardService', () => ({
   updateBoardName: (boardId: string, name: string) => mockUpdateBoardName(boardId, name),
   canUserEdit: (board: { ownerId: string; members: Record<string, string> }, userId: string) =>
     board.ownerId === userId || board.members[userId] === 'editor' || board.members[userId] === 'owner',
+  canUserManage: (board: { ownerId: string }, userId: string) => board.ownerId === userId,
 }));
 
 vi.mock('@/modules/sync/userPreferencesService', () => ({

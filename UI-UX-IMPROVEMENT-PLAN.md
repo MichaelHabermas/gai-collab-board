@@ -23,12 +23,13 @@
   - Speed to implement
   - Wow factor
 - Tie-breakers: ship-risk reduction and user-facing unblockers first.
+- Scores at the end of each task: 1–10 per criterion; Risk is inverted (10 = low risk). Overall = average of the six.
 
 ## Ordered Delivery Plan
 
 ### P0 - Immediate UX unblockers (highest combined value)
 
-1. [ ] **Fix share links (currently broken deep-linking)**
+1. [x] **Fix share links (currently broken deep-linking)**
 
 - Why now: high usefulness/app need; currently blocks collaboration entry.
 - What to change:
@@ -42,6 +43,7 @@
 - Verify:
   - Copy link from share dialog -> paste in new browser -> lands on same board.
   - Logged-out flow redirects to auth, then returns to target board.
+- **Scores (1–10):** Ease `5` · Usefulness `9` · App need `9` · Risk `5` · Speed `5` · Wow `6` → **Overall `7`**
 
 2. [ ] **Non-owner “delete” becomes “leave board”**
 
@@ -57,6 +59,7 @@
 - Verify:
   - Non-owner action removes board from their sidebar.
   - Owner still can permanently delete board.
+- **Scores (1–10):** Ease `6` · Usefulness `8` · App need `8` · Risk `6` · Speed `6` · Wow `4` → **Overall `6`**
 
 3. [ ] **Only owners can rename board names**
 
@@ -69,6 +72,7 @@
   - [src/modules/sync/boardService.ts](src/modules/sync/boardService.ts)
 - Verify:
   - Viewer/editor cannot edit board title; owner can.
+- **Scores (1–10):** Ease `7` · Usefulness `7` · App need `8` · Risk `7` · Speed `7` · Wow `3` → **Overall `7`**
 
 4. [ ] **Bulk delete performance fix**
 
@@ -80,6 +84,7 @@
   - [src/modules/sync/objectService.ts](src/modules/sync/objectService.ts)
 - Verify:
   - Deleting 50+ objects is significantly faster and UI remains responsive.
+- **Scores (1–10):** Ease `6` · Usefulness `8` · App need `8` · Risk `8` · Speed `7` · Wow `5` → **Overall `7`**
 
 5. [ ] **Snap-to-grid parity for drag (not only resize)**
 
@@ -91,6 +96,7 @@
   - [src/lib/snapToGrid.ts](src/lib/snapToGrid.ts)
 - Verify:
   - Drag and resize both show identical snap behavior to grid.
+- **Scores (1–10):** Ease `6` · Usefulness `7` · App need `7` · Risk `8` · Speed `6` · Wow `5` → **Overall `7`**
 
 6. [ ] **Panning reliability pass (middle mouse + Mac trackpad)**
 
@@ -103,18 +109,22 @@
   - [src/hooks/useCanvasViewport.ts](src/hooks/useCanvasViewport.ts)
 - Verify:
   - Windows mouse and Mac trackpad can pan without workaround.
+- **Scores (1–10):** Ease `5` · Usefulness `8` · App need `8` · Risk `7` · Speed `5` · Wow `6` → **Overall `7`**
 
 7. [ ] **Text editing overlay stability (“text moves” bug)**
 
 - Why now: direct content editing must feel stable.
 - What to change:
   - Recompute overlay position when viewport/canvas transforms change while editing.
+  - Make sure to sonsiiider if note is rotated.
+  - Check if same problem exists in text tool.
 - Primary files:
   - [src/components/canvas/shapes/TextElement.tsx](src/components/canvas/shapes/TextElement.tsx)
   - [src/components/canvas/shapes/StickyNote.tsx](src/components/canvas/shapes/StickyNote.tsx)
   - [src/lib/canvasOverlayPosition.ts](src/lib/canvasOverlayPosition.ts)
 - Verify:
   - While editing text, pan/zoom does not cause visible text jump/drift.
+- **Scores (1–10):** Ease `5` · Usefulness `8` · App need `8` · Risk `8` · Speed `5` · Wow `5` → **Overall `7`**
 
 8. [ ] **Properties panel height increase**
 
@@ -126,6 +136,7 @@
   - [src/components/board/RightSidebar.tsx](src/components/board/RightSidebar.tsx)
 - Verify:
   - More controls visible without excessive scrolling on standard laptop viewport.
+- **Scores (1–10):** Ease `9` · Usefulness `6` · App need `6` · Risk `9` · Speed `9` · Wow `4` → **Overall `7`**
 
 9. [ ] **Spin box rapid-click polish**
 
@@ -136,6 +147,7 @@
   - [src/components/canvas/PropertyInspector.tsx](src/components/canvas/PropertyInspector.tsx)
 - Verify:
   - Rapid clicking does not stutter or visually glitch.
+- **Scores (1–10):** Ease `8` · Usefulness `5` · App need `5` · Risk `9` · Speed `9` · Wow `3` → **Overall `7`**
 
 ### P1 - Product UX and maintainability improvements
 
@@ -150,6 +162,7 @@
   - [src/App.tsx](src/App.tsx)
 - Verify:
   - Logged-out users see welcome content + clear auth actions.
+- **Scores (1–10):** Ease `7` · Usefulness `8` · App need `7` · Risk `8` · Speed `7` · Wow `8` → **Overall `8`**
 
 11. [ ] **Light/dark mode fix and consistency audit**
 
@@ -162,6 +175,7 @@
   - [src/components/canvas/BoardCanvas.tsx](src/components/canvas/BoardCanvas.tsx)
 - Verify:
   - No low-contrast/mismatched backgrounds when toggling themes.
+- **Scores (1–10):** Ease `5` · Usefulness `7` · App need `7` · Risk `8` · Speed `5` · Wow `6` → **Overall `6`**
 
 12. [ ] **Move groups of selected objects**
 
@@ -173,6 +187,7 @@
   - [src/hooks/useShapeDragHandler.ts](src/hooks/useShapeDragHandler.ts)
 - Verify:
   - Multi-selected objects move together as one group.
+- **Scores (1–10):** Ease `5` · Usefulness `9` · App need `8` · Risk `7` · Speed `5` · Wow `7` → **Overall `7`**
 
 13. [ ] **Address `only-export-components` violations**
 
@@ -184,6 +199,7 @@
   - `src/components/**` affected files
 - Verify:
   - Lint warnings are resolved for targeted files without behavior change.
+- **Scores (1–10):** Ease `7` · Usefulness `5` · App need `5` · Risk `9` · Speed `6` · Wow `2` → **Overall `6`**
 
 14. [ ] **Refactor files with >2 useEffects into custom hooks**
 
@@ -196,6 +212,7 @@
   - [src/hooks](src/hooks)
 - Verify:
   - Effect count per component reduced; behavior unchanged.
+- **Scores (1–10):** Ease `4` · Usefulness `6` · App need `6` · Risk `7` · Speed `4` · Wow `2` → **Overall `5`**
 
 ### P2 - Discovery then implementation (higher uncertainty, higher potential wow)
 
@@ -210,6 +227,7 @@
   - [src/components/canvas/shapes/Frame.tsx](src/components/canvas/shapes/Frame.tsx)
   - [src/components/canvas/BoardCanvas.tsx](src/components/canvas/BoardCanvas.tsx)
   - [src/types](src/types)
+- **Scores (1–10):** Ease `3` · Usefulness `8` · App need `7` · Risk `4` · Speed `3` · Wow `8` → **Overall `6`**
 
 16. [ ] **Expand AI use in app (discovery first)**
 
@@ -222,6 +240,7 @@
   - [src/modules/ai/aiService.ts](src/modules/ai/aiService.ts)
   - [src/modules/ai/tools.ts](src/modules/ai/tools.ts)
   - [src/components/ai/AIChatPanel.tsx](src/components/ai/AIChatPanel.tsx)
+- **Scores (1–10):** Ease `3` · Usefulness `8` · App need `7` · Risk `4` · Speed `3` · Wow `9` → **Overall `6`**
 
 17. [ ] **Voice input (discovery first, then pilot)**
 
@@ -233,6 +252,7 @@
 - Primary files:
   - [src/components/ai/AIChatPanel.tsx](src/components/ai/AIChatPanel.tsx)
   - [src/hooks](src/hooks)
+- **Scores (1–10):** Ease `3` · Usefulness `7` · App need `6` · Risk `5` · Speed `3` · Wow `9` → **Overall `6`**
 
 ## Execution Sequence (Modular / SOLID)
 

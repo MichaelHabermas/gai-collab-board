@@ -165,3 +165,17 @@ This log records how AI was used during development: tools (Cursor, Context7 MCP
 - Approximate cumulative tokens across logged sessions: ~200k input / ~70k output (estimate)
 
 **Deployment impact (expected):** No new LLM runtime dependencies or model/API calls were introduced. Production AI cost assumptions remain unchanged; follow-up changes are benchmark/test harness hardening plus event-path efficiency.
+
+## Share links / deep-linking (Feb 2026)
+
+**Scope:** Verify and fix share-link (deep-linking) behaviour so opening a copied board URL lands on the correct board (including after login), document expected behaviour in the PRD with checkboxes, add regression tests, and update AI development/cost docs.
+
+**Implementation:**
+
+- **PRD:** Added subsection "Share links and deep-linking" under Story 1.2 (RBAC) with expected behaviour (share link format, open when logged in/out, copy and open in new tab) and three verification checkboxes (unchecked until confirmed).
+- **Share-link helper:** Added `src/lib/shareLink.ts` with `getBoardShareLink(origin, boardId)` (format `{origin}/board/{boardId}`, strips trailing slash from origin). `ShareDialog` now uses this helper instead of inline string.
+- **Unit tests:** `tests/unit/shareLink.test.ts` (format, trailing slash, localhost); `tests/unit/App.shareLinkRouting.test.tsx` (route resolution with MemoryRouter for `/board/:boardId` and boardId passed through).
+- **E2E tests:** `tests/e2e/shareLink.spec.ts` — (1) opening share link when logged in loads that board (sign up, wait for board, open same URL in new page, assert board canvas and URL); (2) opening share link when logged out shows auth, after login user is on that board (incognito goto `/board/{boardId}`, sign in, assert board and URL). Both tests pass (using default/current board URL, no sidebar dependency).
+- **Validation:** Format, typecheck, lint (with existing warnings); unit tests for share-link and routing pass; E2E share-link suite passes. Two pre-existing BoardListSidebar unit tests still fail (delete/switch and create-new callback flow); added missing `canUserManage` mock so remaining BoardListSidebar tests run.
+
+**Cost & usage (this session):** Development via Cursor; no additional external LLM API. Approximate token use: ~20k input / ~7k output (estimate). **Running total (development):** Cursor $20/mo; API $0. **Deployment (expected):** No change; UI/routing only, no new LLM or runtime cost.

@@ -922,9 +922,9 @@ Share links allow opening a specific board by URL. Deep-linking must work when t
 
 **Verification (do not check until confirmed in browser or via E2E)**:
 
-- [ ] Opening `{origin}/board/{boardId}` while logged in loads that board.
-- [ ] Opening `{origin}/board/{boardId}` while logged out shows auth; after login, user is on that board.
-- [ ] Copy link from Share dialog and open in new tab/window; same board is shown.
+- [x] Opening `{origin}/board/{boardId}` while logged in loads that board.
+- [x] Opening `{origin}/board/{boardId}` while logged out shows auth; after login, user is on that board.
+- [x] Copy link from Share dialog and open in new tab/window; same board is shown.
 
 **Branch**: `feature/auth-rbac`
 

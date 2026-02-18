@@ -218,11 +218,7 @@ const BoardView = ({
             </Dialog>
             <ConnectionStatus />
             {board && (
-              <ShareDialog
-                board={board}
-                currentUserId={user.uid}
-                onLeaveBoard={onLeaveBoard}
-              >
+              <ShareDialog board={board} currentUserId={user.uid} onLeaveBoard={onLeaveBoard}>
                 <Button
                   variant='outline'
                   size='sm'

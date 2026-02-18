@@ -87,3 +87,7 @@ Follow-up changes focused on benchmark reliability (fresh-board setup in E2E ben
 - do **not** change token-per-command assumptions.
 
 Result: projected production LLM costs remain the same as the table above. Any cost benefit is expected in non-LLM infrastructure efficiency (fewer unnecessary realtime updates), which should be measured separately in Firebase and hosting telemetry.
+
+### Share links / deep-linking (Feb 2026) — production relevance
+
+Share-link and deep-linking work is UI/routing only: PRD documentation, share-link helper, ShareDialog using it, and regression tests (unit + E2E). No change to LLM usage, API calls, or deployment cost. Production projections and token mix remain unchanged.

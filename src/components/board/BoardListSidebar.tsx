@@ -51,7 +51,6 @@ export const BoardListSidebar = memo(
     currentBoardId,
     onSelectBoard,
     onCreateNewBoard,
-    onLeaveBoard,
   }: IBoardListSidebarProps): ReactElement => {
     const [boards, setBoards] = useState<IBoard[]>([]);
     const [loading, setLoading] = useState(true);
@@ -159,7 +158,14 @@ export const BoardListSidebar = memo(
         await removeBoardIdFromPreferences(user.uid, boardId);
         const wasCurrent = boardId === currentBoardId;
         if (wasCurrent) {
-          onLeaveBoard?.();
+          const others = boards.filter((b) => b.id !== boardId);
+          const firstOther = others[0];
+          if (firstOther) {
+            onSelectBoard(firstOther.id);
+          } else {
+            const newBoard = await onCreateNewBoard();
+            onSelectBoard(newBoard.id);
+          }
         }
         // List updates from subscribeToUserBoards when Firestore snapshot excludes the deleted board
       } catch (err) {

@@ -46,6 +46,7 @@ export const useCanvasOperations = ({
     if (selectedIds.length === 0) {
       return;
     }
+
     if (selectedIds.length > 1 && onObjectsDeleteBatch) {
       onObjectsDeleteBatch(selectedIds);
     } else {
@@ -53,6 +54,7 @@ export const useCanvasOperations = ({
         onObjectDelete(id);
       });
     }
+
     clearSelection();
   }, [selectedIds, onObjectDelete, onObjectsDeleteBatch, clearSelection]);
 
