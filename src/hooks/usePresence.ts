@@ -62,7 +62,7 @@ export const usePresence = ({ boardId, user }: IUsePresenceParams): IUsePresence
     }
 
     const displayName = user.displayName || user.email?.split('@')[0] || 'Anonymous';
-    const {photoURL} = user;
+    const { photoURL } = user;
     Promise.resolve(
       updatePresence(boardId, user.uid, displayName, photoURL, currentUserColor)
     ).catch(() => {

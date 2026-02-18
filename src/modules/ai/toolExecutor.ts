@@ -92,12 +92,10 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
         };
         const MIN_FONT_SIZE = 8;
         const MAX_FONT_SIZE = 72;
-        const clampedFontSize =
-          rawFontSize
-            ? Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, rawFontSize))
-            : undefined;
-        const clampedOpacity =
-          rawOpacity ? Math.min(1, Math.max(0, rawOpacity)) : undefined;
+        const clampedFontSize = rawFontSize
+          ? Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, rawFontSize))
+          : undefined;
+        const clampedOpacity = rawOpacity ? Math.min(1, Math.max(0, rawOpacity)) : undefined;
         const obj = await ctx.createObject(boardId, {
           type: 'sticky',
           x,
@@ -193,8 +191,8 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
         const toAnchor: ConnectorAnchor = 'left';
         const fromPos = getAnchorPosition(fromObj, fromAnchor);
         const toPos = getAnchorPosition(toObj, toAnchor);
-        const {x} = fromPos;
-        const {y} = fromPos;
+        const { x } = fromPos;
+        const { y } = fromPos;
         const points: [number, number, number, number] = [
           0,
           0,

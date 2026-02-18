@@ -91,8 +91,8 @@ export function computeSnappedPositionFromGuides(
   height: number,
   threshold: number = DEFAULT_THRESHOLD
 ): IPosition {
-  let {x} = pos;
-  let {y} = pos;
+  let { x } = pos;
+  let { y } = pos;
 
   const left = pos.x;
   const centerX = pos.x + width / 2;

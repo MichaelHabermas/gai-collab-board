@@ -1394,7 +1394,7 @@ export const BoardCanvas = memo(
               listening={selectedIds.length > 0}
               onClick={(e) => {
                 // Prevent clicks on Transformer (anchors, borders, or Transformer itself) from propagating to stage
-                const {target} = e;
+                const { target } = e;
                 const className = target.getClassName();
 
                 // If clicking directly on Transformer, prevent propagation

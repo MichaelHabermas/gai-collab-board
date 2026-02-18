@@ -16,7 +16,7 @@ export const isRetryableError = (error: unknown): boolean => {
   }
 
   if (error instanceof Error && 'status' in error) {
-    const {status} = (error as Error & { status?: number });
+    const { status } = error as Error & { status?: number };
     return status === 429 || (status != null && status >= 500 && status < 600);
   }
 

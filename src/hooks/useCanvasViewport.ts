@@ -219,7 +219,7 @@ export const useCanvasViewport = (
         return;
       }
 
-      const {lastCenter} = touchStateRef.current;
+      const { lastCenter } = touchStateRef.current;
       const scale = viewport.scale.x * (dist / touchStateRef.current.lastDist);
       const clampedScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale));
 

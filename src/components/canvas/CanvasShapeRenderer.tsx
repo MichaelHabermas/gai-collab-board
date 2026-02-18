@@ -139,8 +139,8 @@ export const CanvasShapeRenderer = memo(
         if (fromObj && toObj && obj.fromAnchor != null && obj.toAnchor != null) {
           const fromPos = getAnchorPosition(fromObj, obj.fromAnchor);
           const toPos = getAnchorPosition(toObj, obj.toAnchor);
-          const {x} = fromPos;
-          const {y} = fromPos;
+          const { x } = fromPos;
+          const { y } = fromPos;
           const points: [number, number, number, number] = [0, 0, toPos.x - x, toPos.y - y];
           return (
             <Connector
@@ -162,8 +162,8 @@ export const CanvasShapeRenderer = memo(
           );
         }
 
-        const {x} = obj;
-        const {y} = obj;
+        const { x } = obj;
+        const { y } = obj;
         const points = obj.points || [0, 0, 100, 100];
         return (
           <Connector
