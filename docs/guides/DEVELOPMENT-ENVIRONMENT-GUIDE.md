@@ -1,3 +1,9 @@
+## Summary
+
+This guide describes the development environment for CollabBoard: Bun as runtime and package manager, Vite as the build tool, and TypeScript for type safety. It covers project initialization, directory layout, environment variables, ESLint/Prettier, Git usage, and VS Code setup. It is intended for onboarding and for keeping local setup consistent across machines; it doubles as the canonical reference when justifying tool choices (Bun over Node, Vite over CRA, etc.).
+
+---
+
 # Development Environment Guide for CollabBoard
 
 ## Overview

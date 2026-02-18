@@ -12,12 +12,14 @@ interface ICircleShapeProps {
   fill: string;
   stroke?: string;
   strokeWidth?: number;
+  opacity?: number;
   rotation?: number;
   isSelected?: boolean;
   draggable?: boolean;
   onSelect?: () => void;
   onDragStart?: () => void;
   onDragEnd?: (x: number, y: number) => void;
+  dragBoundFunc?: (pos: { x: number; y: number }) => { x: number; y: number };
   onTransformEnd?: (attrs: {
     x: number;
     y: number;
@@ -43,12 +45,14 @@ export const CircleShape = memo(
         fill,
         stroke = '#1e293b',
         strokeWidth = 2,
+        opacity = 1,
         rotation = 0,
         isSelected = false,
         draggable = true,
         onSelect,
         onDragStart,
         onDragEnd,
+        dragBoundFunc,
         onTransformEnd,
       },
       ref
@@ -104,12 +108,14 @@ export const CircleShape = memo(
           fill={fill}
           stroke={isSelected ? '#3b82f6' : stroke}
           strokeWidth={isSelected ? 2 : strokeWidth}
+          opacity={opacity}
           rotation={rotation}
           draggable={draggable}
           onClick={onSelect}
           onTap={onSelect}
           onDragStart={onDragStart}
           onDragEnd={handleDragEnd}
+          dragBoundFunc={dragBoundFunc}
           onTransformEnd={handleTransformEnd}
           shadowColor='rgba(0, 0, 0, 0.1)'
           shadowBlur={isSelected ? 8 : 4}

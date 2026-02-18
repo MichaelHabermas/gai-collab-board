@@ -4,7 +4,7 @@ import { AuthPage } from '@/components/auth/AuthPage';
 import { Button } from '@/components/ui/button';
 import { ShareDialog } from '@/components/board/ShareDialog';
 import { BoardListSidebar } from '@/components/board/BoardListSidebar';
-import { LogOut, Loader2, Share2, Sun, Moon } from 'lucide-react';
+import { LogOut, Loader2, Share2, Sun, Moon, Pencil } from 'lucide-react';
 import { BoardCanvas } from '@/components/canvas/BoardCanvas';
 import { useObjects } from '@/hooks/useObjects';
 import { useAI } from '@/hooks/useAI';
@@ -13,24 +13,42 @@ import {
   subscribeToBoard,
   canUserEdit,
   addBoardMember,
+  updateBoardName,
 } from '@/modules/sync/boardService';
+import { updateRecentBoardIds } from '@/modules/sync/userPreferencesService';
 import { ConnectionStatus } from '@/components/ui/ConnectionStatus';
 import { PresenceAvatars } from '@/components/presence/PresenceAvatars';
 import { usePresence } from '@/hooks/usePresence';
 import { AIChatPanel } from '@/components/ai/AIChatPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useTheme } from '@/hooks/useTheme';
+import { useBoardSettings } from '@/hooks/useBoardSettings';
+import { ViewportActionsContext } from '@/contexts/ViewportActionsContext';
+import { SelectionProvider } from '@/contexts/SelectionProvider';
+import { PropertyInspector } from '@/components/canvas/PropertyInspector';
 import type { IBoard } from '@/types';
+import type { IViewportActionsValue } from '@/contexts/ViewportActionsContext';
 
 const DEFAULT_BOARD_ID = 'dev-board-001';
 
 interface IBoardViewProps {
   boardId: string;
   onSelectBoard: (boardId: string) => void;
-  onCreateNewBoard: () => Promise<IBoard>;
+  onCreateNewBoard: (name?: string) => Promise<IBoard>;
   defaultBoardId: string;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
+  onViewportActionsReady: (actions: IViewportActionsValue | null) => void;
 }
 
 const BoardView = ({
@@ -40,10 +58,13 @@ const BoardView = ({
   defaultBoardId,
   theme,
   onToggleTheme,
+  onViewportActionsReady,
 }: IBoardViewProps): ReactElement => {
   const { user, signOut } = useAuth();
   const [board, setBoard] = useState<IBoard | null>(null);
   const [boardLoading, setBoardLoading] = useState(true);
+  const [headerRenameOpen, setHeaderRenameOpen] = useState(false);
+  const [headerRenameName, setHeaderRenameName] = useState<string>('');
   const joinedBoardIdsRef = useRef<Set<string>>(new Set());
 
   const {
@@ -54,16 +75,9 @@ const BoardView = ({
     deleteObject,
   } = useObjects({ boardId, user });
 
-  const { onlineUsers } = usePresence({
-    boardId,
-    user,
-  });
-
-  const ai = useAI({
-    boardId,
-    user,
-    objects,
-  });
+  const { onlineUsers } = usePresence({ boardId, user });
+  const ai = useAI({ boardId, user, objects });
+  const { sidebarTab, setSidebarTab } = useBoardSettings(boardId);
 
   // Subscribe to board data
   useEffect(() => {
@@ -110,10 +124,10 @@ const BoardView = ({
 
   if (boardLoading || objectsLoading) {
     return (
-      <div className='min-h-screen flex items-center justify-center bg-slate-900'>
+      <div className='min-h-screen flex items-center justify-center bg-background'>
         <div className='text-center'>
           <Loader2 className='h-8 w-8 animate-spin text-primary mx-auto mb-4' />
-          <p className='text-slate-400'>Loading board...</p>
+          <p className='text-muted-foreground'>Loading board...</p>
         </div>
       </div>
     );
@@ -124,20 +138,79 @@ const BoardView = ({
   const canEdit = board ? canUserEdit(board, user.uid) : true;
 
   return (
-    <div className='h-screen flex flex-col bg-slate-900 overflow-hidden'>
+    <div className='h-screen flex flex-col bg-background overflow-hidden'>
       {/* Header */}
-      <header className='shrink-0 border-b border-slate-700 bg-slate-800/90 backdrop-blur-sm z-10'>
-        <div className='px-4 py-2 flex items-center justify-between'>
+      <header className='shrink-0 border-b border-border bg-card/90 backdrop-blur-sm z-10'>
+        <div className='px-4 py-2 flex items-center justify-between gap-6'>
           <div className='flex items-center gap-4'>
-            <h1 className='text-lg font-bold text-white'>CollabBoard</h1>
-            <span className='text-sm text-slate-400'>{board?.name || 'Untitled Board'}</span>
+            <h1 className='text-lg font-bold text-foreground'>CollabBoard</h1>
+            {board && canEdit ? (
+              <div className='flex items-center gap-1'>
+                <span className='text-sm text-muted-foreground'>{board.name || 'Untitled Board'}</span>
+                <Button
+                  type='button'
+                  variant='ghost'
+                  size='sm'
+                  className='h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-accent'
+                  onClick={() => {
+                    setHeaderRenameName(board.name || 'Untitled Board');
+                    setHeaderRenameOpen(true);
+                  }}
+                  title='Rename board'
+                  data-testid='header-rename-board'
+                >
+                  <Pencil className='h-3.5 w-3.5' aria-hidden />
+                </Button>
+              </div>
+            ) : (
+              <span className='text-sm text-muted-foreground'>{board?.name || 'Untitled Board'}</span>
+            )}
+            <Dialog open={headerRenameOpen} onOpenChange={setHeaderRenameOpen}>
+              <DialogContent className='bg-card border-border' aria-describedby={undefined}>
+                <DialogHeader>
+                  <DialogTitle className='text-card-foreground'>Rename board</DialogTitle>
+                  <DialogDescription className='sr-only'>
+                    Enter a new name for the board.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className='grid gap-2 py-2'>
+                  <Label htmlFor='header-rename-name' className='text-foreground'>
+                    Board name
+                  </Label>
+                  <Input
+                    id='header-rename-name'
+                    value={headerRenameName}
+                    onChange={(e) => setHeaderRenameName(e.target.value)}
+                    className='bg-muted border-border text-foreground'
+                    data-testid='header-rename-name-input'
+                    placeholder='Untitled Board'
+                  />
+                </div>
+                <DialogFooter>
+                  <Button variant='outline' size='sm' onClick={() => setHeaderRenameOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    size='sm'
+                    onClick={async () => {
+                      const name = headerRenameName.trim() || 'Untitled Board';
+                      await updateBoardName(boardId, name);
+                      setHeaderRenameOpen(false);
+                    }}
+                    data-testid='header-rename-submit'
+                  >
+                    Save
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
             <ConnectionStatus />
             {board && (
               <ShareDialog board={board} currentUserId={user.uid}>
                 <Button
                   variant='outline'
                   size='sm'
-                  className='border-slate-600 text-slate-300 hover:bg-slate-700'
+                  className='border-border text-foreground hover:bg-accent'
                 >
                   <Share2 className='h-4 w-4 mr-2' />
                   Share
@@ -145,7 +218,7 @@ const BoardView = ({
               </ShareDialog>
             )}
           </div>
-          <div className='flex items-center gap-4'>
+          <div className='flex items-center gap-5'>
             <PresenceAvatars
               users={onlineUsers}
               currentUid={user.uid}
@@ -155,18 +228,18 @@ const BoardView = ({
               variant='ghost'
               size='sm'
               onClick={onToggleTheme}
-              className='text-slate-300 hover:text-white hover:bg-slate-700'
+              className='text-foreground hover:bg-accent'
               title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
               data-testid='theme-toggle'
             >
               {theme === 'dark' ? <Sun className='h-4 w-4' /> : <Moon className='h-4 w-4' />}
             </Button>
-            <span className='text-sm text-slate-400'>{user.email}</span>
+            <span className='text-sm text-muted-foreground'>{user.email}</span>
             <Button
               variant='ghost'
               size='sm'
               onClick={signOut}
-              className='text-slate-300 hover:text-white hover:bg-slate-700'
+              className='text-foreground hover:bg-accent'
             >
               <LogOut className='h-4 w-4 mr-2' />
               Sign Out
@@ -175,54 +248,71 @@ const BoardView = ({
         </div>
       </header>
 
-      {/* Canvas area and AI panel */}
+      {/* Canvas area and sidebar */}
       <main className='flex-1 flex relative min-w-0 min-h-0 overflow-hidden'>
-        <div className='flex-1 relative min-w-0'>
-          <BoardCanvas
-            boardId={boardId}
-            user={user}
-            objects={objects}
-            canEdit={canEdit}
-            onObjectUpdate={updateObject}
-            onObjectCreate={createObject}
-            onObjectDelete={deleteObject}
-          />
-        </div>
-        {canEdit && (
-          <aside
-            className='shrink-0 w-80 border-l border-slate-700 bg-slate-800/50 p-2 flex flex-col min-h-0 overflow-hidden'
-            data-testid='sidebar'
-          >
-            <Tabs defaultValue='boards' className='flex flex-col min-h-0 flex-1 overflow-hidden'>
-              <TabsList className='w-full grid grid-cols-2 bg-slate-700/50'>
-                <TabsTrigger value='boards' className='data-[state=active]:bg-slate-700'>
-                  Boards
-                </TabsTrigger>
-                <TabsTrigger value='ai' className='data-[state=active]:bg-slate-700'>
-                  AI
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value='boards' className='flex-1 min-h-0 mt-2 overflow-auto'>
-                <BoardListSidebar
-                  user={user}
-                  currentBoardId={boardId}
-                  onSelectBoard={onSelectBoard}
-                  onCreateNewBoard={onCreateNewBoard}
-                />
-              </TabsContent>
-              <TabsContent value='ai' className='flex-1 min-h-0 mt-2 overflow-hidden flex flex-col'>
-                <AIChatPanel
-                  messages={ai.messages}
-                  loading={ai.loading}
-                  error={ai.error}
-                  onSend={ai.processCommand}
-                  onClearError={ai.clearError}
-                  onClearMessages={ai.clearMessages}
-                />
-              </TabsContent>
-            </Tabs>
-          </aside>
-        )}
+        <SelectionProvider>
+          <div className='flex-1 relative min-w-0'>
+            <BoardCanvas
+              boardId={boardId}
+              boardName={board?.name ?? 'Board'}
+              user={user}
+              objects={objects}
+              canEdit={canEdit}
+              onObjectUpdate={updateObject}
+              onObjectCreate={createObject}
+              onObjectDelete={deleteObject}
+              onViewportActionsReady={onViewportActionsReady}
+            />
+          </div>
+          {canEdit && (
+            <aside
+              className='shrink-0 w-80 border-l border-border bg-card p-2 flex flex-col min-h-0 overflow-hidden'
+              data-testid='sidebar'
+            >
+              <Tabs value={sidebarTab} onValueChange={setSidebarTab} className='flex flex-col min-h-0 flex-1 overflow-hidden'>
+                <TabsList className='w-full grid grid-cols-3 bg-muted'>
+                  <TabsTrigger value='boards' className='text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground'>
+                    Boards
+                  </TabsTrigger>
+                  <TabsTrigger value='properties' className='text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground'>
+                    Properties
+                  </TabsTrigger>
+                  <TabsTrigger value='ai' className='text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground'>
+                    AI
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value='boards' className='flex-1 min-h-0 mt-2 overflow-auto'>
+                  <BoardListSidebar
+                    user={user}
+                    currentBoardId={boardId}
+                    onSelectBoard={onSelectBoard}
+                    onCreateNewBoard={onCreateNewBoard}
+                  />
+                </TabsContent>
+                <TabsContent
+                  value='properties'
+                  className='flex-1 min-h-0 mt-2 overflow-auto'
+                  data-testid='properties-tab-content'
+                >
+                  <PropertyInspector objects={objects} onObjectUpdate={updateObject} />
+                </TabsContent>
+                <TabsContent
+                  value='ai'
+                  className='flex-1 min-h-0 mt-2 overflow-hidden flex flex-col'
+                >
+                  <AIChatPanel
+                    messages={ai.messages}
+                    loading={ai.loading}
+                    error={ai.error}
+                    onSend={ai.processCommand}
+                    onClearError={ai.clearError}
+                    onClearMessages={ai.clearMessages}
+                  />
+                </TabsContent>
+              </Tabs>
+            </aside>
+          )}
+        </SelectionProvider>
       </main>
     </div>
   );
@@ -231,26 +321,41 @@ const BoardView = ({
 export const App = (): ReactElement => {
   const { user, loading } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const [currentBoardId, setCurrentBoardId] = useState<string>(DEFAULT_BOARD_ID);
 
-  const handleCreateNewBoard = useCallback(async (): Promise<IBoard> => {
-    if (!user) {
-      throw new Error('User not authenticated');
+  const [currentBoardId, setCurrentBoardId] = useState<string>(DEFAULT_BOARD_ID);
+  const [viewportActions, setViewportActions] = useState<IViewportActionsValue | null>(null);
+
+  // Update recent boards when user opens a board (navigates to it)
+  useEffect(() => {
+    if (!user || !currentBoardId) {
+      return;
     }
-    const board = await createBoard({
-      name: 'Untitled Board',
-      ownerId: user.uid,
+    updateRecentBoardIds(user.uid, currentBoardId).catch(() => {
+      // Non-blocking; preferences update failure should not break the app
     });
-    setCurrentBoardId(board.id);
-    return board;
-  }, [user]);
+  }, [user, currentBoardId]);
+
+  const handleCreateNewBoard = useCallback(
+    async (name?: string): Promise<IBoard> => {
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const boardName = (name?.trim() ?? '') || 'Untitled Board';
+      const board = await createBoard({ name: boardName, ownerId: user.uid });
+
+      setCurrentBoardId(board.id);
+      return board;
+    },
+    [user]
+  );
 
   if (loading) {
     return (
-      <div className='min-h-screen flex items-center justify-center bg-slate-900'>
+      <div className='min-h-screen flex items-center justify-center bg-background'>
         <div className='text-center'>
           <Loader2 className='h-8 w-8 animate-spin text-primary mx-auto mb-4' />
-          <p className='text-slate-400'>Loading...</p>
+          <p className='text-muted-foreground'>Loading...</p>
         </div>
       </div>
     );
@@ -261,13 +366,16 @@ export const App = (): ReactElement => {
   }
 
   return (
-    <BoardView
-      boardId={currentBoardId}
-      onSelectBoard={setCurrentBoardId}
-      onCreateNewBoard={handleCreateNewBoard}
-      defaultBoardId={DEFAULT_BOARD_ID}
-      theme={theme}
-      onToggleTheme={toggleTheme}
-    />
+    <ViewportActionsContext.Provider value={viewportActions}>
+      <BoardView
+        boardId={currentBoardId}
+        onSelectBoard={setCurrentBoardId}
+        onCreateNewBoard={handleCreateNewBoard}
+        defaultBoardId={DEFAULT_BOARD_ID}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        onViewportActionsReady={setViewportActions}
+      />
+    </ViewportActionsContext.Provider>
   );
 };

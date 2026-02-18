@@ -1,3 +1,9 @@
+## Summary
+
+This file records the v2 feature discovery and prioritization. Section A is a brainstorm of many candidate features; Section B is the ordered Top 20 with justification (user value, effort, risk). It explains why certain items were chosen and in what order, so the v2 roadmap is auditable and the priorities can be explained or revisited.
+
+---
+
 # CollabBoard v2: Initial Research — Candidate Features and Priority List
 
 **Source of truth**: [docs/PRD.md](../PRD.md). Version-2 PRD at `docs/phases/version-2/PRD.md` is empty. The main PRD already specifies: infinite canvas, sticky notes, shapes (rect/circle/line), connectors, frames, text, selection, transforms, multiplayer cursors/presence, RBAC, toolbar with tools + color picker, board list sidebar, AI chat panel, dark mode, and AI tools (create/move/resize/changeColor/delete, getBoardState, findObjects, arrangeInGrid, alignObjects, distributeObjects). The list below only proposes **improvements or additions** not fully specified or shipped.

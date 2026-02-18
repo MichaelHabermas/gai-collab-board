@@ -1,3 +1,9 @@
+## Summary
+
+An expanded PRD that adds more detail to epics (e.g. timelines, subtasks, Mermaid diagrams) while keeping the same stack, architecture, and workflow. It bridges the initial PRD and the final root PRD by showing how scope and process were refined without losing the original intent.
+
+---
+
 # CollabBoard Initial PRD (Expanded)
 
 ## Overview

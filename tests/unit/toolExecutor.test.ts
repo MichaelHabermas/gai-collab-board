@@ -3,6 +3,20 @@ import { Timestamp } from 'firebase/firestore';
 import { createToolExecutor } from '@/modules/ai/toolExecutor';
 import type { IBoardObject } from '@/types';
 
+const mockGetBoard = vi.fn();
+const mockGetUserPreferences = vi.fn();
+const mockToggleFavoriteBoardId = vi.fn();
+
+vi.mock('@/modules/sync/boardService', () => ({
+  getBoard: (id: string) => mockGetBoard(id),
+}));
+
+vi.mock('@/modules/sync/userPreferencesService', () => ({
+  getUserPreferences: (userId: string) => mockGetUserPreferences(userId),
+  toggleFavoriteBoardId: (userId: string, boardId: string) =>
+    mockToggleFavoriteBoardId(userId, boardId),
+}));
+
 const mockCreateObject = vi.fn();
 const mockUpdateObject = vi.fn();
 const mockDeleteObject = vi.fn();
@@ -14,6 +28,7 @@ const mockUserId = 'user-1';
 const createContext = (objects: IBoardObject[] = []) => ({
   boardId: mockBoardId,
   createdBy: mockUserId,
+  userId: mockUserId,
   getObjects: () => objects,
   createObject: mockCreateObject as (boardId: string, params: unknown) => Promise<IBoardObject>,
   updateObject: mockUpdateObject as (
@@ -49,6 +64,80 @@ describe('toolExecutor', () => {
         text: 'Hello',
         createdBy: mockUserId,
       });
+    });
+
+    it('passes fontSize and opacity to createObject when provided', async () => {
+      const { execute } = createToolExecutor(createContext());
+      await execute({
+        name: 'createStickyNote',
+        arguments: {
+          text: 'Hello Bob World',
+          x: 100,
+          y: 100,
+          color: '#93c5fd',
+          fontSize: 60,
+          opacity: 0.75,
+        },
+      });
+      expect(mockCreateObject).toHaveBeenCalledWith(mockBoardId, {
+        type: 'sticky',
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 120,
+        fill: '#93c5fd',
+        text: 'Hello Bob World',
+        createdBy: mockUserId,
+        fontSize: 60,
+        opacity: 0.75,
+      });
+    });
+
+    it('clamps fontSize to 8–72 and opacity to 0–1 when out of range', async () => {
+      const { execute } = createToolExecutor(createContext());
+      await execute({
+        name: 'createStickyNote',
+        arguments: {
+          text: 'Test',
+          x: 0,
+          y: 0,
+          fontSize: 100,
+          opacity: 1.5,
+        },
+      });
+      expect(mockCreateObject).toHaveBeenCalledWith(mockBoardId, {
+        type: 'sticky',
+        x: 0,
+        y: 0,
+        width: 200,
+        height: 120,
+        fill: '#fef08a',
+        text: 'Test',
+        createdBy: mockUserId,
+        fontSize: 72,
+        opacity: 1,
+      });
+    });
+
+    it('resolves color names (e.g. red, blue) to hex', async () => {
+      const { execute } = createToolExecutor(createContext());
+      await execute({
+        name: 'createStickyNote',
+        arguments: { text: 'Hi', x: 0, y: 0, color: 'red' },
+      });
+      expect(mockCreateObject).toHaveBeenCalledWith(
+        mockBoardId,
+        expect.objectContaining({ fill: '#ef4444', text: 'Hi' })
+      );
+      mockCreateObject.mockClear();
+      await execute({
+        name: 'createStickyNote',
+        arguments: { text: 'Bye', x: 10, y: 10, color: 'blue' },
+      });
+      expect(mockCreateObject).toHaveBeenCalledWith(
+        mockBoardId,
+        expect.objectContaining({ fill: '#93c5fd', text: 'Bye' })
+      );
     });
   });
 
@@ -445,6 +534,109 @@ describe('toolExecutor', () => {
     });
   });
 
+  describe('setFontSize', () => {
+    it('calls updateObject with fontSize', async () => {
+      const { execute } = createToolExecutor(createContext());
+      const result = await execute({
+        name: 'setFontSize',
+        arguments: { objectId: 'obj-1', fontSize: 18 },
+      });
+      expect(mockUpdateObject).toHaveBeenCalledWith(mockBoardId, 'obj-1', {
+        fontSize: 18,
+      });
+      expect(result).toEqual({ success: true, message: 'Set font size to 18px' });
+    });
+
+    it('returns failure when fontSize is out of range', async () => {
+      const { execute } = createToolExecutor(createContext());
+      const resultTooSmall = await execute({
+        name: 'setFontSize',
+        arguments: { objectId: 'obj-1', fontSize: 5 },
+      });
+      expect(mockUpdateObject).not.toHaveBeenCalled();
+      expect(resultTooSmall).toEqual({
+        success: false,
+        message: 'Font size must be between 8 and 72',
+      });
+      const resultTooLarge = await execute({
+        name: 'setFontSize',
+        arguments: { objectId: 'obj-1', fontSize: 100 },
+      });
+      expect(resultTooLarge).toEqual({
+        success: false,
+        message: 'Font size must be between 8 and 72',
+      });
+    });
+  });
+
+  describe('setStroke', () => {
+    it('calls updateObject with stroke color', async () => {
+      const { execute } = createToolExecutor(createContext());
+      const result = await execute({
+        name: 'setStroke',
+        arguments: { objectId: 'obj-1', color: '#1e40af' },
+      });
+      expect(mockUpdateObject).toHaveBeenCalledWith(mockBoardId, 'obj-1', {
+        stroke: '#1e40af',
+      });
+      expect(result).toEqual({ success: true, message: 'Set stroke color to #1e40af' });
+    });
+  });
+
+  describe('setStrokeWidth', () => {
+    it('calls updateObject with strokeWidth', async () => {
+      const { execute } = createToolExecutor(createContext());
+      const result = await execute({
+        name: 'setStrokeWidth',
+        arguments: { objectId: 'obj-1', strokeWidth: 4 },
+      });
+      expect(mockUpdateObject).toHaveBeenCalledWith(mockBoardId, 'obj-1', {
+        strokeWidth: 4,
+      });
+      expect(result).toEqual({ success: true, message: 'Set stroke width to 4px' });
+    });
+
+    it('returns failure when strokeWidth is negative', async () => {
+      const { execute } = createToolExecutor(createContext());
+      const result = await execute({
+        name: 'setStrokeWidth',
+        arguments: { objectId: 'obj-1', strokeWidth: -1 },
+      });
+      expect(mockUpdateObject).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        success: false,
+        message: 'Stroke width must be non-negative',
+      });
+    });
+  });
+
+  describe('setOpacity', () => {
+    it('calls updateObject with opacity', async () => {
+      const { execute } = createToolExecutor(createContext());
+      const result = await execute({
+        name: 'setOpacity',
+        arguments: { objectId: 'obj-1', opacity: 0.5 },
+      });
+      expect(mockUpdateObject).toHaveBeenCalledWith(mockBoardId, 'obj-1', {
+        opacity: 0.5,
+      });
+      expect(result).toEqual({ success: true, message: 'Set opacity to 50%' });
+    });
+
+    it('returns failure when opacity is out of range', async () => {
+      const { execute } = createToolExecutor(createContext());
+      const result = await execute({
+        name: 'setOpacity',
+        arguments: { objectId: 'obj-1', opacity: 1.5 },
+      });
+      expect(mockUpdateObject).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        success: false,
+        message: 'Opacity must be between 0 and 1',
+      });
+    });
+  });
+
   describe('alignObjects', () => {
     it('calls updateObject for each object when aligning left', async () => {
       const objects: IBoardObject[] = [
@@ -591,6 +783,267 @@ describe('toolExecutor', () => {
         message: 'Need at least 3 objects to distribute',
       });
       expect(mockUpdateObject).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('zoomToFitAll', () => {
+    it('calls onZoomToFitAll when provided and returns success', async () => {
+      const onZoomToFitAll = vi.fn().mockResolvedValue(undefined);
+      const { execute } = createToolExecutor({
+        ...createContext(),
+        onZoomToFitAll,
+      });
+      const result = await execute({
+        name: 'zoomToFitAll',
+        arguments: {},
+      });
+      expect(onZoomToFitAll).toHaveBeenCalledOnce();
+      expect(result).toEqual({ success: true, message: 'Zoomed to fit all.' });
+    });
+
+    it('returns stub success when onZoomToFitAll not provided', async () => {
+      const { execute } = createToolExecutor(createContext());
+      const result = await execute({
+        name: 'zoomToFitAll',
+        arguments: {},
+      });
+      expect(result).toMatchObject({
+        success: true,
+        message: expect.stringContaining('Zoom to fit all'),
+      });
+    });
+  });
+
+  describe('zoomToSelection', () => {
+    it('calls onZoomToSelection with objectIds when provided', async () => {
+      const onZoomToSelection = vi.fn().mockResolvedValue(undefined);
+      const { execute } = createToolExecutor({
+        ...createContext(),
+        onZoomToSelection,
+      });
+      const result = await execute({
+        name: 'zoomToSelection',
+        arguments: { objectIds: ['id1', 'id2'] },
+      });
+      expect(onZoomToSelection).toHaveBeenCalledWith(['id1', 'id2']);
+      expect(result).toEqual({ success: true, message: 'Zoomed to fit 2 object(s).' });
+    });
+
+    it('returns failure when objectIds is empty', async () => {
+      const { execute } = createToolExecutor(createContext());
+      const result = await execute({
+        name: 'zoomToSelection',
+        arguments: { objectIds: [] },
+      });
+      expect(result).toEqual({
+        success: false,
+        message: 'objectIds (non-empty array) is required.',
+      });
+    });
+
+    it('returns stub success when onZoomToSelection not provided', async () => {
+      const { execute } = createToolExecutor(createContext());
+      const result = await execute({
+        name: 'zoomToSelection',
+        arguments: { objectIds: ['id1'] },
+      });
+      expect(result).toMatchObject({
+        success: true,
+        message: expect.stringContaining('Zoom to selection'),
+      });
+    });
+  });
+
+  describe('setZoomLevel', () => {
+    it('calls onSetZoomLevel when provided and returns success', async () => {
+      const onSetZoomLevel = vi.fn().mockResolvedValue(undefined);
+      const { execute } = createToolExecutor({
+        ...createContext(),
+        onSetZoomLevel,
+      });
+      const result = await execute({
+        name: 'setZoomLevel',
+        arguments: { percent: 100 },
+      });
+      expect(onSetZoomLevel).toHaveBeenCalledWith(100);
+      expect(result).toEqual({ success: true, message: 'Zoom set to 100%.' });
+    });
+
+    it('returns failure when percent is invalid', async () => {
+      const { execute } = createToolExecutor(createContext());
+      const result = await execute({
+        name: 'setZoomLevel',
+        arguments: { percent: 75 },
+      });
+      expect(result).toEqual({
+        success: false,
+        message: 'percent must be one of 50, 100, 200.',
+      });
+    });
+
+    it('returns stub success when onSetZoomLevel not provided', async () => {
+      const { execute } = createToolExecutor(createContext());
+      const result = await execute({
+        name: 'setZoomLevel',
+        arguments: { percent: 50 },
+      });
+      expect(result).toMatchObject({
+        success: true,
+        message: expect.stringContaining('50%'),
+      });
+    });
+  });
+
+  describe('exportBoardAsImage', () => {
+    it('calls onExportViewport when scope is viewport', async () => {
+      const mockExportViewport = vi.fn();
+      const ctx = {
+        ...createContext(),
+        onExportViewport: mockExportViewport,
+      };
+      const { execute } = createToolExecutor(ctx);
+      const result = await execute({
+        name: 'exportBoardAsImage',
+        arguments: { scope: 'viewport', format: 'png' },
+      });
+      expect(mockExportViewport).toHaveBeenCalledWith('png');
+      expect(result).toEqual({ success: true, message: 'Exported current view as image.' });
+    });
+
+    it('calls onExportFullBoard when scope is full', async () => {
+      const mockExportFullBoard = vi.fn();
+      const ctx = {
+        ...createContext(),
+        onExportFullBoard: mockExportFullBoard,
+      };
+      const { execute } = createToolExecutor(ctx);
+      const result = await execute({
+        name: 'exportBoardAsImage',
+        arguments: { scope: 'full', format: 'jpeg' },
+      });
+      expect(mockExportFullBoard).toHaveBeenCalledWith('jpeg');
+      expect(result).toEqual({ success: true, message: 'Exported full board as image.' });
+    });
+
+    it('defaults format to png when omitted', async () => {
+      const mockExportViewport = vi.fn();
+      const ctx = {
+        ...createContext(),
+        onExportViewport: mockExportViewport,
+      };
+      const { execute } = createToolExecutor(ctx);
+      await execute({
+        name: 'exportBoardAsImage',
+        arguments: { scope: 'viewport' },
+      });
+      expect(mockExportViewport).toHaveBeenCalledWith('png');
+    });
+
+    it('returns stub message when export callbacks not provided', async () => {
+      const { execute } = createToolExecutor(createContext());
+      const result = await execute({
+        name: 'exportBoardAsImage',
+        arguments: { scope: 'viewport' },
+      });
+      expect(result).toMatchObject({
+        success: true,
+        message: expect.stringContaining('Export'),
+      });
+    });
+
+    it('returns failure when scope is invalid', async () => {
+      const { execute } = createToolExecutor(createContext());
+      const result = await execute({
+        name: 'exportBoardAsImage',
+        arguments: { scope: 'invalid' },
+      });
+      expect(result).toEqual({
+        success: false,
+        message: 'scope must be "viewport" or "full".',
+      });
+    });
+  });
+
+  describe('getRecentBoards', () => {
+    it('returns recent board IDs and names from preferences', async () => {
+      mockGetUserPreferences.mockResolvedValue({
+        recentBoardIds: ['b1', 'b2'],
+        favoriteBoardIds: [],
+      });
+      mockGetBoard
+        .mockResolvedValueOnce({ id: 'b1', name: 'Board One' })
+        .mockResolvedValueOnce({ id: 'b2', name: 'Board Two' });
+
+      const { execute } = createToolExecutor(createContext());
+      const result = await execute({
+        name: 'getRecentBoards',
+        arguments: {},
+      });
+
+      expect(mockGetUserPreferences).toHaveBeenCalledWith(mockUserId);
+      expect(result).toMatchObject({
+        recentBoardIds: ['b1', 'b2'],
+        boards: [
+          { id: 'b1', name: 'Board One' },
+          { id: 'b2', name: 'Board Two' },
+        ],
+      });
+    });
+  });
+
+  describe('getFavoriteBoards', () => {
+    it('returns favorite board IDs and names from preferences', async () => {
+      mockGetUserPreferences.mockResolvedValue({
+        recentBoardIds: [],
+        favoriteBoardIds: ['fav1'],
+      });
+      mockGetBoard.mockResolvedValueOnce({ id: 'fav1', name: 'My Favorite' });
+
+      const { execute } = createToolExecutor(createContext());
+      const result = await execute({
+        name: 'getFavoriteBoards',
+        arguments: {},
+      });
+
+      expect(mockGetUserPreferences).toHaveBeenCalledWith(mockUserId);
+      expect(result).toMatchObject({
+        favoriteBoardIds: ['fav1'],
+        boards: [{ id: 'fav1', name: 'My Favorite' }],
+      });
+    });
+  });
+
+  describe('toggleBoardFavorite', () => {
+    it('toggles favorite and returns new state', async () => {
+      mockToggleFavoriteBoardId.mockResolvedValue(undefined);
+      // Executor calls getUserPreferences once after toggle to get new state
+      mockGetUserPreferences.mockResolvedValue({
+        recentBoardIds: [],
+        favoriteBoardIds: ['target-board'],
+      });
+
+      const { execute } = createToolExecutor(createContext());
+      const result = await execute({
+        name: 'toggleBoardFavorite',
+        arguments: { boardId: 'target-board' },
+      });
+
+      expect(mockToggleFavoriteBoardId).toHaveBeenCalledWith(mockUserId, 'target-board');
+      expect(result).toMatchObject({
+        success: true,
+        boardId: 'target-board',
+        isFavorite: true,
+      });
+    });
+
+    it('returns error when boardId is missing', async () => {
+      const { execute } = createToolExecutor(createContext());
+      const result = await execute({
+        name: 'toggleBoardFavorite',
+        arguments: {},
+      });
+      expect(result).toEqual({ success: false, message: 'boardId is required.' });
+      expect(mockToggleFavoriteBoardId).not.toHaveBeenCalled();
     });
   });
 

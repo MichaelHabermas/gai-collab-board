@@ -12,6 +12,7 @@ import {
   Hand,
 } from 'lucide-react';
 import { STICKY_COLORS } from './shapes/StickyNote';
+import { cn } from '@/lib/utils';
 import type { ShapeType } from '@/types';
 
 export type ToolMode = 'select' | 'pan' | ShapeType;
@@ -50,15 +51,15 @@ const ToolButton = memo(
       onClick={onClick}
       disabled={disabled}
       data-testid={testId}
-      className={`
-        w-10 h-10 relative group
-        ${isActive ? 'bg-primary text-primary-foreground' : 'text-slate-300 hover:text-white hover:bg-slate-700'}
-        ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-      `}
+      className={cn(
+        'w-10 h-10 relative group',
+        isActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+        disabled && 'opacity-50 cursor-not-allowed'
+      )}
       title={label}
     >
       {icon}
-      <span className='absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50'>
+      <span className='absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-card text-card-foreground border border-border text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50 shadow-md'>
         {label}
       </span>
     </Button>
@@ -76,11 +77,12 @@ interface IColorSwatchProps {
 const ColorSwatch = memo(
   ({ color, isActive, onClick }: IColorSwatchProps): ReactElement => (
     <button
+      type='button'
       onClick={onClick}
-      className={`
-      w-6 h-6 rounded-full border-2 transition-transform hover:scale-110
-      ${isActive ? 'border-white ring-2 ring-primary' : 'border-transparent'}
-    `}
+      className={cn(
+        'w-6 h-6 rounded-full border-2 transition-transform hover:scale-110',
+        isActive ? 'border-primary-foreground ring-2 ring-ring' : 'border-transparent'
+      )}
       style={{ backgroundColor: color }}
       title={color}
     />
@@ -149,8 +151,9 @@ export const Toolbar = memo(
     const wrapperClassName = embedded
       ? 'flex flex-col gap-1'
       : 'absolute left-4 top-1/2 -translate-y-1/2 z-20';
-    const innerClassName =
-      'bg-slate-800/95 backdrop-blur-sm rounded-xl p-2 shadow-xl border border-slate-700 flex flex-col gap-1';
+    const innerClassName = cn(
+      'bg-card/95 backdrop-blur-sm rounded-xl p-2 shadow-xl border border-border flex flex-col gap-1'
+    );
 
     return (
       <div className={wrapperClassName} data-testid={embedded ? 'toolbar-embedded' : 'toolbar'}>
@@ -169,24 +172,25 @@ export const Toolbar = memo(
           ))}
 
           {/* Divider */}
-          <div className='h-px bg-slate-600 my-1' />
+          <div className='h-px bg-border my-1' />
 
           {/* Color picker toggle */}
           <div className='relative'>
             <button
+              type='button'
               onClick={() => setShowColors(!showColors)}
               data-testid='color-picker-toggle'
-              className={`
-                w-10 h-10 rounded-lg border-2 transition-all
-                ${showColors ? 'border-primary' : 'border-slate-600 hover:border-slate-500'}
-              `}
+              className={cn(
+                'w-10 h-10 rounded-lg border-2 transition-all',
+                showColors ? 'border-primary' : 'border-border hover:border-muted-foreground'
+              )}
               style={{ backgroundColor: activeColor }}
               title='Color'
             />
 
             {/* Color palette popover */}
             {showColors && (
-              <div className='absolute left-full ml-2 top-0 bg-slate-800 rounded-lg p-3 shadow-xl border border-slate-700'>
+              <div className='absolute left-full ml-2 top-0 bg-card rounded-lg p-3 shadow-xl border border-border'>
                 <div className='grid grid-cols-3 gap-2'>
                   {Object.entries(STICKY_COLORS).map(([name, color]) => (
                     <ColorSwatch
@@ -201,7 +205,7 @@ export const Toolbar = memo(
                   ))}
                 </div>
                 {/* Additional colors */}
-                <div className='mt-2 pt-2 border-t border-slate-600 grid grid-cols-3 gap-2'>
+                <div className='mt-2 pt-2 border-t border-border grid grid-cols-3 gap-2'>
                   <ColorSwatch
                     color='#3b82f6'
                     isActive={activeColor === '#3b82f6'}

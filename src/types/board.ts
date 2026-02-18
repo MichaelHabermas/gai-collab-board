@@ -18,6 +18,8 @@ export interface IBoardObject {
   strokeWidth?: number;
   text?: string;
   fontSize?: number;
+  /** Opacity 0–1; default 1 when undefined for backward compatibility */
+  opacity?: number;
   // For lines and connectors
   points?: number[];
   // For connectors - object IDs and anchors to connect

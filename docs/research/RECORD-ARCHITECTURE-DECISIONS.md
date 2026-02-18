@@ -1,3 +1,9 @@
+## Summary
+
+An earlier architecture decision record (ADR) that captured a different initial choice (e.g. Supabase, Claude, Vercel). It is kept for history; the current product follows the V2 decisions. Its value is in showing how decisions evolved and what was reconsidered.
+
+---
+
 # Record Architecture Decisions
 
 ## Chosen Design: Supabase backend, React with Konva.js frontend, Claude AI integration, Vercel deployment

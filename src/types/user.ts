@@ -14,3 +14,8 @@ export interface IBoardMember {
   email?: string;
   displayName?: string;
 }
+
+export interface IUserPreferences {
+  recentBoardIds: string[];
+  favoriteBoardIds: string[];
+}

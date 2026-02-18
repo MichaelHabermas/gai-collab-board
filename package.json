@@ -17,7 +17,8 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:ai-connection": "bun run scripts/test-ai-connection.ts",
-    "validate": "bun run typecheck && bun run lint && bun run test:run"
+    "clear-boards": "bun run scripts/clear-boards.ts",
+    "validate": "bun run format && bun run typecheck && bun run lint && bun run test:run"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",

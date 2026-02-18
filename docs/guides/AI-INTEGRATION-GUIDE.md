@@ -1,3 +1,9 @@
+## Summary
+
+This guide is the single reference for integrating AI providers (Groq recommended, NVIDIA/Kimi optional) into CollabBoard. It defines how to configure API keys (local and Netlify), implement OpenAI-compatible function-calling tools for board actions (create, move, resize, align, etc.), and handle context, errors, and rate limits. Its purpose is to let any developer add or switch AI backends and maintain consistent behavior; it also documents the proxy pattern so API keys stay server-side in production.
+
+---
+
 # AI Integration Guide for CollabBoard
 
 ## Overview

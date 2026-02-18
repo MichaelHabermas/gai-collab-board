@@ -1,3 +1,9 @@
+## Summary
+
+This document explains how CollabBoard uses Firebase for backend services: Authentication (email/password and Google), Firestore for persistent board data, and Realtime Database for live object and cursor sync. It covers project setup, security rules, offline behavior, and performance considerations. The guide supports both implementation and operations—anyone extending auth, sync, or presence, or troubleshooting sync/security, can use it to understand the design and configuration.
+
+---
+
 # Firebase Guide for CollabBoard
 
 ## Overview

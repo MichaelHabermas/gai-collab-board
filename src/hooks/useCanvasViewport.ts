@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import Konva from 'konva';
+import { computeViewportToFitBounds, type IBounds } from '@/lib/canvasBounds';
 
 export interface IViewportPosition {
   x: number;
@@ -26,7 +27,20 @@ interface IUseCanvasViewportReturn {
   handleTouchEnd: () => void;
   zoomTo: (scale: number, center?: IViewportPosition) => void;
   panTo: (position: IViewportPosition) => void;
+  zoomToFitBounds: (bounds: IBounds, padding?: number) => void;
   resetViewport: () => void;
+}
+
+export interface IViewportPersistState {
+  position: IViewportPosition;
+  scale: IViewportScale;
+}
+
+interface IUseCanvasViewportOptions {
+  /** Initial position and scale (e.g. from persisted board settings). Width/height come from window. */
+  initialViewport?: IViewportPersistState;
+  /** Called when viewport changes (e.g. to persist). Debounce in the caller if needed. */
+  onViewportChange?: (viewport: IViewportState) => void;
 }
 
 const SCALE_BY = 1.05;
@@ -41,19 +55,59 @@ interface ITouchState {
 /**
  * Hook for managing canvas viewport state including pan and zoom.
  * Provides handlers for wheel zoom, drag pan, and touch pinch-to-zoom.
+ * Optionally accepts initial position/scale and a change callback for persistence.
  */
-export const useCanvasViewport = (): IUseCanvasViewportReturn => {
-  const [viewport, setViewport] = useState<IViewportState>({
-    position: { x: 0, y: 0 },
-    scale: { x: 1, y: 1 },
-    width: typeof window !== 'undefined' ? window.innerWidth : 800,
-    height: typeof window !== 'undefined' ? window.innerHeight : 600,
+export const useCanvasViewport = (options?: IUseCanvasViewportOptions): IUseCanvasViewportReturn => {
+  const { initialViewport, onViewportChange } = options ?? {};
+  const onViewportChangeRef = useRef(onViewportChange);
+  onViewportChangeRef.current = onViewportChange;
+
+  const [viewport, setViewport] = useState<IViewportState>(() => {
+    const width = typeof window !== 'undefined' ? window.innerWidth : 800;
+    const height = typeof window !== 'undefined' ? window.innerHeight : 600;
+    if (initialViewport) {
+      return {
+        position: initialViewport.position,
+        scale: initialViewport.scale,
+        width,
+        height,
+      };
+    }
+    return {
+      position: { x: 0, y: 0 },
+      scale: { x: 1, y: 1 },
+      width,
+      height,
+    };
   });
 
   const touchStateRef = useRef<ITouchState>({
     lastCenter: null,
     lastDist: 0,
   });
+
+  // Notify parent when viewport changes (for persistence). Skip initial mount and right after applying initialViewport.
+  const skipNextNotifyRef = useRef(true);
+  useEffect(() => {
+    if (skipNextNotifyRef.current) {
+      skipNextNotifyRef.current = false;
+      return;
+    }
+    onViewportChangeRef.current?.(viewport);
+  }, [viewport]);
+
+  // When initialViewport changes (e.g. board switch), reset viewport to the new initial and skip one notify
+  useEffect(() => {
+    if (!initialViewport) {
+      return;
+    }
+    setViewport((prev) => ({
+      ...prev,
+      position: initialViewport.position,
+      scale: initialViewport.scale,
+    }));
+    skipNextNotifyRef.current = true;
+  }, [initialViewport?.position.x, initialViewport?.position.y, initialViewport?.scale.x, initialViewport?.scale.y]);
 
   // Handle window resize
   useEffect(() => {
@@ -214,6 +268,24 @@ export const useCanvasViewport = (): IUseCanvasViewportReturn => {
     }));
   }, []);
 
+  // Zoom and pan so the given bounds fit in the viewport with padding
+  const zoomToFitBounds = useCallback(
+    (bounds: IBounds, padding: number = 40) => {
+      const { scale, position } = computeViewportToFitBounds(
+        viewport.width,
+        viewport.height,
+        bounds,
+        padding
+      );
+      setViewport((prev) => ({
+        ...prev,
+        scale: { x: scale, y: scale },
+        position,
+      }));
+    },
+    [viewport.width, viewport.height]
+  );
+
   // Reset viewport to initial state
   const resetViewport = useCallback(() => {
     setViewport((prev) => ({
@@ -231,6 +303,7 @@ export const useCanvasViewport = (): IUseCanvasViewportReturn => {
     handleTouchEnd,
     zoomTo,
     panTo,
+    zoomToFitBounds,
     resetViewport,
   };
 };

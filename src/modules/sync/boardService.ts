@@ -85,8 +85,13 @@ export const subscribeToUserBoards = (
   const memberPath = `members.${userId}`;
   const q = query(boardsRef, where(memberPath, 'in', USER_BOARD_ROLES));
   return onSnapshot(q, (snapshot) => {
-    const boards = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as IBoard);
-    callback(boards);
+    const byId = new Map<string, IBoard>();
+    for (const d of snapshot.docs) {
+      if (!byId.has(d.id)) {
+        byId.set(d.id, { id: d.id, ...d.data() } as IBoard);
+      }
+    }
+    callback(Array.from(byId.values()));
   });
 };
 

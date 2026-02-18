@@ -3,7 +3,7 @@ import { TransformHandler, type ITransformEndAttrs } from './TransformHandler';
 import { SelectionLayer, type ISelectionRect } from './SelectionLayer';
 import { useRef, useCallback, useState, useEffect, useMemo, memo, type ReactElement } from 'react';
 import Konva from 'konva';
-import { Wrench } from 'lucide-react';
+import { Wrench, Focus, Maximize2, Grid3X3, Magnet, Download } from 'lucide-react';
 import { useCanvasViewport } from '@/hooks/useCanvasViewport';
 import { CursorLayer } from './CursorLayer';
 import { Toolbar, type ToolMode } from './Toolbar';
@@ -22,75 +22,52 @@ import {
 import { useCursors } from '@/hooks/useCursors';
 import { useCanvasOperations } from '@/hooks/useCanvasOperations';
 import { useVisibleShapes } from '@/hooks/useVisibleShapes';
+import { useSelection } from '@/contexts/selectionContext';
 import type { User } from 'firebase/auth';
 import type { IBoardObject, ConnectorAnchor, IPosition } from '@/types';
 import type { ICreateObjectParams } from '@/modules/sync/objectService';
 import { getAnchorPosition } from '@/lib/connectorAnchors';
+import { getObjectBounds, getSelectionBounds, getBoardBounds } from '@/lib/canvasBounds';
+import {
+  computeAlignmentGuides,
+  computeSnappedPosition,
+  type IAlignmentGuides,
+} from '@/lib/alignmentGuides';
+import { cn } from '@/lib/utils';
+import { snapPositionToGrid, snapSizeToGrid } from '@/lib/snapToGrid';
 import { ConnectionNodesLayer } from './ConnectionNodesLayer';
+import { AlignToolbar } from './AlignToolbar';
+import { AlignmentGuidesLayer } from './AlignmentGuidesLayer';
+import { useExportAsImage } from '@/hooks/useExportAsImage';
+import { useTheme } from '@/hooks/useTheme';
+import { useBoardSettings } from '@/hooks/useBoardSettings';
+import type { IViewportActionsValue } from '@/contexts/ViewportActionsContext';
 
 interface IBoardCanvasProps {
   boardId: string;
+  boardName?: string;
   user: User;
   objects: IBoardObject[];
   canEdit?: boolean;
   onObjectUpdate?: (objectId: string, updates: Partial<IBoardObject>) => void;
   onObjectCreate?: (params: Omit<ICreateObjectParams, 'createdBy'>) => Promise<IBoardObject | null>;
   onObjectDelete?: (objectId: string) => Promise<void>;
+  onViewportActionsReady?: (actions: IViewportActionsValue | null) => void;
 }
 
-// Grid pattern configuration
-const GRID_SIZE = 50;
-const GRID_COLOR = '#e2e8f0';
+// Zoom preset scales (1 = 100%)
+const ZOOM_PRESETS = [0.5, 1, 2] as const;
+
+// Grid pattern configuration (display and snap use same size per PRD)
+const GRID_SIZE = 20;
 const GRID_STROKE_WIDTH = 1;
+
+/** Board canvas container class; uses theme-aware background so dark/light mode is visible. */
+export const BOARD_CANVAS_CONTAINER_CLASS =
+  'w-full h-full overflow-hidden bg-background relative';
 
 // Default sizes for new objects
 const DEFAULT_STICKY_SIZE = { width: 200, height: 200 };
-
-// Minimum size for line/connector bounds when points define a degenerate box
-const MIN_POINTS_BOUND_SIZE = 2;
-
-/**
- * Returns axis-aligned bounds { x1, y1, x2, y2 } for an object.
- * For line/connector, computes bounds from points (relative to obj.x, obj.y).
- */
-function getObjectBounds(obj: IBoardObject): { x1: number; y1: number; x2: number; y2: number } {
-  if (
-    (obj.type === 'line' || obj.type === 'connector') &&
-    obj.points != null &&
-    obj.points.length >= 4
-  ) {
-    const pts = obj.points;
-    const p0 = pts[0] ?? 0;
-    const p1 = pts[1] ?? 0;
-    let minX = obj.x + p0;
-    let maxX = obj.x + p0;
-    let minY = obj.y + p1;
-    let maxY = obj.y + p1;
-    for (let i = 2; i + 1 < pts.length; i += 2) {
-      const px = obj.x + (pts[i] ?? 0);
-      const py = obj.y + (pts[i + 1] ?? 0);
-      minX = Math.min(minX, px);
-      maxX = Math.max(maxX, px);
-      minY = Math.min(minY, py);
-      maxY = Math.max(maxY, py);
-    }
-    if (maxX - minX < MIN_POINTS_BOUND_SIZE) {
-      minX -= MIN_POINTS_BOUND_SIZE / 2;
-      maxX += MIN_POINTS_BOUND_SIZE / 2;
-    }
-    if (maxY - minY < MIN_POINTS_BOUND_SIZE) {
-      minY -= MIN_POINTS_BOUND_SIZE / 2;
-      maxY += MIN_POINTS_BOUND_SIZE / 2;
-    }
-    return { x1: minX, y1: minY, x2: maxX, y2: maxY };
-  }
-  return {
-    x1: obj.x,
-    y1: obj.y,
-    x2: obj.x + obj.width,
-    y2: obj.y + obj.height,
-  };
-}
 
 // Drawing state for shapes
 interface IDrawingState {
@@ -108,19 +85,21 @@ interface IDrawingState {
 export const BoardCanvas = memo(
   ({
     boardId,
+    boardName = 'Board',
     user,
     objects,
     canEdit = true,
     onObjectUpdate,
     onObjectCreate,
     onObjectDelete,
+    onViewportActionsReady,
   }: IBoardCanvasProps): ReactElement => {
     const stageRef = useRef<Konva.Stage>(null);
     const objectsLayerRef = useRef<Konva.Layer>(null);
     const [activeTool, setActiveTool] = useState<ToolMode>('select');
     const activeToolRef = useRef<ToolMode>('select');
     const [activeColor, setActiveColor] = useState<string>(STICKY_COLORS.yellow);
-    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const { selectedIds, setSelectedIds } = useSelection();
     const [drawingState, setDrawingState] = useState<IDrawingState>({
       isDrawing: false,
       startX: 0,
@@ -145,9 +124,53 @@ export const BoardCanvas = memo(
       anchor: ConnectorAnchor;
     } | null>(null);
     const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
+    const [alignmentGuides, setAlignmentGuides] = useState<IAlignmentGuides | null>(null);
 
-    const { viewport, handleWheel, handleDragEnd, handleTouchMove, handleTouchEnd } =
-      useCanvasViewport();
+    const {
+      viewport: persistedViewport,
+      setViewport: setPersistedViewport,
+      showGrid,
+      setShowGrid,
+      snapToGrid: snapToGridEnabled,
+      setSnapToGrid: setSnapToGridEnabled,
+    } = useBoardSettings(boardId);
+
+    const { theme } = useTheme();
+    const gridColor = useMemo(
+      () =>
+        (typeof document !== 'undefined'
+          ? getComputedStyle(document.documentElement).getPropertyValue('--color-border').trim()
+          : '') || '#e2e8f0',
+      [theme]
+    );
+    const selectionColor = useMemo(
+      () =>
+        (typeof document !== 'undefined'
+          ? getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim()
+          : '') || '#3b82f6',
+      [theme]
+    );
+
+    const {
+      viewport,
+      handleWheel,
+      handleDragEnd,
+      handleTouchMove,
+      handleTouchEnd,
+      zoomTo,
+      zoomToFitBounds,
+      resetViewport,
+    } = useCanvasViewport({
+      initialViewport: persistedViewport,
+      onViewportChange: (v) => {
+        setPersistedViewport({ position: v.position, scale: v.scale });
+      },
+    });
+
+    const { exportViewport, exportFullBoard } = useExportAsImage({
+      stageRef,
+      boardName,
+    });
 
     // Filter objects to only visible ones (viewport culling)
     const visibleObjects = useVisibleShapes({ objects, viewport });
@@ -175,7 +198,7 @@ export const BoardCanvas = memo(
     // Clear selection helper
     const clearSelection = useCallback(() => {
       setSelectedIds([]);
-    }, []);
+    }, [setSelectedIds]);
 
     // Canvas operations (delete, duplicate, copy, paste)
     // Type assertion needed because useCanvasOperations uses a more permissive type
@@ -451,7 +474,15 @@ export const BoardCanvas = memo(
           });
         }
       },
-      [drawingState, activeTool, activeColor, onObjectCreate, objects, getCanvasCoords]
+      [
+        drawingState,
+        activeTool,
+        activeColor,
+        onObjectCreate,
+        objects,
+        getCanvasCoords,
+        setSelectedIds,
+      ]
     );
 
     // Handle stage click for object creation or deselection
@@ -542,7 +573,15 @@ export const BoardCanvas = memo(
           }
         }
       },
-      [activeTool, activeColor, canEdit, onObjectCreate, getCanvasCoords, isEmptyAreaClick]
+      [
+        activeTool,
+        activeColor,
+        canEdit,
+        onObjectCreate,
+        getCanvasCoords,
+        isEmptyAreaClick,
+        setSelectedIds,
+      ]
     );
 
     // Handle connector node click (two-click flow: first node = from, second = to; same shape cancels)
@@ -607,15 +646,58 @@ export const BoardCanvas = memo(
           setSelectedIds([objectId]);
         }
       },
-      []
+      [setSelectedIds]
     );
 
-    // Handle object drag end
+    // Handle object drag end (optionally snap position to grid); clear alignment guides
     const handleObjectDragEnd = useCallback(
       (objectId: string, x: number, y: number) => {
-        onObjectUpdate?.(objectId, { x, y });
+        setAlignmentGuides(null);
+        let finalX = x;
+        let finalY = y;
+        if (snapToGridEnabled) {
+          const snapped = snapPositionToGrid(x, y, GRID_SIZE);
+          finalX = snapped.x;
+          finalY = snapped.y;
+        }
+        onObjectUpdate?.(objectId, { x: finalX, y: finalY });
       },
-      [onObjectUpdate]
+      [onObjectUpdate, snapToGridEnabled]
+    );
+
+    // Throttle guide updates via RAF; ref only used in effect and in drag handler (not during render).
+    const alignmentGuidesRafIdRef = useRef<number>(0);
+    const setGuidesThrottledRef = useRef<(g: IAlignmentGuides) => void>(() => {});
+    useEffect(() => {
+      setGuidesThrottledRef.current = (guides: IAlignmentGuides) => {
+        const prev = alignmentGuidesRafIdRef.current;
+        if (prev !== 0) {
+          cancelAnimationFrame(prev);
+        }
+        alignmentGuidesRafIdRef.current = requestAnimationFrame(() => {
+          setAlignmentGuides(guides);
+          alignmentGuidesRafIdRef.current = 0;
+        });
+      };
+    });
+
+    const getDragBoundFunc = useCallback(
+      (objectId: string, width: number, height: number) => {
+        return (pos: { x: number; y: number }) => {
+          const dragged = {
+            x1: pos.x,
+            y1: pos.y,
+            x2: pos.x + width,
+            y2: pos.y + height,
+          };
+          const others = objects.filter((o) => o.id !== objectId).map((o) => getObjectBounds(o));
+          const guides = computeAlignmentGuides(dragged, others);
+          const snapped = computeSnappedPosition(dragged, others, pos, width, height);
+          setGuidesThrottledRef.current(guides);
+          return snapped;
+        };
+      },
+      [objects]
     );
 
     // Handle text change for sticky notes
@@ -629,9 +711,30 @@ export const BoardCanvas = memo(
     // Handle transform end from TransformHandler (shape-aware attrs: rect-like or points for line/connector)
     const handleTransformEnd = useCallback(
       (objectId: string, attrs: ITransformEndAttrs) => {
-        onObjectUpdate?.(objectId, attrs as Partial<IBoardObject>);
+        let finalAttrs = attrs;
+        if (snapToGridEnabled) {
+          if ('width' in attrs && 'height' in attrs) {
+            const snappedPos = snapPositionToGrid(attrs.x, attrs.y, GRID_SIZE);
+            const snappedSize = snapSizeToGrid(attrs.width, attrs.height, GRID_SIZE);
+            finalAttrs = {
+              ...attrs,
+              x: snappedPos.x,
+              y: snappedPos.y,
+              width: snappedSize.width,
+              height: snappedSize.height,
+            };
+          } else if ('points' in attrs) {
+            const snappedPos = snapPositionToGrid(attrs.x, attrs.y, GRID_SIZE);
+            finalAttrs = {
+              ...attrs,
+              x: snappedPos.x,
+              y: snappedPos.y,
+            };
+          }
+        }
+        onObjectUpdate?.(objectId, finalAttrs as Partial<IBoardObject>);
       },
-      [onObjectUpdate]
+      [onObjectUpdate, snapToGridEnabled]
     );
 
     // Calculate grid lines for visible area
@@ -654,7 +757,7 @@ export const BoardCanvas = memo(
             y={startY}
             width={GRID_STROKE_WIDTH / scale.x}
             height={endY - startY}
-            fill={GRID_COLOR}
+            fill={gridColor}
             listening={false}
             perfectDrawEnabled={false}
           />
@@ -670,7 +773,7 @@ export const BoardCanvas = memo(
             y={y}
             width={endX - startX}
             height={GRID_STROKE_WIDTH / scale.y}
-            fill={GRID_COLOR}
+            fill={gridColor}
             listening={false}
             perfectDrawEnabled={false}
           />
@@ -678,7 +781,7 @@ export const BoardCanvas = memo(
       }
 
       return gridLines;
-    }, [viewport]);
+    }, [viewport, gridColor]);
 
     // Render shape based on type
     const renderShape = useCallback(
@@ -697,11 +800,16 @@ export const BoardCanvas = memo(
                 height={obj.height}
                 text={obj.text || ''}
                 fill={obj.fill}
+                fontSize={obj.fontSize}
+                opacity={obj.opacity ?? 1}
                 rotation={obj.rotation}
                 isSelected={isSelected}
                 draggable={canEdit}
                 onSelect={() => handleObjectSelect(obj.id)}
                 onDragEnd={(x, y) => handleObjectDragEnd(obj.id, x, y)}
+                dragBoundFunc={
+                  canEdit ? getDragBoundFunc(obj.id, obj.width, obj.height) : undefined
+                }
                 onTextChange={canEdit ? (text) => handleTextChange(obj.id, text) : undefined}
               />
             );
@@ -718,15 +826,18 @@ export const BoardCanvas = memo(
                 fill={obj.fill}
                 stroke={obj.stroke}
                 strokeWidth={obj.strokeWidth}
+                opacity={obj.opacity ?? 1}
                 rotation={obj.rotation}
                 isSelected={isSelected}
                 draggable={canEdit}
                 onSelect={() => handleObjectSelect(obj.id)}
                 onDragEnd={(x, y) => handleObjectDragEnd(obj.id, x, y)}
+                dragBoundFunc={getDragBoundFunc(obj.id, obj.width, obj.height)}
               />
             );
 
-          case 'circle':
+          case 'circle': {
+            const boundFunc = getDragBoundFunc(obj.id, obj.width, obj.height);
             return (
               <CircleShape
                 key={obj.id}
@@ -738,13 +849,29 @@ export const BoardCanvas = memo(
                 fill={obj.fill}
                 stroke={obj.stroke}
                 strokeWidth={obj.strokeWidth}
+                opacity={obj.opacity ?? 1}
                 rotation={obj.rotation}
                 isSelected={isSelected}
                 draggable={canEdit}
                 onSelect={() => handleObjectSelect(obj.id)}
                 onDragEnd={(x, y) => handleObjectDragEnd(obj.id, x, y)}
+                dragBoundFunc={
+                  boundFunc
+                    ? (pos) => {
+                        const topLeft = boundFunc({
+                          x: pos.x - obj.width / 2,
+                          y: pos.y - obj.height / 2,
+                        });
+                        return {
+                          x: topLeft.x + obj.width / 2,
+                          y: topLeft.y + obj.height / 2,
+                        };
+                      }
+                    : undefined
+                }
               />
             );
+          }
 
           case 'line':
             return (
@@ -756,11 +883,13 @@ export const BoardCanvas = memo(
                 points={obj.points || [0, 0, 100, 100]}
                 stroke={obj.stroke || obj.fill}
                 strokeWidth={obj.strokeWidth}
+                opacity={obj.opacity ?? 1}
                 rotation={obj.rotation}
                 isSelected={isSelected}
                 draggable={canEdit}
                 onSelect={() => handleObjectSelect(obj.id)}
                 onDragEnd={(x, y) => handleObjectDragEnd(obj.id, x, y)}
+                dragBoundFunc={getDragBoundFunc(obj.id, obj.width, obj.height)}
               />
             );
 
@@ -787,6 +916,7 @@ export const BoardCanvas = memo(
                   points={points}
                   stroke={obj.stroke || obj.fill}
                   strokeWidth={obj.strokeWidth}
+                  opacity={obj.opacity ?? 1}
                   rotation={obj.rotation}
                   isSelected={isSelected}
                   draggable={false}
@@ -808,12 +938,14 @@ export const BoardCanvas = memo(
                 points={points}
                 stroke={obj.stroke || obj.fill}
                 strokeWidth={obj.strokeWidth}
+                opacity={obj.opacity ?? 1}
                 rotation={obj.rotation}
                 isSelected={isSelected}
                 draggable={canEdit}
                 hasArrow={true}
                 onSelect={() => handleObjectSelect(obj.id)}
                 onDragEnd={(dx, dy) => handleObjectDragEnd(obj.id, dx, dy)}
+                dragBoundFunc={getDragBoundFunc(obj.id, obj.width, obj.height)}
               />
             );
           }
@@ -828,11 +960,14 @@ export const BoardCanvas = memo(
                 text={obj.text || ''}
                 fontSize={obj.fontSize}
                 fill={obj.fill}
+                width={obj.width}
+                opacity={obj.opacity ?? 1}
                 rotation={obj.rotation}
                 isSelected={isSelected}
                 draggable={canEdit}
                 onSelect={() => handleObjectSelect(obj.id)}
                 onDragEnd={(x, y) => handleObjectDragEnd(obj.id, x, y)}
+                dragBoundFunc={getDragBoundFunc(obj.id, obj.width, obj.height)}
                 onTextChange={canEdit ? (text) => handleTextChange(obj.id, text) : undefined}
               />
             );
@@ -850,11 +985,13 @@ export const BoardCanvas = memo(
                 fill={obj.fill}
                 stroke={obj.stroke}
                 strokeWidth={obj.strokeWidth}
+                opacity={obj.opacity ?? 1}
                 rotation={obj.rotation}
                 isSelected={isSelected}
                 draggable={canEdit}
                 onSelect={() => handleObjectSelect(obj.id)}
                 onDragEnd={(x, y) => handleObjectDragEnd(obj.id, x, y)}
+                dragBoundFunc={getDragBoundFunc(obj.id, obj.width, obj.height)}
                 onTextChange={canEdit ? (text) => handleTextChange(obj.id, text) : undefined}
               />
             );
@@ -871,7 +1008,7 @@ export const BoardCanvas = memo(
                 width={obj.width}
                 height={obj.height}
                 fill={obj.fill}
-                stroke={isSelected ? '#3b82f6' : obj.stroke}
+                stroke={isSelected ? selectionColor : obj.stroke}
                 strokeWidth={isSelected ? 2 : obj.strokeWidth}
                 rotation={obj.rotation}
                 draggable={canEdit}
@@ -882,7 +1019,16 @@ export const BoardCanvas = memo(
             );
         }
       },
-      [selectedIds, canEdit, objects, handleObjectSelect, handleObjectDragEnd, handleTextChange]
+      [
+        selectedIds,
+        canEdit,
+        objects,
+        selectionColor,
+        handleObjectSelect,
+        handleObjectDragEnd,
+        handleTextChange,
+        getDragBoundFunc,
+      ]
     );
 
     // Render drawing preview
@@ -903,7 +1049,7 @@ export const BoardCanvas = memo(
             width={width}
             height={height}
             fill={activeColor}
-            stroke='#3b82f6'
+            stroke={selectionColor}
             strokeWidth={2}
             dash={[5, 5]}
             listening={false}
@@ -919,7 +1065,7 @@ export const BoardCanvas = memo(
             width={width}
             height={height}
             fill={activeColor}
-            stroke='#3b82f6'
+            stroke={selectionColor}
             strokeWidth={2}
             dash={[5, 5]}
             cornerRadius={Math.min(width, height) / 2}
@@ -948,7 +1094,7 @@ export const BoardCanvas = memo(
             width={width}
             height={height}
             fill='rgba(241, 245, 249, 0.3)'
-            stroke='#3b82f6'
+            stroke={selectionColor}
             strokeWidth={2}
             dash={[5, 5]}
             cornerRadius={6}
@@ -958,14 +1104,72 @@ export const BoardCanvas = memo(
       }
 
       return null;
-    }, [drawingState, activeTool, activeColor]);
+    }, [drawingState, activeTool, activeColor, selectionColor]);
 
     // Stage is draggable only in pan mode so marquee selection is not stolen by pan
     const isDraggable = activeTool === 'pan';
 
+    const handleZoomToSelection = useCallback(() => {
+      const bounds = getSelectionBounds(objects, selectedIds);
+      if (bounds) {
+        zoomToFitBounds(bounds);
+      }
+    }, [objects, selectedIds, zoomToFitBounds]);
+
+    const handleZoomToFitAll = useCallback(() => {
+      const bounds = getBoardBounds(objects);
+      if (bounds) {
+        zoomToFitBounds(bounds);
+      } else {
+        resetViewport();
+      }
+    }, [objects, zoomToFitBounds, resetViewport]);
+
+    const handleZoomPreset = useCallback(
+      (scale: number) => {
+        zoomTo(scale);
+      },
+      [zoomTo]
+    );
+
+    const handleZoomToObjectIds = useCallback(
+      (objectIds: string[]) => {
+        const bounds = getSelectionBounds(objects, objectIds);
+        if (bounds) {
+          zoomToFitBounds(bounds);
+        }
+      },
+      [objects, zoomToFitBounds]
+    );
+
+    useEffect(() => {
+      if (!onViewportActionsReady) {
+        return;
+      }
+      onViewportActionsReady({
+        zoomToFitAll: handleZoomToFitAll,
+        zoomToSelection: handleZoomToObjectIds,
+        setZoomLevel: (percent: number) => handleZoomPreset(percent / 100),
+        exportViewport: (format) => exportViewport(format ?? 'png'),
+        exportFullBoard: (format) => exportFullBoard(objects, zoomToFitBounds, format ?? 'png'),
+      });
+      return () => {
+        onViewportActionsReady(null);
+      };
+    }, [
+      onViewportActionsReady,
+      handleZoomToFitAll,
+      handleZoomToObjectIds,
+      handleZoomPreset,
+      exportViewport,
+      exportFullBoard,
+      objects,
+      zoomToFitBounds,
+    ]);
+
     return (
       <div
-        className='w-full h-full overflow-hidden bg-white relative'
+        className={BOARD_CANVAS_CONTAINER_CLASS}
         data-testid='board-canvas'
         data-selected-count={selectedIds.length}
         data-selected-ids={selectedIds.join(',')}
@@ -988,7 +1192,7 @@ export const BoardCanvas = memo(
         <div className='md:hidden fixed bottom-6 left-4 z-30'>
           <Button
             size='icon'
-            className='h-12 w-12 rounded-full shadow-lg bg-slate-800 border border-slate-700 text-white hover:bg-slate-700'
+            className='h-12 w-12 rounded-full shadow-lg bg-card border border-border text-card-foreground hover:bg-accent'
             onClick={() => setMobileToolsOpen(true)}
             data-testid='toolbar-mobile-toggle'
             title='Tools'
@@ -998,7 +1202,7 @@ export const BoardCanvas = memo(
         </div>
         <Dialog open={mobileToolsOpen} onOpenChange={setMobileToolsOpen}>
           <DialogContent
-            className='fixed left-0 right-0 bottom-0 top-auto translate-x-0 translate-y-0 max-h-[70vh] w-full rounded-t-xl border-t border-slate-700 bg-slate-800/95 p-4'
+            className='fixed left-0 right-0 bottom-0 top-auto translate-x-0 translate-y-0 max-h-[70vh] w-full rounded-t-xl border-t border-border bg-card/95 p-4'
             data-testid='toolbar-mobile-sheet'
           >
             <Toolbar
@@ -1037,10 +1241,12 @@ export const BoardCanvas = memo(
               activeTool === 'pan' ? 'grab' : activeTool === 'select' ? 'default' : 'crosshair',
           }}
         >
-          {/* Background grid layer - static, no interaction */}
-          <Layer listening={false} name='grid'>
-            {renderGrid()}
-          </Layer>
+          {/* Background grid layer - static, no interaction; only when show grid is on */}
+          {showGrid && (
+            <Layer listening={false} name='grid'>
+              {renderGrid()}
+            </Layer>
+          )}
 
           {/* Objects layer - main content (viewport culled) */}
           <Layer ref={objectsLayerRef} name='objects'>
@@ -1054,6 +1260,8 @@ export const BoardCanvas = memo(
               name='background'
               listening={true}
             />
+            {/* dragBoundFunc only reads ref when user drags (event), not during render */}
+            {/* eslint-disable-next-line react-hooks/refs */}
             {visibleObjects.map(renderShape)}
           </Layer>
 
@@ -1075,6 +1283,9 @@ export const BoardCanvas = memo(
 
           {/* Cursor layer - other users' cursors */}
           <CursorLayer cursors={cursors} currentUid={user.uid} />
+
+          {/* Alignment guides - temporary lines during drag */}
+          <AlignmentGuidesLayer guides={alignmentGuides} />
 
           {/* Selection/Transform layer - listening enabled for Transformer, but clicks on Transformer are handled */}
           <Layer
@@ -1115,18 +1326,110 @@ export const BoardCanvas = memo(
           </Layer>
         </Stage>
 
-        {/* Status indicators */}
-        <div className='absolute bottom-4 right-4 flex gap-2'>
+        {/* Status indicators and zoom controls */}
+        <div className='absolute bottom-4 right-4 flex gap-2 items-center'>
+          {/* Grid and snap toggles */}
+          <Button
+            variant={showGrid ? 'default' : 'ghost'}
+            size='icon'
+            className={cn(
+              'h-9 w-9 rounded-md',
+              showGrid ? 'bg-primary text-primary-foreground' : 'text-card-foreground hover:bg-accent bg-card/80'
+            )}
+            onClick={() => setShowGrid(!showGrid)}
+            title={showGrid ? 'Hide grid' : 'Show grid'}
+            data-testid='toggle-show-grid'
+          >
+            <Grid3X3 className='h-4 w-4' />
+          </Button>
+          <Button
+            variant={snapToGridEnabled ? 'default' : 'ghost'}
+            size='icon'
+            className={cn(
+              'h-9 w-9 rounded-md',
+              snapToGridEnabled ? 'bg-primary text-primary-foreground' : 'text-card-foreground hover:bg-accent bg-card/80'
+            )}
+            onClick={() => setSnapToGridEnabled(!snapToGridEnabled)}
+            title={snapToGridEnabled ? 'Disable snap to grid' : 'Enable snap to grid'}
+            data-testid='toggle-snap-to-grid'
+          >
+            <Magnet className='h-4 w-4' />
+          </Button>
+          <Button
+            variant='ghost'
+            size='icon'
+            className='h-9 w-9 text-card-foreground hover:bg-accent bg-card/80 rounded-md'
+            onClick={() => exportViewport('png')}
+            title='Export current view as PNG'
+            data-testid='export-viewport-png'
+          >
+            <Download className='h-4 w-4' />
+          </Button>
+          <Button
+            variant='ghost'
+            size='icon'
+            className='h-9 w-9 text-card-foreground hover:bg-accent bg-card/80 rounded-md'
+            onClick={() => exportFullBoard(objects, zoomToFitBounds, 'png')}
+            title='Export full board as PNG'
+            data-testid='export-full-board-png'
+          >
+            <Download className='h-4 w-4' />
+          </Button>
+          {onObjectUpdate != null && (
+            <AlignToolbar
+              objects={objects}
+              selectedIds={selectedIds}
+              onObjectUpdate={onObjectUpdate}
+              canEdit={canEdit}
+            />
+          )}
           {/* Object count (visible/total) */}
           <div
-            className='bg-slate-800/80 text-white px-3 py-1.5 rounded-md text-sm font-medium backdrop-blur-sm'
+            className='bg-card/80 text-card-foreground px-3 py-1.5 rounded-md text-sm font-medium backdrop-blur-sm'
             data-testid='object-count'
           >
             {visibleObjects.length}/{objects.length}
           </div>
+          {/* Zoom to selection */}
+          <Button
+            variant='ghost'
+            size='icon'
+            className='h-9 w-9 text-card-foreground hover:bg-accent bg-card/80 rounded-md'
+            onClick={handleZoomToSelection}
+            disabled={selectedIds.length === 0}
+            title='Zoom to selection'
+            data-testid='zoom-to-selection'
+          >
+            <Focus className='h-4 w-4' />
+          </Button>
+          {/* Zoom to fit all */}
+          <Button
+            variant='ghost'
+            size='icon'
+            className='h-9 w-9 text-card-foreground hover:bg-accent bg-card/80 rounded-md'
+            onClick={handleZoomToFitAll}
+            title='Zoom to fit all'
+            data-testid='zoom-to-fit-all'
+          >
+            <Maximize2 className='h-4 w-4' />
+          </Button>
+          {/* Zoom presets */}
+          {ZOOM_PRESETS.map((scale) => (
+            <Button
+              key={scale}
+              variant='ghost'
+              size='sm'
+              className='h-9 px-2 text-card-foreground hover:bg-accent bg-card/80 rounded-md text-xs font-medium'
+              onClick={() => handleZoomPreset(scale)}
+              title={`${scale * 100}%`}
+              data-testid={`zoom-preset-${scale * 100}`}
+            >
+              {scale * 100}%
+            </Button>
+          ))}
           {/* Zoom indicator */}
           <div
-            className='bg-slate-800/80 text-white px-3 py-1.5 rounded-md text-sm font-medium backdrop-blur-sm'
+            className='bg-card/80 text-card-foreground px-3 py-1.5 rounded-md text-sm font-medium backdrop-blur-sm'
             data-testid='zoom-indicator'
           >
             {Math.round(viewport.scale.x * 100)}%

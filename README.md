@@ -4,9 +4,10 @@ A real-time collaborative whiteboard application inspired by Miro, enabling
 multiple users to brainstorm, map ideas, and run workshops simultaneously. Built
 with an AI-first development approach.
 
-**Live demo:** [https://gai-collab-board.onrender.com](https://gai-collab-board.onrender.com)
-
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
+
+- **Deployed site:** [collabboard-1-ovl2.onrender.com](https://collabboard-1-ovl2.onrender.com/)
+- **Repository:** [github.com/MichaelHabermas/CollabBoard](https://github.com/MichaelHabermas/CollabBoard)
 
 ## Features
 
@@ -139,6 +140,9 @@ To deploy to Netlify, link the GitHub repository in Netlify (Site settings → B
 | Duplicate    | Ctrl/Cmd + D                       |
 | Copy         | Ctrl/Cmd + C                       |
 | Paste        | Ctrl/Cmd + V                       |
+| Deselect     | Escape                             |
+
+Shortcuts are disabled when focus is in an input or text-edit field.
 
 ### AI Commands
 
@@ -201,7 +205,6 @@ bun run validate        # typecheck + lint + test:run
 
 ## Documentation
 
-- **Live app:** [https://gai-collab-board.onrender.com](https://gai-collab-board.onrender.com)
 - [Deployment](docs/DEPLOYMENT.md) — Netlify setup and environment variables
 - [Guides](docs/guides/README.md) — Development environment, Firebase, testing, AI integration, Konva, Tailwind/Shadcn
 - [AI Cost Analysis](docs/AI-COST-ANALYSIS.md) — AI usage and cost notes

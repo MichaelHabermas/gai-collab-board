@@ -1,3 +1,9 @@
+## Summary
+
+This file records the final architecture decisions: Firebase, React/Vite/Bun/TypeScript/Shadcn/Konva/Tailwind v4, Kimi 2.5, Netlify—with rationale, alternatives considered, and assumptions/constraints. It is the decision log that answers "what we chose and why," so the architecture can be explained and future changes can be compared against these decisions.
+
+---
+
 # Record Architecture Decisions
 
 ## Chosen Design

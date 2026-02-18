@@ -1,3 +1,9 @@
+## Summary
+
+The original tech-stack exploration: backend, frontend, canvas libraries, AI, and deployment options with pros and cons, plus example full stacks. It documents the options that were on the table before locking the stack; it supports explaining how the final choices were narrowed down.
+
+---
+
 # Tech Stack Options Report
 
 ## Backend

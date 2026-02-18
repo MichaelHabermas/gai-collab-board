@@ -1,6 +1,7 @@
 import { Rect } from 'react-konva';
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import type { ReactElement } from 'react';
+import { useTheme } from '@/hooks/useTheme';
 
 interface ISelectionRect {
   visible: boolean;
@@ -14,12 +15,33 @@ interface ISelectionLayerProps {
   selectionRect: ISelectionRect;
 }
 
+function hexToRgba(hex: string, alpha: number): string {
+  const h = hex.replace('#', '');
+  if (h.length !== 6) {
+    return `rgba(59, 130, 246, ${alpha})`;
+  }
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 /**
  * SelectionLayer component - renders the drag-to-select rectangle.
- * Shows a semi-transparent blue rectangle during selection drag.
+ * Shows a semi-transparent primary-colored rectangle during selection drag.
  */
 export const SelectionLayer = memo(
   ({ selectionRect }: ISelectionLayerProps): ReactElement | null => {
+    const { theme } = useTheme();
+    const selectionColor = useMemo(
+      () =>
+        (typeof document !== 'undefined'
+          ? getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim()
+          : '') || '#3b82f6',
+      [theme]
+    );
+    const fillColor = useMemo(() => hexToRgba(selectionColor, 0.1), [selectionColor]);
+
     if (!selectionRect.visible) {
       return null;
     }
@@ -35,8 +57,8 @@ export const SelectionLayer = memo(
         y={y}
         width={width}
         height={height}
-        fill='rgba(59, 130, 246, 0.1)'
-        stroke='#3b82f6'
+        fill={fillColor}
+        stroke={selectionColor}
         strokeWidth={1}
         dash={[4, 4]}
         listening={false}

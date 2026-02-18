@@ -1,3 +1,9 @@
+## Summary
+
+This document describes how CollabBoard is deployed on Netlify: linking the GitHub repo, using `netlify.toml`, and configuring environment variables (Firebase, AI API keys, app settings). It is the minimal runbook for getting the app live and for keeping production config consistent and documented.
+
+---
+
 # Deployment (Netlify)
 
 ## Link GitHub Repository

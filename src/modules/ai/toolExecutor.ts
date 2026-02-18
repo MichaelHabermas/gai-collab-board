@@ -1,7 +1,14 @@
 import type { IToolCall } from './tools';
 import type { IBoardObject, ShapeType, ConnectorAnchor } from '@/types';
 import type { ICreateObjectParams, IUpdateObjectParams } from '@/modules/sync/objectService';
+import { getBoard } from '@/modules/sync/boardService';
+import {
+  getUserPreferences,
+  toggleFavoriteBoardId as toggleFavoriteBoardIdService,
+} from '@/modules/sync/userPreferencesService';
 import { getAnchorPosition } from '@/lib/connectorAnchors';
+import { computeAlignUpdates, computeDistributeUpdates } from '@/lib/alignDistribute';
+import { STICKY_COLORS } from '@/components/canvas/shapes';
 
 const DEFAULT_STICKY_WIDTH = 200;
 const DEFAULT_STICKY_HEIGHT = 120;
@@ -9,17 +16,42 @@ const DEFAULT_FRAME_WIDTH = 300;
 const DEFAULT_FRAME_HEIGHT = 200;
 const DEFAULT_FILL = '#fef08a';
 
+/** Resolves a color name or hex string to a sticky-note fill hex. */
+function resolveStickyColor(input: string): string {
+  const key = input.toLowerCase().trim() as keyof typeof STICKY_COLORS;
+  if (key in STICKY_COLORS) {
+    return STICKY_COLORS[key];
+  }
+  if (/^#[0-9A-Fa-f]{6}$/.test(input.trim())) {
+    return input.trim();
+  }
+  return DEFAULT_FILL;
+}
+
+/** Optional viewport actions; when absent, zoom tools return success with a stub message */
+export interface IViewportActions {
+  onZoomToFitAll?: () => void | Promise<void>;
+  onZoomToSelection?: (objectIds: string[]) => void | Promise<void>;
+  onSetZoomLevel?: (percent: number) => void | Promise<void>;
+}
+
 export interface IToolExecutorContext {
   boardId: string;
   createdBy: string;
+  userId: string;
   getObjects: () => IBoardObject[];
   createObject: (boardId: string, params: ICreateObjectParams) => Promise<IBoardObject>;
   updateObject: (boardId: string, objectId: string, updates: IUpdateObjectParams) => Promise<void>;
   deleteObject: (boardId: string, objectId: string) => Promise<void>;
+  onZoomToFitAll?: () => void | Promise<void>;
+  onZoomToSelection?: (objectIds: string[]) => void | Promise<void>;
+  onSetZoomLevel?: (percent: number) => void | Promise<void>;
+  onExportViewport?: (format?: 'png' | 'jpeg') => void;
+  onExportFullBoard?: (format?: 'png' | 'jpeg') => void;
 }
 
 export const createToolExecutor = (ctx: IToolExecutorContext) => {
-  const { boardId, createdBy, getObjects } = ctx;
+  const { boardId, createdBy, userId, getObjects } = ctx;
 
   const execute = async (tool: IToolCall): Promise<unknown> => {
     switch (tool.name) {
@@ -29,21 +61,35 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           x,
           y,
           color = DEFAULT_FILL,
+          fontSize: rawFontSize,
+          opacity: rawOpacity,
         } = tool.arguments as {
           text: string;
           x: number;
           y: number;
           color?: string;
+          fontSize?: number;
+          opacity?: number;
         };
+        const MIN_FONT_SIZE = 8;
+        const MAX_FONT_SIZE = 72;
+        const clampedFontSize =
+          rawFontSize !== undefined
+            ? Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, rawFontSize))
+            : undefined;
+        const clampedOpacity =
+          rawOpacity !== undefined ? Math.min(1, Math.max(0, rawOpacity)) : undefined;
         const obj = await ctx.createObject(boardId, {
           type: 'sticky',
           x,
           y,
           width: DEFAULT_STICKY_WIDTH,
           height: DEFAULT_STICKY_HEIGHT,
-          fill: color,
+          fill: resolveStickyColor(color),
           text,
           createdBy,
+          ...(clampedFontSize !== undefined && { fontSize: clampedFontSize }),
+          ...(clampedOpacity !== undefined && { opacity: clampedOpacity }),
         });
         return { id: obj.id, success: true, message: `Created sticky note: '${text}'` };
       }
@@ -222,6 +268,51 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
         return { success: true, message: `Changed color to ${color}` };
       }
 
+      case 'setFontSize': {
+        const { objectId, fontSize } = tool.arguments as {
+          objectId: string;
+          fontSize: number;
+        };
+        if (fontSize < 8 || fontSize > 72) {
+          return { success: false, message: 'Font size must be between 8 and 72' };
+        }
+        await ctx.updateObject(boardId, objectId, { fontSize });
+        return { success: true, message: `Set font size to ${fontSize}px` };
+      }
+
+      case 'setStroke': {
+        const { objectId, color } = tool.arguments as {
+          objectId: string;
+          color: string;
+        };
+        await ctx.updateObject(boardId, objectId, { stroke: color });
+        return { success: true, message: `Set stroke color to ${color}` };
+      }
+
+      case 'setStrokeWidth': {
+        const { objectId, strokeWidth } = tool.arguments as {
+          objectId: string;
+          strokeWidth: number;
+        };
+        if (strokeWidth < 0) {
+          return { success: false, message: 'Stroke width must be non-negative' };
+        }
+        await ctx.updateObject(boardId, objectId, { strokeWidth });
+        return { success: true, message: `Set stroke width to ${strokeWidth}px` };
+      }
+
+      case 'setOpacity': {
+        const { objectId, opacity } = tool.arguments as {
+          objectId: string;
+          opacity: number;
+        };
+        if (opacity < 0 || opacity > 1) {
+          return { success: false, message: 'Opacity must be between 0 and 1' };
+        }
+        await ctx.updateObject(boardId, objectId, { opacity });
+        return { success: true, message: `Set opacity to ${Math.round(opacity * 100)}%` };
+      }
+
       case 'deleteObject': {
         const { objectId } = tool.arguments as { objectId: string };
         await ctx.deleteObject(boardId, objectId);
@@ -309,32 +400,21 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
         const objects = getObjects().filter((o) => objectIds.includes(o.id));
         if (objects.length === 0) return { success: false, message: 'No objects found' };
 
-        if (alignment === 'left') {
-          const targetX = Math.min(...objects.map((o) => o.x));
-          for (const obj of objects) await ctx.updateObject(boardId, obj.id, { x: targetX });
-        } else if (alignment === 'right') {
-          const targetRight = Math.max(...objects.map((o) => o.x + o.width));
-          for (const obj of objects)
-            await ctx.updateObject(boardId, obj.id, { x: targetRight - obj.width });
-        } else if (alignment === 'center') {
-          const minX = Math.min(...objects.map((o) => o.x));
-          const maxRight = Math.max(...objects.map((o) => o.x + o.width));
-          const centerX = (minX + maxRight) / 2;
-          for (const obj of objects)
-            await ctx.updateObject(boardId, obj.id, { x: centerX - obj.width / 2 });
-        } else if (alignment === 'top') {
-          const targetY = Math.min(...objects.map((o) => o.y));
-          for (const obj of objects) await ctx.updateObject(boardId, obj.id, { y: targetY });
-        } else if (alignment === 'bottom') {
-          const targetBottom = Math.max(...objects.map((o) => o.y + o.height));
-          for (const obj of objects)
-            await ctx.updateObject(boardId, obj.id, { y: targetBottom - obj.height });
-        } else if (alignment === 'middle') {
-          const minY = Math.min(...objects.map((o) => o.y));
-          const maxBottom = Math.max(...objects.map((o) => o.y + o.height));
-          const centerY = (minY + maxBottom) / 2;
-          for (const obj of objects)
-            await ctx.updateObject(boardId, obj.id, { y: centerY - obj.height / 2 });
+        const rects = objects.map((o) => ({
+          id: o.id,
+          x: o.x,
+          y: o.y,
+          width: o.width,
+          height: o.height,
+        }));
+        const updates = computeAlignUpdates(rects, alignment);
+        for (const u of updates) {
+          const payload: IUpdateObjectParams = {};
+          if (u.x !== undefined) payload.x = u.x;
+          if (u.y !== undefined) payload.y = u.y;
+          if (Object.keys(payload).length > 0) {
+            await ctx.updateObject(boardId, u.id, payload);
+          }
         }
         return { success: true, message: `Aligned objects: ${alignment}` };
       }
@@ -344,42 +424,145 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           objectIds: string[];
           direction: 'horizontal' | 'vertical';
         };
-        const objects = getObjects()
-          .filter((o) => objectIds.includes(o.id))
-          .sort((a, b) => (direction === 'horizontal' ? a.x - b.x : a.y - b.y));
-
+        const objects = getObjects().filter((o) => objectIds.includes(o.id));
         if (objects.length < 3) {
           return { success: false, message: 'Need at least 3 objects to distribute' };
         }
 
-        const first = objects[0];
-        const last = objects[objects.length - 1];
-        if (!first || !last) {
-          return { success: false, message: 'No objects found' };
-        }
-
-        if (direction === 'horizontal') {
-          const totalWidth = last.x + last.width - first.x;
-          const objectsWidth = objects.reduce((s, o) => s + o.width, 0);
-          const spacing = (totalWidth - objectsWidth) / (objects.length - 1);
-          let currentX = first.x;
-
-          for (const obj of objects) {
-            await ctx.updateObject(boardId, obj.id, { x: currentX });
-            currentX += obj.width + spacing;
-          }
-        } else {
-          const totalHeight = last.y + last.height - first.y;
-          const objectsHeight = objects.reduce((s, o) => s + o.height, 0);
-          const spacing = (totalHeight - objectsHeight) / (objects.length - 1);
-          let currentY = first.y;
-
-          for (const obj of objects) {
-            await ctx.updateObject(boardId, obj.id, { y: currentY });
-            currentY += obj.height + spacing;
+        const rects = objects.map((o) => ({
+          id: o.id,
+          x: o.x,
+          y: o.y,
+          width: o.width,
+          height: o.height,
+        }));
+        const updates = computeDistributeUpdates(rects, direction);
+        for (const u of updates) {
+          const payload: IUpdateObjectParams = {};
+          if (u.x !== undefined) payload.x = u.x;
+          if (u.y !== undefined) payload.y = u.y;
+          if (Object.keys(payload).length > 0) {
+            await ctx.updateObject(boardId, u.id, payload);
           }
         }
         return { success: true, message: `Distributed ${objects.length} objects ${direction}ly` };
+      }
+
+      case 'zoomToFitAll': {
+        if (ctx.onZoomToFitAll) {
+          await ctx.onZoomToFitAll();
+          return { success: true, message: 'Zoomed to fit all.' };
+        }
+        return {
+          success: true,
+          message: 'Zoom to fit all requested; use the zoom control in the UI if needed.',
+        };
+      }
+
+      case 'zoomToSelection': {
+        const { objectIds } = tool.arguments as { objectIds?: string[] };
+        if (!objectIds || !Array.isArray(objectIds) || objectIds.length === 0) {
+          return { success: false, message: 'objectIds (non-empty array) is required.' };
+        }
+        if (ctx.onZoomToSelection) {
+          await ctx.onZoomToSelection(objectIds);
+          return { success: true, message: `Zoomed to fit ${objectIds.length} object(s).` };
+        }
+        return {
+          success: true,
+          message: 'Zoom to selection requested; use the zoom control in the UI if needed.',
+        };
+      }
+
+      case 'setZoomLevel': {
+        const { percent } = tool.arguments as { percent?: number };
+        const allowed = [50, 100, 200];
+        if (typeof percent !== 'number' || !allowed.includes(percent)) {
+          return {
+            success: false,
+            message: `percent must be one of ${allowed.join(', ')}.`,
+          };
+        }
+        if (ctx.onSetZoomLevel) {
+          await ctx.onSetZoomLevel(percent);
+          return { success: true, message: `Zoom set to ${percent}%.` };
+        }
+        return {
+          success: true,
+          message: `Set zoom to ${percent}% requested; use the zoom control in the UI if needed.`,
+        };
+      }
+
+      case 'exportBoardAsImage': {
+        const { scope, format } = tool.arguments as {
+          scope?: 'viewport' | 'full';
+          format?: 'png' | 'jpeg';
+        };
+        const f = format ?? 'png';
+        if (scope === 'viewport' && ctx.onExportViewport) {
+          ctx.onExportViewport(f);
+          return { success: true, message: 'Exported current view as image.' };
+        }
+        if (scope === 'full' && ctx.onExportFullBoard) {
+          ctx.onExportFullBoard(f);
+          return { success: true, message: 'Exported full board as image.' };
+        }
+        if (scope === 'viewport' || scope === 'full') {
+          return {
+            success: true,
+            message: `Export ${scope} requested; use the Export button in the UI if the download did not start.`,
+          };
+        }
+        return {
+          success: false,
+          message: 'scope must be "viewport" or "full".',
+        };
+      }
+
+      case 'getRecentBoards': {
+        const prefs = await getUserPreferences(userId);
+        const boardsWithNames = await Promise.all(
+          prefs.recentBoardIds.map(async (id) => {
+            const board = await getBoard(id);
+            return { id, name: board?.name ?? 'Unknown board' };
+          })
+        );
+        return {
+          recentBoardIds: prefs.recentBoardIds,
+          boards: boardsWithNames,
+          message: `Recently opened: ${boardsWithNames.map((b) => b.name).join(', ') || 'none'}`,
+        };
+      }
+
+      case 'getFavoriteBoards': {
+        const prefs = await getUserPreferences(userId);
+        const boardsWithNames = await Promise.all(
+          prefs.favoriteBoardIds.map(async (id) => {
+            const board = await getBoard(id);
+            return { id, name: board?.name ?? 'Unknown board' };
+          })
+        );
+        return {
+          favoriteBoardIds: prefs.favoriteBoardIds,
+          boards: boardsWithNames,
+          message: `Favorites: ${boardsWithNames.map((b) => b.name).join(', ') || 'none'}`,
+        };
+      }
+
+      case 'toggleBoardFavorite': {
+        const { boardId: targetBoardId } = tool.arguments as { boardId: string };
+        if (!targetBoardId || typeof targetBoardId !== 'string') {
+          return { success: false, message: 'boardId is required.' };
+        }
+        await toggleFavoriteBoardIdService(userId, targetBoardId);
+        const prefs = await getUserPreferences(userId);
+        const isFavorite = prefs.favoriteBoardIds.includes(targetBoardId);
+        return {
+          success: true,
+          boardId: targetBoardId,
+          isFavorite,
+          message: isFavorite ? 'Board added to favorites.' : 'Board removed from favorites.',
+        };
       }
 
       default: {

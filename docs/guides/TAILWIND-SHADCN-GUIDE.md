@@ -1,3 +1,9 @@
+## Summary
+
+This guide documents the UI stack: Tailwind CSS v4 and Shadcn/ui. It covers setup (Vite plugin, `@theme`), design tokens, component usage, dark mode, responsiveness, and animations. It is the place to look when adding or styling UI components and when explaining the choice of utility-first CSS plus Radix-based primitives for accessibility and consistency.
+
+---
+
 # Tailwind CSS v4 + Shadcn/ui Guide for CollabBoard
 
 ## Overview

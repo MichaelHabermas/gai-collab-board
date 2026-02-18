@@ -49,6 +49,20 @@
   --color-accent-foreground: #f8fafc;
 }
 
+/* Apply dark palette when .dark is on document so theme tokens switch (Tailwind v4 @theme dark does not auto-apply to class). Set on html so all descendants inherit. */
+html.dark {
+  --color-background: #0f172a;
+  --color-foreground: #f8fafc;
+  --color-muted: #1e293b;
+  --color-muted-foreground: #94a3b8;
+  --color-card: #1e293b;
+  --color-card-foreground: #f8fafc;
+  --color-border: #334155;
+  --color-input: #334155;
+  --color-accent: #1e293b;
+  --color-accent-foreground: #f8fafc;
+}
+
 html,
 body {
   height: 100%;
@@ -69,4 +83,26 @@ body {
 #root {
   height: 100%;
   overflow: hidden;
+}
+
+/* Sticky note edit overlay: theme-aware text color (appended to body, inherits from html) */
+.sticky-note-edit-overlay {
+  color: var(--color-foreground);
+}
+
+.sticky-note-edit-overlay:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 0;
+}
+
+/* Opacity slider: visible track in light and dark theme */
+.opacity-slider::-webkit-slider-runnable-track {
+  height: 0.625rem;
+  border-radius: 9999px;
+  background: var(--color-input);
+}
+.opacity-slider::-moz-range-track {
+  height: 0.625rem;
+  border-radius: 9999px;
+  background: var(--color-input);
 }

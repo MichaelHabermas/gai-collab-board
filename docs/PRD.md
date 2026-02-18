@@ -1,3 +1,9 @@
+## Summary
+
+The root Product Requirements Document is the main product and technical spec for CollabBoard. It defines the project (real-time collaborative whiteboard, AI-powered, Miro-inspired), MVP and success metrics, tech stack and architecture, SOLID application, naming, and detailed requirements (features, collaboration, AI, testing, appendices). It is the source of truth for scope and rationale so that implementation and prioritization stay aligned and can be explained from one document.
+
+---
+
 # CollabBoard Product Requirements Document (PRD)
 
 ## Executive Summary

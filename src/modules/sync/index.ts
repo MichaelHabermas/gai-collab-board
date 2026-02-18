@@ -44,3 +44,12 @@ export {
   type ICreateObjectParams,
   type IUpdateObjectParams,
 } from './objectService';
+
+// User preferences exports
+export {
+  getUserPreferences,
+  updateRecentBoardIds,
+  toggleFavoriteBoardId,
+  removeBoardIdFromPreferences,
+  subscribeToUserPreferences,
+} from './userPreferencesService';

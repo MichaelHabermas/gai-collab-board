@@ -81,10 +81,26 @@ export const TransformHandler = memo(
         let attrs: ITransformEndAttrs;
 
         if (className === 'Group') {
-          // StickyNote and other Group-based shapes: use getClientRect (skipTransform) then apply scale
-          const rect = node.getClientRect({ skipTransform: true });
-          const width = Math.max(MIN_SIZE, rect.width * scaleX);
-          const height = Math.max(MIN_SIZE, rect.height * scaleY);
+          // StickyNote: use first Rect (note body) so shadow/fold don't inflate size. Frame/others: use getClientRect.
+          const name = node.name() ?? '';
+          const isSticky = name.includes('sticky');
+          const contentRect = node.getClientRect({ skipTransform: true });
+          let width: number;
+          let height: number;
+          if (isSticky) {
+            const firstRect = node.findOne('Rect');
+            if (firstRect && firstRect.getClassName() === 'Rect') {
+              const r = firstRect as Konva.Rect;
+              width = Math.max(MIN_SIZE, r.width() * scaleX);
+              height = Math.max(MIN_SIZE, r.height() * scaleY);
+            } else {
+              width = Math.max(MIN_SIZE, contentRect.width * scaleX);
+              height = Math.max(MIN_SIZE, contentRect.height * scaleY);
+            }
+          } else {
+            width = Math.max(MIN_SIZE, contentRect.width * scaleX);
+            height = Math.max(MIN_SIZE, contentRect.height * scaleY);
+          }
           node.scaleX(1);
           node.scaleY(1);
           attrs = {

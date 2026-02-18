@@ -1,3 +1,9 @@
+## Summary
+
+This log records how AI was used during development: tools (Cursor, Context7 MCP), workflows, effective prompts, and a rough split of AI-generated vs hand-written code. It also notes strengths, limitations, and learnings. It serves as both a submission artifact and a reference for improving future AI-assisted workflow and for explaining the development approach.
+
+---
+
 # AI Development Log
 
 ## Tools & Workflow

@@ -6,7 +6,7 @@ export const boardTools: ChatCompletionTool[] = [
     function: {
       name: 'createStickyNote',
       description:
-        'Creates a new sticky note on the board with specified text, position, and color',
+        'Creates a new sticky note on the board with specified text, position, and color. Optionally set font size and opacity.',
       parameters: {
         type: 'object',
         properties: {
@@ -24,8 +24,17 @@ export const boardTools: ChatCompletionTool[] = [
           },
           color: {
             type: 'string',
-            description: 'Background color of the sticky note (e.g. #fef08a for yellow)',
-            enum: ['#fef08a', '#fda4af', '#93c5fd', '#86efac', '#c4b5fd', '#fed7aa'],
+            description:
+              'Background color: use a color name (yellow, pink, blue, green, purple, orange, red) or a hex code (e.g. #fef08a).',
+          },
+          fontSize: {
+            type: 'number',
+            description: 'Font size in pixels (e.g. 14–72). Omit for default (14).',
+          },
+          opacity: {
+            type: 'number',
+            description:
+              'Opacity of the sticky note from 0 to 1 (e.g. 0.75 for 75%). Omit for fully opaque (1).',
           },
         },
         required: ['text', 'x', 'y'],
@@ -215,6 +224,90 @@ export const boardTools: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
+      name: 'setFontSize',
+      description: 'Sets the font size for a text or sticky note object (in pixels)',
+      parameters: {
+        type: 'object',
+        properties: {
+          objectId: {
+            type: 'string',
+            description: 'ID of the sticky note or text object',
+          },
+          fontSize: {
+            type: 'number',
+            description: 'Font size in pixels (e.g. 14, 16, 20)',
+          },
+        },
+        required: ['objectId', 'fontSize'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'setStroke',
+      description: 'Sets the stroke (border) color of a shape or connector',
+      parameters: {
+        type: 'object',
+        properties: {
+          objectId: {
+            type: 'string',
+            description: 'ID of the object',
+          },
+          color: {
+            type: 'string',
+            description: 'Stroke color (e.g. hex #000000)',
+          },
+        },
+        required: ['objectId', 'color'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'setStrokeWidth',
+      description: 'Sets the stroke (border) width of a shape or connector in pixels',
+      parameters: {
+        type: 'object',
+        properties: {
+          objectId: {
+            type: 'string',
+            description: 'ID of the object',
+          },
+          strokeWidth: {
+            type: 'number',
+            description: 'Stroke width in pixels',
+          },
+        },
+        required: ['objectId', 'strokeWidth'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'setOpacity',
+      description: 'Sets the opacity of an object (0 to 1, where 1 is fully opaque)',
+      parameters: {
+        type: 'object',
+        properties: {
+          objectId: {
+            type: 'string',
+            description: 'ID of the object',
+          },
+          opacity: {
+            type: 'number',
+            description: 'Opacity from 0 (transparent) to 1 (opaque)',
+          },
+        },
+        required: ['objectId', 'opacity'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'deleteObject',
       description: 'Deletes an object from the board',
       parameters: {
@@ -349,6 +442,121 @@ export const boardTools: ChatCompletionTool[] = [
           },
         },
         required: ['objectIds', 'direction'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'zoomToFitAll',
+      description: 'Fits the entire board content in the viewport.',
+      parameters: {
+        type: 'object',
+        properties: {},
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'zoomToSelection',
+      description: 'Zooms the viewport to fit the specified objects in view.',
+      parameters: {
+        type: 'object',
+        properties: {
+          objectIds: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'IDs of objects to fit in view',
+          },
+        },
+        required: ['objectIds'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'setZoomLevel',
+      description: 'Sets the viewport zoom to the given percentage (50, 100, or 200).',
+      parameters: {
+        type: 'object',
+        properties: {
+          percent: {
+            type: 'number',
+            enum: [50, 100, 200],
+            description: 'Zoom percentage',
+          },
+        },
+        required: ['percent'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'exportBoardAsImage',
+      description:
+        'Exports the board as an image file (PNG or JPEG). Use viewport to export what is currently visible, or full to export the entire board.',
+      parameters: {
+        type: 'object',
+        properties: {
+          scope: {
+            type: 'string',
+            enum: ['viewport', 'full'],
+            description: 'Viewport = current view; full = entire board content',
+          },
+          format: {
+            type: 'string',
+            enum: ['png', 'jpeg'],
+            description: 'Image format',
+          },
+        },
+        required: ['scope'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'getRecentBoards',
+      description:
+        'Returns the current user’s recently opened boards (IDs and names) in last-opened order.',
+      parameters: {
+        type: 'object',
+        properties: {},
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'getFavoriteBoards',
+      description: 'Returns the current user’s favorite (starred) boards (IDs and names).',
+      parameters: {
+        type: 'object',
+        properties: {},
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'toggleBoardFavorite',
+      description:
+        'Toggles the favorite (star) state for a board for the current user. Pass the board ID.',
+      parameters: {
+        type: 'object',
+        properties: {
+          boardId: {
+            type: 'string',
+            description: 'ID of the board to star or unstar',
+          },
+        },
+        required: ['boardId'],
       },
     },
   },

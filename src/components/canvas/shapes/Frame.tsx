@@ -1,7 +1,8 @@
 import { Group, Rect, Text } from 'react-konva';
-import { forwardRef, useCallback, useRef, useState, useEffect, memo } from 'react';
+import { forwardRef, useCallback, useRef, useState, useEffect, useMemo, memo } from 'react';
 import type { ReactElement } from 'react';
 import Konva from 'konva';
+import { useTheme } from '@/hooks/useTheme';
 
 interface IFrameProps {
   id: string;
@@ -13,12 +14,14 @@ interface IFrameProps {
   fill?: string;
   stroke?: string;
   strokeWidth?: number;
+  opacity?: number;
   rotation?: number;
   isSelected?: boolean;
   draggable?: boolean;
   onSelect?: () => void;
   onDragStart?: () => void;
   onDragEnd?: (x: number, y: number) => void;
+  dragBoundFunc?: (pos: { x: number; y: number }) => { x: number; y: number };
   onTextChange?: (text: string) => void;
   onTransformEnd?: (attrs: {
     x: number;
@@ -49,12 +52,14 @@ export const Frame = memo(
         fill = 'rgba(241, 245, 249, 0.5)',
         stroke = '#94a3b8',
         strokeWidth = 2,
+        opacity = 1,
         rotation = 0,
         isSelected = false,
         draggable = true,
         onSelect,
         onDragStart,
         onDragEnd,
+        dragBoundFunc,
         onTextChange,
         onTransformEnd,
       },
@@ -63,8 +68,23 @@ export const Frame = memo(
       const [isEditing, setIsEditing] = useState(false);
       const groupRef = useRef<Konva.Group>(null);
       const textRef = useRef<Konva.Text>(null);
+      const { theme } = useTheme();
+      const selectionColor = useMemo(
+        () =>
+          (typeof document !== 'undefined'
+            ? getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim()
+            : '') || '#3b82f6',
+        [theme]
+      );
+      const titleTextFill = useMemo(
+        () =>
+          (typeof document !== 'undefined'
+            ? getComputedStyle(document.documentElement).getPropertyValue('--color-muted-foreground').trim()
+            : '') || '#475569',
+        [theme]
+      );
 
-      // Handle double-click on title to edit
+      // Handle double-click on title to edit. Position overlay from Group's transformed rect.
       const handleTitleDblClick = useCallback(() => {
         if (!onTextChange) return;
 
@@ -76,67 +96,86 @@ export const Frame = memo(
 
         setIsEditing(true);
 
-        const textNode = textRef.current;
-        if (!textNode) return;
+        requestAnimationFrame(() => {
+          const stageBox = stage.container().getBoundingClientRect();
+          const stagePos = stage.position();
+          const scaleX = stage.scaleX();
+          const scaleY = stage.scaleY();
+          const transform = group.getAbsoluteTransform();
+          const titleTop = (TITLE_HEIGHT - 14) / 2;
+          const titleWidth = width - TITLE_PADDING * 2;
+          const titleHeight = 14;
+          const localCorners = [
+            { x: TITLE_PADDING, y: titleTop },
+            { x: width - TITLE_PADDING, y: titleTop },
+            { x: width - TITLE_PADDING, y: titleTop + titleHeight },
+            { x: TITLE_PADDING, y: titleTop + titleHeight },
+          ];
+          const screenPoints = localCorners.map((p) => {
+            const stagePt = transform.point(p);
+            return {
+              x: stageBox.left + (stagePt.x + stagePos.x) * scaleX,
+              y: stageBox.top + (stagePt.y + stagePos.y) * scaleY,
+            };
+          });
+          const left = Math.min(...screenPoints.map((p) => p.x));
+          const top = Math.min(...screenPoints.map((p) => p.y));
+          const right = Math.max(...screenPoints.map((p) => p.x));
+          const bottom = Math.max(...screenPoints.map((p) => p.y));
+          const areaWidth = Math.max(1, right - left);
+          const areaHeight = Math.max(1, bottom - top);
+          const avgScale = (scaleX + scaleY) / 2;
 
-        const textPosition = textNode.absolutePosition();
-        const stageBox = stage.container().getBoundingClientRect();
-        const scale = stage.scaleX();
+          const input = document.createElement('input');
+          input.className = 'sticky-note-edit-overlay';
+          input.type = 'text';
+          document.body.appendChild(input);
 
-        const areaPosition = {
-          x: stageBox.left + textPosition.x * scale,
-          y: stageBox.top + textPosition.y * scale,
-        };
+          input.value = text;
+          input.style.position = 'fixed';
+          input.style.top = `${top}px`;
+          input.style.left = `${left}px`;
+          input.style.width = `${areaWidth}px`;
+          input.style.height = `${areaHeight}px`;
+          input.style.fontSize = `${14 * avgScale}px`;
+          input.style.fontWeight = '600';
+          input.style.border = 'none';
+          input.style.padding = '0px';
+          input.style.margin = '0px';
+          input.style.background = 'transparent';
+          input.style.outline = 'none';
+          input.style.fontFamily = 'Inter, system-ui, sans-serif';
+          input.style.zIndex = '1000';
 
-        // Create input for editing
-        const input = document.createElement('input');
-        document.body.appendChild(input);
+          input.focus();
+          input.select();
 
-        input.value = text;
-        input.type = 'text';
-        input.style.position = 'fixed';
-        input.style.top = `${areaPosition.y}px`;
-        input.style.left = `${areaPosition.x}px`;
-        input.style.width = `${(width - TITLE_PADDING * 2) * scale}px`;
-        input.style.fontSize = `${14 * scale}px`;
-        input.style.fontWeight = '600';
-        input.style.border = 'none';
-        input.style.padding = '0px';
-        input.style.margin = '0px';
-        input.style.background = 'transparent';
-        input.style.outline = 'none';
-        input.style.fontFamily = 'Inter, system-ui, sans-serif';
-        input.style.color = '#475569';
-        input.style.zIndex = '1000';
+          const removeInput = () => {
+            if (document.body.contains(input)) {
+              document.body.removeChild(input);
+            }
+            setIsEditing(false);
+          };
 
-        input.focus();
-        input.select();
+          const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+              removeInput();
+            }
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              onTextChange(input.value);
+              removeInput();
+            }
+          };
 
-        const removeInput = () => {
-          if (document.body.contains(input)) {
-            document.body.removeChild(input);
-          }
-          setIsEditing(false);
-        };
-
-        const handleKeyDown = (e: KeyboardEvent) => {
-          if (e.key === 'Escape') {
-            removeInput();
-          }
-          if (e.key === 'Enter') {
-            e.preventDefault();
+          const handleBlur = () => {
             onTextChange(input.value);
             removeInput();
-          }
-        };
+          };
 
-        const handleBlur = () => {
-          onTextChange(input.value);
-          removeInput();
-        };
-
-        input.addEventListener('keydown', handleKeyDown);
-        input.addEventListener('blur', handleBlur);
+          input.addEventListener('keydown', handleKeyDown);
+          input.addEventListener('blur', handleBlur);
+        });
       }, [text, width, onTextChange]);
 
       // Handle drag end
@@ -147,26 +186,7 @@ export const Frame = memo(
         [onDragEnd]
       );
 
-      // Handle transform end
-      const handleTransformEnd = useCallback(() => {
-        const node = groupRef.current;
-        if (!node) return;
-
-        const scaleX = node.scaleX();
-        const scaleY = node.scaleY();
-
-        // Reset scale and apply to width/height
-        node.scaleX(1);
-        node.scaleY(1);
-
-        onTransformEnd?.({
-          x: node.x(),
-          y: node.y(),
-          width: Math.max(100, width * scaleX),
-          height: Math.max(100, height * scaleY),
-          rotation: node.rotation(),
-        });
-      }, [width, height, onTransformEnd]);
+      // Transform end (resize/rotate) is handled only by TransformHandler; no duplicate handler here.
 
       // Combine refs
       useEffect(() => {
@@ -186,13 +206,14 @@ export const Frame = memo(
           name='shape frame'
           x={x}
           y={y}
+          opacity={opacity}
           rotation={rotation}
           draggable={draggable && !isEditing}
           onClick={onSelect}
           onTap={onSelect}
           onDragStart={onDragStart}
           onDragEnd={handleDragEnd}
-          onTransformEnd={handleTransformEnd}
+          dragBoundFunc={dragBoundFunc}
         >
           {/* Title bar background */}
           <Rect
@@ -201,7 +222,7 @@ export const Frame = memo(
             width={width}
             height={TITLE_HEIGHT}
             fill='#f1f5f9'
-            stroke={isSelected ? '#3b82f6' : stroke}
+            stroke={isSelected ? selectionColor : stroke}
             strokeWidth={isSelected ? 2 : strokeWidth}
             cornerRadius={[6, 6, 0, 0]}
             onDblClick={handleTitleDblClick}
@@ -217,7 +238,7 @@ export const Frame = memo(
             fontSize={14}
             fontFamily='Inter, system-ui, sans-serif'
             fontStyle='600'
-            fill='#475569'
+            fill={titleTextFill}
             width={width - TITLE_PADDING * 2}
             ellipsis
             listening={false}
@@ -231,7 +252,7 @@ export const Frame = memo(
             width={width}
             height={height - TITLE_HEIGHT}
             fill={fill}
-            stroke={isSelected ? '#3b82f6' : stroke}
+            stroke={isSelected ? selectionColor : stroke}
             strokeWidth={isSelected ? 2 : strokeWidth}
             cornerRadius={[0, 0, 6, 6]}
             dash={[4, 4]}

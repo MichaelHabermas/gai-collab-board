@@ -1,3 +1,9 @@
+## Summary
+
+This design document translates the v2 feature set into principles and structure. It states modular design and SOLID alignment, maps v2 work to existing modules (auth, sync, canvas, ai, ui), and breaks scope into EPICs and user stories. It does not specify implementation steps; it establishes the "why" and "where" so that feature work stays consistent and traceable to a single design source.
+
+---
+
 # CollabBoard v2: Design Document
 
 ## Purpose

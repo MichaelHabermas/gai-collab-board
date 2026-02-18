@@ -1,3 +1,9 @@
+## Summary
+
+This report summarizes the chosen tech stack (Firebase, React/Vite/Bun/TS/Shadcn/Konva/Tailwind v4, Kimi 2.5, Netlify) with pros and cons per layer and for the full stack. It is the concise "what we use and why" reference that complements the tradeoffs and ADR documents.
+
+---
+
 # Tech Stack Report
 
 ## Backend

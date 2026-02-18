@@ -1,9 +1,10 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo, useContext } from 'react';
 import type { User } from 'firebase/auth';
 import type { IBoardObject } from '@/types';
 import { AIService, createToolExecutor } from '@/modules/ai';
 import { createObject, updateObject, deleteObject } from '@/modules/sync/objectService';
 import { AIError } from '@/modules/ai/errors';
+import { ViewportActionsContext } from '@/contexts/ViewportActionsContext';
 
 export interface IChatMessage {
   role: 'user' | 'assistant';
@@ -34,17 +35,27 @@ export const useAI = ({ boardId, user, objects }: IUseAIParams): IUseAIReturn =>
   const objectsRef = useRef<IBoardObject[]>(objects);
   objectsRef.current = objects;
 
+  const viewportActions = useContext(ViewportActionsContext);
+
   const executorContext = useMemo(() => {
     if (!boardId || !user) return null;
     return {
       boardId,
       createdBy: user.uid,
+      userId: user.uid,
       getObjects: () => objectsRef.current,
       createObject,
       updateObject,
       deleteObject,
+      ...(viewportActions && {
+        onZoomToFitAll: viewportActions.zoomToFitAll,
+        onZoomToSelection: viewportActions.zoomToSelection,
+        onSetZoomLevel: viewportActions.setZoomLevel,
+        onExportViewport: viewportActions.exportViewport,
+        onExportFullBoard: viewportActions.exportFullBoard,
+      }),
     };
-  }, [boardId, user]);
+  }, [boardId, user, viewportActions]);
 
   const executor = useMemo(() => {
     if (!executorContext) return null;

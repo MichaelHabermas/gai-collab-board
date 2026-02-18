@@ -1,8 +1,9 @@
 /* eslint-disable react-refresh/only-export-components -- exports STICKY_COLORS and StickyColor for consumers */
 import { Group, Rect, Text } from 'react-konva';
-import { forwardRef, useState, useRef, useCallback, useEffect, memo } from 'react';
+import { forwardRef, useState, useRef, useCallback, useEffect, useMemo, memo } from 'react';
 import type { ReactElement } from 'react';
 import Konva from 'konva';
+import { useTheme } from '@/hooks/useTheme';
 
 // Sticky note color palette
 export const STICKY_COLORS = {
@@ -12,9 +13,12 @@ export const STICKY_COLORS = {
   green: '#86efac',
   purple: '#c4b5fd',
   orange: '#fed7aa',
+  red: '#ef4444',
 } as const;
 
 export type StickyColor = keyof typeof STICKY_COLORS;
+
+const DEFAULT_STICKY_FONT_SIZE = 14;
 
 interface IStickyNoteProps {
   id: string;
@@ -24,12 +28,15 @@ interface IStickyNoteProps {
   height: number;
   text: string;
   fill: string;
+  fontSize?: number;
+  opacity?: number;
   rotation?: number;
   isSelected?: boolean;
   draggable?: boolean;
   onSelect?: () => void;
   onDragStart?: () => void;
   onDragEnd?: (x: number, y: number) => void;
+  dragBoundFunc?: (pos: { x: number; y: number }) => { x: number; y: number };
   onTextChange?: (text: string) => void;
   onTransformEnd?: (attrs: {
     x: number;
@@ -55,12 +62,15 @@ export const StickyNote = memo(
         height,
         text,
         fill,
+        fontSize = DEFAULT_STICKY_FONT_SIZE,
+        opacity = 1,
         rotation = 0,
         isSelected = false,
         draggable = true,
         onSelect,
         onDragStart,
         onDragEnd,
+        dragBoundFunc,
         onTextChange,
         onTransformEnd,
       },
@@ -69,8 +79,24 @@ export const StickyNote = memo(
       const [isEditing, setIsEditing] = useState(false);
       const textRef = useRef<Konva.Text>(null);
       const groupRef = useRef<Konva.Group>(null);
+      const { theme } = useTheme();
+      const selectionColor = useMemo(
+        () =>
+          (typeof document !== 'undefined'
+            ? getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim()
+            : '') || '#3b82f6',
+        [theme]
+      );
+      const textFillColor = useMemo(
+        () =>
+          (typeof document !== 'undefined'
+            ? getComputedStyle(document.documentElement).getPropertyValue('--color-foreground').trim()
+            : '') || '#0f172a',
+        [theme]
+      );
 
-      // Handle double-click to start editing
+      // Handle double-click to start editing. Position textarea from Group's screen rect
+      // so it stays aligned for any rotation/zoom (avoids text "jumping" out of the note).
       const handleDblClick = useCallback(() => {
         if (!onTextChange) return;
 
@@ -82,73 +108,92 @@ export const StickyNote = memo(
 
         setIsEditing(true);
 
-        // Get absolute position for textarea
-        const textNode = textRef.current;
-        if (!textNode) return;
+        // Defer overlay by one frame so Konva Text is hidden and stage has redrawn first.
+        requestAnimationFrame(() => {
+          const stageBox = stage.container().getBoundingClientRect();
+          const stagePos = stage.position();
+          const scaleX = stage.scaleX();
+          const scaleY = stage.scaleY();
+          const transform = group.getAbsoluteTransform();
 
-        const textPosition = textNode.absolutePosition();
-        const stageBox = stage.container().getBoundingClientRect();
-        const scale = stage.scaleX();
-        const stagePos = stage.position();
+          // Text content rect in group-local coords (same padding as Konva Text: 8px)
+          const padding = 8;
+          const localCorners = [
+            { x: padding, y: padding },
+            { x: width - padding, y: padding },
+            { x: width - padding, y: height - padding },
+            { x: padding, y: height - padding },
+          ];
 
-        // Account for stage pan/zoom offset
-        const areaPosition = {
-          x: stageBox.left + (textPosition.x + stagePos.x) * scale,
-          y: stageBox.top + (textPosition.y + stagePos.y) * scale,
-        };
+          // Transform corners to stage then to screen
+          const screenPoints = localCorners.map((p) => {
+            const stagePt = transform.point(p);
+            return {
+              x: stageBox.left + (stagePt.x + stagePos.x) * scaleX,
+              y: stageBox.top + (stagePt.y + stagePos.y) * scaleY,
+            };
+          });
 
-        // Create textarea for editing
-        const textarea = document.createElement('textarea');
-        document.body.appendChild(textarea);
+          const left = Math.min(...screenPoints.map((p) => p.x));
+          const top = Math.min(...screenPoints.map((p) => p.y));
+          const right = Math.max(...screenPoints.map((p) => p.x));
+          const bottom = Math.max(...screenPoints.map((p) => p.y));
+          const areaWidth = Math.max(1, right - left);
+          const areaHeight = Math.max(1, bottom - top);
+          const avgScale = (scaleX + scaleY) / 2;
 
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.top = `${areaPosition.y}px`;
-        textarea.style.left = `${areaPosition.x}px`;
-        textarea.style.width = `${(width - 16) * scale}px`;
-        textarea.style.height = `${(height - 16) * scale}px`;
-        textarea.style.fontSize = `${14 * scale}px`;
-        textarea.style.border = 'none';
-        textarea.style.padding = '0px';
-        textarea.style.margin = '0px';
-        textarea.style.overflow = 'hidden';
-        textarea.style.background = 'transparent';
-        textarea.style.outline = 'none';
-        textarea.style.resize = 'none';
-        textarea.style.fontFamily = 'Inter, system-ui, sans-serif';
-        textarea.style.lineHeight = '1.4';
-        textarea.style.color = '#1f2937';
-        textarea.style.zIndex = '1000';
+          const textarea = document.createElement('textarea');
+          textarea.className = 'sticky-note-edit-overlay';
+          document.body.appendChild(textarea);
 
-        textarea.focus();
-        textarea.select();
+          textarea.value = text;
+          textarea.style.position = 'fixed';
+          textarea.style.top = `${top}px`;
+          textarea.style.left = `${left}px`;
+          textarea.style.width = `${areaWidth}px`;
+          textarea.style.height = `${areaHeight}px`;
+          textarea.style.fontSize = `${fontSize * avgScale}px`;
+          textarea.style.border = 'none';
+          textarea.style.padding = '0px';
+          textarea.style.margin = '0px';
+          textarea.style.overflow = 'hidden';
+          textarea.style.background = 'transparent';
+          textarea.style.outline = 'none';
+          textarea.style.resize = 'none';
+          textarea.style.fontFamily = 'Inter, system-ui, sans-serif';
+          textarea.style.lineHeight = '1.4';
+          textarea.style.zIndex = '1000';
 
-        const removeTextarea = () => {
-          if (document.body.contains(textarea)) {
-            document.body.removeChild(textarea);
-          }
-          setIsEditing(false);
-        };
+          textarea.focus();
+          textarea.select();
 
-        const handleKeyDown = (e: KeyboardEvent) => {
-          if (e.key === 'Escape') {
-            removeTextarea();
-          }
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
+          const removeTextarea = () => {
+            if (document.body.contains(textarea)) {
+              document.body.removeChild(textarea);
+            }
+            setIsEditing(false);
+          };
+
+          const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+              removeTextarea();
+            }
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              onTextChange(textarea.value);
+              removeTextarea();
+            }
+          };
+
+          const handleBlur = () => {
             onTextChange(textarea.value);
             removeTextarea();
-          }
-        };
+          };
 
-        const handleBlur = () => {
-          onTextChange(textarea.value);
-          removeTextarea();
-        };
-
-        textarea.addEventListener('keydown', handleKeyDown);
-        textarea.addEventListener('blur', handleBlur);
-      }, [text, width, height, onTextChange]);
+          textarea.addEventListener('keydown', handleKeyDown);
+          textarea.addEventListener('blur', handleBlur);
+        });
+      }, [text, width, height, fontSize, onTextChange]);
 
       // Handle drag end
       const handleDragEnd = useCallback(
@@ -158,26 +203,7 @@ export const StickyNote = memo(
         [onDragEnd]
       );
 
-      // Handle transform end (resize/rotate)
-      const handleTransformEnd = useCallback(() => {
-        const node = groupRef.current;
-        if (!node) return;
-
-        const scaleX = node.scaleX();
-        const scaleY = node.scaleY();
-
-        // Reset scale and apply to width/height
-        node.scaleX(1);
-        node.scaleY(1);
-
-        onTransformEnd?.({
-          x: node.x(),
-          y: node.y(),
-          width: Math.max(80, width * scaleX),
-          height: Math.max(80, height * scaleY),
-          rotation: node.rotation(),
-        });
-      }, [width, height, onTransformEnd]);
+      // Transform end (resize/rotate) is handled only by TransformHandler; no duplicate handler here.
 
       // Combine refs
       useEffect(() => {
@@ -197,6 +223,7 @@ export const StickyNote = memo(
           name='shape sticky'
           x={x}
           y={y}
+          opacity={opacity}
           rotation={rotation}
           draggable={draggable && !isEditing}
           onClick={onSelect}
@@ -205,7 +232,7 @@ export const StickyNote = memo(
           onDblTap={handleDblClick}
           onDragStart={onDragStart}
           onDragEnd={handleDragEnd}
-          onTransformEnd={handleTransformEnd}
+          dragBoundFunc={dragBoundFunc}
         >
           {/* Background with shadow */}
           <Rect
@@ -218,7 +245,7 @@ export const StickyNote = memo(
             shadowOffsetX={isSelected ? 0 : 3}
             shadowOffsetY={isSelected ? 0 : 3}
             cornerRadius={4}
-            stroke={isSelected ? '#3b82f6' : undefined}
+            stroke={isSelected ? selectionColor : undefined}
             strokeWidth={isSelected ? 2 : 0}
           />
 
@@ -240,9 +267,9 @@ export const StickyNote = memo(
             y={8}
             width={width - 16}
             height={height - 16}
-            fontSize={14}
+            fontSize={fontSize}
             fontFamily='Inter, system-ui, sans-serif'
-            fill='#1f2937'
+            fill={textFillColor}
             lineHeight={1.4}
             wrap='word'
             ellipsis

@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Timestamp, getDoc, deleteDoc } from 'firebase/firestore';
+import { Timestamp, getDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import {
   getUserRole,
   canUserEdit,
   canUserManage,
   deleteBoard,
+  updateBoardName,
 } from '@/modules/sync/boardService';
 import { IBoard } from '@/types';
 
@@ -152,5 +153,27 @@ describe('boardService - deleteBoard', () => {
     await deleteBoard('board-123');
     expect(deleteDoc).toHaveBeenCalled();
     expect(getDoc).not.toHaveBeenCalled();
+  });
+});
+
+describe('boardService - updateBoardName', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(updateDoc).mockResolvedValue(undefined as never);
+  });
+
+  it('updates board name and updatedAt', async () => {
+    await updateBoardName('board-123', 'New Name');
+
+    expect(updateDoc).toHaveBeenCalledTimes(1);
+    const call = vi.mocked(updateDoc).mock.calls[0];
+    if (call == null || call[1] == null) {
+      throw new Error('updateDoc expected to be called with (ref, updates)');
+    }
+    const updates = call[1] as unknown as { name: string; updatedAt: unknown };
+    expect(updates).toMatchObject({
+      name: 'New Name',
+    });
+    expect(updates.updatedAt).toBeDefined();
   });
 });

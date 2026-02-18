@@ -45,11 +45,22 @@ export const useTheme = (): IUseThemeReturn => {
 
   const setTheme = useCallback((next: Theme) => {
     setThemeState(next);
+    applyTheme(next);
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setThemeState((prev) => (prev === 'dark' ? 'light' : 'dark'));
+    setThemeState((prev) => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      return next;
+    });
   }, []);
 
   return { theme, setTheme, toggleTheme };
 };
+
+// Apply stored theme immediately so the document has the correct class before first paint.
+// This ensures the theme toggle has a visible effect and avoids both modes looking the same.
+if (typeof document !== 'undefined' && typeof window !== 'undefined') {
+  applyTheme(getStoredTheme());
+}

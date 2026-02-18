@@ -1,3 +1,9 @@
+## Summary
+
+This guide is the main reference for the canvas layer in CollabBoard. It explains Konva.js and react-konva concepts: Stage, Layer, Group, shapes, events, transforms, selection, and pan/zoom. It also covers performance tuning and integration with Firebase sync. Its role is to align the team on how the infinite canvas is built and why Konva was chosen over alternatives; it supports consistent patterns and makes it easier to add new shapes or interactions.
+
+---
+
 # Konva.js + React Guide for CollabBoard
 
 ## Overview

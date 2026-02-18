@@ -1,3 +1,9 @@
+## Summary
+
+This document defines the testing strategy for CollabBoard: Vitest for unit and integration tests, Playwright for E2E, and a testing pyramid (many unit tests, fewer integration, few critical E2E flows). It covers setup, mocking (e.g. Firebase), coverage targets, and CI integration. Its purpose is to keep quality bar and practices consistent and to justify the choice of tools and what is tested at each layer.
+
+---
+
 # Testing Guide for CollabBoard
 
 ## Overview

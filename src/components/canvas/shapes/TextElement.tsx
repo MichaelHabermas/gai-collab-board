@@ -1,7 +1,8 @@
 import { Text } from 'react-konva';
-import { forwardRef, useCallback, useRef, useState, memo } from 'react';
+import { forwardRef, useCallback, useRef, useState, useMemo, memo } from 'react';
 import type { ReactElement } from 'react';
 import Konva from 'konva';
+import { useTheme } from '@/hooks/useTheme';
 
 interface ITextElementProps {
   id: string;
@@ -11,12 +12,14 @@ interface ITextElementProps {
   fontSize?: number;
   fill?: string;
   width?: number;
+  opacity?: number;
   rotation?: number;
   isSelected?: boolean;
   draggable?: boolean;
   onSelect?: () => void;
   onDragStart?: () => void;
   onDragEnd?: (x: number, y: number) => void;
+  dragBoundFunc?: (pos: { x: number; y: number }) => { x: number; y: number };
   onTextChange?: (text: string) => void;
   onTransformEnd?: (attrs: {
     x: number;
@@ -42,12 +45,14 @@ export const TextElement = memo(
         fontSize = 16,
         fill = '#1f2937',
         width,
+        opacity = 1,
         rotation = 0,
         isSelected = false,
         draggable = true,
         onSelect,
         onDragStart,
         onDragEnd,
+        dragBoundFunc,
         onTextChange,
         onTransformEnd,
       },
@@ -55,8 +60,17 @@ export const TextElement = memo(
     ): ReactElement => {
       const [isEditing, setIsEditing] = useState(false);
       const textRef = useRef<Konva.Text>(null);
+      const { theme } = useTheme();
+      const selectionColor = useMemo(
+        () =>
+          (typeof document !== 'undefined'
+            ? getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim()
+            : '') || '#3b82f6',
+        [theme]
+      );
 
-      // Handle double-click to start editing
+      // Handle double-click to start editing. Position overlay from node's transformed rect
+      // so it stays aligned for any rotation/zoom.
       const handleDblClick = useCallback(() => {
         if (!onTextChange) return;
 
@@ -68,70 +82,89 @@ export const TextElement = memo(
 
         setIsEditing(true);
 
-        // Get absolute position for textarea
-        const textPosition = textNode.absolutePosition();
-        const stageBox = stage.container().getBoundingClientRect();
-        const scale = stage.scaleX();
-        const stagePos = stage.position();
+        requestAnimationFrame(() => {
+          const stageBox = stage.container().getBoundingClientRect();
+          const stagePos = stage.position();
+          const scaleX = stage.scaleX();
+          const scaleY = stage.scaleY();
+          const transform = textNode.getAbsoluteTransform();
+          const w = width ?? textNode.width();
+          const h = textNode.height();
 
-        // Account for stage pan/zoom offset
-        const areaPosition = {
-          x: stageBox.left + (textPosition.x + stagePos.x) * scale,
-          y: stageBox.top + (textPosition.y + stagePos.y) * scale,
-        };
+          const localCorners = [
+            { x: 0, y: 0 },
+            { x: w, y: 0 },
+            { x: w, y: h },
+            { x: 0, y: h },
+          ];
+          const screenPoints = localCorners.map((p) => {
+            const stagePt = transform.point(p);
+            return {
+              x: stageBox.left + (stagePt.x + stagePos.x) * scaleX,
+              y: stageBox.top + (stagePt.y + stagePos.y) * scaleY,
+            };
+          });
+          const left = Math.min(...screenPoints.map((p) => p.x));
+          const top = Math.min(...screenPoints.map((p) => p.y));
+          const right = Math.max(...screenPoints.map((p) => p.x));
+          const bottom = Math.max(...screenPoints.map((p) => p.y));
+          const areaWidth = Math.max(100, right - left);
+          const areaHeight = Math.max(1, bottom - top);
+          const avgScale = (scaleX + scaleY) / 2;
 
-        // Create textarea for editing
-        const textarea = document.createElement('textarea');
-        document.body.appendChild(textarea);
+          const textarea = document.createElement('textarea');
+          textarea.className = 'sticky-note-edit-overlay';
+          document.body.appendChild(textarea);
 
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.top = `${areaPosition.y}px`;
-        textarea.style.left = `${areaPosition.x}px`;
-        textarea.style.width = `${(width || textNode.width()) * scale}px`;
-        textarea.style.minWidth = '100px';
-        textarea.style.fontSize = `${fontSize * scale}px`;
-        textarea.style.border = 'none';
-        textarea.style.padding = '0px';
-        textarea.style.margin = '0px';
-        textarea.style.overflow = 'hidden';
-        textarea.style.background = 'transparent';
-        textarea.style.outline = 'none';
-        textarea.style.resize = 'none';
-        textarea.style.fontFamily = 'Inter, system-ui, sans-serif';
-        textarea.style.lineHeight = '1.4';
-        textarea.style.color = fill;
-        textarea.style.zIndex = '1000';
+          textarea.value = text;
+          textarea.style.position = 'fixed';
+          textarea.style.top = `${top}px`;
+          textarea.style.left = `${left}px`;
+          textarea.style.width = `${areaWidth}px`;
+          textarea.style.minWidth = '100px';
+          textarea.style.height = `${areaHeight}px`;
+          textarea.style.fontSize = `${fontSize * avgScale}px`;
+          textarea.style.border = 'none';
+          textarea.style.padding = '0px';
+          textarea.style.margin = '0px';
+          textarea.style.overflow = 'hidden';
+          textarea.style.background = 'transparent';
+          textarea.style.outline = 'none';
+          textarea.style.resize = 'none';
+          textarea.style.fontFamily = 'Inter, system-ui, sans-serif';
+          textarea.style.lineHeight = '1.4';
+          textarea.style.zIndex = '1000';
 
-        textarea.focus();
-        textarea.select();
+          textarea.focus();
+          textarea.select();
 
-        const removeTextarea = () => {
-          if (document.body.contains(textarea)) {
-            document.body.removeChild(textarea);
-          }
-          setIsEditing(false);
-        };
+          const removeTextarea = () => {
+            if (document.body.contains(textarea)) {
+              document.body.removeChild(textarea);
+            }
+            setIsEditing(false);
+          };
 
-        const handleKeyDown = (e: KeyboardEvent) => {
-          if (e.key === 'Escape') {
-            removeTextarea();
-          }
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
+          const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+              removeTextarea();
+            }
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              onTextChange(textarea.value);
+              removeTextarea();
+            }
+          };
+
+          const handleBlur = () => {
             onTextChange(textarea.value);
             removeTextarea();
-          }
-        };
+          };
 
-        const handleBlur = () => {
-          onTextChange(textarea.value);
-          removeTextarea();
-        };
-
-        textarea.addEventListener('keydown', handleKeyDown);
-        textarea.addEventListener('blur', handleBlur);
-      }, [text, width, fontSize, fill, onTextChange]);
+          textarea.addEventListener('keydown', handleKeyDown);
+          textarea.addEventListener('blur', handleBlur);
+        });
+      }, [text, width, fontSize, onTextChange]);
 
       // Handle drag end
       const handleDragEnd = useCallback(
@@ -190,8 +223,9 @@ export const TextElement = memo(
           text={text || 'Double-click to edit'}
           fontSize={fontSize}
           fontFamily='Inter, system-ui, sans-serif'
-          fill={isSelected ? '#3b82f6' : fill}
+          fill={isSelected ? selectionColor : fill}
           width={width}
+          opacity={opacity}
           rotation={rotation}
           lineHeight={1.4}
           draggable={draggable && !isEditing}
@@ -201,6 +235,7 @@ export const TextElement = memo(
           onDblTap={handleDblClick}
           onDragStart={onDragStart}
           onDragEnd={handleDragEnd}
+          dragBoundFunc={dragBoundFunc}
           onTransformEnd={handleTransformEnd}
           visible={!isEditing}
         />

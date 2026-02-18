@@ -1,3 +1,9 @@
+## Summary
+
+The initial PRD that turned the design doc and research into an executable plan. It states tech stack, architecture, Git workflow, .cursor rules, and an agile breakdown (epics, stories, features, branches, commits). It is the first version of "how we will build CollabBoard" and the basis for later PRD expansions.
+
+---
+
 # CollabBoard Initial Product Requirements Document (PRD)
 
 ## Overview

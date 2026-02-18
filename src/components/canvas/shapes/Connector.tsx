@@ -10,6 +10,7 @@ interface IConnectorProps {
   points: number[];
   stroke: string;
   strokeWidth?: number;
+  opacity?: number;
   rotation?: number;
   isSelected?: boolean;
   draggable?: boolean;
@@ -17,6 +18,7 @@ interface IConnectorProps {
   onSelect?: () => void;
   onDragStart?: () => void;
   onDragEnd?: (x: number, y: number) => void;
+  dragBoundFunc?: (pos: { x: number; y: number }) => { x: number; y: number };
   onTransformEnd?: (attrs: { x: number; y: number; points: number[]; rotation: number }) => void;
 }
 
@@ -34,6 +36,7 @@ export const Connector = memo(
         points,
         stroke,
         strokeWidth = 2,
+        opacity = 1,
         rotation = 0,
         isSelected = false,
         draggable = true,
@@ -41,6 +44,7 @@ export const Connector = memo(
         onSelect,
         onDragStart,
         onDragEnd,
+        dragBoundFunc,
         onTransformEnd,
       },
       ref
@@ -87,6 +91,7 @@ export const Connector = memo(
         points,
         stroke: isSelected ? '#3b82f6' : stroke,
         strokeWidth: isSelected ? strokeWidth + 1 : strokeWidth,
+        opacity,
         rotation,
         lineCap: 'round' as const,
         lineJoin: 'round' as const,
@@ -96,6 +101,7 @@ export const Connector = memo(
         onTap: onSelect,
         onDragStart,
         onDragEnd: handleDragEnd,
+        dragBoundFunc,
         onTransformEnd: handleTransformEnd,
       };
 

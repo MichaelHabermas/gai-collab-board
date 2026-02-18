@@ -1,3 +1,9 @@
+## Summary
+
+This design document captures the original CollabBoard vision and constraints: hard requirements from the project brief (MVP in 24 hours, core features, real-time collaboration, performance, AI agent, AI-first development), the chosen tech stack, and high-level architecture. It reflects the pre-search and locks in design direction; it is the reference for why the product and stack look the way they do.
+
+---
+
 # CollabBoard Design Document
 
 ## Overview

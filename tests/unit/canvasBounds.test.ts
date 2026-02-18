@@ -1,0 +1,96 @@
+import { describe, it, expect } from 'vitest';
+import {
+  getObjectBounds,
+  getSelectionBounds,
+  getBoardBounds,
+  computeViewportToFitBounds,
+} from '@/lib/canvasBounds';
+import type { IBoardObject } from '@/types';
+
+function makeSticky(overrides: Partial<IBoardObject> & { id: string; x: number; y: number; width: number; height: number }): IBoardObject {
+  return {
+    ...overrides,
+    type: 'sticky',
+    rotation: 0,
+    fill: overrides.fill ?? '#f',
+    text: '',
+    createdBy: 'test',
+    createdAt: {} as IBoardObject['createdAt'],
+    updatedAt: {} as IBoardObject['updatedAt'],
+  };
+}
+
+describe('canvasBounds', () => {
+  describe('getObjectBounds', () => {
+    it('returns rect bounds for sticky', () => {
+      const obj = makeSticky({ id: '1', x: 10, y: 20, width: 100, height: 80 });
+      expect(getObjectBounds(obj)).toEqual({ x1: 10, y1: 20, x2: 110, y2: 100 });
+    });
+
+    it('returns bounds from points for line', () => {
+      const obj: IBoardObject = {
+        ...makeSticky({ id: '2', x: 0, y: 0, width: 0, height: 0 }),
+        type: 'line',
+        points: [0, 0, 100, 50],
+      };
+      const b = getObjectBounds(obj);
+      expect(b.x1).toBe(0);
+      expect(b.y1).toBe(0);
+      expect(b.x2).toBe(100);
+      expect(b.y2).toBe(50);
+    });
+  });
+
+  describe('getSelectionBounds', () => {
+    it('returns null when no selection', () => {
+      const objects = [makeSticky({ id: '1', x: 0, y: 0, width: 10, height: 10 })];
+      expect(getSelectionBounds(objects, [])).toBeNull();
+    });
+
+    it('returns bounds of selected objects', () => {
+      const objects = [
+        makeSticky({ id: '1', x: 0, y: 0, width: 10, height: 10 }),
+        makeSticky({ id: '2', x: 100, y: 50, width: 20, height: 20 }),
+      ];
+      expect(getSelectionBounds(objects, ['1', '2'])).toEqual({
+        x1: 0,
+        y1: 0,
+        x2: 120,
+        y2: 70,
+      });
+    });
+  });
+
+  describe('getBoardBounds', () => {
+    it('returns null when board empty', () => {
+      expect(getBoardBounds([])).toBeNull();
+    });
+
+    it('returns bounds of all objects', () => {
+      const objects = [
+        makeSticky({ id: '1', x: 5, y: 5, width: 10, height: 10 }),
+        makeSticky({ id: '2', x: 100, y: 50, width: 20, height: 20 }),
+      ];
+      expect(getBoardBounds(objects)).toEqual({ x1: 5, y1: 5, x2: 120, y2: 70 });
+    });
+  });
+
+  describe('computeViewportToFitBounds', () => {
+    it('returns scale and position so bounds fit with padding', () => {
+      const bounds = { x1: 0, y1: 0, x2: 100, y2: 100 };
+      const result = computeViewportToFitBounds(400, 300, bounds, 20);
+      expect(result.scale).toBeGreaterThan(0);
+      expect(result.scale).toBeLessThanOrEqual(10);
+      expect(result.position).toEqual({
+        x: 400 / 2 - 50 * result.scale,
+        y: 300 / 2 - 50 * result.scale,
+      });
+    });
+
+    it('clamps scale to max', () => {
+      const bounds = { x1: 0, y1: 0, x2: 1, y2: 1 };
+      const result = computeViewportToFitBounds(1000, 1000, bounds, 0);
+      expect(result.scale).toBeLessThanOrEqual(10);
+    });
+  });
+});

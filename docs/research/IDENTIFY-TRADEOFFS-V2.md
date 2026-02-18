@@ -1,3 +1,9 @@
+## Summary
+
+This document records the pros and cons of the main technology choices (backend, canvas, frontend stack, AI, deployment) in a structured way. It explains what was gained and what was given up (e.g. Firebase vs Supabase, Konva vs Fabric, Kimi vs GPT-4/Claude, Netlify vs alternatives) and touches on performance vs cost and scalability vs complexity. It supports explaining and defending the stack when questioned.
+
+---
+
 # Identify Tradeoffs
 
 ## Backend

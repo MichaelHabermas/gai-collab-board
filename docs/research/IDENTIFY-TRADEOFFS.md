@@ -1,3 +1,9 @@
+## Summary
+
+An earlier, more concise version of the tradeoffs analysis. It lists backend, frontend canvas, AI, and deployment options with brief pros and cons. It serves as the historical record of how tradeoffs were first identified and as a quick reference for the reasoning behind the chosen technologies.
+
+---
+
 # Identify Tradeoffs
 
 ## Backend

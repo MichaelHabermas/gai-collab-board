@@ -1,3 +1,9 @@
+## Summary
+
+This document elaborates the Top 20 v2 features chosen from initial research. For each feature it provides a short description, rationale, acceptance criteria, technical notes, and dependencies. It is the detailed spec for what "done" means for each feature and how it fits with others; it supports planning, implementation, and verification without locking in low-level tasks.
+
+---
+
 # CollabBoard v2: Chosen Features (Elaborated)
 
 This document elaborates the **Top 20** features chosen for version 2 from [INITIAL-RESEARCH.md](./INITIAL-RESEARCH.md). The main [PRD](../PRD.md) remains the source of truth for existing scope (infinite canvas, stickies, shapes, connectors, frames, text, selection, transforms, multiplayer, RBAC, toolbar, board list, AI chat, dark mode, and existing AI tools). Here we describe only **improvements or additions** for v2, ordered by **build priority**.

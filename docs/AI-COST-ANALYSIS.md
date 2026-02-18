@@ -1,3 +1,9 @@
+## Summary
+
+This document estimates and tracks AI-related costs. It separates development costs (optional) from production projections (monthly LLM cost at 100 / 1K / 10K / 100K users), documents assumptions (sessions per user, commands per session, token mix), and cites pricing sources. Its purpose is to make AI cost transparent and reproducible so that scaling and provider choices can be discussed with numbers.
+
+---
+
 # AI Cost Analysis
 
 ## Development Costs

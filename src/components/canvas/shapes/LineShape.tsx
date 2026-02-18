@@ -10,12 +10,14 @@ interface ILineShapeProps {
   points: number[];
   stroke: string;
   strokeWidth?: number;
+  opacity?: number;
   rotation?: number;
   isSelected?: boolean;
   draggable?: boolean;
   onSelect?: () => void;
   onDragStart?: () => void;
   onDragEnd?: (x: number, y: number) => void;
+  dragBoundFunc?: (pos: { x: number; y: number }) => { x: number; y: number };
   onTransformEnd?: (attrs: { x: number; y: number; points: number[]; rotation: number }) => void;
 }
 
@@ -33,12 +35,14 @@ export const LineShape = memo(
         points,
         stroke,
         strokeWidth = 3,
+        opacity = 1,
         rotation = 0,
         isSelected = false,
         draggable = true,
         onSelect,
         onDragStart,
         onDragEnd,
+        dragBoundFunc,
         onTransformEnd,
       },
       ref
@@ -86,6 +90,7 @@ export const LineShape = memo(
           points={points}
           stroke={isSelected ? '#3b82f6' : stroke}
           strokeWidth={isSelected ? strokeWidth + 1 : strokeWidth}
+          opacity={opacity}
           rotation={rotation}
           lineCap='round'
           lineJoin='round'
@@ -95,6 +100,7 @@ export const LineShape = memo(
           onTap={onSelect}
           onDragStart={onDragStart}
           onDragEnd={handleDragEnd}
+          dragBoundFunc={dragBoundFunc}
           onTransformEnd={handleTransformEnd}
         />
       );
