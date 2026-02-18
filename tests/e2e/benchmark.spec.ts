@@ -23,8 +23,12 @@ const createCredential = (index: number): ICredential => {
 };
 
 const waitForBoardVisible = async (page: Page): Promise<void> => {
-  await expect(page.locator('[data-testid="board-canvas"]')).toBeVisible({ timeout: BOARD_TIMEOUT_MS });
-  await expect(page.locator('[data-testid="object-count"]')).toBeVisible({ timeout: BOARD_TIMEOUT_MS });
+  await expect(page.locator('[data-testid="board-canvas"]')).toBeVisible({
+    timeout: BOARD_TIMEOUT_MS,
+  });
+  await expect(page.locator('[data-testid="object-count"]')).toBeVisible({
+    timeout: BOARD_TIMEOUT_MS,
+  });
 };
 
 const trySignUp = async (page: Page, credential: ICredential): Promise<void> => {
@@ -46,7 +50,12 @@ const ensureAuthenticated = async (page: Page, credential: ICredential): Promise
   await page.goto('/');
   await page.waitForLoadState('load');
 
-  if (await page.locator('[data-testid="board-canvas"]').isVisible().catch(() => false)) {
+  if (
+    await page
+      .locator('[data-testid="board-canvas"]')
+      .isVisible()
+      .catch(() => false)
+  ) {
     return;
   }
 
@@ -116,7 +125,7 @@ test.describe('MVP Benchmarks', () => {
 
       await Promise.all(
         pages.map(async (page, index) => {
-          const baseline = baselineCounts[index];
+          const baseline = baselineCounts[index] ?? 0;
           await expect
             .poll(async () => getObjectCount(page), {
               timeout: 15_000,

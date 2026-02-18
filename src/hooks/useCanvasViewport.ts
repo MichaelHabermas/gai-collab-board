@@ -57,10 +57,15 @@ interface ITouchState {
  * Provides handlers for wheel zoom, drag pan, and touch pinch-to-zoom.
  * Optionally accepts initial position/scale and a change callback for persistence.
  */
-export const useCanvasViewport = (options?: IUseCanvasViewportOptions): IUseCanvasViewportReturn => {
+export const useCanvasViewport = (
+  options?: IUseCanvasViewportOptions
+): IUseCanvasViewportReturn => {
   const { initialViewport, onViewportChange } = options ?? {};
   const onViewportChangeRef = useRef(onViewportChange);
-  onViewportChangeRef.current = onViewportChange;
+
+  useEffect(() => {
+    onViewportChangeRef.current = onViewportChange;
+  }, [onViewportChange]);
 
   const [viewport, setViewport] = useState<IViewportState>(() => {
     const width = typeof window !== 'undefined' ? window.innerWidth : 800;
@@ -101,13 +106,18 @@ export const useCanvasViewport = (options?: IUseCanvasViewportOptions): IUseCanv
     if (!initialViewport) {
       return;
     }
-    setViewport((prev) => ({
-      ...prev,
-      position: initialViewport.position,
-      scale: initialViewport.scale,
-    }));
+    const timeoutId = window.setTimeout(() => {
+      setViewport((prev) => ({
+        ...prev,
+        position: initialViewport.position,
+        scale: initialViewport.scale,
+      }));
+    }, 0);
     skipNextNotifyRef.current = true;
-  }, [initialViewport?.position.x, initialViewport?.position.y, initialViewport?.scale.x, initialViewport?.scale.y]);
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [initialViewport]);
 
   // Handle window resize
   useEffect(() => {

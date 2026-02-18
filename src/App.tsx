@@ -146,7 +146,9 @@ const BoardView = ({
             <h1 className='text-lg font-bold text-foreground'>CollabBoard</h1>
             {board && canEdit ? (
               <div className='flex items-center gap-1'>
-                <span className='text-sm text-muted-foreground'>{board.name || 'Untitled Board'}</span>
+                <span className='text-sm text-muted-foreground'>
+                  {board.name || 'Untitled Board'}
+                </span>
                 <Button
                   type='button'
                   variant='ghost'
@@ -163,7 +165,9 @@ const BoardView = ({
                 </Button>
               </div>
             ) : (
-              <span className='text-sm text-muted-foreground'>{board?.name || 'Untitled Board'}</span>
+              <span className='text-sm text-muted-foreground'>
+                {board?.name || 'Untitled Board'}
+              </span>
             )}
             <Dialog open={headerRenameOpen} onOpenChange={setHeaderRenameOpen}>
               <DialogContent className='bg-card border-border' aria-describedby={undefined}>
@@ -269,15 +273,32 @@ const BoardView = ({
               className='shrink-0 w-80 border-l border-border bg-card p-2 flex flex-col min-h-0 overflow-hidden'
               data-testid='sidebar'
             >
-              <Tabs value={sidebarTab} onValueChange={setSidebarTab} className='flex flex-col min-h-0 flex-1 overflow-hidden'>
+              <Tabs
+                value={sidebarTab}
+                onValueChange={(value) => {
+                  if (value === 'boards' || value === 'properties' || value === 'ai') {
+                    setSidebarTab(value);
+                  }
+                }}
+                className='flex flex-col min-h-0 flex-1 overflow-hidden'
+              >
                 <TabsList className='w-full grid grid-cols-3 bg-muted'>
-                  <TabsTrigger value='boards' className='text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground'>
+                  <TabsTrigger
+                    value='boards'
+                    className='text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground'
+                  >
                     Boards
                   </TabsTrigger>
-                  <TabsTrigger value='properties' className='text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground'>
+                  <TabsTrigger
+                    value='properties'
+                    className='text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground'
+                  >
                     Properties
                   </TabsTrigger>
-                  <TabsTrigger value='ai' className='text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground'>
+                  <TabsTrigger
+                    value='ai'
+                    className='text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground'
+                  >
                     AI
                   </TabsTrigger>
                 </TabsList>

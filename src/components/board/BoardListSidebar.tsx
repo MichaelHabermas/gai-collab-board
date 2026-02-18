@@ -255,7 +255,9 @@ export const BoardListSidebar = memo(
               size='icon'
               className={cn(
                 'h-8 w-8 shrink-0',
-                isFavorite ? 'text-primary hover:text-primary/90' : 'text-muted-foreground hover:text-primary'
+                isFavorite
+                  ? 'text-primary hover:text-primary/90'
+                  : 'text-muted-foreground hover:text-primary'
               )}
               onClick={(e) => handleToggleFavorite(item.id, e)}
               title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
@@ -390,7 +392,15 @@ export const BoardListSidebar = memo(
             {deleteError}
           </p>
         )}
-        <Tabs value={boardListFilter} onValueChange={setBoardListFilter} className='flex-1 flex flex-col min-h-0 overflow-hidden'>
+        <Tabs
+          value={boardListFilter}
+          onValueChange={(value) => {
+            if (value === 'all' || value === 'recent' || value === 'favorites') {
+              setBoardListFilter(value);
+            }
+          }}
+          className='flex-1 flex flex-col min-h-0 overflow-hidden'
+        >
           <TabsList className='w-full grid grid-cols-3 shrink-0 bg-muted'>
             <TabsTrigger
               value='all'
@@ -420,7 +430,10 @@ export const BoardListSidebar = memo(
           <TabsContent value='recent' className='flex-1 min-h-0 mt-2 overflow-auto' forceMount>
             <ul className='flex flex-col gap-1'>
               {recentBoardItems.length === 0 ? (
-                <p className='text-sm text-muted-foreground py-4' data-testid='board-list-recent-empty'>
+                <p
+                  className='text-sm text-muted-foreground py-4'
+                  data-testid='board-list-recent-empty'
+                >
                   No recently opened boards
                 </p>
               ) : (
@@ -436,7 +449,10 @@ export const BoardListSidebar = memo(
           >
             <ul className='flex flex-col gap-1'>
               {favoriteBoardItems.length === 0 ? (
-                <p className='text-sm text-muted-foreground py-4' data-testid='board-list-favorites-empty'>
+                <p
+                  className='text-sm text-muted-foreground py-4'
+                  data-testid='board-list-favorites-empty'
+                >
                   No favorite boards
                 </p>
               ) : (

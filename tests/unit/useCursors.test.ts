@@ -4,18 +4,26 @@ import { useCursors } from '@/hooks/useCursors';
 import type { Cursors } from '@/hooks/useCursors';
 import type { User } from 'firebase/auth';
 
-const mockUpdateCursor = vi.fn();
-const mockSubscribeToCursors = vi.fn();
-const mockRemoveCursor = vi.fn();
-const mockSetupCursorDisconnectHandler = vi.fn();
-const mockGetUserColor = vi.fn(() => '#123456');
+const {
+  mockUpdateCursor,
+  mockSubscribeToCursors,
+  mockRemoveCursor,
+  mockSetupCursorDisconnectHandler,
+  mockGetUserColor,
+} = vi.hoisted(() => ({
+  mockUpdateCursor: vi.fn(),
+  mockSubscribeToCursors: vi.fn(),
+  mockRemoveCursor: vi.fn(),
+  mockSetupCursorDisconnectHandler: vi.fn(),
+  mockGetUserColor: vi.fn(),
+}));
 
 vi.mock('@/modules/sync/realtimeService', () => ({
-  updateCursor: (...args: unknown[]) => mockUpdateCursor(...args),
-  subscribeToCursors: (...args: unknown[]) => mockSubscribeToCursors(...args),
-  removeCursor: (...args: unknown[]) => mockRemoveCursor(...args),
-  setupCursorDisconnectHandler: (...args: unknown[]) => mockSetupCursorDisconnectHandler(...args),
-  getUserColor: (...args: unknown[]) => mockGetUserColor(...args),
+  updateCursor: mockUpdateCursor,
+  subscribeToCursors: mockSubscribeToCursors,
+  removeCursor: mockRemoveCursor,
+  setupCursorDisconnectHandler: mockSetupCursorDisconnectHandler,
+  getUserColor: mockGetUserColor,
 }));
 
 const buildUser = (overrides: Partial<User> = {}): User =>
@@ -30,6 +38,7 @@ describe('useCursors', () => {
     vi.useFakeTimers();
     vi.setSystemTime(0);
     vi.clearAllMocks();
+    mockGetUserColor.mockReturnValue('#123456');
   });
 
   afterEach(() => {
@@ -49,10 +58,12 @@ describe('useCursors', () => {
     };
 
     const unsubscribe = vi.fn();
-    mockSubscribeToCursors.mockImplementation((_boardId: string, callback: (data: Cursors) => void) => {
-      callback(cursors);
-      return unsubscribe;
-    });
+    mockSubscribeToCursors.mockImplementation(
+      (_boardId: string, callback: (data: Cursors) => void) => {
+        callback(cursors);
+        return unsubscribe;
+      }
+    );
 
     const { result, unmount } = renderHook(() =>
       useCursors({

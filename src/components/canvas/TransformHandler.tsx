@@ -84,11 +84,12 @@ export const TransformHandler = memo(
           // StickyNote: use first Rect (note body) so shadow/fold don't inflate size. Frame/others: use getClientRect.
           const name = node.name() ?? '';
           const isSticky = name.includes('sticky');
+          const groupNode = node as Konva.Group;
           const contentRect = node.getClientRect({ skipTransform: true });
           let width: number;
           let height: number;
           if (isSticky) {
-            const firstRect = node.findOne('Rect');
+            const firstRect = groupNode.findOne('Rect');
             if (firstRect && firstRect.getClassName() === 'Rect') {
               const r = firstRect as Konva.Rect;
               width = Math.max(MIN_SIZE, r.width() * scaleX);
