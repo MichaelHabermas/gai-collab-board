@@ -3,6 +3,14 @@ import { forwardRef, useCallback, useRef, useState, useMemo, memo } from 'react'
 import type { ReactElement } from 'react';
 import Konva from 'konva';
 import { useTheme } from '@/hooks/useTheme';
+import {
+  SHADOW_BLUR_DEFAULT,
+  SHADOW_BLUR_SELECTED,
+  SHADOW_COLOR,
+  SHADOW_OPACITY,
+  SHADOW_OFFSET_X,
+  SHADOW_OFFSET_Y,
+} from '@/lib/canvasShadows';
 import { getOverlayRectFromLocalCorners } from '@/lib/canvasOverlayPosition';
 
 interface ITextElementProps {
@@ -213,6 +221,11 @@ export const TextElement = memo(
           opacity={opacity}
           rotation={rotation}
           lineHeight={1.4}
+          shadowColor={SHADOW_COLOR}
+          shadowBlur={isSelected ? SHADOW_BLUR_SELECTED : SHADOW_BLUR_DEFAULT}
+          shadowOpacity={SHADOW_OPACITY}
+          shadowOffsetX={SHADOW_OFFSET_X}
+          shadowOffsetY={SHADOW_OFFSET_Y}
           draggable={draggable && !isEditing}
           onClick={onSelect}
           onTap={onSelect}

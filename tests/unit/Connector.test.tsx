@@ -1,6 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Connector } from '@/components/canvas/shapes/Connector';
+import {
+  SHADOW_BLUR_DEFAULT,
+  SHADOW_BLUR_SELECTED,
+  SHADOW_COLOR,
+} from '@/lib/canvasShadows';
 
 let latestArrowProps: Record<string, unknown> | null = null;
 let latestLineProps: Record<string, unknown> | null = null;
@@ -29,6 +34,8 @@ describe('Connector', () => {
 
     expect(screen.getByTestId('connector-arrow')).toBeInTheDocument();
     expect(latestArrowProps?.fill).toBe('#111827');
+    expect(latestArrowProps?.shadowColor).toBe(SHADOW_COLOR);
+    expect(latestArrowProps?.shadowBlur).toBe(SHADOW_BLUR_DEFAULT);
 
     rerender(
       <Connector id='connector-1' x={10} y={20} points={[0, 0, 50, 50]} stroke='#111827' hasArrow={false} />
@@ -36,6 +43,8 @@ describe('Connector', () => {
 
     expect(screen.getByTestId('connector-line')).toBeInTheDocument();
     expect(latestLineProps?.stroke).toBe('#111827');
+    expect(latestLineProps?.shadowColor).toBe(SHADOW_COLOR);
+    expect(latestLineProps?.shadowBlur).toBe(SHADOW_BLUR_DEFAULT);
   });
 
   it('uses selected stroke styling and emits drag end coordinates', () => {
@@ -56,6 +65,8 @@ describe('Connector', () => {
 
     expect(latestArrowProps?.stroke).toBe('#3b82f6');
     expect(latestArrowProps?.strokeWidth).toBe(3);
+    expect(latestArrowProps?.shadowBlur).toBe(SHADOW_BLUR_SELECTED);
+    expect(latestArrowProps?.shadowColor).toBe(SHADOW_COLOR);
 
     const dragEndHandler = latestArrowProps?.onDragEnd as ((event: unknown) => void) | undefined;
     dragEndHandler?.({

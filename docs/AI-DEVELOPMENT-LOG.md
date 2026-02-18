@@ -71,3 +71,11 @@ This log records how AI was used during development: tools (Cursor, Context7 MCP
 **Implementation:** Added `sidebarCollapsed` to `IBoardSettings` and `useBoardSettings` (default false, immediate persist, reload on board switch). Extracted `RightSidebar` component (`src/components/board/RightSidebar.tsx`) with collapse/expand and icon rail; `App.tsx` uses it with `expandedContent` (TabsContent for boards, properties, AI). Unit tests: `useBoardSettings` (default, persist, reload, invalid fallback) and `App.rightPanelCollapse.test.tsx` (expand/collapse, rail tabs, initial collapsed). PRD updated with expected behaviour and unchecked verification checkboxes.
 
 **Cost & usage (this session):** Development via Cursor; no additional external LLM API. Approximate token use for planning + implementation + tests + docs: ~25k input / ~8k output (estimate). **Running total (development):** Cursor $20/mo; API $0. **Deployment (expected):** no change; UI-only feature, no new LLM or runtime cost.
+
+## Canvas object shadow (Feb 2026)
+
+**Scope:** Add a consistent slight shadow to all canvas objects. Frame, TextElement, LineShape, and Connector did not have shadow; StickyNote, RectangleShape, and CircleShape already did. Goal: single source of truth (DRY) and consistent visual treatment.
+
+**Implementation:** Added `src/lib/canvasShadows.ts` with shared constants (SHADOW_COLOR, SHADOW_BLUR_DEFAULT, SHADOW_BLUR_SELECTED, SHADOW_OPACITY, SHADOW_OFFSET_X/Y, SHADOW_FOR_STROKE_ENABLED; plus StickyNote-specific constants). Refactored StickyNote, RectangleShape, and CircleShape to use these constants; applied shadow to Frame (both Rects), TextElement (Text), LineShape (Line), Connector (commonProps for Arrow/Line). Updated PRD with “Canvas object appearance” and unchecked verification checkbox. Added/extended unit tests in Frame, TextElement, LineShape, Connector to assert shadow props; fixed typecheck in tests (ReactNode cast, defined element before fireEvent) and in `useVisibleShapes` (points array access). All 370 tests pass; typecheck passes.
+
+**Cost & usage (this session):** Development via Cursor; no external LLM API. Approximate token use: ~35k input / ~12k output (estimate). **Running total (development):** Cursor $20/mo; API $0. **Deployment (expected):** no change; UI-only, no new LLM or runtime cost.

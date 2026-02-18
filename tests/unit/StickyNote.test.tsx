@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ReactNode } from 'react';
 import type Konva from 'konva';
 import { StickyNote } from '@/components/canvas/shapes/StickyNote';
 
@@ -47,7 +48,7 @@ vi.mock('react-konva', () => ({
             handler?.();
           }}
         />
-        {props.children}
+        {props.children as ReactNode}
       </div>
     );
   },

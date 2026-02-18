@@ -1736,6 +1736,14 @@ while maintaining 60 FPS with 500+ objects.
 
 **Branch**: `feature/canvas-frames`
 
+### Canvas object appearance (visual consistency)
+
+All canvas objects (sticky notes, rectangles, circles, lines, connectors, frames, text elements) display a consistent slight shadow so objects are visually distinct from the canvas background.
+
+**Expected behavior:**
+
+- [ ] All canvas object types (sticky note, rectangle, circle, line, connector, frame, text) render with a consistent slight shadow.
+
 ### Story 3.7: Transforms (Move, Resize, Rotate)
 
 **As a user**, I can move, resize, and rotate objects.

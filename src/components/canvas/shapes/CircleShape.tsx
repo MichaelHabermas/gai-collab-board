@@ -2,6 +2,15 @@ import { Ellipse } from 'react-konva';
 import { forwardRef, useCallback, memo } from 'react';
 import type { ReactElement } from 'react';
 import Konva from 'konva';
+import {
+  SHADOW_BLUR_DEFAULT,
+  SHADOW_BLUR_SELECTED,
+  SHADOW_COLOR,
+  SHADOW_FOR_STROKE_ENABLED,
+  SHADOW_OPACITY,
+  SHADOW_OFFSET_X,
+  SHADOW_OFFSET_Y,
+} from '@/lib/canvasShadows';
 
 interface ICircleShapeProps {
   id: string;
@@ -117,12 +126,12 @@ export const CircleShape = memo(
           onDragEnd={handleDragEnd}
           dragBoundFunc={dragBoundFunc}
           onTransformEnd={handleTransformEnd}
-          shadowColor='rgba(0, 0, 0, 0.1)'
-          shadowBlur={isSelected ? 8 : 4}
-          shadowOpacity={0.3}
-          shadowOffsetX={2}
-          shadowOffsetY={2}
-          shadowForStrokeEnabled={false}
+          shadowColor={SHADOW_COLOR}
+          shadowBlur={isSelected ? SHADOW_BLUR_SELECTED : SHADOW_BLUR_DEFAULT}
+          shadowOpacity={SHADOW_OPACITY}
+          shadowOffsetX={SHADOW_OFFSET_X}
+          shadowOffsetY={SHADOW_OFFSET_Y}
+          shadowForStrokeEnabled={SHADOW_FOR_STROKE_ENABLED}
           perfectDrawEnabled={false}
         />
       );

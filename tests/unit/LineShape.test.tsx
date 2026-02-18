@@ -1,6 +1,11 @@
 import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { LineShape } from '@/components/canvas/shapes/LineShape';
+import {
+  SHADOW_BLUR_DEFAULT,
+  SHADOW_BLUR_SELECTED,
+  SHADOW_COLOR,
+} from '@/lib/canvasShadows';
 
 let latestLineProps: Record<string, unknown> | null = null;
 
@@ -32,6 +37,23 @@ describe('LineShape', () => {
     expect(latestLineProps?.stroke).toBe('#3b82f6');
     expect(latestLineProps?.strokeWidth).toBe(5);
     expect(latestLineProps?.hitStrokeWidth).toBe(20);
+    expect(latestLineProps?.shadowColor).toBe(SHADOW_COLOR);
+    expect(latestLineProps?.shadowBlur).toBe(SHADOW_BLUR_SELECTED);
+  });
+
+  it('renders line with slight shadow when not selected', () => {
+    render(
+      <LineShape
+        id='line-shadow'
+        x={0}
+        y={0}
+        points={[0, 0, 50, 50]}
+        stroke='#0f172a'
+      />
+    );
+
+    expect(latestLineProps?.shadowColor).toBe(SHADOW_COLOR);
+    expect(latestLineProps?.shadowBlur).toBe(SHADOW_BLUR_DEFAULT);
   });
 
   it('reports drag end coordinates', () => {

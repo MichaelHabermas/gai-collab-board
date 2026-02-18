@@ -43,14 +43,15 @@ export const useVisibleShapes = ({ objects, viewport }: IUseVisibleShapesProps):
         obj.points.length >= 2
       ) {
         // Line/connector: bounds from points (relative to obj.x, obj.y)
+        const points = obj.points;
         let minX = Number.POSITIVE_INFINITY;
         let maxX = Number.NEGATIVE_INFINITY;
         let minY = Number.POSITIVE_INFINITY;
         let maxY = Number.NEGATIVE_INFINITY;
 
-        for (let pointIndex = 0; pointIndex < obj.points.length - 1; pointIndex += 2) {
-          const pointX = obj.x + obj.points[pointIndex];
-          const pointY = obj.y + obj.points[pointIndex + 1];
+        for (let pointIndex = 0; pointIndex < points.length - 1; pointIndex += 2) {
+          const pointX = obj.x + (points[pointIndex] ?? 0);
+          const pointY = obj.y + (points[pointIndex + 1] ?? 0);
           minX = Math.min(minX, pointX);
           maxX = Math.max(maxX, pointX);
           minY = Math.min(minY, pointY);

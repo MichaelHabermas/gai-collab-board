@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type Konva from 'konva';
 import { TextElement } from '@/components/canvas/shapes/TextElement';
+import { SHADOW_BLUR_DEFAULT, SHADOW_COLOR } from '@/lib/canvasShadows';
 
 const mockOverlayRect = {
   top: 10,
@@ -72,6 +73,13 @@ describe('TextElement', () => {
       y: () => 60,
       rotation: () => 0,
     };
+  });
+
+  it('renders text with slight shadow', () => {
+    render(<TextElement id='text-shadow' x={10} y={20} text='hello' />);
+
+    expect(latestTextProps?.shadowColor).toBe(SHADOW_COLOR);
+    expect(latestTextProps?.shadowBlur).toBe(SHADOW_BLUR_DEFAULT);
   });
 
   it('does not open editor when onTextChange is missing', () => {

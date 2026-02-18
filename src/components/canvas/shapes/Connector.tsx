@@ -2,6 +2,14 @@ import { Arrow, Line } from 'react-konva';
 import { forwardRef, useCallback, memo } from 'react';
 import type { ReactElement } from 'react';
 import Konva from 'konva';
+import {
+  SHADOW_BLUR_DEFAULT,
+  SHADOW_BLUR_SELECTED,
+  SHADOW_COLOR,
+  SHADOW_OPACITY,
+  SHADOW_OFFSET_X,
+  SHADOW_OFFSET_Y,
+} from '@/lib/canvasShadows';
 
 interface IConnectorProps {
   id: string;
@@ -95,6 +103,11 @@ export const Connector = memo(
         rotation,
         lineCap: 'round' as const,
         lineJoin: 'round' as const,
+        shadowColor: SHADOW_COLOR,
+        shadowBlur: isSelected ? SHADOW_BLUR_SELECTED : SHADOW_BLUR_DEFAULT,
+        shadowOpacity: SHADOW_OPACITY,
+        shadowOffsetX: SHADOW_OFFSET_X,
+        shadowOffsetY: SHADOW_OFFSET_Y,
         hitStrokeWidth: Math.max(20, strokeWidth * 3),
         draggable,
         onClick: onSelect,

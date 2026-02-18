@@ -4,6 +4,15 @@ import { forwardRef, useState, useRef, useCallback, useEffect, useMemo, memo } f
 import type { ReactElement } from 'react';
 import Konva from 'konva';
 import { useTheme } from '@/hooks/useTheme';
+import {
+  STICKY_NOTE_SHADOW_BLUR_DEFAULT,
+  STICKY_NOTE_SHADOW_BLUR_SELECTED,
+  STICKY_NOTE_SHADOW_COLOR,
+  STICKY_NOTE_SHADOW_OFFSET_DEFAULT,
+  STICKY_NOTE_SHADOW_OFFSET_SELECTED,
+  STICKY_NOTE_SHADOW_OPACITY_DEFAULT,
+  STICKY_NOTE_SHADOW_OPACITY_SELECTED,
+} from '@/lib/canvasShadows';
 import { getOverlayRectFromLocalCorners } from '@/lib/canvasOverlayPosition';
 
 // Sticky note color palette
@@ -224,11 +233,19 @@ export const StickyNote = memo(
             width={width}
             height={height}
             fill={fill}
-            shadowColor='rgba(0, 0, 0, 0.15)'
-            shadowBlur={isSelected ? 12 : 8}
-            shadowOpacity={isSelected ? 0.3 : 0.2}
-            shadowOffsetX={isSelected ? 0 : 3}
-            shadowOffsetY={isSelected ? 0 : 3}
+            shadowColor={STICKY_NOTE_SHADOW_COLOR}
+            shadowBlur={
+              isSelected ? STICKY_NOTE_SHADOW_BLUR_SELECTED : STICKY_NOTE_SHADOW_BLUR_DEFAULT
+            }
+            shadowOpacity={
+              isSelected ? STICKY_NOTE_SHADOW_OPACITY_SELECTED : STICKY_NOTE_SHADOW_OPACITY_DEFAULT
+            }
+            shadowOffsetX={
+              isSelected ? STICKY_NOTE_SHADOW_OFFSET_SELECTED : STICKY_NOTE_SHADOW_OFFSET_DEFAULT
+            }
+            shadowOffsetY={
+              isSelected ? STICKY_NOTE_SHADOW_OFFSET_SELECTED : STICKY_NOTE_SHADOW_OFFSET_DEFAULT
+            }
             cornerRadius={4}
             stroke={isSelected ? selectionColor : undefined}
             strokeWidth={isSelected ? 2 : 0}

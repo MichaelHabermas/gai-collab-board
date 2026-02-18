@@ -1,7 +1,13 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ReactNode } from 'react';
 import type Konva from 'konva';
 import { Frame } from '@/components/canvas/shapes/Frame';
+import {
+  SHADOW_BLUR_DEFAULT,
+  SHADOW_BLUR_SELECTED,
+  SHADOW_COLOR,
+} from '@/lib/canvasShadows';
 
 const mockOverlayRect = {
   top: 14,
@@ -38,7 +44,7 @@ vi.mock('react-konva', () => ({
         ref.current = mockGroupNode as Konva.Group | null;
       }
     }
-    return <div>{props.children}</div>;
+    return <div>{props.children as ReactNode}</div>;
   },
   Rect: (props: Record<string, unknown>) => {
     latestRectProps.push(props);
@@ -96,6 +102,41 @@ describe('Frame', () => {
     expect(latestTextProps?.text).toBe('Design');
   });
 
+  it('renders title and body rects with consistent slight shadow', () => {
+    render(
+      <Frame
+        id='frame-shadow'
+        x={0}
+        y={0}
+        width={200}
+        height={120}
+        text='Frame'
+      />
+    );
+
+    expect(latestRectProps[0]?.shadowColor).toBe(SHADOW_COLOR);
+    expect(latestRectProps[0]?.shadowBlur).toBe(SHADOW_BLUR_DEFAULT);
+    expect(latestRectProps[1]?.shadowColor).toBe(SHADOW_COLOR);
+    expect(latestRectProps[1]?.shadowBlur).toBe(SHADOW_BLUR_DEFAULT);
+  });
+
+  it('renders selected frame with stronger shadow blur', () => {
+    render(
+      <Frame
+        id='frame-shadow-selected'
+        x={0}
+        y={0}
+        width={200}
+        height={120}
+        text='Frame'
+        isSelected={true}
+      />
+    );
+
+    expect(latestRectProps[0]?.shadowBlur).toBe(SHADOW_BLUR_SELECTED);
+    expect(latestRectProps[1]?.shadowBlur).toBe(SHADOW_BLUR_SELECTED);
+  });
+
   it('opens title input on double click and commits on Enter', () => {
     const onTextChange = vi.fn();
 
@@ -111,7 +152,9 @@ describe('Frame', () => {
       />
     );
 
-    fireEvent.doubleClick(screen.getAllByTestId('frame-rect')[0]);
+    const titleRect = screen.getAllByTestId('frame-rect')[0];
+    expect(titleRect).toBeDefined();
+    fireEvent.doubleClick(titleRect as HTMLElement);
 
     const input = document.querySelector('input.sticky-note-edit-overlay') as HTMLInputElement;
     expect(input).toBeTruthy();
@@ -143,7 +186,9 @@ describe('Frame', () => {
       />
     );
 
-    fireEvent.doubleClick(screen.getAllByTestId('frame-rect')[0]);
+    const guardRect = screen.getAllByTestId('frame-rect')[0];
+    expect(guardRect).toBeDefined();
+    fireEvent.doubleClick(guardRect as HTMLElement);
     expect(document.querySelector('.sticky-note-edit-overlay')).toBeNull();
 
     const dragEndHandler = latestGroupProps?.onDragEnd as ((event: unknown) => void) | undefined;

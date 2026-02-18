@@ -2,6 +2,14 @@ import { Line } from 'react-konva';
 import { forwardRef, useCallback, memo } from 'react';
 import type { ReactElement } from 'react';
 import Konva from 'konva';
+import {
+  SHADOW_BLUR_DEFAULT,
+  SHADOW_BLUR_SELECTED,
+  SHADOW_COLOR,
+  SHADOW_OPACITY,
+  SHADOW_OFFSET_X,
+  SHADOW_OFFSET_Y,
+} from '@/lib/canvasShadows';
 
 interface ILineShapeProps {
   id: string;
@@ -94,6 +102,11 @@ export const LineShape = memo(
           rotation={rotation}
           lineCap='round'
           lineJoin='round'
+          shadowColor={SHADOW_COLOR}
+          shadowBlur={isSelected ? SHADOW_BLUR_SELECTED : SHADOW_BLUR_DEFAULT}
+          shadowOpacity={SHADOW_OPACITY}
+          shadowOffsetX={SHADOW_OFFSET_X}
+          shadowOffsetY={SHADOW_OFFSET_Y}
           hitStrokeWidth={Math.max(20, strokeWidth * 3)} // Larger hit area for easier selection
           draggable={draggable}
           onClick={onSelect}
