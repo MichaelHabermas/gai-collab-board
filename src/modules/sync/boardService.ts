@@ -175,10 +175,12 @@ export const deleteBoard = async (boardId: string, userId?: string | null): Prom
     if (!board) {
       throw new Error('Board not found');
     }
+
     if (!canUserManage(board, userId)) {
       throw new Error('Only the board owner can delete the board');
     }
   }
+
   const boardRef = doc(firestore, BOARDS_COLLECTION, boardId);
   await deleteDoc(boardRef);
 };

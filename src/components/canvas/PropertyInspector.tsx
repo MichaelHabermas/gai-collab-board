@@ -33,6 +33,7 @@ const getObjectFontColor = (object: IBoardObject, defaultFontColor: string): str
   if (object.type === 'sticky') {
     return object.textFill ?? defaultFontColor;
   }
+
   return object.fill;
 };
 
@@ -55,6 +56,7 @@ export const PropertyInspector = ({
     if (selectedIds.length === 0) {
       return [];
     }
+
     return selectedIds
       .map((id) => objectsById.get(id))
       .filter((obj): obj is IBoardObject => obj !== undefined);
@@ -68,6 +70,7 @@ export const PropertyInspector = ({
 
   const fillValue = useMemo(() => {
     if (selectedObjects.length === 0) return '';
+
     const fills = [
       ...new Set(selectedObjects.filter((o) => supportsFill(o.type)).map((o) => o.fill)),
     ];
@@ -76,15 +79,18 @@ export const PropertyInspector = ({
 
   const strokeValue = useMemo(() => {
     if (selectedObjects.length === 0) return '';
+
     const strokes = [
       ...new Set(selectedObjects.filter((o) => supportsStroke(o.type)).map((o) => o.stroke ?? '')),
     ].filter(Boolean);
     if (strokes.length === 0) return '';
+
     return strokes.length === 1 ? (strokes[0] ?? '') : MIXED_PLACEHOLDER;
   }, [selectedObjects]);
 
   const strokeWidthValue = useMemo(() => {
     if (selectedObjects.length === 0) return '';
+
     const widths = [
       ...new Set(
         selectedObjects
@@ -93,27 +99,33 @@ export const PropertyInspector = ({
       ),
     ].filter(Boolean);
     if (widths.length === 0) return '';
+
     return widths.length === 1 ? (widths[0] ?? '') : MIXED_PLACEHOLDER;
   }, [selectedObjects]);
 
   const fontSizeValue = useMemo(() => {
     if (selectedObjects.length === 0) return '';
+
     const textObjects = selectedObjects.filter((o) => supportsFontSize(o.type));
     if (textObjects.length === 0) return '';
+
     const sizes = [...new Set(textObjects.map((o) => (o.fontSize != null ? o.fontSize : 14)))];
     return sizes.length === 1 ? String(sizes[0]) : MIXED_PLACEHOLDER;
   }, [selectedObjects]);
 
   const fontColorValue = useMemo(() => {
     if (selectedObjects.length === 0) return '';
+
     const textObjects = selectedObjects.filter((o) => supportsFontColor(o.type));
     if (textObjects.length === 0) return '';
+
     const colors = [...new Set(textObjects.map((o) => getObjectFontColor(o, defaultFontColor)))];
     return colors.length === 1 ? (colors[0] ?? '') : MIXED_PLACEHOLDER;
   }, [defaultFontColor, selectedObjects]);
 
   const opacityValue = useMemo(() => {
     if (selectedObjects.length === 0) return '';
+
     const opacities = [...new Set(selectedObjects.map((o) => (o.opacity != null ? o.opacity : 1)))];
     return opacities.length === 1
       ? String(Math.round((opacities[0] ?? 1) * 100))
@@ -125,6 +137,7 @@ export const PropertyInspector = ({
 
   const handleFillChange = (value: string) => {
     if (value === MIXED_PLACEHOLDER || !value) return;
+
     selectedObjects.forEach((obj) => {
       if (supportsFill(obj.type)) {
         onObjectUpdate(obj.id, { fill: value });
@@ -134,6 +147,7 @@ export const PropertyInspector = ({
 
   const handleStrokeChange = (value: string) => {
     if (value === MIXED_PLACEHOLDER || value === '') return;
+
     selectedObjects.forEach((obj) => {
       if (supportsStroke(obj.type)) {
         onObjectUpdate(obj.id, { stroke: value });
@@ -143,8 +157,10 @@ export const PropertyInspector = ({
 
   const handleStrokeWidthChange = (value: string) => {
     if (value === MIXED_PLACEHOLDER) return;
+
     const num = Number(value);
     if (Number.isNaN(num) || num < 0) return;
+
     selectedObjects.forEach((obj) => {
       if (supportsStroke(obj.type)) {
         onObjectUpdate(obj.id, { strokeWidth: num });
@@ -154,8 +170,10 @@ export const PropertyInspector = ({
 
   const handleFontSizeChange = (value: string) => {
     if (value === MIXED_PLACEHOLDER) return;
+
     const num = Number(value);
     if (Number.isNaN(num) || num < 8 || num > 72) return;
+
     selectedObjects.forEach((obj) => {
       if (supportsFontSize(obj.type)) {
         onObjectUpdate(obj.id, { fontSize: num });
@@ -165,8 +183,10 @@ export const PropertyInspector = ({
 
   const handleFontColorChange = (value: string) => {
     if (value === MIXED_PLACEHOLDER || value === '') return;
+
     selectedObjects.forEach((obj) => {
       if (!supportsFontColor(obj.type)) return;
+
       const updates: IUpdateObjectParams =
         obj.type === 'sticky' ? { textFill: value } : { fill: value };
       onObjectUpdate(obj.id, updates);
@@ -175,8 +195,10 @@ export const PropertyInspector = ({
 
   const handleOpacityChange = (value: string) => {
     if (value === MIXED_PLACEHOLDER) return;
+
     const num = Number(value);
     if (Number.isNaN(num) || num < 0 || num > 100) return;
+
     const opacity = num / 100;
     selectedObjects.forEach((obj) => {
       onObjectUpdate(obj.id, { opacity });

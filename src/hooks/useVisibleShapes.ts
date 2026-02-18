@@ -41,7 +41,7 @@ export const useVisibleShapes = ({ objects, viewport }: IUseVisibleShapesProps):
         obj.points.length >= 2
       ) {
         // Line/connector: bounds from points (relative to obj.x, obj.y)
-        const points = obj.points;
+        const {points} = obj;
         let minX = Number.POSITIVE_INFINITY;
         let maxX = Number.NEGATIVE_INFINITY;
         let minY = Number.POSITIVE_INFINITY;

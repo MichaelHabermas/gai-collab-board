@@ -24,6 +24,7 @@ const getInitials = (displayName: string): string => {
   if (parts.length === 1) {
     return displayName.slice(0, 2).toUpperCase();
   }
+
   return ((parts[0]?.charAt(0) || '') + (parts[1]?.charAt(0) || '')).toUpperCase();
 };
 
@@ -119,7 +120,9 @@ export const PresenceAvatars = memo(
     // Sort to show current user first
     const sortedUsers = [...visibleUsers].sort((a, b) => {
       if (a.uid === currentUid) return -1;
+
       if (b.uid === currentUid) return 1;
+
       return 0;
     });
 

@@ -74,6 +74,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
             workingById.delete(mergedObject.id);
             didMutate = true;
           }
+
           continue;
         }
 
@@ -95,6 +96,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         if (change.type !== 'added') {
           continue;
         }
+
         const alreadyInOrder = nextObjects.some((object) => object.id === change.object.id);
         if (!alreadyInOrder) {
           const pendingLocalObject = pendingUpdatesRef.current.get(change.object.id);
@@ -132,6 +134,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         objectsByIdRef.current = new Map(refreshedObjects.map((object) => [object.id, object]));
         return refreshedObjects;
       }
+
       return nextObjects;
     },
     [applyIncrementalChanges]

@@ -23,24 +23,29 @@ export function computeAlignUpdates(
     const targetX = Math.min(...objects.map((o) => o.x));
     return objects.map((obj) => ({ id: obj.id, x: targetX }));
   }
+
   if (alignment === 'right') {
     const targetRight = Math.max(...objects.map((o) => o.x + o.width));
     return objects.map((obj) => ({ id: obj.id, x: targetRight - obj.width }));
   }
+
   if (alignment === 'center') {
     const minX = Math.min(...objects.map((o) => o.x));
     const maxRight = Math.max(...objects.map((o) => o.x + o.width));
     const centerX = (minX + maxRight) / 2;
     return objects.map((obj) => ({ id: obj.id, x: centerX - obj.width / 2 }));
   }
+
   if (alignment === 'top') {
     const targetY = Math.min(...objects.map((o) => o.y));
     return objects.map((obj) => ({ id: obj.id, y: targetY }));
   }
+
   if (alignment === 'bottom') {
     const targetBottom = Math.max(...objects.map((o) => o.y + o.height));
     return objects.map((obj) => ({ id: obj.id, y: targetBottom - obj.height }));
   }
+
   if (alignment === 'middle') {
     const minY = Math.min(...objects.map((o) => o.y));
     const maxBottom = Math.max(...objects.map((o) => o.y + o.height));

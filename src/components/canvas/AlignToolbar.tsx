@@ -43,8 +43,10 @@ export const AlignToolbar = memo(
         const updates = computeAlignUpdates(rects, alignment);
         for (const u of updates) {
           const payload: Partial<IBoardObject> = {};
-          if (u.x !== undefined) payload.x = u.x;
-          if (u.y !== undefined) payload.y = u.y;
+          if (u.x) payload.x = u.x;
+
+          if (u.y) payload.y = u.y;
+
           if (Object.keys(payload).length > 0) {
             onObjectUpdate(u.id, payload);
           }
@@ -58,8 +60,10 @@ export const AlignToolbar = memo(
         const updates = computeDistributeUpdates(rects, direction);
         for (const u of updates) {
           const payload: Partial<IBoardObject> = {};
-          if (u.x !== undefined) payload.x = u.x;
-          if (u.y !== undefined) payload.y = u.y;
+          if (u.x) payload.x = u.x;
+
+          if (u.y) payload.y = u.y;
+
           if (Object.keys(payload).length > 0) {
             onObjectUpdate(u.id, payload);
           }

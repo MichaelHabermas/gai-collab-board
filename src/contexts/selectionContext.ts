@@ -9,8 +9,9 @@ export const SelectionContext = createContext<ISelectionContextValue | null>(nul
 
 export const useSelection = (): ISelectionContextValue => {
   const value = useContext(SelectionContext);
-  if (value === null) {
+  if (!value) {
     throw new Error('useSelection must be used within SelectionProvider');
   }
+
   return value;
 };

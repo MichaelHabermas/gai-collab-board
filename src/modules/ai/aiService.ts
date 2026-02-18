@@ -124,6 +124,7 @@ export class AIService {
     if (!toolCalls?.length) {
       return "I couldn't process any tools.";
     }
+
     const toolResults: Array<{
       tool_call_id: string;
       role: 'tool';
@@ -134,6 +135,7 @@ export class AIService {
       if (!('function' in toolCall) || !toolCall.function) {
         continue;
       }
+
       const functionName = toolCall.function.name;
       const functionArgs = JSON.parse(toolCall.function.arguments ?? '{}');
 
@@ -225,6 +227,7 @@ export class AIService {
             ? new AIError(error.message, undefined, status)
             : new AIError(String(error), undefined, status);
         }
+
         const delayMs = INITIAL_BACKOFF_MS * Math.pow(2, attempt);
         await new Promise((r) => setTimeout(r, delayMs));
       }

@@ -26,9 +26,10 @@ export const AlignmentGuidesLayer = memo(
       [theme]
     );
 
-    if (guides === null) {
+    if (!guides) {
       return null;
     }
+
     const { horizontal, vertical } = guides;
     if (horizontal.length === 0 && vertical.length === 0) {
       return null;

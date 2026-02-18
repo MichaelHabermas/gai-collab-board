@@ -97,9 +97,10 @@ export const StickyNote = memo(
         [theme]
       );
       const textFillColor = useMemo(() => {
-        if (textFill !== undefined && textFill !== '') {
+        if (textFill && textFill !== '') {
           return textFill;
         }
+
         return DEFAULT_STICKY_TEXT_COLOR;
       }, [textFill]);
 
@@ -161,6 +162,7 @@ export const StickyNote = memo(
             if (document.body.contains(textarea)) {
               document.body.removeChild(textarea);
             }
+
             setIsEditing(false);
           };
 
@@ -168,6 +170,7 @@ export const StickyNote = memo(
             if (e.key === 'Escape') {
               removeTextarea();
             }
+
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
               onTextChange(textarea.value);

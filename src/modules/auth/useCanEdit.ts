@@ -32,6 +32,7 @@ export const useCanEdit = (boardId: string | null): IUseCanEditReturn => {
       if (isFirstCallbackRef.current) {
         isFirstCallbackRef.current = false;
       }
+
       setBoard(boardData);
       setLoading(false);
     });

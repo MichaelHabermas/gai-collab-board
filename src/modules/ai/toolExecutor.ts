@@ -23,9 +23,11 @@ function resolveStickyColor(input: string): string {
   if (key in STICKY_COLORS) {
     return STICKY_COLORS[key];
   }
+
   if (/^#[0-9A-Fa-f]{6}$/.test(input.trim())) {
     return input.trim();
   }
+
   return DEFAULT_FILL;
 }
 
@@ -35,9 +37,11 @@ function resolveTextColor(input: string): string {
   if (key in STICKY_COLORS) {
     return STICKY_COLORS[key];
   }
+
   if (/^#[0-9A-Fa-f]{6}$/.test(input.trim())) {
     return input.trim();
   }
+
   return DEFAULT_FONT_COLOR;
 }
 
@@ -89,11 +93,11 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
         const MIN_FONT_SIZE = 8;
         const MAX_FONT_SIZE = 72;
         const clampedFontSize =
-          rawFontSize !== undefined
+          rawFontSize
             ? Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, rawFontSize))
             : undefined;
         const clampedOpacity =
-          rawOpacity !== undefined ? Math.min(1, Math.max(0, rawOpacity)) : undefined;
+          rawOpacity ? Math.min(1, Math.max(0, rawOpacity)) : undefined;
         const obj = await ctx.createObject(boardId, {
           type: 'sticky',
           x,
@@ -184,12 +188,13 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
         if (!fromObj || !toObj) {
           throw new Error('Source or target object not found for connector');
         }
+
         const fromAnchor: ConnectorAnchor = 'right';
         const toAnchor: ConnectorAnchor = 'left';
         const fromPos = getAnchorPosition(fromObj, fromAnchor);
         const toPos = getAnchorPosition(toObj, toAnchor);
-        const x = fromPos.x;
-        const y = fromPos.y;
+        const {x} = fromPos;
+        const {y} = fromPos;
         const points: [number, number, number, number] = [
           0,
           0,
@@ -292,6 +297,7 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
         if (fontSize < 8 || fontSize > 72) {
           return { success: false, message: 'Font size must be between 8 and 72' };
         }
+
         await ctx.updateObject(boardId, objectId, { fontSize });
         return { success: true, message: `Set font size to ${fontSize}px` };
       }
@@ -302,18 +308,21 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           color: string;
         };
         const object = getObjects().find((item) => item.id === objectId);
-        if (object === undefined) {
+        if (!object) {
           return { success: false, message: `Object not found: ${objectId}` };
         }
+
         const resolvedColor = resolveTextColor(color);
         if (object.type === 'sticky') {
           await ctx.updateObject(boardId, objectId, { textFill: resolvedColor });
           return { success: true, message: `Set font color to ${resolvedColor}` };
         }
+
         if (object.type === 'text') {
           await ctx.updateObject(boardId, objectId, { fill: resolvedColor });
           return { success: true, message: `Set font color to ${resolvedColor}` };
         }
+
         return { success: false, message: 'Font color can only be set on sticky notes and text.' };
       }
 
@@ -334,6 +343,7 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
         if (strokeWidth < 0) {
           return { success: false, message: 'Stroke width must be non-negative' };
         }
+
         await ctx.updateObject(boardId, objectId, { strokeWidth });
         return { success: true, message: `Set stroke width to ${strokeWidth}px` };
       }
@@ -346,6 +356,7 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
         if (opacity < 0 || opacity > 1) {
           return { success: false, message: 'Opacity must be between 0 and 1' };
         }
+
         await ctx.updateObject(boardId, objectId, { opacity });
         return { success: true, message: `Set opacity to ${Math.round(opacity * 100)}%` };
       }
@@ -386,11 +397,14 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
         };
         let filtered = getObjects();
         if (type) filtered = filtered.filter((o) => o.type === type);
+
         if (color) filtered = filtered.filter((o) => o.fill === color);
+
         if (textContains != null && textContains !== '')
           filtered = filtered.filter((o) =>
             o.text?.toLowerCase().includes(textContains.toLowerCase())
           );
+
         return {
           found: filtered.length,
           objects: filtered.map((o) => ({ id: o.id, type: o.type, text: o.text, x: o.x, y: o.y })),
@@ -416,9 +430,10 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           const row = Math.floor(i / columns);
           const col = i % columns;
           const obj = objects[i];
-          if (obj === undefined) {
+          if (!obj) {
             continue;
           }
+
           const newX = startX + col * (obj.width + spacing);
           const newY = startY + row * (obj.height + spacing);
           await ctx.updateObject(boardId, obj.id, { x: newX, y: newY });
@@ -447,8 +462,10 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
         const updates = computeAlignUpdates(rects, alignment);
         for (const u of updates) {
           const payload: IUpdateObjectParams = {};
-          if (u.x !== undefined) payload.x = u.x;
-          if (u.y !== undefined) payload.y = u.y;
+          if (u.x) payload.x = u.x;
+
+          if (u.y) payload.y = u.y;
+
           if (Object.keys(payload).length > 0) {
             await ctx.updateObject(boardId, u.id, payload);
           }
@@ -476,8 +493,10 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
         const updates = computeDistributeUpdates(rects, direction);
         for (const u of updates) {
           const payload: IUpdateObjectParams = {};
-          if (u.x !== undefined) payload.x = u.x;
-          if (u.y !== undefined) payload.y = u.y;
+          if (u.x) payload.x = u.x;
+
+          if (u.y) payload.y = u.y;
+
           if (Object.keys(payload).length > 0) {
             await ctx.updateObject(boardId, u.id, payload);
           }
@@ -490,6 +509,7 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           await ctx.onZoomToFitAll();
           return { success: true, message: 'Zoomed to fit all.' };
         }
+
         return {
           success: true,
           message: 'Zoom to fit all requested; use the zoom control in the UI if needed.',
@@ -501,10 +521,12 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
         if (!objectIds || !Array.isArray(objectIds) || objectIds.length === 0) {
           return { success: false, message: 'objectIds (non-empty array) is required.' };
         }
+
         if (ctx.onZoomToSelection) {
           await ctx.onZoomToSelection(objectIds);
           return { success: true, message: `Zoomed to fit ${objectIds.length} object(s).` };
         }
+
         return {
           success: true,
           message: 'Zoom to selection requested; use the zoom control in the UI if needed.',
@@ -520,10 +542,12 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
             message: `percent must be one of ${allowed.join(', ')}.`,
           };
         }
+
         if (ctx.onSetZoomLevel) {
           await ctx.onSetZoomLevel(percent);
           return { success: true, message: `Zoom set to ${percent}%.` };
         }
+
         return {
           success: true,
           message: `Set zoom to ${percent}% requested; use the zoom control in the UI if needed.`,
@@ -540,16 +564,19 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           ctx.onExportViewport(f);
           return { success: true, message: 'Exported current view as image.' };
         }
+
         if (scope === 'full' && ctx.onExportFullBoard) {
           ctx.onExportFullBoard(f);
           return { success: true, message: 'Exported full board as image.' };
         }
+
         if (scope === 'viewport' || scope === 'full') {
           return {
             success: true,
             message: `Export ${scope} requested; use the Export button in the UI if the download did not start.`,
           };
         }
+
         return {
           success: false,
           message: 'scope must be "viewport" or "full".',
@@ -591,6 +618,7 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
         if (!targetBoardId || typeof targetBoardId !== 'string') {
           return { success: false, message: 'boardId is required.' };
         }
+
         await toggleFavoriteBoardIdService(userId, targetBoardId);
         const prefs = await getUserPreferences(userId);
         const isFavorite = prefs.favoriteBoardIds.includes(targetBoardId);

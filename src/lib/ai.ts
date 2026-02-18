@@ -14,12 +14,15 @@ function resolveProvider(): AIProvider {
   if (configured === 'nvidia' && import.meta.env.VITE_NVIDIA_API_KEY) {
     return 'nvidia';
   }
+
   if (configured === 'groq' || import.meta.env.VITE_GROQ_API_KEY) {
     return 'groq';
   }
+
   if (import.meta.env.VITE_NVIDIA_API_KEY) {
     return 'nvidia';
   }
+
   return 'groq';
 }
 
@@ -28,6 +31,7 @@ function getProxyBaseURL(): string {
   if (typeof window !== 'undefined' && window.location?.origin) {
     return window.location.origin + path;
   }
+
   return path;
 }
 

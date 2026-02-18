@@ -180,7 +180,7 @@ export const BoardCanvas = memo(
 
     const handleViewportPersist = useCallback(
       (nextViewport: IViewportState) => {
-        if (viewportPersistTimeoutRef.current !== null) {
+        if (viewportPersistTimeoutRef.current) {
           clearTimeout(viewportPersistTimeoutRef.current);
         }
 
@@ -214,12 +214,14 @@ export const BoardCanvas = memo(
       if (!isMiddlePanning) {
         return;
       }
+
       const onWindowMouseMove = (e: MouseEvent) => {
         const startClient = middlePanStartClientRef.current;
         const startPosition = middlePanStartPositionRef.current;
-        if (startClient === null || startPosition === null) {
+        if (!startClient || !startPosition) {
           return;
         }
+
         panTo({
           x: startPosition.x + (e.clientX - startClient.x),
           y: startPosition.y + (e.clientY - startClient.y),
@@ -373,10 +375,12 @@ export const BoardCanvas = memo(
       // Traverse up the node tree to find if any ancestor is a shape
       const checkIfShape = (node: Konva.Node | null): boolean => {
         if (!node) return false;
+
         const name = node.name?.() || '';
         if (name.includes('shape')) {
           return true;
         }
+
         // Check parent recursively
         return checkIfShape(node.getParent());
       };
@@ -547,6 +551,7 @@ export const BoardCanvas = memo(
                 y: e.evt.clientY - rect.top,
               };
             }
+
             const end = getCanvasCoords(stage, pointer);
             const selX1 = Math.min(start.x1, end.x);
             const selY1 = Math.min(start.y1, end.y);
@@ -586,6 +591,7 @@ export const BoardCanvas = memo(
           cancelAnimationFrame(pointerFrameRef.current);
           pointerFrameRef.current = null;
         }
+
         pendingPointerRef.current = null;
       },
       [
@@ -604,7 +610,8 @@ export const BoardCanvas = memo(
         if (pointerFrameRef.current != null) {
           cancelAnimationFrame(pointerFrameRef.current);
         }
-        if (viewportPersistTimeoutRef.current !== null) {
+
+        if (viewportPersistTimeoutRef.current) {
           clearTimeout(viewportPersistTimeoutRef.current);
         }
       },
@@ -618,9 +625,11 @@ export const BoardCanvas = memo(
         if (!stage) {
           return;
         }
+
         if (activeToolRef.current === 'pan') {
           return;
         }
+
         // Click that follows marquee release on empty area must not clear selection
         if (justDidMarqueeSelectionRef.current) {
           justDidMarqueeSelectionRef.current = false;
@@ -720,16 +729,19 @@ export const BoardCanvas = memo(
           setConnectorFrom({ shapeId, anchor });
           return;
         }
+
         if (connectorFrom.shapeId === shapeId) {
           setConnectorFrom(null);
           return;
         }
+
         const fromObj = objects.find((o) => o.id === connectorFrom.shapeId);
         const toObj = objects.find((o) => o.id === shapeId);
         if (!fromObj || !toObj || !onObjectCreate) {
           setConnectorFrom(null);
           return;
         }
+
         const fromPos = getAnchorPosition(fromObj, connectorFrom.anchor);
         const toPos = getAnchorPosition(toObj, anchor);
         onObjectCreate({
@@ -789,6 +801,7 @@ export const BoardCanvas = memo(
           finalX = snapped.x;
           finalY = snapped.y;
         }
+
         onObjectUpdate?.(objectId, { x: finalX, y: finalY });
       },
       [onObjectUpdate, snapToGridEnabled]
@@ -803,6 +816,7 @@ export const BoardCanvas = memo(
         if (prev !== 0) {
           cancelAnimationFrame(prev);
         }
+
         alignmentGuidesRafIdRef.current = requestAnimationFrame(() => {
           setAlignmentGuides(guides);
           alignmentGuidesRafIdRef.current = 0;
@@ -961,6 +975,7 @@ export const BoardCanvas = memo(
             };
           }
         }
+
         onObjectUpdate?.(objectId, finalAttrs as Partial<IBoardObject>);
       },
       [onObjectUpdate, snapToGridEnabled]
@@ -1142,6 +1157,7 @@ export const BoardCanvas = memo(
           e.evt.preventDefault();
           return;
         }
+
         if (shouldHandlePointerMutations) {
           handleStageMouseDown(e);
         }
@@ -1155,6 +1171,7 @@ export const BoardCanvas = memo(
           setIsMiddlePanning(false);
           return;
         }
+
         if (shouldHandlePointerMutations) {
           void handleStageMouseUp(e);
         }
@@ -1233,6 +1250,7 @@ export const BoardCanvas = memo(
       if (!onViewportActionsReady) {
         return;
       }
+
       onViewportActionsReady(viewportActions);
       return () => {
         onViewportActionsReady(null);
@@ -1376,7 +1394,7 @@ export const BoardCanvas = memo(
               listening={selectedIds.length > 0}
               onClick={(e) => {
                 // Prevent clicks on Transformer (anchors, borders, or Transformer itself) from propagating to stage
-                const target = e.target;
+                const {target} = e;
                 const className = target.getClassName();
 
                 // If clicking directly on Transformer, prevent propagation
@@ -1395,6 +1413,7 @@ export const BoardCanvas = memo(
                       e.cancelBubble = true;
                       return;
                     }
+
                     node = node.getParent();
                   }
                 }

@@ -23,11 +23,13 @@ export const getUserPreferences = async (userId: string): Promise<IUserPreferenc
   if (!snap.exists()) {
     return { ...DEFAULT_PREFERENCES };
   }
+
   const data = snap.data();
   const prefs = data?.preferences;
   if (!prefs || typeof prefs !== 'object') {
     return { ...DEFAULT_PREFERENCES };
   }
+
   const recent = Array.isArray(prefs.recentBoardIds) ? prefs.recentBoardIds : [];
   const favorite = Array.isArray(prefs.favoriteBoardIds) ? prefs.favoriteBoardIds : [];
   return {
@@ -46,6 +48,7 @@ export const updateRecentBoardIds = async (userId: string, boardId: string): Pro
   if (idx !== -1) {
     recent.splice(idx, 1);
   }
+
   recent.unshift(boardId);
   const trimmed = recent.slice(0, MAX_RECENT_BOARDS);
   await setDoc(
@@ -67,6 +70,7 @@ export const toggleFavoriteBoardId = async (userId: string, boardId: string): Pr
   } else {
     favorites.splice(idx, 1);
   }
+
   await setDoc(
     userDoc(userId),
     { preferences: { ...prefs, favoriteBoardIds: favorites } },
@@ -104,12 +108,14 @@ export const subscribeToUserPreferences = (
       callback({ ...DEFAULT_PREFERENCES });
       return;
     }
+
     const data = snapshot.data();
     const prefs = data?.preferences;
     if (!prefs || typeof prefs !== 'object') {
       callback({ ...DEFAULT_PREFERENCES });
       return;
     }
+
     const recent = Array.isArray(prefs.recentBoardIds) ? prefs.recentBoardIds : [];
     const favorite = Array.isArray(prefs.favoriteBoardIds) ? prefs.favoriteBoardIds : [];
     callback({

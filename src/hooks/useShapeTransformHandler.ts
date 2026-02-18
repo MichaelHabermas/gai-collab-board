@@ -75,7 +75,7 @@ export const useShapeTransformHandler = (
         return;
       }
 
-      if (kind === 'text' && fontSize !== undefined) {
+      if (kind === 'text' && fontSize) {
         const textNode = node as Konva.Text;
         const newFontSize = Math.max(MIN_FONT_SIZE, fontSize * Math.max(scaleX, scaleY));
         onTransformEnd?.({

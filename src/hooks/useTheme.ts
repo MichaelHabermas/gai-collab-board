@@ -8,10 +8,12 @@ function getStoredTheme(): Theme {
   if (typeof window === 'undefined') {
     return 'light';
   }
+
   const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
   if (stored === 'dark' || stored === 'light') {
     return stored;
   }
+
   return 'light';
 }
 
@@ -19,11 +21,13 @@ function applyTheme(theme: Theme): void {
   if (typeof document === 'undefined') {
     return;
   }
+
   const root = document.documentElement;
   root.style.colorScheme = theme;
   if (document.body) {
     document.body.style.colorScheme = theme;
   }
+
   if (theme === 'dark') {
     root.classList.add('dark');
   } else {

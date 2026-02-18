@@ -29,7 +29,7 @@ export const TransformHandler = memo(
     const transformerRef = useRef<Konva.Transformer>(null);
 
     const transformableIds =
-      excludedFromTransformIds?.length !== undefined && excludedFromTransformIds.length > 0
+      excludedFromTransformIds?.length && excludedFromTransformIds.length > 0
         ? selectedIds.filter((id) => !excludedFromTransformIds.includes(id))
         : selectedIds;
 
@@ -38,7 +38,7 @@ export const TransformHandler = memo(
       if (!transformerRef.current || !layerRef.current) return;
 
       const ids =
-        excludedFromTransformIds?.length !== undefined && excludedFromTransformIds.length > 0
+        excludedFromTransformIds?.length && excludedFromTransformIds.length > 0
           ? selectedIds.filter((id) => !excludedFromTransformIds.includes(id))
           : selectedIds;
 
@@ -85,6 +85,7 @@ export const TransformHandler = memo(
             width = Math.max(MIN_SIZE, contentRect.width * scaleX);
             height = Math.max(MIN_SIZE, contentRect.height * scaleY);
           }
+
           node.scaleX(1);
           node.scaleY(1);
           attrs = {
@@ -166,6 +167,7 @@ export const TransformHandler = memo(
           if (Math.abs(newBox.width) < MIN_SIZE || Math.abs(newBox.height) < MIN_SIZE) {
             return oldBox;
           }
+
           return newBox;
         }}
         onTransformEnd={handleTransformEnd}

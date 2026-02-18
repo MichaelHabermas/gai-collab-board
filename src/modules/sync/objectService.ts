@@ -77,37 +77,47 @@ export const createObject = async (
   };
 
   // Only add optional fields if they are defined
-  if (params.stroke !== undefined) {
+  if (params.stroke) {
     object.stroke = params.stroke;
   }
-  if (params.strokeWidth !== undefined) {
+
+  if (params.strokeWidth) {
     object.strokeWidth = params.strokeWidth;
   }
-  if (params.text !== undefined) {
+
+  if (params.text) {
     object.text = params.text;
   }
-  if (params.textFill !== undefined) {
+
+  if (params.textFill) {
     object.textFill = params.textFill;
   }
-  if (params.fontSize !== undefined) {
+
+  if (params.fontSize) {
     object.fontSize = params.fontSize;
   }
-  if (params.opacity !== undefined) {
+
+  if (params.opacity) {
     object.opacity = params.opacity;
   }
-  if (params.points !== undefined) {
+
+  if (params.points) {
     object.points = params.points;
   }
-  if (params.fromObjectId !== undefined) {
+
+  if (params.fromObjectId) {
     object.fromObjectId = params.fromObjectId;
   }
-  if (params.toObjectId !== undefined) {
+
+  if (params.toObjectId) {
     object.toObjectId = params.toObjectId;
   }
-  if (params.fromAnchor !== undefined) {
+
+  if (params.fromAnchor) {
     object.fromAnchor = params.fromAnchor;
   }
-  if (params.toAnchor !== undefined) {
+
+  if (params.toAnchor) {
     object.toAnchor = params.toAnchor;
   }
 
@@ -150,7 +160,7 @@ export const createObjectsBatch = async (
       createdAt: now,
       updatedAt: now,
     };
-    if (params.opacity !== undefined) {
+    if (params.opacity) {
       object.opacity = params.opacity;
     }
 

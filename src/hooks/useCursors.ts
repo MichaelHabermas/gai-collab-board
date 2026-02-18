@@ -68,6 +68,7 @@ export const useCursors = ({ boardId, user }: IUseCursorsParams): IUseCursorsRet
       if (now - lastUpdateRef.current < DEBOUNCE_MS) {
         return;
       }
+
       lastUpdateRef.current = now;
 
       const displayName = user.displayName || user.email?.split('@')[0] || 'Anonymous';

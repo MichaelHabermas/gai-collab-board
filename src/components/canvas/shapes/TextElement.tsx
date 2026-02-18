@@ -107,6 +107,7 @@ export const TextElement = memo(
             if (document.body.contains(textarea)) {
               document.body.removeChild(textarea);
             }
+
             setIsEditing(false);
           };
 
@@ -114,6 +115,7 @@ export const TextElement = memo(
             if (e.key === 'Escape') {
               removeTextarea();
             }
+
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
               onTextChange(textarea.value);

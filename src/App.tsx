@@ -116,6 +116,7 @@ const BoardView = ({
     if (!board || !user || user.uid in board.members || joinedBoardIdsRef.current.has(boardId)) {
       return;
     }
+
     joinedBoardIdsRef.current.add(boardId);
     addBoardMember(boardId, user.uid, 'editor').catch(() => {
       joinedBoardIdsRef.current.delete(boardId);
@@ -328,6 +329,7 @@ export const App = (): ReactElement => {
     if (!user || !currentBoardId) {
       return;
     }
+
     updateRecentBoardIds(user.uid, currentBoardId).catch(() => {
       // Non-blocking; preferences update failure should not break the app
     });

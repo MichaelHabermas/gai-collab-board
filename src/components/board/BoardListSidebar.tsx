@@ -117,9 +117,10 @@ export const BoardListSidebar = memo(
     );
 
     const handleRenameSave = useCallback(async () => {
-      if (renameBoardId === null) {
+      if (!renameBoardId) {
         return;
       }
+
       const name = renameBoardName.trim() || 'Untitled Board';
       setRenameError('');
       try {
@@ -146,6 +147,7 @@ export const BoardListSidebar = memo(
       ) {
         return;
       }
+
       setDeleteError('');
       setDeletingBoardId(boardId);
       try {

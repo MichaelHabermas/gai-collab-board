@@ -40,6 +40,7 @@ export const useAuth = (): IUseAuthReturn => {
       if (result.error) {
         setError(result.error);
       }
+
       return result;
     },
     []
@@ -52,6 +53,7 @@ export const useAuth = (): IUseAuthReturn => {
       if (result.error) {
         setError(result.error);
       }
+
       return result;
     },
     []
@@ -63,6 +65,7 @@ export const useAuth = (): IUseAuthReturn => {
     if (result.error) {
       setError(result.error);
     }
+
     return result;
   }, []);
 

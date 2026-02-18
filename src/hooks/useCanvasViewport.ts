@@ -66,6 +66,7 @@ export const useCanvasViewport = (
         height,
       };
     }
+
     return {
       position: { x: 0, y: 0 },
       scale: { x: 1, y: 1 },
@@ -86,6 +87,7 @@ export const useCanvasViewport = (
       skipNextNotifyRef.current = false;
       return;
     }
+
     onViewportChangeRef.current?.(viewport);
   }, [viewport]);
 
@@ -94,6 +96,7 @@ export const useCanvasViewport = (
     if (!initialViewport) {
       return;
     }
+
     const timeoutId = window.setTimeout(() => {
       setViewport((prev) => {
         const isSameViewport =
@@ -216,7 +219,7 @@ export const useCanvasViewport = (
         return;
       }
 
-      const lastCenter = touchStateRef.current.lastCenter;
+      const {lastCenter} = touchStateRef.current;
       const scale = viewport.scale.x * (dist / touchStateRef.current.lastDist);
       const clampedScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale));
 

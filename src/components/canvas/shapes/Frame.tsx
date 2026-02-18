@@ -136,6 +136,7 @@ export const Frame = memo(
             if (document.body.contains(input)) {
               document.body.removeChild(input);
             }
+
             setIsEditing(false);
           };
 
@@ -143,6 +144,7 @@ export const Frame = memo(
             if (e.key === 'Escape') {
               removeInput();
             }
+
             if (e.key === 'Enter') {
               e.preventDefault();
               onTextChange(input.value);

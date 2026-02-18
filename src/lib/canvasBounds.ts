@@ -33,12 +33,15 @@ export function getObjectBounds(obj: IBoardObject): IBounds {
       minX -= MIN_POINTS_BOUND_SIZE / 2;
       maxX += MIN_POINTS_BOUND_SIZE / 2;
     }
+
     if (maxY - minY < MIN_POINTS_BOUND_SIZE) {
       minY -= MIN_POINTS_BOUND_SIZE / 2;
       maxY += MIN_POINTS_BOUND_SIZE / 2;
     }
+
     return { x1: minX, y1: minY, x2: maxX, y2: maxY };
   }
+
   return {
     x1: obj.x,
     y1: obj.y,
@@ -54,14 +57,17 @@ export function getSelectionBounds(objects: IBoardObject[], selectedIds: string[
   if (selectedIds.length === 0) {
     return null;
   }
+
   const selected = objects.filter((obj) => selectedIds.includes(obj.id));
   if (selected.length === 0) {
     return null;
   }
+
   const firstObj = selected[0];
-  if (firstObj === undefined) {
+  if (!firstObj) {
     return null;
   }
+
   const first = getObjectBounds(firstObj);
   let minX = first.x1;
   let minY = first.y1;
@@ -69,9 +75,10 @@ export function getSelectionBounds(objects: IBoardObject[], selectedIds: string[
   let maxY = first.y2;
   for (let i = 1; i < selected.length; i++) {
     const obj = selected[i];
-    if (obj === undefined) {
+    if (!obj) {
       continue;
     }
+
     const b = getObjectBounds(obj);
     minX = Math.min(minX, b.x1);
     minY = Math.min(minY, b.y1);
@@ -88,10 +95,12 @@ export function getBoardBounds(objects: IBoardObject[]): IBounds | null {
   if (objects.length === 0) {
     return null;
   }
+
   const firstObj = objects[0];
-  if (firstObj === undefined) {
+  if (!firstObj) {
     return null;
   }
+
   const first = getObjectBounds(firstObj);
   let minX = first.x1;
   let minY = first.y1;
@@ -99,9 +108,10 @@ export function getBoardBounds(objects: IBoardObject[]): IBounds | null {
   let maxY = first.y2;
   for (let i = 1; i < objects.length; i++) {
     const obj = objects[i];
-    if (obj === undefined) {
+    if (!obj) {
       continue;
     }
+
     const b = getObjectBounds(obj);
     minX = Math.min(minX, b.x1);
     minY = Math.min(minY, b.y1);

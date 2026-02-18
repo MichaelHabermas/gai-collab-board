@@ -44,6 +44,7 @@ export const useAI = ({ boardId, user, objects }: IUseAIParams): IUseAIReturn =>
 
   const executorContext = useMemo(() => {
     if (!boardId || !user) return null;
+
     return {
       boardId,
       createdBy: user.uid,
@@ -70,6 +71,7 @@ export const useAI = ({ boardId, user, objects }: IUseAIParams): IUseAIReturn =>
 
   const executor = useMemo(() => {
     if (!executorContext) return null;
+
     return createToolExecutor(executorContext);
   }, [executorContext]);
 
@@ -78,6 +80,7 @@ export const useAI = ({ boardId, user, objects }: IUseAIParams): IUseAIReturn =>
       aiServiceRef.current = null;
       return;
     }
+
     aiServiceRef.current = new AIService((tool) => executor.execute(tool));
     return () => {
       aiServiceRef.current = null;

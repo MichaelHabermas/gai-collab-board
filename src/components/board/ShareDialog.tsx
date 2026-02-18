@@ -115,6 +115,7 @@ export const ShareDialog = ({ board, currentUserId, children }: ShareDialogProps
     ) {
       return;
     }
+
     setDeleteInProgress(true);
     setError('');
     try {

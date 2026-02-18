@@ -45,3 +45,11 @@ if (condition) return result;
 if (condition) doSomething();
 else doOther();
 ```
+
+## Prefer falsy check over explicit null/undefined
+
+- **Prefer `!expr` over `expr === null` or `expr === undefined` in conditions** when the intent is a simple nullish check. Prefer `expr` over `expr !== null` and `expr !== undefined` for the positive case. Enforced by `local/prefer-falsy-over-explicit-nullish` (warn).
+
+## Prefer destructuring
+
+- **Prefer object destructuring** when declaring variables or assigning from an object (e.g. `const { a, b } = obj` instead of `const a = obj.a; const b = obj.b`). Enforced by `prefer-destructuring` (warn).

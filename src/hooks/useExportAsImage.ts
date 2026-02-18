@@ -50,6 +50,7 @@ export function useExportAsImage({
       if (stage == null) {
         return;
       }
+
       const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
       const dataURL = stage.toDataURL({
         mimeType,
@@ -76,6 +77,7 @@ export function useExportAsImage({
       if (stage == null || bounds == null) {
         return;
       }
+
       zoomToFitBounds(bounds, 40);
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
@@ -83,6 +85,7 @@ export function useExportAsImage({
           if (stageNow == null) {
             return;
           }
+
           const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
           const dataURL = stageNow.toDataURL({
             mimeType,

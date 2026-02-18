@@ -40,11 +40,13 @@ function loadSettings(boardId: string): IBoardSettings {
   if (typeof window === 'undefined') {
     return { ...DEFAULT_SETTINGS };
   }
+
   try {
     const raw = window.localStorage.getItem(getStorageKey(boardId));
     if (!raw) {
       return { ...DEFAULT_SETTINGS };
     }
+
     const parsed = JSON.parse(raw) as Partial<IBoardSettings>;
     return {
       viewport: {
@@ -75,6 +77,7 @@ function saveSettings(boardId: string, settings: IBoardSettings): void {
   if (typeof window === 'undefined') {
     return;
   }
+
   try {
     window.localStorage.setItem(getStorageKey(boardId), JSON.stringify(settings));
   } catch {
@@ -115,9 +118,10 @@ export const useBoardSettings = (boardId: string): IUseBoardSettingsReturn => {
     (v: IPersistedViewport) => {
       setSettings((prev) => {
         const next = { ...prev, viewport: v };
-        if (viewportDebounceRef.current !== null) {
+        if (viewportDebounceRef.current) {
           clearTimeout(viewportDebounceRef.current);
         }
+
         viewportDebounceRef.current = setTimeout(() => {
           saveSettings(boardId, next);
           viewportDebounceRef.current = null;
@@ -186,7 +190,7 @@ export const useBoardSettings = (boardId: string): IUseBoardSettingsReturn => {
   // Clear viewport debounce on unmount
   useEffect(() => {
     return () => {
-      if (viewportDebounceRef.current !== null) {
+      if (viewportDebounceRef.current) {
         clearTimeout(viewportDebounceRef.current);
       }
     };

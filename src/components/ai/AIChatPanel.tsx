@@ -40,6 +40,7 @@ export const AIChatPanel = ({
     e.preventDefault();
     const trimmed = inputValue.trim();
     if (!trimmed || loading) return;
+
     setInputValue('');
     await onSend(trimmed);
   };
