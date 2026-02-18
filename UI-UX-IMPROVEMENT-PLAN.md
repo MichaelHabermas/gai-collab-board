@@ -74,7 +74,7 @@
   - Viewer/editor cannot edit board title; owner can.
 - **Scores (1–10):** Ease `7` · Usefulness `7` · App need `8` · Risk `7` · Speed `7` · Wow `3` → **Overall `7`**
 
-4. [ ] **Bulk delete performance fix**
+4. [x] **Bulk delete performance fix**
 
 - Why now: high speed-to-value and low risk; clear user pain.
 - What to change:

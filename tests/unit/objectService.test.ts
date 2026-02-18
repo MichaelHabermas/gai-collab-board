@@ -4,6 +4,8 @@ import {
   mergeObjectUpdates,
   subscribeToObjects,
   subscribeToObjectsWithChanges,
+  deleteObject,
+  deleteObjectsBatch,
 } from '@/modules/sync/objectService';
 import type { IBoardObject } from '@/types';
 
@@ -12,11 +14,13 @@ const mockSetDoc = vi.fn();
 const mockUpdateDoc = vi.fn();
 const mockDeleteDoc = vi.fn();
 const mockOnSnapshot = vi.fn();
+const mockBatchDelete = vi.fn();
+const mockBatchCommit = vi.fn().mockResolvedValue(undefined);
 const mockWriteBatch = vi.fn(() => ({
   set: vi.fn(),
   update: vi.fn(),
-  delete: vi.fn(),
-  commit: vi.fn(),
+  delete: mockBatchDelete,
+  commit: mockBatchCommit,
 }));
 const mockDoc = vi.fn();
 const mockCollection = vi.fn();
@@ -318,6 +322,28 @@ describe('objectService', () => {
       });
 
       expect(callback).toHaveBeenCalledWith([objectA]);
+    });
+  });
+
+  describe('deleteObject and deleteObjectsBatch', () => {
+    it('deleteObject calls deleteDoc once', async () => {
+      await deleteObject('board-1', 'obj-1');
+      expect(mockDeleteDoc).toHaveBeenCalledTimes(1);
+    });
+
+    it('deleteObjectsBatch uses one batch with N deletes and one commit', async () => {
+      await deleteObjectsBatch('board-1', ['id1', 'id2', 'id3']);
+      expect(mockWriteBatch).toHaveBeenCalledTimes(1);
+      expect(mockBatchDelete).toHaveBeenCalledTimes(3);
+      expect(mockBatchCommit).toHaveBeenCalledTimes(1);
+      expect(mockDeleteDoc).not.toHaveBeenCalled();
+    });
+
+    it('deleteObjectsBatch with empty array does not call commit', async () => {
+      await deleteObjectsBatch('board-1', []);
+      expect(mockWriteBatch).toHaveBeenCalledTimes(1);
+      expect(mockBatchDelete).toHaveBeenCalledTimes(0);
+      expect(mockBatchCommit).toHaveBeenCalledTimes(1);
     });
   });
 });

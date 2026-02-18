@@ -243,3 +243,23 @@ This log records how AI was used during development: tools (Cursor, Context7 MCP
 - Approximate cumulative tokens across logged sessions: ~285k input / ~100k output (estimate)
 
 **Deployment impact (expected):** None; verification and documentation only. No new production cost or LLM usage.
+
+## Bulk delete performance verification (Feb 2026)
+
+**Scope:** Verify and document UI-UX Task 4 (bulk delete performance). The batched delete path was already implemented: multi-select delete uses `objectService.deleteObjectsBatch` (single Firestore writeBatch commit), `useObjects.deleteObjects`, and `useCanvasOperations` with `onObjectsDeleteBatch` when 2+ selected. No runtime behaviour change.
+
+**Implementation:**
+
+- **Tests:** [tests/unit/objectService.test.ts](tests/unit/objectService.test.ts) — `deleteObject` (calls deleteDoc once), `deleteObjectsBatch` (one batch, N deletes, one commit). [tests/unit/useObjects.test.ts](tests/unit/useObjects.test.ts) — added `deleteObjectsBatch` to mock; test that `deleteObjects` calls it once with boardId and ids; rollback test when batch fails. [tests/unit/useCanvasOperations.test.ts](tests/unit/useCanvasOperations.test.ts) — multi-select delete with `onObjectsDeleteBatch` called once (not per-id `onObjectDelete`); fallback when batch callback not provided.
+- **PRD:** Added "Bulk delete performance" subsection under Story 3.9 with expected behaviour and two verification checkboxes (50+ objects responsive; single batch write verified by tests).
+- **Plan:** Marked item 4 in [UI-UX-IMPROVEMENT-PLAN.md](../UI-UX-IMPROVEMENT-PLAN.md) as complete.
+
+**Cost & usage (this session):** Development via Cursor; no external LLM API. Approximate token use: ~20k input / ~7k output (estimate).
+
+**Running totals (development):**
+
+- Cursor subscription: $20/month
+- External API spend during development: $0
+- Approximate cumulative tokens across logged sessions: ~305k input / ~107k output (estimate)
+
+**Deployment impact (expected):** None; client/sync path only. No new LLM usage or production cost.

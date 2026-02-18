@@ -1877,6 +1877,15 @@ All canvas objects (sticky notes, rectangles, circles, lines, connectors, frames
 - **Subtask 1**: Delete key handler
 - **Subtask 2**: Context menu delete
 
+#### Bulk delete performance
+
+Multi-select delete uses a single batched Firestore write (not N sequential deletes). The UI updates optimistically; one batch commit is performed; rollback on failure. Deleting 50+ objects remains responsive.
+
+**Verification (do not check until confirmed in browser or via tests)**:
+
+- [ ] Deleting 50+ selected objects completes in a short time and the UI stays responsive.
+- [ ] Multi-select delete results in a single batch write (verified by unit tests for objectService, useObjects, and useCanvasOperations).
+
 #### Commit 2: Duplicate
 
 - **Subtask 1**: Ctrl/Cmd+D handler

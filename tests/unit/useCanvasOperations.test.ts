@@ -22,11 +22,13 @@ describe('useCanvasOperations', () => {
 
   let onObjectCreate: (params: Partial<IBoardObject>) => void;
   let onObjectDelete: (objectId: string) => void;
+  let onObjectsDeleteBatch: (objectIds: string[]) => void;
   let clearSelection: () => void;
 
   beforeEach(() => {
     onObjectCreate = vi.fn<(params: Partial<IBoardObject>) => void>();
     onObjectDelete = vi.fn<(objectId: string) => void>();
+    onObjectsDeleteBatch = vi.fn<(objectIds: string[]) => void>();
     clearSelection = vi.fn<() => void>();
   });
 
@@ -49,6 +51,38 @@ describe('useCanvasOperations', () => {
         result.current.handleDelete();
       });
       expect(onObjectDelete).toHaveBeenCalledWith('obj-1');
+      expect(clearSelection).toHaveBeenCalled();
+    });
+
+    it('handleDelete with 2+ selected and onObjectsDeleteBatch calls batch once and not onObjectDelete', () => {
+      const props = {
+        ...getDefaultProps(),
+        selectedIds: ['id1', 'id2'],
+        onObjectsDeleteBatch,
+      };
+      const { result } = renderHook(() => useCanvasOperations(props));
+      act(() => {
+        result.current.handleDelete();
+      });
+      expect(onObjectsDeleteBatch).toHaveBeenCalledTimes(1);
+      expect(onObjectsDeleteBatch).toHaveBeenCalledWith(['id1', 'id2']);
+      expect(onObjectDelete).not.toHaveBeenCalled();
+      expect(clearSelection).toHaveBeenCalled();
+    });
+
+    it('handleDelete with 2+ selected and no onObjectsDeleteBatch falls back to per-id onObjectDelete', () => {
+      const props = {
+        ...getDefaultProps(),
+        selectedIds: ['id1', 'id2'],
+        onObjectsDeleteBatch: undefined,
+      };
+      const { result } = renderHook(() => useCanvasOperations(props));
+      act(() => {
+        result.current.handleDelete();
+      });
+      expect(onObjectDelete).toHaveBeenCalledTimes(2);
+      expect(onObjectDelete).toHaveBeenCalledWith('id1');
+      expect(onObjectDelete).toHaveBeenCalledWith('id2');
       expect(clearSelection).toHaveBeenCalled();
     });
 

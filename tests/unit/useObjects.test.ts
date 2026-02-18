@@ -7,6 +7,7 @@ import { useObjects } from '@/hooks/useObjects';
 const mockCreateObject = vi.fn();
 const mockUpdateObject = vi.fn();
 const mockDeleteObject = vi.fn();
+const mockDeleteObjectsBatch = vi.fn();
 const mockSubscribeToObjectsWithChanges = vi.fn();
 const mockMergeObjectUpdates = vi.fn();
 
@@ -14,6 +15,7 @@ vi.mock('@/modules/sync/objectService', () => ({
   createObject: (...args: unknown[]) => mockCreateObject(...args),
   updateObject: (...args: unknown[]) => mockUpdateObject(...args),
   deleteObject: (...args: unknown[]) => mockDeleteObject(...args),
+  deleteObjectsBatch: (...args: unknown[]) => mockDeleteObjectsBatch(...args),
   subscribeToObjectsWithChanges: (...args: unknown[]) => mockSubscribeToObjectsWithChanges(...args),
   mergeObjectUpdates: (...args: unknown[]) => mockMergeObjectUpdates(...args),
 }));
@@ -204,6 +206,71 @@ describe('useObjects', () => {
     expect(result.current.objects).toHaveLength(1);
     expect(result.current.objects[0]?.id).toBe('obj-delete');
     expect(result.current.error).toBe('delete failed');
+  });
+
+  it('deleteObjects calls deleteObjectsBatch once with boardId and all ids', async () => {
+    const objA = createBoardObject({ id: 'a' });
+    const objB = createBoardObject({ id: 'b' });
+    mockDeleteObjectsBatch.mockResolvedValue(undefined);
+
+    const { result } = renderHook(() =>
+      useObjects({
+        boardId: 'board-1',
+        user: createUser(),
+      })
+    );
+
+    act(() => {
+      subscriptionCallback?.({
+        objects: [objA, objB],
+        changes: [
+          { type: 'added', object: objA },
+          { type: 'added', object: objB },
+        ],
+        isInitialSnapshot: true,
+      });
+    });
+
+    await act(async () => {
+      await result.current.deleteObjects(['a', 'b']);
+    });
+
+    expect(mockDeleteObjectsBatch).toHaveBeenCalledTimes(1);
+    expect(mockDeleteObjectsBatch).toHaveBeenCalledWith('board-1', ['a', 'b']);
+    expect(result.current.objects).toHaveLength(0);
+    expect(mockDeleteObject).not.toHaveBeenCalled();
+  });
+
+  it('rolls back optimistic delete when deleteObjectsBatch fails', async () => {
+    const objA = createBoardObject({ id: 'a' });
+    const objB = createBoardObject({ id: 'b' });
+    mockDeleteObjectsBatch.mockRejectedValueOnce(new Error('batch failed'));
+
+    const { result } = renderHook(() =>
+      useObjects({
+        boardId: 'board-1',
+        user: createUser(),
+      })
+    );
+
+    act(() => {
+      subscriptionCallback?.({
+        objects: [objA, objB],
+        changes: [
+          { type: 'added', object: objA },
+          { type: 'added', object: objB },
+        ],
+        isInitialSnapshot: true,
+      });
+    });
+
+    await act(async () => {
+      await result.current.deleteObjects(['a', 'b']);
+    });
+
+    expect(mockDeleteObjectsBatch).toHaveBeenCalledWith('board-1', ['a', 'b']);
+    expect(result.current.objects).toHaveLength(2);
+    expect(result.current.error).toBe('batch failed');
   });
 
   it('merges remote updates against pending local changes while update is in flight', async () => {
