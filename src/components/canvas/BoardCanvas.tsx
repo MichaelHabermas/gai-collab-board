@@ -21,6 +21,7 @@ import type {
   ConnectorAnchor,
   IPosition,
   ITransformEndAttrs,
+  IViewportPosition,
   IViewportState,
 } from '@/types';
 import type { ICreateObjectParams } from '@/modules/sync/objectService';
@@ -146,6 +147,10 @@ export const BoardCanvas = memo(
     const pointerFrameRef = useRef<number | null>(null);
     const viewportPersistTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+    const [isMiddlePanning, setIsMiddlePanning] = useState<boolean>(false);
+    const middlePanStartClientRef = useRef<{ x: number; y: number } | null>(null);
+    const middlePanStartPositionRef = useRef<IViewportPosition | null>(null);
+
     const {
       viewport: persistedViewport,
       setViewport: setPersistedViewport,
@@ -193,12 +198,39 @@ export const BoardCanvas = memo(
       handleTouchMove,
       handleTouchEnd,
       zoomTo,
+      panTo,
       zoomToFitBounds,
       resetViewport,
     } = useCanvasViewport({
       initialViewport: persistedViewport,
       onViewportChange: handleViewportPersist,
     });
+
+    useEffect(() => {
+      if (!isMiddlePanning) {
+        return;
+      }
+      const onWindowMouseMove = (e: MouseEvent) => {
+        const startClient = middlePanStartClientRef.current;
+        const startPosition = middlePanStartPositionRef.current;
+        if (startClient === null || startPosition === null) {
+          return;
+        }
+        panTo({
+          x: startPosition.x + (e.clientX - startClient.x),
+          y: startPosition.y + (e.clientY - startClient.y),
+        });
+      };
+      const onWindowMouseUp = () => {
+        setIsMiddlePanning(false);
+      };
+      window.addEventListener('mousemove', onWindowMouseMove);
+      window.addEventListener('mouseup', onWindowMouseUp);
+      return () => {
+        window.removeEventListener('mousemove', onWindowMouseMove);
+        window.removeEventListener('mouseup', onWindowMouseUp);
+      };
+    }, [isMiddlePanning, panTo]);
 
     const { exportViewport, exportFullBoard } = useExportAsImage({
       stageRef,
@@ -1097,6 +1129,38 @@ export const BoardCanvas = memo(
     const shouldHandleMouseMove = hasRemoteCursors || drawingState.isDrawing || isSelecting;
     const shouldHandlePointerMutations = activeTool !== 'pan';
 
+    const handleStageMouseDownWithMiddlePan = useCallback(
+      (e: Konva.KonvaEventObject<MouseEvent>) => {
+        if (e.evt.button === 1) {
+          middlePanStartClientRef.current = {
+            x: e.evt.clientX,
+            y: e.evt.clientY,
+          };
+          middlePanStartPositionRef.current = { ...viewport.position };
+          setIsMiddlePanning(true);
+          e.evt.preventDefault();
+          return;
+        }
+        if (shouldHandlePointerMutations) {
+          handleStageMouseDown(e);
+        }
+      },
+      [viewport.position, shouldHandlePointerMutations, handleStageMouseDown]
+    );
+
+    const handleStageMouseUpWithMiddlePan = useCallback(
+      (e: Konva.KonvaEventObject<MouseEvent>) => {
+        if (e.evt.button === 1) {
+          setIsMiddlePanning(false);
+          return;
+        }
+        if (shouldHandlePointerMutations) {
+          void handleStageMouseUp(e);
+        }
+      },
+      [shouldHandlePointerMutations, handleStageMouseUp]
+    );
+
     const handleZoomToSelection = useCallback(() => {
       const bounds = getSelectionBounds(objects, selectedIds);
       if (bounds) {
@@ -1243,16 +1307,21 @@ export const BoardCanvas = memo(
           onWheel={handleWheel}
           onDragEnd={handleDragEnd}
           onMouseMove={shouldHandleMouseMove ? handleStageMouseMove : undefined}
-          onMouseDown={shouldHandlePointerMutations ? handleStageMouseDown : undefined}
-          onMouseUp={shouldHandlePointerMutations ? handleStageMouseUp : undefined}
+          onMouseDown={handleStageMouseDownWithMiddlePan}
+          onMouseUp={handleStageMouseUpWithMiddlePan}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
           onClick={shouldHandlePointerMutations ? handleStageClick : undefined}
           style={{
             backgroundColor: getBoardCanvasBackgroundColor(theme),
             forcedColorAdjust: 'none',
-            cursor:
-              activeTool === 'pan' ? 'grab' : activeTool === 'select' ? 'default' : 'crosshair',
+            cursor: isMiddlePanning
+              ? 'grabbing'
+              : activeTool === 'pan'
+                ? 'grab'
+                : activeTool === 'select'
+                  ? 'default'
+                  : 'crosshair',
           }}
         >
           {/* Background grid layer - static, no interaction; only when show grid is on */}
