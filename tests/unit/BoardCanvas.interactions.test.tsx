@@ -21,6 +21,8 @@ let latestStageProps: IStageProps = {};
 const shapePropsById = new Map<string, Record<string, unknown>>();
 let latestRectProps: Array<Record<string, unknown>> = [];
 let mockSelectedIds: string[] = [];
+const mockSetSelectedIds = vi.fn();
+const mockClearSelection = vi.fn();
 
 /** Toggled by tests to assert snap-to-grid behavior in dragBoundFunc. */
 let mockSnapToGridEnabled = false;
@@ -137,11 +139,17 @@ vi.mock('@/hooks/useBoardSettings', () => ({
   }),
 }));
 
-vi.mock('@/contexts/selectionContext', () => ({
-  useSelection: () => ({
-    selectedIds: mockSelectedIds,
-    setSelectedIds: vi.fn(),
-  }),
+vi.mock('@/stores/selectionStore', () => ({
+  useSelectionStore: <T,>(selector: (state: {
+    selectedIds: string[];
+    setSelectedIds: typeof mockSetSelectedIds;
+    clearSelection: typeof mockClearSelection;
+  }) => T) =>
+    selector({
+      selectedIds: mockSelectedIds,
+      setSelectedIds: mockSetSelectedIds,
+      clearSelection: mockClearSelection,
+    }),
 }));
 
 vi.mock('@/components/canvas/ConnectionNodesLayer', () => ({
@@ -259,6 +267,8 @@ describe('BoardCanvas interactions', () => {
     latestRectProps = [];
     mockSnapToGridEnabled = false;
     mockSelectedIds = [];
+    mockSetSelectedIds.mockReset();
+    mockClearSelection.mockReset();
     vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
       callback(0);
       return 1;

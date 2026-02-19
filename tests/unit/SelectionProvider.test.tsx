@@ -1,14 +1,14 @@
 import { memo, useState, type ReactElement } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { SelectionProvider } from '@/contexts/SelectionProvider';
-import { useSelection } from '@/contexts/selectionContext';
+import { setSelectionStoreState, useSelectionStore } from '@/stores/selectionStore';
 
 let renderCount = 0;
 
 const SelectionConsumer = memo((): ReactElement => {
   renderCount += 1;
-  const { selectedIds, setSelectedIds } = useSelection();
+  const selectedIds = useSelectionStore((state) => state.selectedIds);
+  const setSelectedIds = useSelectionStore((state) => state.setSelectedIds);
 
   return (
     <div>
@@ -38,15 +38,14 @@ const HostComponent = (): ReactElement => {
       >
         Host rerender {counter}
       </button>
-      <SelectionProvider>
-        <SelectionConsumer />
-      </SelectionProvider>
+      <SelectionConsumer />
     </div>
   );
 };
 
-describe('SelectionProvider', () => {
+describe('selectionStore', () => {
   it('keeps consumers stable on unrelated parent rerenders', () => {
+    setSelectionStoreState([]);
     renderCount = 0;
     render(<HostComponent />);
 

@@ -1,0 +1,10 @@
+{
+  "history": [
+    {
+      "date": "2026-02-19",
+      "cursor_latency_ms": 14,
+      "object_update_latency_ms": 31,
+      "batch_500_objects_ms": 62
+    }
+  ]
+}

@@ -40,7 +40,6 @@ import { Label } from '@/components/ui/label';
 import { useTheme } from '@/hooks/useTheme';
 import { useBoardSettings } from '@/hooks/useBoardSettings';
 import { ViewportActionsContext } from '@/contexts/ViewportActionsContext';
-import { SelectionProvider } from '@/contexts/SelectionProvider';
 import { PropertyInspector } from '@/components/canvas/PropertyInspector';
 import type { IBoard, IUserPreferences, IViewportActionsValue } from '@/types';
 
@@ -264,62 +263,30 @@ const BoardView = ({
 
       {/* Canvas area and sidebar */}
       <main className='flex-1 flex relative min-w-0 min-h-0 overflow-hidden'>
-        <SelectionProvider>
-          <div className='flex-1 relative min-w-0'>
-            <BoardCanvas
-              boardId={boardId}
-              boardName={board?.name ?? 'Board'}
-              user={user}
-              objects={objects}
-              canEdit={canEdit}
-              onObjectUpdate={updateObject}
-              onObjectsUpdate={updateObjects}
-              onObjectCreate={createObject}
-              onObjectDelete={deleteObject}
-              onObjectsDeleteBatch={deleteObjects}
-              onViewportActionsReady={onViewportActionsReady}
-            />
-          </div>
-          <RightSidebar
-            sidebarCollapsed={sidebarCollapsed}
-            setSidebarCollapsed={setSidebarCollapsed}
-            sidebarTab={sidebarTab}
-            setSidebarTab={setSidebarTab}
-            boardsOnly={!canEdit}
-            expandedContent={
-              canEdit ? (
-                <>
-                  <TabsContent value='boards' className='flex-1 min-h-0 mt-2 overflow-auto'>
-                    <BoardListSidebar
-                      user={user}
-                      currentBoardId={boardId}
-                      onSelectBoard={onSelectBoard}
-                      onCreateNewBoard={onCreateNewBoard}
-                      onLeaveBoard={onLeaveBoard}
-                    />
-                  </TabsContent>
-                  <TabsContent
-                    value='properties'
-                    className='flex flex-1 min-h-0 flex-col mt-2 overflow-auto'
-                    data-testid='properties-tab-content'
-                  >
-                    <PropertyInspector objects={objects} onObjectUpdate={updateObject} />
-                  </TabsContent>
-                  <TabsContent
-                    value='ai'
-                    className='flex-1 min-h-0 mt-2 overflow-hidden flex flex-col'
-                  >
-                    <AIChatPanel
-                      messages={ai.messages}
-                      loading={ai.loading}
-                      error={ai.error}
-                      onSend={ai.processCommand}
-                      onClearError={ai.clearError}
-                      onClearMessages={ai.clearMessages}
-                    />
-                  </TabsContent>
-                </>
-              ) : (
+        <div className='flex-1 relative min-w-0'>
+          <BoardCanvas
+            boardId={boardId}
+            boardName={board?.name ?? 'Board'}
+            user={user}
+            objects={objects}
+            canEdit={canEdit}
+            onObjectUpdate={updateObject}
+            onObjectsUpdate={updateObjects}
+            onObjectCreate={createObject}
+            onObjectDelete={deleteObject}
+            onObjectsDeleteBatch={deleteObjects}
+            onViewportActionsReady={onViewportActionsReady}
+          />
+        </div>
+        <RightSidebar
+          sidebarCollapsed={sidebarCollapsed}
+          setSidebarCollapsed={setSidebarCollapsed}
+          sidebarTab={sidebarTab}
+          setSidebarTab={setSidebarTab}
+          boardsOnly={!canEdit}
+          expandedContent={
+            canEdit ? (
+              <>
                 <TabsContent value='boards' className='flex-1 min-h-0 mt-2 overflow-auto'>
                   <BoardListSidebar
                     user={user}
@@ -329,10 +296,40 @@ const BoardView = ({
                     onLeaveBoard={onLeaveBoard}
                   />
                 </TabsContent>
-              )
-            }
-          />
-        </SelectionProvider>
+                <TabsContent
+                  value='properties'
+                  className='flex flex-1 min-h-0 flex-col mt-2 overflow-auto'
+                  data-testid='properties-tab-content'
+                >
+                  <PropertyInspector objects={objects} onObjectUpdate={updateObject} />
+                </TabsContent>
+                <TabsContent
+                  value='ai'
+                  className='flex-1 min-h-0 mt-2 overflow-hidden flex flex-col'
+                >
+                  <AIChatPanel
+                    messages={ai.messages}
+                    loading={ai.loading}
+                    error={ai.error}
+                    onSend={ai.processCommand}
+                    onClearError={ai.clearError}
+                    onClearMessages={ai.clearMessages}
+                  />
+                </TabsContent>
+              </>
+            ) : (
+              <TabsContent value='boards' className='flex-1 min-h-0 mt-2 overflow-auto'>
+                <BoardListSidebar
+                  user={user}
+                  currentBoardId={boardId}
+                  onSelectBoard={onSelectBoard}
+                  onCreateNewBoard={onCreateNewBoard}
+                  onLeaveBoard={onLeaveBoard}
+                />
+              </TabsContent>
+            )
+          }
+        />
       </main>
     </div>
   );

@@ -178,6 +178,9 @@ test.describe('MVP Benchmarks', () => {
         );
 
         const propagationMs = Date.now() - propagationStart;
+        if (process.env.REPORT_METRICS === '1') {
+          console.log(`METRIC propagation_ms ${propagationMs}`);
+        }
         assertLessThan(propagationMs, MAX_PROPAGATION_MS);
       }
     } finally {
@@ -238,6 +241,9 @@ test.describe('MVP Benchmarks', () => {
     }
 
     const fps = await fpsPromise;
+    if (process.env.REPORT_METRICS === '1') {
+      console.log(`METRIC fps ${fps.toFixed(2)}`);
+    }
     assertGreaterThanOrEqual(fps, MIN_FPS_TARGET);
   });
 
@@ -265,6 +271,9 @@ test.describe('MVP Benchmarks', () => {
       .toBeGreaterThan(initialCount);
 
     const durationMs = Date.now() - start;
+    if (process.env.REPORT_METRICS === '1') {
+      console.log(`METRIC ai_command_ms ${durationMs}`);
+    }
     assertLessThan(durationMs, MAX_AI_COMMAND_MS);
   });
 });

@@ -9,6 +9,7 @@ export type { ITransformEndRectAttrs, ITransformEndLineAttrs, ITransformEndAttrs
 interface ITransformHandlerProps {
   selectedIds: string[];
   layerRef: RefObject<Konva.Layer | null>;
+  requestBatchDraw: (layer: Konva.Layer | null) => void;
   /** IDs to exclude from transform (e.g. linked connectors); they stay selected but get no handles */
   excludedFromTransformIds?: string[];
   onTransformEnd?: (id: string, attrs: ITransformEndAttrs) => void;
@@ -24,6 +25,7 @@ export const TransformHandler = memo(
   ({
     selectedIds,
     layerRef,
+    requestBatchDraw,
     excludedFromTransformIds,
     onTransformEnd,
   }: ITransformHandlerProps): ReactElement | null => {
@@ -43,8 +45,8 @@ export const TransformHandler = memo(
         .filter((node): node is Konva.Node => node !== undefined && node !== null);
 
       transformerRef.current.nodes(nodes);
-      transformerRef.current.getLayer()?.batchDraw();
-    }, [transformableIds, layerRef]);
+      requestBatchDraw(transformerRef.current.getLayer() ?? null);
+    }, [transformableIds, layerRef, requestBatchDraw]);
 
     // Handle transform end with shape-aware attrs
     const handleTransformEnd = () => {

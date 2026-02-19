@@ -24,7 +24,8 @@
     "deploy:firebase-rules": "bun run scripts/deploy-firebase-rules.ts",
     "smoke:ai-proxy": "bun run scripts/smoke-ai-proxy.ts",
     "benchmark:strict": "bun run scripts/release-gate.ts --skip-proxy-smoke",
-    "release:gate": "bun run scripts/release-gate.ts"
+    "release:gate": "bun run scripts/release-gate.ts",
+    "perf:check": "bun run scripts/run-performance-check.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
@@ -68,6 +69,7 @@
     "react-dom": "^19.2.4",
     "react-konva": "^19.2.2",
     "react-router-dom": "^7.13.0",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.4.0",
+    "zustand": "^5.0.11"
   }
 }

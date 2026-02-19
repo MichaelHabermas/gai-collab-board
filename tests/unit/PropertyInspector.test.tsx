@@ -1,9 +1,9 @@
-import { useState, useEffect, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Timestamp } from 'firebase/firestore';
 import { PropertyInspector } from '@/components/canvas/PropertyInspector';
-import { SelectionContext } from '@/contexts/selectionContext';
+import { setSelectionStoreState } from '@/stores/selectionStore';
 import type { IBoardObject } from '@/types';
 
 const createMockObject = (overrides: Partial<IBoardObject> = {}): IBoardObject => ({
@@ -30,17 +30,8 @@ function TestSelectionWrapper({
   selectedIds: string[];
   children: ReactNode;
 }) {
-  const [ids, setIds] = useState<string[]>(selectedIds);
-  
-  useEffect(() => {
-    setIds(selectedIds);
-  }, [selectedIds.join(',')]);
-
-  return (
-    <SelectionContext.Provider value={{ selectedIds: ids, setSelectedIds: setIds }}>
-      {children}
-    </SelectionContext.Provider>
-  );
+  setSelectionStoreState(selectedIds);
+  return <>{children}</>;
 }
 
 describe('PropertyInspector', () => {
@@ -48,6 +39,7 @@ describe('PropertyInspector', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    setSelectionStoreState([]);
   });
 
   it('shows empty state when no selection', () => {

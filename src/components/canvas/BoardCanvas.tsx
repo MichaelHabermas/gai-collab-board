@@ -14,7 +14,8 @@ import { CanvasShapeRenderer } from './CanvasShapeRenderer';
 import { useCursors } from '@/hooks/useCursors';
 import { useCanvasOperations } from '@/hooks/useCanvasOperations';
 import { useVisibleShapes } from '@/hooks/useVisibleShapes';
-import { useSelection } from '@/contexts/selectionContext';
+import { useBatchDraw } from '@/hooks/useBatchDraw';
+import { useSelectionStore } from '@/stores/selectionStore';
 import type { User } from 'firebase/auth';
 import type {
   IBoardObject,
@@ -125,10 +126,13 @@ export const BoardCanvas = memo(
   }: IBoardCanvasProps): ReactElement => {
     const stageRef = useRef<Konva.Stage>(null);
     const objectsLayerRef = useRef<Konva.Layer>(null);
+    const { requestBatchDraw } = useBatchDraw();
     const [activeTool, setActiveTool] = useState<ToolMode>('select');
     const activeToolRef = useRef<ToolMode>('select');
     const [activeColor, setActiveColor] = useState<string>(STICKY_COLORS.yellow);
-    const { selectedIds, setSelectedIds } = useSelection();
+    const selectedIds = useSelectionStore((state) => state.selectedIds);
+    const setSelectedIds = useSelectionStore((state) => state.setSelectedIds);
+    const clearSelectionFromStore = useSelectionStore((state) => state.clearSelection);
     const [drawingState, setDrawingState] = useState<IDrawingState>({
       isDrawing: false,
       startX: 0,
@@ -316,8 +320,8 @@ export const BoardCanvas = memo(
 
     // Clear selection helper
     const clearSelection = useCallback(() => {
-      setSelectedIds([]);
-    }, [setSelectedIds]);
+      clearSelectionFromStore();
+    }, [clearSelectionFromStore]);
 
     // Canvas operations (delete, duplicate, copy, paste)
     // Type assertion needed because useCanvasOperations uses a more permissive type
@@ -1630,6 +1634,7 @@ export const BoardCanvas = memo(
               <TransformHandler
                 selectedIds={selectedIds}
                 layerRef={objectsLayerRef}
+                requestBatchDraw={requestBatchDraw}
                 excludedFromTransformIds={linkedConnectorIds}
                 onTransformEnd={handleTransformEnd}
               />

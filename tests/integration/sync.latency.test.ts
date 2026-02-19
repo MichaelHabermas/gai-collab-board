@@ -1,5 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest';
 import type { ICreateObjectParams } from '@/modules/sync/objectService';
+
+/** Collected measured latencies for REPORT_METRICS=1 or performance log. */
+const collectedMetrics: Array<{ name: string; value: number; unit: string }> = [];
 
 const mockRealtimeSet = vi.fn();
 const mockFirestoreUpdateDoc = vi.fn();
@@ -77,7 +80,7 @@ describe('Sync Benchmark Integration Tests', () => {
     const start = Date.now();
     await updateCursor('benchmark-board', 'user-latency', 320, 220, 'Latency User', '#ff9900');
     const durationMs = Date.now() - start;
-
+    collectedMetrics.push({ name: 'cursor_latency', value: durationMs, unit: 'ms' });
     expect(mockRealtimeSet).toHaveBeenCalledTimes(1);
     assertLatencyLessThan(durationMs, CURSOR_LATENCY_TARGET_MS);
   });
@@ -92,7 +95,7 @@ describe('Sync Benchmark Integration Tests', () => {
       text: 'Latency update',
     });
     const durationMs = Date.now() - start;
-
+    collectedMetrics.push({ name: 'object_update_latency', value: durationMs, unit: 'ms' });
     expect(mockFirestoreUpdateDoc).toHaveBeenCalledTimes(1);
     assertLatencyLessThan(durationMs, OBJECT_LATENCY_TARGET_MS);
   });
@@ -117,11 +120,28 @@ describe('Sync Benchmark Integration Tests', () => {
       const start = Date.now();
       const created = await createObjectsBatch('benchmark-board', objects);
       const durationMs = Date.now() - start;
-
+      collectedMetrics.push({ name: 'batch_500_objects', value: durationMs, unit: 'ms' });
       expect(created).toHaveLength(500);
       expect(mockBatchSet).toHaveBeenCalledTimes(500);
       expect(mockBatchCommit).toHaveBeenCalledTimes(1);
       assertLatencyLessThan(durationMs, BATCH_DURATION_TARGET_MS);
     }
   );
+
+  afterAll(async () => {
+    if (collectedMetrics.length === 0) {
+      return;
+    }
+    const { writeFileSync } = await import('fs');
+    const { join } = await import('path');
+    const outPath = join(process.cwd(), 'docs/performance/last-run-metrics.json');
+    writeFileSync(
+      outPath,
+      JSON.stringify(
+        { capturedAt: new Date().toISOString(), source: 'sync.latency.test.ts', metrics: collectedMetrics },
+        null,
+        2
+      )
+    );
+  });
 });

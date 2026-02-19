@@ -1,0 +1,20 @@
+---
+description: Enforce Bun and Vite for runtime and build
+alwaysApply: true
+---
+
+# Bun and Vite
+
+## Bun
+
+- **Use Bun as the runtime and package manager.** Run scripts with `bun run <script>` (or `bun <file>` for direct execution).
+- Do not use `npm run`, `pnpm`, or `node` for running project scripts or tooling.
+
+## Vite
+
+- **Use Vite for the dev server and production build.** Do not introduce or recommend other bundlers (e.g. webpack, Parcel) for this project.
+- Keep using the existing Vite config and scripts in `package.json`.
+
+## New scripts
+
+- Prefer adding new scripts that use `bun run` and Vite as in existing scripts; `package.json` scripts are the source of truth.

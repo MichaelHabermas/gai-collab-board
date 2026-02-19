@@ -2,8 +2,8 @@
 
 > Quick-reference guide for AI agents and LLMs. Use this to locate relevant documentation without loading everything into context. Always check this index FIRST before searching the codebase.
 
-**Last Updated:** 2026-02-19 12:00
-**Total Documents:** 39
+**Last Updated:** 2026-02-19
+**Total Documents:** 40
 
 ## How to Use This Index
 
@@ -43,6 +43,12 @@
 | `optimization/OPTIMIZATION-PLAN-2.md` | Agent-executable plan: viewport off React hot path, useBatchDraw, Zustand selection | `viewport`, `FPS`, `Zustand`, `batch draw` | 2026-02-18 |
 | `optimization/OPTIMIZATION-PLAN-3.md` | Prioritized task list (welcome page, share link, trackpad, text edit, delete perf, etc.) with scores | `prioritization`, `UX`, `performance`, `tasks` | 2026-02-18 |
 | `optimization/OPTIMIZATION-PLAN.md` | Cumulative optimization plan: de-duplicated tasks, benchmark guardrails, 20% improvement target | `benchmarks`, `FPS`, `sync latency`, `no regression` | 2026-02-19 |
+
+### Performance
+
+| File | Summary | Key Topics | Last Modified |
+|------|---------|------------|---------------|
+| `performance/PERFORMANCE_LOG.md` | Task-level performance reviews, metrics-over-time graph, and optimization history; run `bun run perf:check` to record and refresh | `performance`, `cleanup`, `optimization`, `perf:check`, `metrics over time` | 2026-02-19 |
 
 ### Phases (version-2)
 
@@ -116,6 +122,7 @@
 | `FPS` | `optimization/OPTIMIZATION-PLAN.md`, `optimization/OPTIMIZATION-PLAN-2.md` |
 | `Konva` | `guides/KONVA-REACT-GUIDE.md`, `research/IDENTIFY-TRADEOFFS-V2.md` |
 | `MVP` | `product/PRD.md`, `reports/mvp-audit-report.md`, `reports/mvp-audit-matrix.md`, `research/DESIGN-DOCUMENT.md` |
+| `performance` | `performance/PERFORMANCE_LOG.md`, `optimization/OPTIMIZATION-PLAN.md` |
 | `PRD` | `product/PRD.md`, `product/PRD-UNCHECKED-TRACKER.md`, `phases/version-2/PRD.md`, `research/PRD-V1.md`, `research/PRD-V2.md` |
 | `theme` | `theme/THEME-VISUAL-GUIDE.md`, `theme/theme-screenshots/README.md`, `planning/UI-UX-IMPROVEMENT-PLAN.md`, `guides/TAILWIND-SHADCN-GUIDE.md` |
 | `tradeoffs` | `research/IDENTIFY-TRADEOFFS-V2.md`, `research/IDENTIFY-TRADEOFFS.md` |

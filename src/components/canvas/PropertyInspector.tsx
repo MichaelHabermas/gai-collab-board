@@ -1,5 +1,5 @@
 import { useMemo, useCallback, type ReactElement } from 'react';
-import { useSelection } from '@/contexts/selectionContext';
+import { useSelectionStore } from '@/stores/selectionStore';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useDebouncedNumberField } from '@/hooks/useDebouncedNumberField';
@@ -46,7 +46,7 @@ export const PropertyInspector = ({
   objects,
   onObjectUpdate,
 }: IPropertyInspectorProps): ReactElement | null => {
-  const { selectedIds } = useSelection();
+  const selectedIds = useSelectionStore((state) => state.selectedIds);
   const defaultFontColor = DEFAULT_STICKY_TEXT_COLOR;
   const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const objectsById = useMemo(() => {

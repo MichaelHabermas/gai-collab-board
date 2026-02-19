@@ -16,16 +16,14 @@ const transformerNodesMock = vi.fn((nextNodes?: Konva.Node[]) => {
   }
   return transformerNodes;
 });
-const transformerBatchDrawMock = vi.fn();
+const requestBatchDrawMock = vi.fn();
 
 vi.mock('react-konva', () => ({
   Transformer: forwardRef((props: ITransformerProps, ref: Ref<unknown>) => {
     transformerProps = props;
     useImperativeHandle(ref, () => ({
       nodes: transformerNodesMock,
-      getLayer: () => ({
-        batchDraw: transformerBatchDrawMock,
-      }),
+      getLayer: () => ({ batchDraw: vi.fn() }),
     }));
     return <div data-testid='transformer-mock' />;
   }),
@@ -151,7 +149,7 @@ describe('TransformHandler', () => {
     transformerProps = null;
     transformerNodes = [];
     transformerNodesMock.mockClear();
-    transformerBatchDrawMock.mockClear();
+    requestBatchDrawMock.mockClear();
   });
 
   it('attaches transformer only to non-excluded selected nodes', () => {
@@ -176,11 +174,12 @@ describe('TransformHandler', () => {
         selectedIds={['rect-1', 'line-1']}
         excludedFromTransformIds={['line-1']}
         layerRef={layerRef}
+        requestBatchDraw={requestBatchDrawMock}
       />
     );
 
     expect(transformerNodesMock).toHaveBeenCalledWith([rectNode]);
-    expect(transformerBatchDrawMock).toHaveBeenCalledTimes(1);
+    expect(requestBatchDrawMock).toHaveBeenCalledTimes(1);
   });
 
   it('emits rect-like transform attrs for rect nodes', () => {
@@ -193,7 +192,12 @@ describe('TransformHandler', () => {
     const onTransformEnd = vi.fn();
 
     render(
-      <TransformHandler selectedIds={['rect-1']} layerRef={layerRef} onTransformEnd={onTransformEnd} />
+      <TransformHandler
+        selectedIds={['rect-1']}
+        layerRef={layerRef}
+        requestBatchDraw={requestBatchDrawMock}
+        onTransformEnd={onTransformEnd}
+      />
     );
 
     transformerProps?.onTransformEnd?.();
@@ -217,7 +221,12 @@ describe('TransformHandler', () => {
     const onTransformEnd = vi.fn();
 
     render(
-      <TransformHandler selectedIds={['line-1']} layerRef={layerRef} onTransformEnd={onTransformEnd} />
+      <TransformHandler
+        selectedIds={['line-1']}
+        layerRef={layerRef}
+        requestBatchDraw={requestBatchDrawMock}
+        onTransformEnd={onTransformEnd}
+      />
     );
 
     transformerProps?.onTransformEnd?.();
@@ -243,6 +252,7 @@ describe('TransformHandler', () => {
       <TransformHandler
         selectedIds={['sticky-1']}
         layerRef={layerRef}
+        requestBatchDraw={requestBatchDrawMock}
         onTransformEnd={onTransformEnd}
       />
     );
@@ -271,6 +281,7 @@ describe('TransformHandler', () => {
       <TransformHandler
         selectedIds={['ellipse-1']}
         layerRef={layerRef}
+        requestBatchDraw={requestBatchDrawMock}
         onTransformEnd={onTransformEnd}
       />
     );
