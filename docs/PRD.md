@@ -935,9 +935,9 @@ Only the board owner can rename the board. Viewers and editors cannot see or use
 
 **Verification (do not check until confirmed in browser or via E2E)**:
 
-- [ ] Viewer/editor do not see rename control in sidebar or header.
-- [ ] Owner can rename from sidebar and from header.
-- [ ] Calling rename as non-owner (e.g. via service with another user id) returns an error and does not change the name.
+- [x] Viewer/editor do not see rename control in sidebar or header.
+- [x] Owner can rename from sidebar and from header.
+- [x] Calling rename as non-owner (e.g. via service with another user id) returns an error and does not change the name.
 
 #### Share links and deep-linking
 
