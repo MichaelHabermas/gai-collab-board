@@ -19,6 +19,9 @@ interface IStageProps {
 let latestStageProps: IStageProps = {};
 const shapePropsById = new Map<string, Record<string, unknown>>();
 
+/** Toggled by tests to assert snap-to-grid behavior in dragBoundFunc. */
+let mockSnapToGridEnabled = false;
+
 vi.mock('react-konva', () => ({
   Stage: (props: IStageProps) => {
     latestStageProps = props;
@@ -121,7 +124,9 @@ vi.mock('@/hooks/useBoardSettings', () => ({
     setViewport: vi.fn(),
     showGrid: false,
     setShowGrid: vi.fn(),
-    snapToGrid: false,
+    get snapToGrid() {
+      return mockSnapToGridEnabled;
+    },
     setSnapToGrid: vi.fn(),
   }),
 }));
@@ -239,10 +244,13 @@ const createStageEvent = (pointer: { x: number; y: number }): KonvaEvent => {
   } as KonvaEvent;
 };
 
+const GRID_SIZE = 20;
+
 describe('BoardCanvas interactions', () => {
   beforeEach(() => {
     latestStageProps = {};
     shapePropsById.clear();
+    mockSnapToGridEnabled = false;
     vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
       callback(0);
       return 1;
@@ -493,5 +501,44 @@ describe('BoardCanvas interactions', () => {
     });
 
     expect(secondResult).toEqual(firstResult);
+  });
+
+  it('returns grid-aligned position from dragBoundFunc when snap to grid is enabled', () => {
+    mockSnapToGridEnabled = true;
+    const objects = [
+      createObject({
+        id: 'shape-a',
+        type: 'rectangle',
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 80,
+      }),
+    ];
+    render(
+      <BoardCanvas
+        boardId='board-1'
+        boardName='Board'
+        user={createUser()}
+        objects={objects}
+        canEdit={true}
+      />
+    );
+
+    const props = shapePropsById.get('shape-a');
+    const dragBoundFunc = props?.dragBoundFunc as
+      | ((pos: { x: number; y: number }) => { x: number; y: number })
+      | undefined;
+    expect(typeof dragBoundFunc).toBe('function');
+
+    const nonGridPos = { x: 13, y: 17 };
+    let result: { x: number; y: number } | undefined;
+    act(() => {
+      result = dragBoundFunc(nonGridPos);
+    });
+
+    expect(result).toEqual({ x: 20, y: 20 });
+    expect((result?.x ?? 0) % GRID_SIZE).toBe(0);
+    expect((result?.y ?? 0) % GRID_SIZE).toBe(0);
   });
 });

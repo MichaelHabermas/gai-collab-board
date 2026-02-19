@@ -102,12 +102,10 @@ export const updateBoardName = async (
 ): Promise<void> => {
   const board = await getBoard(boardId);
   if (!board) {
-
     throw new Error('Board not found');
   }
 
   if (!canUserManage(board, userId)) {
-
     throw new Error('Only the board owner can rename the board');
   }
 

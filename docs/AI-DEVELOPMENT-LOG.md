@@ -306,3 +306,24 @@ This log records how AI was used during development: tools (Cursor, Context7 MCP
 - Approximate cumulative tokens across logged sessions: ~345k input / ~120k output (estimate)
 
 **Deployment impact (expected):** Permissions/backend and UI consistency only. No new AI endpoints, no change to LLM usage or command volume. Production projections and token mix unchanged.
+
+## Snap-to-grid drag parity (Feb 2026)
+
+**Scope:** UI-UX item 5 — snap-to-grid parity for drag (not only resize). Drag previously snapped position only on drag end; resize already snapped position and size on transform end. Goal: constrain position to the 20px grid **during** drag (via `dragBoundFunc`) so drag and resize show identical snap behavior.
+
+**Implementation:**
+
+- **BoardCanvas:** [src/components/canvas/BoardCanvas.tsx](../src/components/canvas/BoardCanvas.tsx) — added `snapToGridEnabledRef` kept in sync with `snapToGridEnabled`; in `getDragBoundFunc`'s returned function, after alignment-guide snap, when ref is true apply `snapPositionToGrid(snapped.x, snapped.y, GRID_SIZE)` so during-drag position is grid-aligned. Cache key unchanged (objectId, width, height) so toggling snap does not invalidate cached bound func.
+- **PRD:** [docs/PRD.md](PRD.md) — added "Snap-to-grid behavior" under Story 3.7 with expected behavior and verification checkboxes (unchecked until browser/E2E).
+- **Tests:** [tests/unit/BoardCanvas.interactions.test.tsx](../tests/unit/BoardCanvas.interactions.test.tsx) — configurable mock `mockSnapToGridEnabled`; new test "returns grid-aligned position from dragBoundFunc when snap to grid is enabled" (calls dragBoundFunc with off-grid position, asserts result is grid-aligned). [tests/e2e/snapToGridDrag.spec.ts](../tests/e2e/snapToGridDrag.spec.ts) — enable snap, create sticky, drag, assert object count and canvas state.
+- **Plan:** Item 5 marked complete in [UI-UX-IMPROVEMENT-PLAN.md](../UI-UX-IMPROVEMENT-PLAN.md).
+
+**Cost & usage (this session):** Development via Cursor; no external LLM API. Approximate token use: ~22k input / ~8k output (estimate).
+
+**Running totals (development):**
+
+- Cursor subscription: $20/month
+- External API spend during development: $0
+- Approximate cumulative tokens across logged sessions: ~367k input / ~128k output (estimate)
+
+**Deployment impact (expected):** UI-only; drag bound logic runs in client. No new AI endpoints, no change to LLM usage or command volume. Production projections and token mix unchanged.

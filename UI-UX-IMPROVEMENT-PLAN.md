@@ -86,7 +86,7 @@
   - Deleting 50+ objects is significantly faster and UI remains responsive.
 - **Scores (1–10):** Ease `6` · Usefulness `8` · App need `8` · Risk `8` · Speed `7` · Wow `5` → **Overall `7`**
 
-5. [ ] **Snap-to-grid parity for drag (not only resize)**
+5. [x] **Snap-to-grid parity for drag (not only resize)**
 
 - Why now: predictable editing behavior; medium effort, high UX consistency.
 - What to change:
@@ -126,18 +126,6 @@
   - While editing text, pan/zoom does not cause visible text jump/drift.
 - **Implementation (fix/task-7-overlay-stability):** Added src/lib/canvasTextEditOverlay.ts to attach stage and node change listeners during edit; overlay position/styles recompute on pan/zoom/rotation. Wired into StickyNote, TextElement, and Frame title editor. Unit tests for lifecycle and cleanup; E2E spec in tests/e2e/textOverlayStability.spec.ts. PRD verification checkboxes remain unchecked until confirmed in browser or E2E.
 - **Scores (1–10):** Ease `5` · Usefulness `8` · App need `8` · Risk `8` · Speed `5` · Wow `5` → **Overall `7`**
-
-8. [ ] **Properties panel height increase**
-
-- Why now: low effort, immediate ergonomic gain.
-- What to change:
-  - Increase available vertical space and scroll behavior for inspector controls.
-- Primary files:
-  - [src/components/canvas/PropertyInspector.tsx](src/components/canvas/PropertyInspector.tsx)
-  - [src/components/board/RightSidebar.tsx](src/components/board/RightSidebar.tsx)
-- Verify:
-  - More controls visible without excessive scrolling on standard laptop viewport.
-- **Scores (1–10):** Ease `9` · Usefulness `6` · App need `6` · Risk `9` · Speed `9` · Wow `4` → **Overall `7`**
 
 9. [ ] **Spin box rapid-click polish**
 

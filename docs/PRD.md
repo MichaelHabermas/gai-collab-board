@@ -1834,6 +1834,19 @@ While editing text in place (sticky note, text element, or frame title), the HTM
 
 **Branch**: `feature/canvas-transforms`
 
+#### Snap-to-grid behavior
+
+Snap-to-grid uses the same 20px grid for both **drag** and **resize**. When "Snap to grid" is enabled in board settings:
+
+- **Drag:** Position is constrained to the grid **during** drag (via `dragBoundFunc`) and snapped again on drag end.
+- **Resize:** Position and size are snapped to the grid on transform end.
+
+**Verification (do not check until confirmed in browser or via E2E):**
+
+- [ ] With "Snap to grid" on, dragging an object keeps its position on grid lines during drag and on release.
+- [ ] With "Snap to grid" on, resizing an object leaves position and size grid-aligned on release.
+- [ ] Drag and resize show identical snap behavior to the grid when the option is enabled.
+
 #### Commit 1: Transformer Setup
 
 - **Subtask 1**: Create transform handler

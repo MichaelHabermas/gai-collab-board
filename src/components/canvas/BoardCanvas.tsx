@@ -166,6 +166,11 @@ export const BoardCanvas = memo(
       setSnapToGrid: setSnapToGridEnabled,
     } = useBoardSettings(boardId);
 
+    const snapToGridEnabledRef = useRef<boolean>(snapToGridEnabled);
+    useEffect(() => {
+      snapToGridEnabledRef.current = snapToGridEnabled;
+    }, [snapToGridEnabled]);
+
     const { theme } = useTheme();
     const gridColor = useMemo(() => getBoardGridColor(theme), [theme]);
     const selectionColor = useMemo(
@@ -870,7 +875,11 @@ export const BoardCanvas = memo(
           y2: pos.y + height,
         };
         const guides = computeAlignmentGuidesWithCandidates(dragged, otherCandidates);
-        const snapped = computeSnappedPositionFromGuides(guides, pos, width, height);
+        let snapped = computeSnappedPositionFromGuides(guides, pos, width, height);
+        if (snapToGridEnabledRef.current) {
+          snapped = snapPositionToGrid(snapped.x, snapped.y, GRID_SIZE);
+        }
+
         setGuidesThrottledRef.current(guides);
         return snapped;
       };

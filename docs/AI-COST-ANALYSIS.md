@@ -115,3 +115,7 @@ Text editing overlay stability (sticky note, text element, frame title) is clien
 ### Owner-only board rename (Feb 2026) — production relevance
 
 Task 3 (only owners can rename board names) is permissions and backend alignment: service-layer owner check in `updateBoardName`, Firestore rule so only owner can change `name`. No new AI endpoints, no change to LLM usage or command volume. **LLM cost:** unchanged. Production projections and token mix unchanged. Focus remains on what is actually used in production: AI commands (Groq/NVIDIA) and the table above.
+
+### Snap-to-grid drag parity (Feb 2026) — production relevance
+
+Snap-to-grid parity (drag position constrained to grid during drag, not only on end) is client-side canvas behavior only. No new AI endpoints, no change to LLM usage, API calls, or command volume. **LLM cost:** unchanged. Production cost and token mix unchanged. Track production cost by what is actually used: AI chat (Groq/NVIDIA) and the projections table above.
