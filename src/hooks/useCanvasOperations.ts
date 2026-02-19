@@ -1,10 +1,13 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { IBoardObject } from '@/types';
+import { getFrameChildren } from '@/hooks/useFrameContainment';
 
 interface IUseCanvasOperationsProps {
   objects: IBoardObject[];
   selectedIds: string[];
   onObjectCreate: (params: Partial<IBoardObject>) => void;
+  onObjectUpdate?: (objectId: string, updates: Partial<IBoardObject>) => void;
+  onObjectsUpdate?: (updates: Array<{ objectId: string; updates: Partial<IBoardObject> }>) => void;
   onObjectDelete: (objectId: string) => void;
   onObjectsDeleteBatch?: (objectIds: string[]) => void | Promise<void>;
   clearSelection: () => void;
@@ -30,6 +33,8 @@ export const useCanvasOperations = ({
   objects,
   selectedIds,
   onObjectCreate,
+  onObjectUpdate,
+  onObjectsUpdate,
   onObjectDelete,
   onObjectsDeleteBatch,
   clearSelection,
@@ -41,12 +46,36 @@ export const useCanvasOperations = ({
     return objects.filter((obj) => selectedIds.includes(obj.id));
   }, [objects, selectedIds]);
 
-  // Delete selected objects (batch when multiple and batch callback provided)
+  // Delete selected objects (batch when multiple and batch callback provided).
+  // When deleting a frame, unparent its children that are NOT also being deleted.
   const handleDelete = useCallback(async () => {
-    if (selectedIds.length === 0) {
-      return;
+    if (selectedIds.length === 0) return;
+
+    const deletingIds = new Set(selectedIds);
+
+    // Unparent children of frames being deleted (children NOT in the selection stay on canvas)
+    const unparentUpdates: Array<{ objectId: string; updates: Partial<IBoardObject> }> = [];
+    for (const id of selectedIds) {
+      const obj = objects.find((o) => o.id === id);
+      if (obj?.type !== 'frame') continue;
+
+      const children = getFrameChildren(id, objects);
+      for (const child of children) {
+        if (deletingIds.has(child.id)) continue;
+
+        unparentUpdates.push({ objectId: child.id, updates: { parentFrameId: '' } });
+      }
     }
 
+    if (unparentUpdates.length > 0 && onObjectsUpdate) {
+      await Promise.resolve(onObjectsUpdate(unparentUpdates));
+    } else if (unparentUpdates.length > 0 && onObjectUpdate) {
+      for (const u of unparentUpdates) {
+        onObjectUpdate(u.objectId, u.updates);
+      }
+    }
+
+    // Delete the selected objects
     if (selectedIds.length > 1 && onObjectsDeleteBatch) {
       await Promise.resolve(onObjectsDeleteBatch(selectedIds));
     } else {
@@ -56,14 +85,30 @@ export const useCanvasOperations = ({
     }
 
     clearSelection();
-  }, [selectedIds, onObjectDelete, onObjectsDeleteBatch, clearSelection]);
+  }, [
+    selectedIds,
+    objects,
+    onObjectUpdate,
+    onObjectsUpdate,
+    onObjectDelete,
+    onObjectsDeleteBatch,
+    clearSelection,
+  ]);
 
-  // Duplicate selected objects with offset
+  // Duplicate selected objects with offset.
+  // Strip parentFrameId — duplicates land at an offset and are not inside the original frame.
+  // Spatial reparenting resolves on the next drag-end if the duplicate is inside a frame.
   const handleDuplicate = useCallback(() => {
     const selectedObjects = getSelectedObjects();
 
     selectedObjects.forEach((obj) => {
-      const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = obj;
+      const {
+        id: _id,
+        createdAt: _createdAt,
+        updatedAt: _updatedAt,
+        parentFrameId: _pfid,
+        ...rest
+      } = obj;
       onObjectCreate({
         ...rest,
         x: obj.x + DUPLICATE_OFFSET,
@@ -78,11 +123,18 @@ export const useCanvasOperations = ({
     setClipboard(selectedObjects);
   }, [getSelectedObjects]);
 
-  // Paste objects from clipboard
+  // Paste objects from clipboard.
+  // Strip parentFrameId — pasted objects are unparented; spatial reparenting resolves on drag.
   const handlePaste = useCallback(
     (offsetX: number = PASTE_OFFSET, offsetY: number = PASTE_OFFSET) => {
       clipboard.forEach((obj) => {
-        const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = obj;
+        const {
+          id: _id,
+          createdAt: _createdAt,
+          updatedAt: _updatedAt,
+          parentFrameId: _pfid,
+          ...rest
+        } = obj;
         onObjectCreate({
           ...rest,
           x: obj.x + offsetX,

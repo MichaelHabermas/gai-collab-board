@@ -35,6 +35,8 @@ export interface ICreateObjectParams {
   arrowheads?: ArrowheadMode;
   /** Stroke dash style for connectors; default 'solid' when undefined */
   strokeStyle?: StrokeStyle;
+  /** ID of the containing frame, or undefined if top-level. */
+  parentFrameId?: string;
   createdBy: string;
 }
 
@@ -71,6 +73,8 @@ export interface IBoardObject {
   strokeStyle?: StrokeStyle;
   // For circles
   radius?: number;
+  /** ID of the containing frame, or undefined if top-level. */
+  parentFrameId?: string;
   createdBy: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;

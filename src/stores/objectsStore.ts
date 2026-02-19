@@ -100,3 +100,13 @@ export const selectAllObjects = (state: IObjectsStore): IBoardObject[] =>
 
 /** Select all object IDs. */
 export const selectObjectIds = (state: IObjectsStore): string[] => Object.keys(state.objects);
+
+/** Select all children of a frame (treats '' and undefined as no parent). */
+export const selectFrameChildren =
+  (frameId: string) =>
+  (state: IObjectsStore): IBoardObject[] =>
+    Object.values(state.objects).filter((o) => o.parentFrameId === frameId && frameId !== '');
+
+/** Select all frame objects. */
+export const selectFrames = (state: IObjectsStore): IBoardObject[] =>
+  Object.values(state.objects).filter((o) => o.type === 'frame');

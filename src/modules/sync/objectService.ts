@@ -131,6 +131,10 @@ export const createObject = async (
     object.strokeStyle = params.strokeStyle;
   }
 
+  if (params.parentFrameId) {
+    object.parentFrameId = params.parentFrameId;
+  }
+
   await setDoc(objectRef, object);
   return object;
 };
@@ -180,6 +184,10 @@ export const createObjectsBatch = async (
 
     if (params.strokeStyle) {
       object.strokeStyle = params.strokeStyle;
+    }
+
+    if (params.parentFrameId) {
+      object.parentFrameId = params.parentFrameId;
     }
 
     batch.set(objectRef, object);

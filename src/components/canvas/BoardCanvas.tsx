@@ -56,6 +56,7 @@ import { useMiddleMousePanListeners } from '@/hooks/useMiddleMousePanListeners';
 import { useCanvasKeyboardShortcuts } from '@/hooks/useCanvasKeyboardShortcuts';
 import { useAlignmentGuideCache } from '@/hooks/useAlignmentGuideCache';
 import { useHistoryStore } from '@/stores/historyStore';
+import { getFrameChildren, resolveParentFrameId } from '@/hooks/useFrameContainment';
 
 interface IBoardCanvasProps {
   boardId: string;
@@ -315,6 +316,8 @@ export const BoardCanvas = memo(
       objects,
       selectedIds,
       onObjectCreate: (onObjectCreate as (params: Partial<IBoardObject>) => void) || (() => {}),
+      onObjectUpdate,
+      onObjectsUpdate,
       onObjectDelete: (onObjectDelete as (objectId: string) => void) || (() => {}),
       onObjectsDeleteBatch: onObjectsDeleteBatch
         ? (ids) => Promise.resolve(onObjectsDeleteBatch(ids))
@@ -818,25 +821,28 @@ export const BoardCanvas = memo(
 
     // Handle object drag end (optionally snap position to grid); clear alignment guides.
     // When multiple objects are selected, apply same delta to all (batch update).
+    // When a frame is dragged, its children move with it (same delta).
+    // After any non-frame/non-connector drag, resolve parentFrameId via spatial containment.
     const handleObjectDragEnd = useCallback(
       (objectId: string, x: number, y: number) => {
         setAlignmentGuides(null);
         const draggedObj = objectsById.get(objectId);
+        if (!draggedObj) return;
+
         const multiSelected =
-          selectedIds.length > 1 &&
-          selectedIds.includes(objectId) &&
-          onObjectsUpdate &&
-          draggedObj != null;
+          selectedIds.length > 1 && selectedIds.includes(objectId) && onObjectsUpdate;
 
         if (multiSelected) {
           const dx = x - draggedObj.x;
           const dy = y - draggedObj.y;
           const updates: Array<{ objectId: string; updates: Partial<IBoardObject> }> = [];
+
+          // Collect IDs being moved so we skip reparenting for frame children already in selection
+          const movedIds = new Set(selectedIds);
+
           for (const id of selectedIds) {
             const obj = objectsById.get(id);
-            if (!obj) {
-              continue;
-            }
+            if (!obj) continue;
 
             let newX = obj.x + dx;
             let newY = obj.y + dy;
@@ -846,7 +852,37 @@ export const BoardCanvas = memo(
               newY = snapped.y;
             }
 
-            updates.push({ objectId: id, updates: { x: newX, y: newY } });
+            const objUpdates: Partial<IBoardObject> = { x: newX, y: newY };
+
+            // If this is a frame, also move its children that aren't already in the selection
+            if (obj.type === 'frame') {
+              const children = getFrameChildren(obj.id, objects);
+              for (const child of children) {
+                if (movedIds.has(child.id)) continue;
+
+                let cx = child.x + dx;
+                let cy = child.y + dy;
+                if (snapToGridEnabled) {
+                  const snapped = snapPositionToGrid(cx, cy, GRID_SIZE);
+                  cx = snapped.x;
+                  cy = snapped.y;
+                }
+
+                updates.push({ objectId: child.id, updates: { x: cx, y: cy } });
+                movedIds.add(child.id);
+              }
+            }
+
+            // Resolve reparenting for non-frame, non-connector objects
+            if (obj.type !== 'frame' && obj.type !== 'connector') {
+              const newBounds = { x1: newX, y1: newY, x2: newX + obj.width, y2: newY + obj.height };
+              const newParent = resolveParentFrameId(obj, newBounds, objects);
+              if (newParent !== obj.parentFrameId) {
+                objUpdates.parentFrameId = newParent ?? '';
+              }
+            }
+
+            updates.push({ objectId: id, updates: objUpdates });
           }
           if (updates.length > 0) {
             onObjectsUpdate(updates);
@@ -855,6 +891,7 @@ export const BoardCanvas = memo(
           return;
         }
 
+        // Single object drag
         let finalX = x;
         let finalY = y;
         if (snapToGridEnabled) {
@@ -863,9 +900,50 @@ export const BoardCanvas = memo(
           finalY = snapped.y;
         }
 
-        onObjectUpdate?.(objectId, { x: finalX, y: finalY });
+        const singleUpdates: Partial<IBoardObject> = { x: finalX, y: finalY };
+
+        // Frame drag: move children with it
+        if (draggedObj.type === 'frame' && onObjectsUpdate) {
+          const dx = finalX - draggedObj.x;
+          const dy = finalY - draggedObj.y;
+          const children = getFrameChildren(draggedObj.id, objects);
+          if (children.length > 0) {
+            const batchUpdates: Array<{ objectId: string; updates: Partial<IBoardObject> }> = [
+              { objectId, updates: singleUpdates },
+            ];
+            for (const child of children) {
+              let cx = child.x + dx;
+              let cy = child.y + dy;
+              if (snapToGridEnabled) {
+                const snapped = snapPositionToGrid(cx, cy, GRID_SIZE);
+                cx = snapped.x;
+                cy = snapped.y;
+              }
+
+              batchUpdates.push({ objectId: child.id, updates: { x: cx, y: cy } });
+            }
+            onObjectsUpdate(batchUpdates);
+            return;
+          }
+        }
+
+        // Non-frame single drag: resolve reparenting
+        if (draggedObj.type !== 'frame' && draggedObj.type !== 'connector') {
+          const newBounds = {
+            x1: finalX,
+            y1: finalY,
+            x2: finalX + draggedObj.width,
+            y2: finalY + draggedObj.height,
+          };
+          const newParent = resolveParentFrameId(draggedObj, newBounds, objects);
+          if (newParent !== draggedObj.parentFrameId) {
+            singleUpdates.parentFrameId = newParent ?? '';
+          }
+        }
+
+        onObjectUpdate?.(objectId, singleUpdates);
       },
-      [onObjectUpdate, onObjectsUpdate, snapToGridEnabled, selectedIds, objectsById]
+      [onObjectUpdate, onObjectsUpdate, snapToGridEnabled, selectedIds, objectsById, objects]
     );
 
     // Selection bounds when 2+ selected (for draggable handle over empty space in selection)
@@ -912,12 +990,11 @@ export const BoardCanvas = memo(
 
       const { dx, dy } = groupDragOffsetRef.current;
       const updates: Array<{ objectId: string; updates: Partial<IBoardObject> }> = [];
+      const movedIds = new Set(selectedIds);
 
       for (const id of selectedIds) {
         const obj = objectsById.get(id);
-        if (!obj) {
-          continue;
-        }
+        if (!obj) continue;
 
         let newX = obj.x + dx;
         let newY = obj.y + dy;
@@ -927,7 +1004,37 @@ export const BoardCanvas = memo(
           newY = snapped.y;
         }
 
-        updates.push({ objectId: id, updates: { x: newX, y: newY } });
+        const objUpdates: Partial<IBoardObject> = { x: newX, y: newY };
+
+        // Frame in selection: also move children not already in selection
+        if (obj.type === 'frame') {
+          const children = getFrameChildren(obj.id, objects);
+          for (const child of children) {
+            if (movedIds.has(child.id)) continue;
+
+            let cx = child.x + dx;
+            let cy = child.y + dy;
+            if (snapToGridEnabled) {
+              const snapped = snapPositionToGrid(cx, cy, GRID_SIZE);
+              cx = snapped.x;
+              cy = snapped.y;
+            }
+
+            updates.push({ objectId: child.id, updates: { x: cx, y: cy } });
+            movedIds.add(child.id);
+          }
+        }
+
+        // Reparent non-frame, non-connector objects
+        if (obj.type !== 'frame' && obj.type !== 'connector') {
+          const newBounds = { x1: newX, y1: newY, x2: newX + obj.width, y2: newY + obj.height };
+          const newParent = resolveParentFrameId(obj, newBounds, objects);
+          if (newParent !== obj.parentFrameId) {
+            objUpdates.parentFrameId = newParent ?? '';
+          }
+        }
+
+        updates.push({ objectId: id, updates: objUpdates });
       }
 
       if (updates.length > 0) {
@@ -936,7 +1043,7 @@ export const BoardCanvas = memo(
 
       selectionDragBoundsRef.current = null;
       setGroupDragOffset(null);
-    }, [onObjectsUpdate, selectedIds, objectsById, snapToGridEnabled]);
+    }, [onObjectsUpdate, selectedIds, objectsById, snapToGridEnabled, objects]);
 
     // Throttle guide updates via RAF; ref used by drag handler so it sees latest setter without effect.
     const alignmentGuidesRafIdRef = useRef<number>(0);
