@@ -2,7 +2,12 @@ import { useState, useCallback, useRef, useEffect, useMemo, useContext } from 'r
 import type { User } from 'firebase/auth';
 import type { IBoardObject } from '@/types';
 import { AIService, createToolExecutor } from '@/modules/ai';
-import { createObject, updateObject, deleteObject } from '@/modules/sync/objectService';
+import {
+  createObject,
+  updateObject,
+  deleteObject,
+  deleteObjectsBatch,
+} from '@/modules/sync/objectService';
 import { AIError } from '@/modules/ai/errors';
 import { ViewportActionsContext } from '@/contexts/ViewportActionsContext';
 
@@ -53,6 +58,7 @@ export const useAI = ({ boardId, user, objects }: IUseAIParams): IUseAIReturn =>
       createObject,
       updateObject,
       deleteObject,
+      deleteObjectsBatch,
       ...(zoomToFitAll &&
         zoomToSelection &&
         setZoomLevel && {

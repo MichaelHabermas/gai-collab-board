@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 
 /**
- * Claude Code Usage Tracker — Stop Hook
+ * Usage Tracker — Stop Hook (Claude Code + Cursor)
  *
- * Fires after every Claude response. Reads the session JSONL transcript,
+ * Fires after each agent response. Reads the session JSONL transcript,
  * aggregates token usage by model, estimates cost, and appends a summary
- * to USAGE.md in the project root.
+ * to USAGE.md in the project root. Deduplicates by session/conversation ID
+ * so the same conversation is never counted twice (update-in-place).
  *
- * Install: add to .claude/settings.local.json under hooks.Stop
+ * Claude: add to .claude/settings.local.json under hooks.Stop
+ * Cursor: add to .cursor/hooks.json under hooks.stop
  */
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
@@ -39,12 +41,13 @@ const PRICING = {
 // Fallback pricing for unknown models
 const DEFAULT_PRICING = { input: 3.0, output: 15.0, cache_read: 0.3, cache_create: 3.75 };
 
-// ── Read hook input from stdin ──────────────────────────────────────
+// ── Read hook input from stdin (cross-platform: Node fd 0) ───────────
 function readStdin() {
   try {
-    return JSON.parse(readFileSync("/dev/stdin", "utf8"));
+    const raw = readFileSync(0, "utf8");
+    return raw ? JSON.parse(raw) : null;
   } catch {
-    process.exit(0); // silent fail — don't block Claude
+    process.exit(0); // silent fail — don't block agent
   }
 }
 
@@ -179,8 +182,8 @@ function generateMarkdown(data) {
   const t = data.totals;
   const totalTokens = t.input_tokens + t.output_tokens + t.cache_read_input_tokens + t.cache_creation_input_tokens;
 
-  let md = `# Claude Usage Tracker\n\n`;
-  md += `> Auto-updated by Claude Code stop hook\n\n`;
+  let md = `# Usage Tracker\n\n`;
+  md += `> Auto-updated by Claude Code / Cursor stop hook\n\n`;
 
   // ── Totals
   md += `## Totals\n\n`;
@@ -233,9 +236,28 @@ function generateMarkdown(data) {
   return md;
 }
 
+// ── Normalize hook payload (Claude vs Cursor) ─────────────────────────
+function normalizeInput(raw) {
+  if (!raw) return null;
+  // Cursor: conversation_id, workspace_roots; Claude: session_id, cwd
+  const sessionId = raw.session_id ?? raw.conversation_id ?? "unknown";
+  const projectDir =
+    raw.cwd ??
+    (Array.isArray(raw.workspace_roots) && raw.workspace_roots[0]
+      ? raw.workspace_roots[0]
+      : process.env.CLAUDE_PROJECT_DIR || process.cwd());
+  return {
+    transcript_path: raw.transcript_path,
+    session_id: sessionId,
+    cwd: projectDir,
+    stop_hook_active: raw.stop_hook_active,
+  };
+}
+
 // ── Main ────────────────────────────────────────────────────────────
 function main() {
-  const input = readStdin();
+  const raw = readStdin();
+  const input = normalizeInput(raw);
   if (!input) process.exit(0);
 
   // Prevent infinite loops if stop hook triggers another stop
@@ -244,7 +266,7 @@ function main() {
   const transcriptPath = input.transcript_path;
   if (!transcriptPath) process.exit(0);
 
-  const projectDir = input.cwd || process.env.CLAUDE_PROJECT_DIR || ".";
+  const projectDir = input.cwd;
   const trackingDir = join(projectDir, ".claude", "usage");
   const dataPath = join(trackingDir, "usage-data.json");
   const mdPath = join(projectDir, "USAGE.md");
@@ -262,9 +284,9 @@ function main() {
 
   const cost = calculateCost(byModel);
 
-  // Build session record
+  // Build session record (one per conversation; dedup by session_id below)
   const sessionRecord = {
-    session_id: input.session_id || "unknown",
+    session_id: input.session_id,
     timestamp: new Date().toISOString(),
     input_tokens: totalInput,
     output_tokens: totalOutput,

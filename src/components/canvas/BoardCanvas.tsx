@@ -51,7 +51,11 @@ import { AlignToolbar } from './AlignToolbar';
 import { AlignmentGuidesLayer } from './AlignmentGuidesLayer';
 import { useExportAsImage } from '@/hooks/useExportAsImage';
 import { useTheme } from '@/hooks/useTheme';
-import { getBoardCanvasBackgroundColor, getBoardGridColor, BOARD_CANVAS_CONTAINER_CLASS } from './boardCanvasTheme';
+import {
+  getBoardCanvasBackgroundColor,
+  getBoardGridColor,
+  BOARD_CANVAS_CONTAINER_CLASS,
+} from './boardCanvasTheme';
 import { useBoardSettings } from '@/hooks/useBoardSettings';
 import { useMiddleMousePanListeners } from '@/hooks/useMiddleMousePanListeners';
 import { useCanvasKeyboardShortcuts } from '@/hooks/useCanvasKeyboardShortcuts';

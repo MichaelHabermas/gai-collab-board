@@ -40,3 +40,7 @@ Costs scale linearly with commands per user per month.
 - Cost scales with command volume; choose model/capability vs. budget
 - Doubling commands per user per month doubles monthly cost
 - At 100K users, Groq costs ~$725/month — well within typical SaaS margins
+
+## Summary (production focus)
+
+**What is actually used in production:** Groq (Llama 3.3 70B) via server-side AI proxy for natural-language board commands. Tool set includes create/move/edit/delete (single and bulk), duplicate, find, getBoardState, layout (align, distribute, grid), zoom, and export. Token mix per command (simple/medium/complex) and 10 commands/user/month assumption drive the table above. New tools (deleteObjects, duplicateObject) and richer getBoardState (connector endpoints) may slightly increase output tokens on complex multi-step commands; no change to pricing model or order-of-magnitude projections.

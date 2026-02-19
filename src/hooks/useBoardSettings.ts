@@ -56,7 +56,7 @@ function loadSettings(boardId: string): IBoardSettings {
       showGrid: parsed.showGrid ?? DEFAULT_SETTINGS.showGrid,
       snapToGrid: parsed.snapToGrid ?? DEFAULT_SETTINGS.snapToGrid,
       sidebarTab:
-        parsed.sidebarTab && ['boards', 'properties', 'ai'].includes(parsed.sidebarTab)
+        parsed.sidebarTab && ['boards', 'props', 'ai'].includes(parsed.sidebarTab)
           ? parsed.sidebarTab
           : DEFAULT_SETTINGS.sidebarTab,
       sidebarCollapsed:

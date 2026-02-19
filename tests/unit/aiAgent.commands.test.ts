@@ -32,6 +32,7 @@ vi.mock('@/modules/sync/userPreferencesService', () => ({
 const mockCreateObject = vi.fn();
 const mockUpdateObject = vi.fn();
 const mockDeleteObject = vi.fn();
+const mockDeleteObjectsBatch = vi.fn();
 
 const now = Timestamp.now();
 const BOARD_ID = 'board-test';
@@ -67,6 +68,10 @@ function createContext(objects: IBoardObject[] = []) {
       updates: unknown
     ) => Promise<void>,
     deleteObject: mockDeleteObject as (boardId: string, objectId: string) => Promise<void>,
+    deleteObjectsBatch: mockDeleteObjectsBatch as (
+      boardId: string,
+      objectIds: string[]
+    ) => Promise<void>,
   };
 }
 
@@ -78,6 +83,7 @@ describe('AI Board Agent – Command Test Suite', () => {
     mockCreateObject.mockResolvedValue({ id: 'new-id', type: 'sticky', x: 0, y: 0 });
     mockUpdateObject.mockResolvedValue(undefined);
     mockDeleteObject.mockResolvedValue(undefined);
+    mockDeleteObjectsBatch.mockResolvedValue(undefined);
   });
 
   // ═══════════════════════════════════════════════════════════════════════════

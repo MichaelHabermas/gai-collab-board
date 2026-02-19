@@ -2872,25 +2872,39 @@ interface IPresenceData {
 }
 ```
 
+### AI tool correctness and behaviour
+
+Expected behaviours for AI tools. Check each box only after the behaviour is implemented and verified (tests and, where applicable, manual or E2E).
+
+- [x] findObjects with type `'connector'` returns connector objects.
+- [x] createFrame accepts title, x, y only; width and height default to 300×200.
+- [x] createConnector accepts optional fromAnchor and toAnchor (top/right/bottom/left).
+- [x] exportBoardAsImage returns a clear message when export handlers are not wired.
+- [x] getBoardState with includeDetails includes connector fromObjectId/toObjectId (and anchors if present).
+- [x] deleteObjects deletes multiple objects in one call.
+- [x] duplicateObject creates a copy with optional offset; connectors keep same endpoints.
+
 ### Appendix B: AI Tool Functions
 
-| Function            | Category     | Parameters                       |
-| ------------------- | ------------ | -------------------------------- |
-| `createStickyNote`  | Creation     | text, x, y, color                |
-| `createShape`       | Creation     | type, x, y, width, height, color |
-| `createFrame`       | Creation     | title, x, y, width, height       |
-| `createConnector`   | Creation     | fromId, toId, style              |
-| `createText`        | Creation     | text, x, y, fontSize, color      |
-| `moveObject`        | Manipulation | objectId, x, y                   |
-| `resizeObject`      | Manipulation | objectId, width, height          |
-| `updateText`        | Manipulation | objectId, newText                |
-| `changeColor`       | Manipulation | objectId, color                  |
-| `deleteObject`      | Manipulation | objectId                         |
-| `getBoardState`     | Query        | includeDetails                   |
-| `findObjects`       | Query        | type, color, textContains        |
-| `arrangeInGrid`     | Layout       | objectIds, columns, spacing      |
-| `alignObjects`      | Layout       | objectIds, alignment             |
-| `distributeObjects` | Layout       | objectIds, direction             |
+| Function             | Category     | Parameters                                      |
+| -------------------- | ------------ | ----------------------------------------------- |
+| `createStickyNote`   | Creation     | text, x, y, color                                |
+| `createShape`        | Creation     | type, x, y, width, height, color                 |
+| `createFrame`        | Creation     | title, x, y; width, height optional (default 300×200) |
+| `createConnector`    | Creation     | fromId, toId, style; fromAnchor, toAnchor optional |
+| `createText`         | Creation     | text, x, y, fontSize, color                      |
+| `moveObject`         | Manipulation | objectId, x, y                                  |
+| `resizeObject`       | Manipulation | objectId, width, height                         |
+| `updateText`         | Manipulation | objectId, newText                               |
+| `changeColor`        | Manipulation | objectId, color                                 |
+| `deleteObject`       | Manipulation | objectId                                        |
+| `deleteObjects`      | Manipulation | objectIds (bulk delete)                          |
+| `duplicateObject`    | Manipulation | objectId; offsetX, offsetY optional              |
+| `getBoardState`      | Query        | includeDetails (connectors include from/to IDs) |
+| `findObjects`        | Query        | type (includes connector), color, textContains  |
+| `arrangeInGrid`      | Layout       | objectIds, columns, spacing                     |
+| `alignObjects`       | Layout       | objectIds, alignment                            |
+| `distributeObjects`  | Layout       | objectIds, direction                            |
 
 ### Appendix C: Environment Variables
 

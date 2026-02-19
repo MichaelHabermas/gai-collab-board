@@ -60,6 +60,7 @@ export interface IToolExecutorContext {
   createObject: (boardId: string, params: ICreateObjectParams) => Promise<IBoardObject>;
   updateObject: (boardId: string, objectId: string, updates: IUpdateObjectParams) => Promise<void>;
   deleteObject: (boardId: string, objectId: string) => Promise<void>;
+  deleteObjectsBatch: (boardId: string, objectIds: string[]) => Promise<void>;
   onZoomToFitAll?: () => void | Promise<void>;
   onZoomToSelection?: (objectIds: string[]) => void | Promise<void>;
   onSetZoomLevel?: (percent: number) => void | Promise<void>;
@@ -175,10 +176,14 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           fromId,
           toId,
           style = 'line',
+          fromAnchor: rawFromAnchor,
+          toAnchor: rawToAnchor,
         } = tool.arguments as {
           fromId: string;
           toId: string;
           style?: string;
+          fromAnchor?: string;
+          toAnchor?: string;
         };
         const objects = getObjects();
         const fromObj = objects.find((o) => o.id === fromId);
@@ -187,8 +192,15 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           throw new Error('Source or target object not found for connector');
         }
 
-        const fromAnchor: ConnectorAnchor = 'right';
-        const toAnchor: ConnectorAnchor = 'left';
+        const VALID_ANCHORS: ConnectorAnchor[] = ['top', 'right', 'bottom', 'left'];
+        const fromAnchor: ConnectorAnchor =
+          rawFromAnchor && VALID_ANCHORS.includes(rawFromAnchor as ConnectorAnchor)
+            ? (rawFromAnchor as ConnectorAnchor)
+            : 'right';
+        const toAnchor: ConnectorAnchor =
+          rawToAnchor && VALID_ANCHORS.includes(rawToAnchor as ConnectorAnchor)
+            ? (rawToAnchor as ConnectorAnchor)
+            : 'left';
         const fromPos = getAnchorPosition(fromObj, fromAnchor);
         const toPos = getAnchorPosition(toObj, toAnchor);
         const { x } = fromPos;
@@ -366,25 +378,120 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
         return { success: true, message: 'Deleted object' };
       }
 
+      case 'deleteObjects': {
+        const { objectIds } = tool.arguments as { objectIds: string[] };
+        if (!Array.isArray(objectIds) || objectIds.length === 0) {
+          return {
+            success: false,
+            message: 'objectIds must be a non-empty array',
+          };
+        }
+
+        await ctx.deleteObjectsBatch(boardId, objectIds);
+        return {
+          success: true,
+          message: `Deleted ${objectIds.length} object(s)`,
+          deletedCount: objectIds.length,
+        };
+      }
+
+      case 'duplicateObject': {
+        const {
+          objectId,
+          offsetX = 20,
+          offsetY = 20,
+        } = tool.arguments as {
+          objectId: string;
+          offsetX?: number;
+          offsetY?: number;
+        };
+        const source = getObjects().find((o) => o.id === objectId);
+        if (!source) {
+          return { success: false, message: 'Object not found' };
+        }
+
+        const params: ICreateObjectParams = {
+          type: source.type as ShapeType,
+          x: source.x + offsetX,
+          y: source.y + offsetY,
+          width: source.width,
+          height: source.height,
+          fill: source.fill,
+          createdBy,
+        };
+        if (source.rotation && source.rotation !== 0) {
+          params.rotation = source.rotation;
+        }
+
+        if (source.stroke) params.stroke = source.stroke;
+
+        if (source.strokeWidth) params.strokeWidth = source.strokeWidth;
+
+        if (source.text) params.text = source.text;
+
+        if (source.textFill) params.textFill = source.textFill;
+
+        if (source.fontSize) params.fontSize = source.fontSize;
+
+        if (source.opacity) params.opacity = source.opacity;
+
+        if (source.points?.length) params.points = [...source.points];
+
+        if (source.fromObjectId) params.fromObjectId = source.fromObjectId;
+
+        if (source.toObjectId) params.toObjectId = source.toObjectId;
+
+        if (source.fromAnchor) params.fromAnchor = source.fromAnchor;
+
+        if (source.toAnchor) params.toAnchor = source.toAnchor;
+
+        if (source.arrowheads) params.arrowheads = source.arrowheads;
+
+        if (source.strokeStyle) params.strokeStyle = source.strokeStyle;
+
+        const obj = await ctx.createObject(boardId, params);
+        return { id: obj.id, success: true, message: 'Duplicated object' };
+      }
+
       case 'getBoardState': {
         const { includeDetails = false } = tool.arguments as { includeDetails?: boolean };
         const objects = getObjects();
         return {
           objectCount: objects.length,
-          objects: objects.map((obj) =>
-            includeDetails
-              ? {
-                  id: obj.id,
-                  type: obj.type,
-                  x: obj.x,
-                  y: obj.y,
-                  width: obj.width,
-                  height: obj.height,
-                  text: obj.text,
-                  fill: obj.fill,
-                }
-              : { id: obj.id, type: obj.type, x: obj.x, y: obj.y, text: obj.text, fill: obj.fill }
-          ),
+          objects: objects.map((obj) => {
+            if (includeDetails) {
+              const base = {
+                id: obj.id,
+                type: obj.type,
+                x: obj.x,
+                y: obj.y,
+                width: obj.width,
+                height: obj.height,
+                text: obj.text,
+                fill: obj.fill,
+              };
+              if (obj.type === 'connector') {
+                return {
+                  ...base,
+                  fromObjectId: obj.fromObjectId,
+                  toObjectId: obj.toObjectId,
+                  ...(obj.fromAnchor !== undefined && { fromAnchor: obj.fromAnchor }),
+                  ...(obj.toAnchor !== undefined && { toAnchor: obj.toAnchor }),
+                };
+              }
+
+              return base;
+            }
+
+            return {
+              id: obj.id,
+              type: obj.type,
+              x: obj.x,
+              y: obj.y,
+              text: obj.text,
+              fill: obj.fill,
+            };
+          }),
         };
       }
 
@@ -586,7 +693,9 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
         if (scope === 'viewport' || scope === 'full') {
           return {
             success: true,
-            message: `Export ${scope} requested; use the Export button in the UI if the download did not start.`,
+            exportTriggered: false,
+            message:
+              'Export requested but not available in this context; use the Export button in the UI.',
           };
         }
 

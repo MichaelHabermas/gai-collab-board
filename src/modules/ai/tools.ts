@@ -91,10 +91,16 @@ export const boardTools: ChatCompletionTool[] = [
           },
           x: { type: 'number', description: 'X coordinate position' },
           y: { type: 'number', description: 'Y coordinate position' },
-          width: { type: 'number', description: 'Width of the frame' },
-          height: { type: 'number', description: 'Height of the frame' },
+          width: {
+            type: 'number',
+            description: 'Width of the frame. Optional; default 300 if omitted.',
+          },
+          height: {
+            type: 'number',
+            description: 'Height of the frame. Optional; default 200 if omitted.',
+          },
         },
-        required: ['title', 'x', 'y', 'width', 'height'],
+        required: ['title', 'x', 'y'],
       },
     },
   },
@@ -118,6 +124,16 @@ export const boardTools: ChatCompletionTool[] = [
             type: 'string',
             enum: ['line', 'arrow', 'dashed'],
             description: 'Style of the connector',
+          },
+          fromAnchor: {
+            type: 'string',
+            enum: ['top', 'right', 'bottom', 'left'],
+            description: 'Anchor point on the source object. Optional; default right.',
+          },
+          toAnchor: {
+            type: 'string',
+            enum: ['top', 'right', 'bottom', 'left'],
+            description: 'Anchor point on the target object. Optional; default left.',
           },
         },
         required: ['fromId', 'toId'],
@@ -350,6 +366,50 @@ export const boardTools: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
+      name: 'deleteObjects',
+      description: 'Deletes multiple objects by ID. Use for bulk remove.',
+      parameters: {
+        type: 'object',
+        properties: {
+          objectIds: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'IDs of objects to delete',
+          },
+        },
+        required: ['objectIds'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'duplicateObject',
+      description:
+        'Creates a copy of an object at an offset position. For connectors, the copy keeps the same from/to endpoints.',
+      parameters: {
+        type: 'object',
+        properties: {
+          objectId: {
+            type: 'string',
+            description: 'ID of the object to duplicate',
+          },
+          offsetX: {
+            type: 'number',
+            description: 'X offset for the copy. Optional; default 20.',
+          },
+          offsetY: {
+            type: 'number',
+            description: 'Y offset for the copy. Optional; default 20.',
+          },
+        },
+        required: ['objectId'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'getBoardState',
       description: 'Gets the current state of all objects on the board for context',
       parameters: {
@@ -374,7 +434,7 @@ export const boardTools: ChatCompletionTool[] = [
         properties: {
           type: {
             type: 'string',
-            enum: ['sticky', 'rectangle', 'circle', 'line', 'text', 'frame'],
+            enum: ['sticky', 'rectangle', 'circle', 'line', 'text', 'frame', 'connector'],
             description: 'Filter by object type',
           },
           color: {

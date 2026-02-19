@@ -20,6 +20,7 @@ vi.mock('@/modules/sync/userPreferencesService', () => ({
 const mockCreateObject = vi.fn();
 const mockUpdateObject = vi.fn();
 const mockDeleteObject = vi.fn();
+const mockDeleteObjectsBatch = vi.fn();
 
 const now = Timestamp.now();
 const mockBoardId = 'board-1';
@@ -37,6 +38,10 @@ const createContext = (objects: IBoardObject[] = []) => ({
     updates: unknown
   ) => Promise<void>,
   deleteObject: mockDeleteObject as (boardId: string, objectId: string) => Promise<void>,
+  deleteObjectsBatch: mockDeleteObjectsBatch as (
+    boardId: string,
+    objectIds: string[]
+  ) => Promise<void>,
 });
 
 describe('toolExecutor', () => {
@@ -45,6 +50,7 @@ describe('toolExecutor', () => {
     mockCreateObject.mockResolvedValue({ id: 'new-id', type: 'sticky', x: 0, y: 0 });
     mockUpdateObject.mockResolvedValue(undefined);
     mockDeleteObject.mockResolvedValue(undefined);
+    mockDeleteObjectsBatch.mockResolvedValue(undefined);
   });
 
   describe('createStickyNote', () => {
@@ -202,6 +208,48 @@ describe('toolExecutor', () => {
         objects: [{ id: 'a', type: 'sticky', x: 0, y: 0, text: undefined, fill: '#fff' }],
       });
     });
+
+    it('includes connector fromObjectId and toObjectId when includeDetails is true', async () => {
+      const objects: IBoardObject[] = [
+        {
+          id: 'conn-1',
+          type: 'connector',
+          x: 100,
+          y: 40,
+          width: 100,
+          height: 0,
+          rotation: 0,
+          fill: '#64748b',
+          fromObjectId: 'sticky-a',
+          toObjectId: 'sticky-b',
+          fromAnchor: 'right',
+          toAnchor: 'left',
+          createdBy: 'u',
+          createdAt: now,
+          updatedAt: now,
+        },
+      ];
+      const { execute } = createToolExecutor(createContext(objects));
+      const result = await execute({
+        name: 'getBoardState',
+        arguments: { includeDetails: true },
+      });
+      expect(result).toMatchObject({
+        objectCount: 1,
+        objects: [
+          {
+            id: 'conn-1',
+            type: 'connector',
+            x: 100,
+            y: 40,
+            fromObjectId: 'sticky-a',
+            toObjectId: 'sticky-b',
+            fromAnchor: 'right',
+            toAnchor: 'left',
+          },
+        ],
+      });
+    });
   });
 
   describe('findObjects', () => {
@@ -245,6 +293,58 @@ describe('toolExecutor', () => {
         objects: [{ id: 's1', type: 'sticky', text: 'Note', x: 0, y: 0 }],
       });
     });
+
+    it('returns connector objects when filtering by type connector', async () => {
+      const objects: IBoardObject[] = [
+        {
+          id: 'c1',
+          type: 'connector',
+          x: 100,
+          y: 40,
+          width: 100,
+          height: 0,
+          rotation: 0,
+          fill: '#64748b',
+          stroke: '#64748b',
+          points: [0, 0, 100, 0],
+          fromObjectId: 'from-1',
+          toObjectId: 'to-1',
+          createdBy: 'u',
+          createdAt: now,
+          updatedAt: now,
+        },
+        {
+          id: 's1',
+          type: 'sticky',
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 80,
+          rotation: 0,
+          fill: '#fff',
+          createdBy: 'u',
+          createdAt: now,
+          updatedAt: now,
+        },
+      ];
+      const { execute } = createToolExecutor(createContext(objects));
+      const result = await execute({
+        name: 'findObjects',
+        arguments: { type: 'connector' },
+      });
+      expect(result).toEqual({
+        found: 1,
+        objects: [
+          {
+            id: 'c1',
+            type: 'connector',
+            text: undefined,
+            x: 100,
+            y: 40,
+          },
+        ],
+      });
+    });
   });
 
   describe('deleteObject', () => {
@@ -252,6 +352,123 @@ describe('toolExecutor', () => {
       const { execute } = createToolExecutor(createContext());
       await execute({ name: 'deleteObject', arguments: { objectId: 'obj-99' } });
       expect(mockDeleteObject).toHaveBeenCalledWith(mockBoardId, 'obj-99');
+    });
+  });
+
+  describe('deleteObjects', () => {
+    it('calls deleteObjectsBatch with boardId and objectIds', async () => {
+      const { execute } = createToolExecutor(createContext());
+      const result = await execute({
+        name: 'deleteObjects',
+        arguments: { objectIds: ['id1', 'id2'] },
+      });
+      expect(mockDeleteObjectsBatch).toHaveBeenCalledTimes(1);
+      expect(mockDeleteObjectsBatch).toHaveBeenCalledWith(mockBoardId, ['id1', 'id2']);
+      expect(result).toMatchObject({
+        success: true,
+        deletedCount: 2,
+        message: 'Deleted 2 object(s)',
+      });
+    });
+
+    it('returns failure when objectIds is empty', async () => {
+      const { execute } = createToolExecutor(createContext());
+      const result = await execute({
+        name: 'deleteObjects',
+        arguments: { objectIds: [] },
+      });
+      expect(mockDeleteObjectsBatch).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        success: false,
+        message: 'objectIds must be a non-empty array',
+      });
+    });
+  });
+
+  describe('duplicateObject', () => {
+    it('creates a copy of a sticky with offset position', async () => {
+      const objects: IBoardObject[] = [
+        {
+          id: 'sticky-1',
+          type: 'sticky',
+          x: 100,
+          y: 200,
+          width: 200,
+          height: 120,
+          rotation: 0,
+          fill: '#fef08a',
+          text: 'Original',
+          createdBy: 'u',
+          createdAt: now,
+          updatedAt: now,
+        },
+      ];
+      const { execute } = createToolExecutor(createContext(objects));
+      const result = await execute({
+        name: 'duplicateObject',
+        arguments: { objectId: 'sticky-1', offsetX: 30, offsetY: 10 },
+      });
+      expect(mockCreateObject).toHaveBeenCalledWith(mockBoardId, {
+        type: 'sticky',
+        x: 130,
+        y: 210,
+        width: 200,
+        height: 120,
+        fill: '#fef08a',
+        text: 'Original',
+        createdBy: mockUserId,
+      });
+      expect(result).toMatchObject({ success: true, id: 'new-id', message: 'Duplicated object' });
+    });
+
+    it('preserves connector fromObjectId and toObjectId when duplicating connector', async () => {
+      const objects: IBoardObject[] = [
+        {
+          id: 'conn-1',
+          type: 'connector',
+          x: 100,
+          y: 40,
+          width: 80,
+          height: 0,
+          rotation: 0,
+          fill: '#64748b',
+          points: [0, 0, 80, 0],
+          fromObjectId: 'from-1',
+          toObjectId: 'to-1',
+          fromAnchor: 'right',
+          toAnchor: 'left',
+          createdBy: 'u',
+          createdAt: now,
+          updatedAt: now,
+        },
+      ];
+      const { execute } = createToolExecutor(createContext(objects));
+      await execute({
+        name: 'duplicateObject',
+        arguments: { objectId: 'conn-1' },
+      });
+      expect(mockCreateObject).toHaveBeenCalledWith(
+        mockBoardId,
+        expect.objectContaining({
+          type: 'connector',
+          fromObjectId: 'from-1',
+          toObjectId: 'to-1',
+          fromAnchor: 'right',
+          toAnchor: 'left',
+          x: 120,
+          y: 60,
+        })
+      );
+    });
+
+    it('returns failure when object not found', async () => {
+      const { execute } = createToolExecutor(createContext([]));
+      const result = await execute({
+        name: 'duplicateObject',
+        arguments: { objectId: 'missing' },
+      });
+      expect(mockCreateObject).not.toHaveBeenCalled();
+      expect(result).toEqual({ success: false, message: 'Object not found' });
     });
   });
 
@@ -466,6 +683,102 @@ describe('toolExecutor', () => {
         })
       ).rejects.toThrow('Source or target object not found for connector');
       expect(mockCreateObject).not.toHaveBeenCalled();
+    });
+
+    it('calls createObject with explicit fromAnchor and toAnchor when provided', async () => {
+      const objects: IBoardObject[] = [
+        {
+          id: 'from-1',
+          type: 'sticky',
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 80,
+          rotation: 0,
+          fill: '#fff',
+          createdBy: 'u',
+          createdAt: now,
+          updatedAt: now,
+        },
+        {
+          id: 'to-1',
+          type: 'sticky',
+          x: 200,
+          y: 100,
+          width: 100,
+          height: 80,
+          rotation: 0,
+          fill: '#fff',
+          createdBy: 'u',
+          createdAt: now,
+          updatedAt: now,
+        },
+      ];
+      const { execute } = createToolExecutor(createContext(objects));
+      await execute({
+        name: 'createConnector',
+        arguments: {
+          fromId: 'from-1',
+          toId: 'to-1',
+          fromAnchor: 'bottom',
+          toAnchor: 'top',
+        },
+      });
+      const call = mockCreateObject.mock.calls[0];
+      if (call === undefined) {
+        throw new Error('Expected mock to be called');
+      }
+      expect(call[1]).toMatchObject({
+        type: 'connector',
+        fromObjectId: 'from-1',
+        toObjectId: 'to-1',
+        fromAnchor: 'bottom',
+        toAnchor: 'top',
+      });
+    });
+
+    it('uses default right/left anchors when fromAnchor/toAnchor omitted', async () => {
+      const objects: IBoardObject[] = [
+        {
+          id: 'from-1',
+          type: 'sticky',
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 80,
+          rotation: 0,
+          fill: '#fff',
+          createdBy: 'u',
+          createdAt: now,
+          updatedAt: now,
+        },
+        {
+          id: 'to-1',
+          type: 'sticky',
+          x: 200,
+          y: 0,
+          width: 100,
+          height: 80,
+          rotation: 0,
+          fill: '#fff',
+          createdBy: 'u',
+          createdAt: now,
+          updatedAt: now,
+        },
+      ];
+      const { execute } = createToolExecutor(createContext(objects));
+      await execute({
+        name: 'createConnector',
+        arguments: { fromId: 'from-1', toId: 'to-1' },
+      });
+      const call = mockCreateObject.mock.calls[0];
+      if (call === undefined) {
+        throw new Error('Expected mock to be called');
+      }
+      expect(call[1]).toMatchObject({
+        fromAnchor: 'right',
+        toAnchor: 'left',
+      });
     });
   });
 
@@ -1043,7 +1356,7 @@ describe('toolExecutor', () => {
       expect(mockExportViewport).toHaveBeenCalledWith('png');
     });
 
-    it('returns stub message when export callbacks not provided', async () => {
+    it('returns exportTriggered false and clear message when export callbacks not provided', async () => {
       const { execute } = createToolExecutor(createContext());
       const result = await execute({
         name: 'exportBoardAsImage',
@@ -1051,7 +1364,9 @@ describe('toolExecutor', () => {
       });
       expect(result).toMatchObject({
         success: true,
-        message: expect.stringContaining('Export'),
+        exportTriggered: false,
+        message:
+          'Export requested but not available in this context; use the Export button in the UI.',
       });
     });
 

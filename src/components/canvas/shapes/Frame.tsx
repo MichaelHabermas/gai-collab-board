@@ -74,7 +74,9 @@ export const Frame = memo(
         () =>
           (theme &&
             (typeof document !== 'undefined'
-              ? getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim()
+              ? getComputedStyle(document.documentElement)
+                  .getPropertyValue('--color-primary')
+                  .trim()
               : '')) ||
           '#3b82f6',
         [theme]

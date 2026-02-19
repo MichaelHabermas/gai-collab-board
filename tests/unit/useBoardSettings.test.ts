@@ -115,7 +115,7 @@ describe('useBoardSettings', () => {
         },
         showGrid: true,
         snapToGrid: true,
-        sidebarTab: 'properties',
+        sidebarTab: 'props',
         sidebarCollapsed: false,
         boardListFilter: 'recent',
       })
@@ -140,7 +140,7 @@ describe('useBoardSettings', () => {
       initialProps: { boardId: 'board-a' },
     });
 
-    expect(result.current.sidebarTab).toBe('properties');
+    expect(result.current.sidebarTab).toBe('props');
     expect(result.current.sidebarCollapsed).toBe(false);
     expect(result.current.boardListFilter).toBe('recent');
 

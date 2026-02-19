@@ -41,7 +41,7 @@
 
 ## Cost & Usage
 
-**Development (fixed cost):** Cursor subscription $20/month. External LLM API spend: $0 (all AI usage via Cursor subscription). Approximate cumulative tokens across 20+ logged sessions: ~442k input / ~157k output.
+**Development (fixed cost):** Cursor subscription $20/month. External LLM API spend: $0 (all AI usage via Cursor subscription). Approximate cumulative tokens across logged sessions: ~492k input / ~175k output (includes AI tools fixes session).
 
 **Production projections** (monthly LLM API cost at scale, 10 AI commands/user/month):
 
@@ -53,3 +53,13 @@
 | 100,000 | $724.80               |
 
 See [AI-COST-ANALYSIS.md](AI-COST-ANALYSIS.md) for assumptions, token mix, and pricing sources. Detailed per-session notes are in [AI-SESSION-LOG.md](AI-SESSION-LOG.md).
+
+## Session: AI tools fixes and additions (Feb 2026)
+
+- **Date:** February 2026
+- **What was done:** Fixed and extended AI board tools: (1) findObjects — added `connector` to type enum so the AI can find connectors; (2) createFrame — made width/height optional in schema (default 300×200); (3) createConnector — added optional fromAnchor/toAnchor (top/right/bottom/left); (4) exportBoardAsImage — when handlers are not wired, return clear message and `exportTriggered: false`; (5) getBoardState — when includeDetails is true, include connector fromObjectId, toObjectId, and anchors; (6) new tools — deleteObjects (bulk), duplicateObject (with optional offset; connectors keep same endpoints). PRD updated with “AI tool correctness and behaviour” checkboxes and Appendix B. Tests added/updated in toolExecutor.test.ts and useAI.test.ts (deleteObjectsBatch mock).
+- **Tools used:** Cursor (Agent mode), Vitest, ESLint, Prettier
+- **Approximate token usage (this session):** ~50k input / ~18k output (estimate)
+- **Cumulative tokens (updated):** ~492k input / ~175k output
+- **Cost:** Development via Cursor subscription; no additional API spend
+- **Follow-ups:** None. All planned items implemented and verified.

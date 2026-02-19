@@ -20,9 +20,9 @@ const RightSidebarHarness = (): React.ReactElement => {
             <div data-testid='boards-panel'>Boards content</div>
           </TabsContent>
           <TabsContent
-            value='properties'
+            value='props'
             className='flex-1 min-h-0 mt-2 overflow-auto'
-            data-testid='properties-tab-content'
+            data-testid='props-tab-content'
           >
             <div>Properties content</div>
           </TabsContent>
@@ -58,7 +58,7 @@ describe('Right panel collapse', () => {
     expect(sidebar).toHaveAttribute('aria-expanded', 'false');
     expect(within(sidebar).getByTestId('sidebar-expand')).toBeInTheDocument();
     expect(within(sidebar).getByTestId('sidebar-rail-tab-boards')).toBeInTheDocument();
-    expect(within(sidebar).getByTestId('sidebar-rail-tab-properties')).toBeInTheDocument();
+    expect(within(sidebar).getByTestId('sidebar-rail-tab-props')).toBeInTheDocument();
     expect(within(sidebar).getByTestId('sidebar-rail-tab-ai')).toBeInTheDocument();
   });
 
@@ -87,10 +87,10 @@ describe('Right panel collapse', () => {
     });
     expect(sidebar).toHaveAttribute('aria-expanded', 'false');
     await act(async () => {
-      within(sidebar).getByTestId('sidebar-rail-tab-properties').click();
+      within(sidebar).getByTestId('sidebar-rail-tab-props').click();
     });
     expect(sidebar).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByTestId('properties-tab-content')).toBeInTheDocument();
+    expect(screen.getByTestId('props-tab-content')).toBeInTheDocument();
   });
 
   it('when initially collapsed, rail is visible and expand shows full panel', () => {
@@ -109,11 +109,11 @@ describe('Right panel collapse', () => {
                 <div data-testid='boards-panel'>Boards</div>
               </TabsContent>
               <TabsContent
-                value='properties'
+                value='props'
                 className='flex-1 min-h-0 mt-2 overflow-auto'
-                data-testid='properties-tab-content'
+                data-testid='props-tab-content'
               >
-                <div>Properties</div>
+                <div>props</div>
               </TabsContent>
               <TabsContent value='ai' className='flex-1 min-h-0 mt-2 overflow-hidden flex flex-col'>
                 <div data-testid='ai-panel'>AI</div>

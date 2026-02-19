@@ -34,12 +34,7 @@ export const RightSidebar = ({
       <Tabs
         value={boardsOnly ? 'boards' : sidebarTab}
         onValueChange={(value) => {
-          if (
-            value === 'boards' ||
-            value === 'properties' ||
-            value === 'ai' ||
-            value === 'comments'
-          ) {
+          if (value === 'boards' || value === 'props' || value === 'ai' || value === 'comments') {
             setSidebarTab(value);
           }
         }}
@@ -70,16 +65,16 @@ export const RightSidebar = ({
               <>
                 <Button
                   type='button'
-                  variant={sidebarTab === 'properties' ? 'secondary' : 'ghost'}
+                  variant={sidebarTab === 'props' ? 'secondary' : 'ghost'}
                   size='icon'
                   className='h-9 w-9 shrink-0'
                   onClick={() => {
-                    setSidebarTab('properties');
+                    setSidebarTab('props');
                     setSidebarCollapsed(false);
                   }}
-                  title='Properties'
-                  aria-label='Properties'
-                  data-testid='sidebar-rail-tab-properties'
+                  title='props'
+                  aria-label='props'
+                  data-testid='sidebar-rail-tab-props'
                 >
                   <Settings className='h-4 w-4' aria-hidden />
                 </Button>
@@ -143,10 +138,10 @@ export const RightSidebar = ({
               {!boardsOnly && (
                 <>
                   <TabsTrigger
-                    value='properties'
+                    value='props'
                     className='text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground'
                   >
-                    Properties
+                    Props
                   </TabsTrigger>
                   <TabsTrigger
                     value='ai'

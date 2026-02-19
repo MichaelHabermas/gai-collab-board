@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "stop": [
+      {
+        "command": "node .claude/hooks/track-usage.mjs",
+        "timeout": 15
+      }
+    ]
+  }
+}

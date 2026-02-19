@@ -12,6 +12,7 @@ const {
   mockCreateObject,
   mockUpdateObject,
   mockDeleteObject,
+  mockDeleteObjectsBatch,
   mockCreateToolExecutor,
   mockExecute,
   mockProcessCommand,
@@ -21,6 +22,7 @@ const {
   mockCreateObject: vi.fn(),
   mockUpdateObject: vi.fn(),
   mockDeleteObject: vi.fn(),
+  mockDeleteObjectsBatch: vi.fn(),
   mockCreateToolExecutor: vi.fn(),
   mockExecute: vi.fn(),
   mockProcessCommand: vi.fn(),
@@ -32,6 +34,7 @@ vi.mock('@/modules/sync/objectService', () => ({
   createObject: mockCreateObject,
   updateObject: mockUpdateObject,
   deleteObject: mockDeleteObject,
+  deleteObjectsBatch: mockDeleteObjectsBatch,
 }));
 
 vi.mock('@/modules/ai', () => ({
