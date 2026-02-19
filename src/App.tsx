@@ -105,6 +105,7 @@ const BoardView = ({
       skipAutoJoinBoardIdRef.current = null;
       return;
     }
+
     if (!board || !user || user.uid in board.members || joinedBoardIdsRef.current.has(boardId)) {
       return;
     }

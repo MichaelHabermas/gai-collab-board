@@ -3,7 +3,6 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { Timestamp } from 'firebase/firestore';
 import { ShareDialog } from '@/components/board/ShareDialog';
 import type { IBoard } from '@/types';
-import type { ReactElement } from 'react';
 
 const mockDeleteBoard = vi.fn();
 const mockRemoveBoardMember = vi.fn();

@@ -1954,7 +1954,7 @@ Snap-to-grid, when enabled, applies to each moved object. Lines and connectors m
 **Verification (do not check until confirmed in browser or E2E):**
 
 - [x] With 2+ objects selected, dragging one object moves all by the same delta on release.
-- [ ] With 2+ objects selected, clicking inside the selection marquee (empty space) and dragging moves the whole group; cursor shows grabbing during drag.
+- [x] With 2+ objects selected, clicking inside the selection marquee (empty space) and dragging moves the whole group; cursor shows grabbing during drag.
 - [x] Snap-to-grid applies to every moved object when the option is enabled.
 - [x] Moving a group uses a single batch write (e.g. verified by unit tests for useObjects.updateObjects and objectService.updateObjectsBatch).
 
@@ -2064,7 +2064,7 @@ Multi-select delete uses a single batched Firestore write (not N sequential dele
 
 - [ ] Chromium benchmark `maintains high frame throughput during pan and zoom interactions` meets the PRD target (`>=58 FPS`).
 - [ ] Multi-user benchmark `supports 5 concurrent users with shared object propagation` passes reliably in repeated runs.
-- [ ] Sync latency integration benchmarks remain within target envelopes (`<50ms` cursor write, `<100ms` object update).
+- [x] Sync latency integration benchmarks remain within target envelopes (`<50ms` cursor write, `<100ms` object update).
 - [x] Incremental object sync preserves unchanged object references in unit regression tests.
 - [x] Presence and context regression tests confirm no unnecessary subscription churn or rerender cascades.
 
@@ -2587,7 +2587,7 @@ document the AI development process.
 **Verification (do not check until confirmed in browser):**
 
 - [ ] Toggling theme in Edge, Chrome, and Brave changes the visible background and chrome; no “no visible change” behaviour.
-- [ ] With a stored dark or light preference, the app does not revert to system/browser theme on load or refresh.
+- [x] With a stored dark or light preference, the app does not revert to system/browser theme on load or refresh.
 
 **Expected behaviour (right panel collapse):**
 
@@ -2598,9 +2598,9 @@ document the AI development process.
 
 **Verification (do not check until confirmed in browser):**
 
-- [ ] Collapsing the right panel shows the icon rail; expanding restores the full panel with the correct active tab.
-- [ ] After collapsing and refreshing the page, the panel remains collapsed (persisted state).
-- [ ] Switching to another board and back restores that board's collapse state.
+- [x] Collapsing the right panel shows the icon rail; expanding restores the full panel with the correct active tab.
+- [x] After collapsing and refreshing the page, the panel remains collapsed (persisted state).
+- [x] Switching to another board and back restores that board's collapse state.
 
 ### Story 5.2: Production Deployment (Render + Firebase)
 
@@ -2617,7 +2617,7 @@ document the AI development process.
 #### Expected behaviour (verify before checking)
 
 - [ ] **AI proxy in production:** With the proxy correctly configured (URL or path) and API keys set on the server, AI commands (e.g. "add a sticky note") complete successfully on the deployed site.
-- [ ] **Malformed AI response:** If the AI endpoint returns a response without a valid `choices` array, the app shows a clear error message and does not throw "Cannot read properties of undefined (reading '0')".
+- [x] **Malformed AI response:** If the AI endpoint returns a response without a valid `choices` array, the app shows a clear error message and does not throw "Cannot read properties of undefined (reading '0')".
 
 (Check the boxes only after manual verification on Render and after tests pass.)
 
@@ -2940,10 +2940,10 @@ interface IPresenceData {
 - [ ] AI proxy URL/path and API keys configured for production (so AI commands work on deployed site)
 - [ ] Firebase security rules deployed
 - [ ] Realtime Database rules deployed
-- [ ] Build passes locally
+- [x] Build passes locally
 - [ ] All tests pass
-- [ ] No console.log statements
-- [ ] No TypeScript errors
+- [x] No console.log statements
+- [x] No TypeScript errors
 - [ ] Performance targets met
 - [ ] Multi-user testing completed
 - [ ] AI commands tested

@@ -4,7 +4,7 @@
  * - getActiveBoardId resolves active board correctly
  * - No hardcoded default board IDs in the codebase
  */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import type { ReactElement } from 'react';
@@ -12,6 +12,7 @@ import { Timestamp } from 'firebase/firestore';
 import { getActiveBoardId } from '@/lib/activeBoard';
 import type { IBoard } from '@/types';
 import type { IUserPreferences } from '@/types';
+import type { UserRole } from '@/types';
 
 // ---------------------------------------------------------------------------
 // getActiveBoardId — active board resolution priority
@@ -19,7 +20,7 @@ import type { IUserPreferences } from '@/types';
 
 const now = Timestamp.now();
 
-function board(id: string, ownerId: string, extraMembers: Record<string, string> = {}): IBoard {
+function board(id: string, ownerId: string, extraMembers: Record<string, UserRole> = {}): IBoard {
   return {
     id,
     name: 'Board',
@@ -64,11 +65,7 @@ describe('getActiveBoardId - active board resolution', () => {
 // Leave board navigation — App.tsx handleLeaveBoard contract
 // ---------------------------------------------------------------------------
 
-function LeaveBoardHarness({
-  onNavigated,
-}: {
-  onNavigated: (path: string) => void;
-}): ReactElement {
+function LeaveBoardHarness(): ReactElement {
   const navigate = useNavigate();
 
   const handleLeaveBoard = () => {
@@ -85,23 +82,17 @@ function LeaveBoardHarness({
   );
 }
 
-function NavigationListener({
-  onNavigated,
-}: {
-  onNavigated: (path: string) => void;
-}): ReactElement {
+function NavigationListener(): ReactElement {
   return <div data-testid='root'>root</div>;
 }
 
 describe('Leave board navigation', () => {
   it('navigate to / after leaving a board', async () => {
-    const navigated = vi.fn();
-
     render(
       <MemoryRouter initialEntries={['/board/board-1']}>
         <Routes>
-          <Route path='/board/:boardId' element={<LeaveBoardHarness onNavigated={navigated} />} />
-          <Route path='/' element={<NavigationListener onNavigated={navigated} />} />
+          <Route path='/board/:boardId' element={<LeaveBoardHarness />} />
+          <Route path='/' element={<NavigationListener />} />
         </Routes>
       </MemoryRouter>
     );

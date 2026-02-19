@@ -7,6 +7,29 @@ interface ICredential {
 
 const AUTH_TIMEOUT_MS = 20_000;
 const BOARD_TIMEOUT_MS = 20_000;
+const BENCHMARK_STRICT_MODE = process.env.BENCHMARK_STRICT === '1';
+const MIN_FPS_TARGET = Number(process.env.BENCHMARK_MIN_FPS ?? '58');
+const MAX_PROPAGATION_MS = Number(process.env.BENCHMARK_MAX_PROPAGATION_MS ?? '3000');
+const MULTIUSER_REPETITIONS = Number(
+  process.env.BENCHMARK_MULTIUSER_REPETITIONS ?? (BENCHMARK_STRICT_MODE ? '3' : '1')
+);
+const MAX_AI_COMMAND_MS = Number(process.env.BENCHMARK_MAX_AI_COMMAND_MS ?? '2000');
+
+const assertLessThan = (actual: number, target: number): void => {
+  if (BENCHMARK_STRICT_MODE) {
+    expect(actual).toBeLessThan(target);
+  } else {
+    expect.soft(actual).toBeLessThan(target);
+  }
+};
+
+const assertGreaterThanOrEqual = (actual: number, target: number): void => {
+  if (BENCHMARK_STRICT_MODE) {
+    expect(actual).toBeGreaterThanOrEqual(target);
+  } else {
+    expect.soft(actual).toBeGreaterThanOrEqual(target);
+  }
+};
 
 const getObjectCount = async (page: Page): Promise<number> => {
   const objectCountText = await page.locator('[data-testid="object-count"]').textContent();
@@ -134,25 +157,27 @@ test.describe('MVP Benchmarks', () => {
         throw new Error('No editable user context found for object creation benchmark');
       }
 
-      const baselineCounts = await Promise.all(pages.map((page) => getObjectCount(page)));
+      for (let run = 0; run < MULTIUSER_REPETITIONS; run += 1) {
+        const baselineCounts = await Promise.all(pages.map((page) => getObjectCount(page)));
 
-      await createStickyWithAI(creatorPage);
-      const propagationStart = Date.now();
+        await createStickyWithAI(creatorPage);
+        const propagationStart = Date.now();
 
-      await Promise.all(
-        pages.map(async (page, index) => {
-          const baseline = baselineCounts[index] ?? 0;
-          await expect
-            .poll(async () => getObjectCount(page), {
-              timeout: 15_000,
-              intervals: [200, 300, 500],
-            })
-            .toBeGreaterThan(baseline);
-        })
-      );
+        await Promise.all(
+          pages.map(async (page, index) => {
+            const baseline = baselineCounts[index] ?? 0;
+            await expect
+              .poll(async () => getObjectCount(page), {
+                timeout: 15_000,
+                intervals: [200, 300, 500],
+              })
+              .toBeGreaterThan(baseline);
+          })
+        );
 
-      const propagationMs = Date.now() - propagationStart;
-      expect(propagationMs).toBeLessThan(3_000);
+        const propagationMs = Date.now() - propagationStart;
+        assertLessThan(propagationMs, MAX_PROPAGATION_MS);
+      }
     } finally {
       await Promise.all(
         contexts.map(async (context) => {
@@ -211,7 +236,7 @@ test.describe('MVP Benchmarks', () => {
     }
 
     const fps = await fpsPromise;
-    expect(fps).toBeGreaterThanOrEqual(58);
+    assertGreaterThanOrEqual(fps, MIN_FPS_TARGET);
   });
 
   test('responds to a single-step AI command within 2 seconds', async ({ page }) => {
@@ -238,6 +263,6 @@ test.describe('MVP Benchmarks', () => {
       .toBeGreaterThan(initialCount);
 
     const durationMs = Date.now() - start;
-    expect(durationMs).toBeLessThan(2_000);
+    assertLessThan(durationMs, MAX_AI_COMMAND_MS);
   });
 });

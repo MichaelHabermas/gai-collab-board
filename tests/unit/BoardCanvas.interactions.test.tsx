@@ -9,6 +9,7 @@ import { BoardCanvas } from '@/components/canvas/BoardCanvas';
 type KonvaEvent = Konva.KonvaEventObject<MouseEvent>;
 
 interface IStageProps {
+  style?: Record<string, unknown>;
   onClick?: (event: KonvaEvent) => void;
   onMouseDown?: (event: KonvaEvent) => void;
   onMouseMove?: (event: KonvaEvent) => void;
@@ -18,6 +19,8 @@ interface IStageProps {
 
 let latestStageProps: IStageProps = {};
 const shapePropsById = new Map<string, Record<string, unknown>>();
+let latestRectProps: Array<Record<string, unknown>> = [];
+let mockSelectedIds: string[] = [];
 
 /** Toggled by tests to assert snap-to-grid behavior in dragBoundFunc. */
 let mockSnapToGridEnabled = false;
@@ -28,7 +31,10 @@ vi.mock('react-konva', () => ({
     return <div data-testid='stage-mock'>{props.children}</div>;
   },
   Layer: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
-  Rect: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
+  Rect: (props: Record<string, unknown>) => {
+    latestRectProps.push(props);
+    return <div>{props.children as ReactNode}</div>;
+  },
   Line: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
 }));
 
@@ -133,7 +139,7 @@ vi.mock('@/hooks/useBoardSettings', () => ({
 
 vi.mock('@/contexts/selectionContext', () => ({
   useSelection: () => ({
-    selectedIds: [],
+    selectedIds: mockSelectedIds,
     setSelectedIds: vi.fn(),
   }),
 }));
@@ -250,7 +256,9 @@ describe('BoardCanvas interactions', () => {
   beforeEach(() => {
     latestStageProps = {};
     shapePropsById.clear();
+    latestRectProps = [];
     mockSnapToGridEnabled = false;
+    mockSelectedIds = [];
     vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
       callback(0);
       return 1;
@@ -543,5 +551,80 @@ describe('BoardCanvas interactions', () => {
     expect((result?.x ?? 0) % GRID_SIZE).toBe(0);
     expect((result?.y ?? 0) % GRID_SIZE).toBe(0);
     expect(typeof props?.onDragMove).toBe('function');
+  });
+
+  it('uses grab/grabbing cursor while hovering and dragging selection handle', async () => {
+    mockSelectedIds = ['shape-a', 'shape-b'];
+    const onObjectsUpdate = vi.fn();
+    const objects = [
+      createObject({
+        id: 'shape-a',
+        type: 'rectangle',
+        x: 100,
+        y: 100,
+        width: 120,
+        height: 90,
+      }),
+      createObject({
+        id: 'shape-b',
+        type: 'rectangle',
+        x: 280,
+        y: 120,
+        width: 120,
+        height: 90,
+      }),
+    ];
+
+    render(
+      <BoardCanvas
+        boardId='board-1'
+        boardName='Board'
+        user={createUser()}
+        objects={objects}
+        canEdit={true}
+        onObjectsUpdate={onObjectsUpdate}
+      />
+    );
+
+    const selectionHandleRect = latestRectProps.find(
+      (props) => props.name === 'selection-drag-handle'
+    );
+    expect(selectionHandleRect).toBeTruthy();
+
+    const handleMouseEnter = selectionHandleRect?.onMouseEnter as (() => void) | undefined;
+    act(() => {
+      handleMouseEnter?.();
+    });
+
+    await waitFor(() => {
+      const stageStyle = latestStageProps.style as Record<string, unknown> | undefined;
+      expect(stageStyle?.cursor).toBe('grab');
+    });
+
+    const handleDragStart = selectionHandleRect?.onDragStart as (() => void) | undefined;
+    const handleDragMove = selectionHandleRect?.onDragMove as
+      | ((event: { target: { x: () => number; y: () => number } }) => void)
+      | undefined;
+    const handleDragEnd = selectionHandleRect?.onDragEnd as (() => void) | undefined;
+
+    act(() => {
+      handleDragStart?.();
+      handleDragMove?.({
+        target: {
+          x: () => 210,
+          y: () => 140,
+        },
+      });
+    });
+
+    await waitFor(() => {
+      const stageStyle = latestStageProps.style as Record<string, unknown> | undefined;
+      expect(stageStyle?.cursor).toBe('grabbing');
+    });
+
+    act(() => {
+      handleDragEnd?.();
+    });
+    expect(onObjectsUpdate).toHaveBeenCalledTimes(1);
   });
 });

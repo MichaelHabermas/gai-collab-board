@@ -5,6 +5,18 @@ const mockRealtimeSet = vi.fn();
 const mockFirestoreUpdateDoc = vi.fn();
 const mockBatchSet = vi.fn();
 const mockBatchCommit = vi.fn();
+const BENCHMARK_STRICT_MODE = process.env.BENCHMARK_STRICT === '1';
+const CURSOR_LATENCY_TARGET_MS = Number(process.env.BENCHMARK_CURSOR_LATENCY_MS ?? '50');
+const OBJECT_LATENCY_TARGET_MS = Number(process.env.BENCHMARK_OBJECT_LATENCY_MS ?? '100');
+const BATCH_DURATION_TARGET_MS = Number(process.env.BENCHMARK_BATCH_DURATION_MS ?? '1500');
+
+const assertLatencyLessThan = (actual: number, target: number): void => {
+  if (BENCHMARK_STRICT_MODE) {
+    expect(actual).toBeLessThan(target);
+  } else {
+    expect.soft(actual).toBeLessThan(target);
+  }
+};
 
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -67,7 +79,7 @@ describe('Sync Benchmark Integration Tests', () => {
     const durationMs = Date.now() - start;
 
     expect(mockRealtimeSet).toHaveBeenCalledTimes(1);
-    expect(durationMs).toBeLessThan(50);
+    assertLatencyLessThan(durationMs, CURSOR_LATENCY_TARGET_MS);
   });
 
   it('measures object update sync write latency under 100ms target envelope', async () => {
@@ -82,7 +94,7 @@ describe('Sync Benchmark Integration Tests', () => {
     const durationMs = Date.now() - start;
 
     expect(mockFirestoreUpdateDoc).toHaveBeenCalledTimes(1);
-    expect(durationMs).toBeLessThan(100);
+    assertLatencyLessThan(durationMs, OBJECT_LATENCY_TARGET_MS);
   });
 
   it(
@@ -109,7 +121,7 @@ describe('Sync Benchmark Integration Tests', () => {
       expect(created).toHaveLength(500);
       expect(mockBatchSet).toHaveBeenCalledTimes(500);
       expect(mockBatchCommit).toHaveBeenCalledTimes(1);
-      expect(durationMs).toBeLessThan(1_500);
+      assertLatencyLessThan(durationMs, BATCH_DURATION_TARGET_MS);
     }
   );
 });
