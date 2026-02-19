@@ -141,7 +141,7 @@
 
 ### P1 - Product UX and maintainability improvements
 
-10. [ ] **Welcome page for logged-out users**
+10. [x] **Welcome page for logged-out users**
 
 - Why now: strong first impression + conversion utility.
 - What to change:
@@ -167,7 +167,7 @@
   - No low-contrast/mismatched backgrounds when toggling themes.
 - **Scores (1–10):** Ease `5` · Usefulness `7` · App need `7` · Risk `8` · Speed `5` · Wow `6` → **Overall `6`**
 
-12. [ ] **Move groups of selected objects**
+12. [x] **Move groups of selected objects**
 
 - Why now: high usefulness, moderate complexity.
 - What to change:

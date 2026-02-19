@@ -20,7 +20,13 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { getBoardShareLink } from '@/lib/shareLink';
 import { IBoard, UserRole } from '@/types';
-import { addBoardMember, removeBoardMember, updateMemberRole, deleteBoard } from '@/modules/sync';
+import {
+  addBoardMember,
+  removeBoardMember,
+  updateMemberRole,
+  deleteBoard,
+  removeBoardIdFromPreferences,
+} from '@/modules/sync';
 import { Copy, Check, UserPlus, Trash2, Crown, Edit, Eye, Trash } from 'lucide-react';
 
 interface ShareDialogProps {
@@ -141,6 +147,7 @@ export const ShareDialog = ({
     setError('');
     try {
       await removeBoardMember(board.id, currentUserId);
+      await removeBoardIdFromPreferences(currentUserId, board.id);
       onLeaveBoard?.();
     } catch (err) {
       setError((err as Error).message);

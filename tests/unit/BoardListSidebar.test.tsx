@@ -583,9 +583,9 @@ describe('BoardListSidebar', () => {
 
   it('non-owner Leave board calls removeBoardMember and removeBoardIdFromPreferences and navigates away when current board', async () => {
     const sharedBoard = createMockBoardWhereUserIsMember('board-2', 'Shared Board', 'other-owner', 'editor');
-    const newBoard = createMockBoard('board-new', 'Untitled Board', mockUser.uid);
     const onSelectBoard = vi.fn();
-    const onCreateNewBoard = vi.fn().mockResolvedValue(newBoard);
+    const onCreateNewBoard = vi.fn();
+    const onLeaveBoard = vi.fn();
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     render(
@@ -594,6 +594,7 @@ describe('BoardListSidebar', () => {
         currentBoardId='board-2'
         onSelectBoard={onSelectBoard}
         onCreateNewBoard={onCreateNewBoard}
+        onLeaveBoard={onLeaveBoard}
       />
     );
     triggerSubscriptions([sharedBoard]);
@@ -608,8 +609,9 @@ describe('BoardListSidebar', () => {
       expect(mockRemoveBoardMember).toHaveBeenCalledWith('board-2', 'user-1');
     });
     expect(mockRemoveBoardIdFromPreferences).toHaveBeenCalledWith('user-1', 'board-2');
-    expect(onCreateNewBoard).toHaveBeenCalledTimes(1);
-    expect(onSelectBoard).toHaveBeenCalledWith('board-new');
+    expect(onLeaveBoard).toHaveBeenCalledTimes(1);
+    expect(onSelectBoard).not.toHaveBeenCalled();
+    expect(onCreateNewBoard).not.toHaveBeenCalled();
     confirmSpy.mockRestore();
   });
 });

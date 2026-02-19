@@ -51,6 +51,7 @@ export const BoardListSidebar = memo(
     currentBoardId,
     onSelectBoard,
     onCreateNewBoard,
+    onLeaveBoard,
   }: IBoardListSidebarProps): ReactElement => {
     const [boards, setBoards] = useState<IBoard[]>([]);
     const [loading, setLoading] = useState(true);
@@ -188,14 +189,8 @@ export const BoardListSidebar = memo(
         await removeBoardIdFromPreferences(user.uid, boardId);
         const wasCurrent = boardId === currentBoardId;
         if (wasCurrent) {
-          const others = boards.filter((b) => b.id !== boardId);
-          const firstOther = others[0];
-          if (firstOther) {
-            onSelectBoard(firstOther.id);
-          } else {
-            const newBoard = await onCreateNewBoard();
-            onSelectBoard(newBoard.id);
-          }
+          onLeaveBoard?.();
+          return;
         }
       } catch (err) {
         setDeleteError(err instanceof Error ? err.message : 'Failed to leave board');
