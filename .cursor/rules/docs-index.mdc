@@ -1,0 +1,47 @@
+---
+description: Keeps docs/INDEX.md in sync whenever documentation files are added, modified, or removed in the docs/ directory.
+globs:
+  - docs/**/*.md
+  - docs/**/*.mdx
+  - docs/**/*.txt
+alwaysApply: false
+---
+
+# Documentation Index Maintenance Rule
+
+## When This Rule Activates
+
+This rule applies whenever you are working with ANY file inside the `docs/` directory.
+
+## Core Directive
+
+The file `docs/INDEX.md` is a quick-reference index for AI agents and LLMs. It MUST stay accurate and up-to-date at all times.
+
+## Required Actions
+
+### On ANY docs/ file change (create, edit, delete, rename, move):
+
+1. **Read `docs/INDEX.md`** to understand current state
+2. **Update the relevant entry** in the index:
+   - **New file:** Add a row to the appropriate category table. Read the file to generate a 1-line summary and 3-5 key topics. Add keywords to the Topic Cross-Reference. If it's an ADR, add to Decision Quick-Lookup.
+   - **Modified file:** Re-read the file. Update the summary, key topics, and last-modified date if content has materially changed. Update cross-reference keywords if topics shifted.
+   - **Deleted/moved file:** Remove or update the entry. Remove orphaned cross-reference entries.
+   - **Renamed file:** Update all path references.
+3. **Update metadata:** Set `Last Updated` timestamp and `Total Documents` count.
+4. **Maintain formatting:** Keep categories alphabetical, files alphabetical within categories, cross-reference alphabetical.
+
+### Validation Checks
+
+Before finishing any docs/ task, verify:
+
+- [ ] Every `.md`/`.mdx` file in `docs/` has an entry in INDEX.md
+- [ ] No entries in INDEX.md point to non-existent files
+- [ ] `Total Documents` count matches actual file count
+- [ ] `Last Updated` timestamp is current
+
+## Important Notes
+
+- Do NOT load all docs into context — the index exists to PREVENT that
+- Keep summaries to ONE concise line
+- If unsure about categorization, use "General" as the category
+- When creating new categories, maintain alphabetical order
