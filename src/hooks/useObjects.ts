@@ -298,12 +298,15 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         pendingUpdatesRef.current.set(obj.id, obj);
       }
 
-      setObjects((prev) =>
-        prev.map((obj) => {
+      setObjects((prev) => {
+        const next = prev.map((obj) => {
           const entry = updates.find((u) => u.objectId === obj.id);
           return entry ? { ...obj, ...entry.updates } : obj;
-        })
-      );
+        });
+        // Keep ref in sync so subscription callbacks do not reconcile from stale ref and cause one-by-one flicker
+        objectsByIdRef.current = new Map(next.map((object) => [object.id, object]));
+        return next;
+      });
 
       try {
         setError('');

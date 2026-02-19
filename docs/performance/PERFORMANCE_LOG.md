@@ -17,20 +17,20 @@
 
 | Metric | Value | Target |
 |--------|-------|--------|
-| Cursor write latency | 17 ms | <50 ms |
-| Object update latency | 32 ms | <100 ms |
-| 500-object batch | 62 ms | <1500 ms |
+| Cursor write latency | 22 ms | <50 ms |
+| Object update latency | 26 ms | <100 ms |
+| 500-object batch | 60 ms | <1500 ms |
 
 **Progress over time**
 
 ```mermaid
 xychart-beta
     title "Integration metrics over time (ms)"
-    x-axis ["2026-02-19", "2026-02-19", "2026-02-19", "2026-02-19"]
+    x-axis ["2026-02-19", "2026-02-19", "2026-02-19", "2026-02-19", "2026-02-19"]
     y-axis "Latency (ms)" 0 --> 88
-    line "Cursor write" [14, 25, 20, 17]
-    line "Object update" [31, 18, 32, 32]
-    line "Batch 500 objects" [62, 63, 60, 62]
+    line "Cursor write" [14, 25, 20, 17, 22]
+    line "Object update" [31, 18, 32, 32, 26]
+    line "Batch 500 objects" [62, 63, 60, 62, 60]
 ```
 
 ## Optimization History
@@ -83,6 +83,47 @@ E2E metrics (FPS, propagation, AI command) require running the benchmark spec wi
 **Metrics (integration, no regression expected):**
 
 - Sync latency tests unchanged (cursor, object update, 500-object batch). Run `bun run perf:check` to refresh.
+
+**Issues Found:** None
+
+**Build Status:** ✅ Passing
+
+---
+
+### 2026-02-19 — Baseline (pre multi-drop reconciliation fix)
+
+**Scope:** Baseline capture before fixing post-drop one-by-one disappear/reappear for large multi-selection drags.
+
+**Metrics (integration, before fix):**
+
+| Metric | Value | Target | Source |
+|--------|-------|--------|--------|
+| Cursor write latency | 17 ms | <50 ms | `last-run-metrics.json` |
+| Object update latency | 32 ms | <100 ms | `last-run-metrics.json` |
+| 500-object batch | 62 ms | <1500 ms | `last-run-metrics.json` |
+
+E2E benchmarks (FPS, propagation, AI) to be compared post-fix; see A.4 entry.
+
+---
+
+### 2026-02-19 — A.4 Multi-drop reconciliation (no post-drop flicker)
+
+**Files Changed:** 4 (src: 1 modified; tests: 2 modified; docs: 2 modified)
+**Scope:** Fix post-drop one-by-one disappear/reappear when dragging a large multi-selection. Kept `objectsByIdRef` in sync with optimistic batch position updates so Firestore snapshot reconciliation does not rebuild from stale ref and cause sequential visual updates.
+
+**Changes:**
+
+- `useObjects.handleUpdateObjects`: inside the optimistic `setObjects` updater, set `objectsByIdRef.current` to the new array so subscription callbacks see current positions when applying incremental changes.
+- Tests: `useObjects` regression test for batch position update + simulated Firestore snapshot (10 objects, positions stable); `BoardCanvas.interactions` asserts group-drag batch payload length and object ids.
+- PRD: "Multi-drop reconciliation (no post-drop flicker)" with 200-object/250 ms target and verification checkboxes.
+
+**Metrics (integration, after task):**
+
+| Metric | Value | Target | Source |
+|--------|-------|--------|--------|
+| Cursor write latency | 22 ms | <50 ms | `last-run-metrics.json` |
+| Object update latency | 26 ms | <100 ms | `last-run-metrics.json` |
+| 500-object batch | 60 ms | <1500 ms | `last-run-metrics.json` |
 
 **Issues Found:** None
 

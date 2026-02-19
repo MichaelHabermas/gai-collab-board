@@ -55,7 +55,8 @@ describe('useCanvasOperations', () => {
     });
 
     it('handleDelete with 2+ selected and onObjectsDeleteBatch calls batch once and not onObjectDelete', async () => {
-      onObjectsDeleteBatch.mockResolvedValue(undefined);
+      (onObjectsDeleteBatch as unknown as { mockResolvedValue: (v: undefined) => void })
+        .mockResolvedValue(undefined);
       const props = {
         ...getDefaultProps(),
         selectedIds: ['id1', 'id2'],
@@ -72,7 +73,8 @@ describe('useCanvasOperations', () => {
     });
 
     it('deleting 50+ selected objects uses a single batch write (not N individual deletes)', async () => {
-      onObjectsDeleteBatch.mockResolvedValue(undefined);
+      (onObjectsDeleteBatch as unknown as { mockResolvedValue: (v: undefined) => void })
+        .mockResolvedValue(undefined);
       const ids = Array.from({ length: 55 }, (_, i) => `obj-${i}`);
       const objects: IBoardObject[] = ids.map((id) => ({
         ...mockObject,

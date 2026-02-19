@@ -1964,6 +1964,20 @@ Snap-to-grid, when enabled, applies to each moved object. Lines and connectors m
 - [x] Snap-to-grid applies to every moved object when the option is enabled.
 - [x] Moving a group uses a single batch write (e.g. verified by unit tests for useObjects.updateObjects and objectService.updateObjectsBatch).
 
+#### Multi-drop reconciliation (no post-drop flicker)
+
+After dropping a large multi-selection, objects must settle in one go with no visible one-by-one disappear/reappear. Optimistic state and refs stay in sync so Firestore snapshot reconciliation does not cause sequential visual updates.
+
+**Expected behaviour:**
+
+- No visible one-by-one disappear or reappear of objects after releasing a multi-selection drag.
+- With up to 200 selected objects, final positions are stable and the UI settles within 250 ms of drop.
+
+**Verification (do not check until confirmed in browser or E2E):**
+
+- [ ] Dropping a multi-selection (e.g. 20+ objects) shows no one-by-one flicker; all objects remain visible and move to the new position together.
+- [ ] With ~200 selected objects, dropping the group results in stable final positions within 250 ms.
+
 ### Story 3.9: Operations (Delete, Duplicate, Copy/Paste)
 
 **As a user**, I can delete, duplicate, and copy/paste objects.

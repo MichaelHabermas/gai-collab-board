@@ -49,7 +49,7 @@
 
 | File | Summary | Key Topics | Last Modified |
 |------|---------|------------|---------------|
-| `performance/PERFORMANCE_LOG.md` | Task-level performance reviews, metrics-over-time graph, optimization history (A.1, A.2, A.3); run `bun run perf:check` to record and refresh | `performance`, `cleanup`, `optimization`, `perf:check`, `metrics over time`, `viewport`, `A.3` | 2026-02-19 |
+| `performance/PERFORMANCE_LOG.md` | Task-level performance reviews, metrics-over-time graph, optimization history (A.1–A.4); run `bun run perf:check` to record and refresh | `performance`, `cleanup`, `optimization`, `perf:check`, `metrics over time`, `viewport`, `A.4`, `multi-drop` | 2026-02-19 |
 
 ### Phases (version-2)
 
@@ -66,15 +66,15 @@
 
 | File | Summary | Key Topics | Last Modified |
 |------|---------|------------|---------------|
-| `planning/AI-COST-ANALYSIS.md` | AI cost at scale: dev costs, production projections (100–100K users), Groq vs NVIDIA, assumptions | `AI cost`, `Groq`, `NVIDIA`, `scaling`, `LLM` | 2026-02-18 |
-| `planning/AI-DEVELOPMENT-LOG.md` | How AI was used: Cursor, Context7 MCP, prompts, AI vs hand-written code split, learnings | `AI-first`, `Cursor`, `MCP`, `workflow`, `learnings` | 2026-02-18 |
+| `planning/AI-COST-ANALYSIS.md` | AI cost at scale: dev costs, production projections (100–100K users), Groq vs NVIDIA, assumptions | `AI cost`, `Groq`, `NVIDIA`, `scaling`, `LLM` | 2026-02-19 |
+| `planning/AI-DEVELOPMENT-LOG.md` | How AI was used: Cursor, Context7 MCP, prompts, AI vs hand-written code split, learnings | `AI-first`, `Cursor`, `MCP`, `workflow`, `learnings` | 2026-02-19 |
 | `planning/UI-UX-IMPROVEMENT-PLAN.md` | Prioritized UX improvements: share links, theme, panel collapse, balanced scoring, delivery plan | `UX`, `share links`, `theme`, `prioritization`, `P0/P1` | 2026-02-18 |
 
 ### Product
 
 | File | Summary | Key Topics | Last Modified |
 |------|---------|------------|---------------|
-| `product/PRD.md` | Root PRD: CollabBoard scope, MVP/full requirements, tech stack, architecture, appendices | `PRD`, `MVP`, `requirements`, `scope`, `architecture` | 2026-02-19 |
+| `product/PRD.md` | Root PRD: CollabBoard scope, MVP/full requirements, tech stack, architecture, multi-drop reconciliation | `PRD`, `MVP`, `requirements`, `scope`, `architecture`, `multi-drop`, `flicker` | 2026-02-19 |
 | `product/PRD-UNCHECKED-TRACKER.md` | Maps unchecked PRD items to implementation and test evidence (E2E, unit, manual) | `PRD`, `tracker`, `evidence`, `Epic 3`, `Epic 5` | 2026-02-19 |
 
 ### Reports

@@ -742,5 +742,12 @@ describe('BoardCanvas interactions', () => {
       handleDragEnd?.();
     });
     expect(onObjectsUpdate).toHaveBeenCalledTimes(1);
+    const batchPayload = onObjectsUpdate.mock.calls[0]?.[0] as Array<{
+      objectId: string;
+      updates: { x?: number; y?: number };
+    }>;
+    expect(Array.isArray(batchPayload)).toBe(true);
+    expect(batchPayload).toHaveLength(2);
+    expect(batchPayload.map((e) => e.objectId).sort()).toEqual(['shape-a', 'shape-b']);
   });
 });

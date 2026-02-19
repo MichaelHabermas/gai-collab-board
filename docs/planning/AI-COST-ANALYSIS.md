@@ -141,3 +141,7 @@ Line drag fix (drag end reports origin so line does not jump) and refactor pass 
 ### Cursor broadcast regression fix (Feb 2026) — production relevance
 
 Fix restores visibility of other users' cursors when sharing a board. Cursor sync uses Firebase Realtime Database only; no LLM usage or API change. Production projections and token mix unchanged. What we actually use in production: AI chat (Groq/NVIDIA) and the table above; cursor/presence remain Realtime DB. Keep this file ~1 page.
+
+### Multi-drop reconciliation fix (Feb 2026) — production relevance
+
+Optimistic batch move now keeps `objectsByIdRef` in sync so Firestore snapshot reconciliation does not cause one-by-one post-drop flicker. Client/sync only; no LLM or API change. Production cost and token mix unchanged. Focus remains on what is actually used in production: AI chat (Groq/NVIDIA) and the projections table above.

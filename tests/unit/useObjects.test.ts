@@ -630,4 +630,62 @@ describe('useObjects – updateObjects for group drag', () => {
 
     expect(result.current.objects).toHaveLength(0);
   });
+
+  it('batch position update keeps all objects at new positions after simulated Firestore snapshot (no one-by-one revert)', async () => {
+    const count = 10;
+    const objects = Array.from({ length: count }, (_, i) =>
+      createBoardObject({ id: `obj-${i}`, x: i * 100, y: 0, updatedAt: createTimestamp(1000) })
+    );
+
+    const { result } = renderHook(() =>
+      useObjects({ boardId: 'board-1', user: createUser() })
+    );
+
+    act(() => {
+      subscriptionCallback?.({
+        objects,
+        changes: objects.map((o) => ({ type: 'added' as const, object: o })),
+        isInitialSnapshot: true,
+      });
+    });
+
+    const dx = 50;
+    const dy = 50;
+    const updates = objects.map((obj) => ({
+      objectId: obj.id,
+      updates: { x: obj.x + dx, y: obj.y + dy },
+    }));
+
+    await act(async () => {
+      await result.current.updateObjects(updates);
+    });
+
+    for (let i = 0; i < count; i += 1) {
+      const obj = result.current.objects.find((o) => o.id === `obj-${i}`);
+      expect(obj).toMatchObject({ x: i * 100 + dx, y: dy });
+    }
+
+    const batchTimestamp = createTimestamp(2000);
+    const remoteObjects = objects.map((obj) =>
+      createBoardObject({
+        id: obj.id,
+        x: obj.x + dx,
+        y: obj.y + dy,
+        updatedAt: batchTimestamp,
+      })
+    );
+
+    act(() => {
+      subscriptionCallback?.({
+        objects: remoteObjects,
+        changes: remoteObjects.map((o) => ({ type: 'modified' as const, object: o })),
+        isInitialSnapshot: false,
+      });
+    });
+
+    for (let i = 0; i < count; i += 1) {
+      const obj = result.current.objects.find((o) => o.id === `obj-${i}`);
+      expect(obj).toMatchObject({ x: i * 100 + dx, y: dy });
+    }
+  });
 });
