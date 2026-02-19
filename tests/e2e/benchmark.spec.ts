@@ -97,6 +97,8 @@ const ensureAuthenticated = async (page: Page, credential: ICredential): Promise
     return;
   }
 
+  await page.goto('/login?tab=signup');
+  await page.waitForLoadState('load');
   await trySignUp(page, credential);
 
   const boardLocator = page.locator('[data-testid="board-canvas"]');
