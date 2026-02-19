@@ -57,6 +57,13 @@ service cloud.firestore {
         allow read: if isAuthenticated() && isBoardMember(boardId);
         allow write: if isAuthenticated() && canEdit(boardId);
       }
+
+      // Board comments subcollection
+      match /comments/{commentId} {
+        allow read: if isAuthenticated() && isBoardMember(boardId);
+        allow create: if isAuthenticated() && canEdit(boardId);
+        allow update, delete: if isAuthenticated() && resource.data.authorId == request.auth.uid;
+      }
     }
     
     // User profiles (optional, for user lookup)

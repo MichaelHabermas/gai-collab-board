@@ -1,0 +1,82 @@
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import type { IComment, ICreateCommentParams } from '@/types';
+import {
+  createComment as createCommentService,
+  deleteComment as deleteCommentService,
+  subscribeToComments,
+} from '@/modules/sync/commentService';
+
+interface UseCommentsParams {
+  boardId: string | undefined;
+}
+
+interface UseCommentsResult {
+  /** All comments for the board, ordered by createdAt. */
+  comments: IComment[];
+  /** Comments grouped by objectId for efficient lookup. */
+  commentsByObjectId: Map<string, IComment[]>;
+  /** Whether the initial load is in progress. */
+  loading: boolean;
+  /** Create a new comment. */
+  createComment: (params: ICreateCommentParams) => Promise<IComment | null>;
+  /** Delete a comment by ID (only author should call this). */
+  deleteComment: (commentId: string) => Promise<void>;
+}
+
+/**
+ * Hook for real-time comments on a board.
+ * Subscribes to the comments subcollection and provides CRUD operations.
+ */
+export const useComments = ({ boardId }: UseCommentsParams): UseCommentsResult => {
+  const [comments, setComments] = useState<IComment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Real-time subscription
+  useEffect(() => {
+    if (!boardId) {
+      setComments([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    const unsubscribe = subscribeToComments(boardId, (nextComments) => {
+      setComments(nextComments);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [boardId]);
+
+  // Group comments by objectId
+  const commentsByObjectId = useMemo(() => {
+    const map = new Map<string, IComment[]>();
+    for (const comment of comments) {
+      const existing = map.get(comment.objectId);
+      if (existing) {
+        existing.push(comment);
+      } else {
+        map.set(comment.objectId, [comment]);
+      }
+    }
+    return map;
+  }, [comments]);
+
+  const createComment = useCallback(
+    async (params: ICreateCommentParams): Promise<IComment | null> => {
+      if (!boardId) return null;
+      return createCommentService(boardId, params);
+    },
+    [boardId]
+  );
+
+  const deleteComment = useCallback(
+    async (commentId: string): Promise<void> => {
+      if (!boardId) return;
+      return deleteCommentService(boardId, commentId);
+    },
+    [boardId]
+  );
+
+  return { comments, commentsByObjectId, loading, createComment, deleteComment };
+};

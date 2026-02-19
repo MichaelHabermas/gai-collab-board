@@ -29,6 +29,9 @@ const AIChatPanel = lazy(() =>
   import('@/components/ai/AIChatPanel').then((m) => ({ default: m.AIChatPanel }))
 );
 import { TabsContent } from '@/components/ui/tabs';
+import { CommentPanel } from '@/components/board/CommentPanel';
+import { useComments } from '@/hooks/useComments';
+import { useSelectionStore } from '@/stores/selectionStore';
 import {
   Dialog,
   DialogContent,
@@ -85,6 +88,11 @@ const BoardView = ({
 
   const { onlineUsers } = usePresence({ boardId, user });
   const ai = useAI({ boardId, user, objects });
+  const { commentsByObjectId, loading: commentsLoading, createComment, deleteComment: deleteCommentFn } =
+    useComments({ boardId });
+  const selectedIds = useSelectionStore((s) => s.selectedIds);
+  const selectedObjectId = selectedIds.length === 1 ? (selectedIds[0] ?? null) : null;
+  const selectedObjectComments = selectedObjectId ? (commentsByObjectId.get(selectedObjectId) ?? []) : [];
   const { sidebarTab, setSidebarTab, sidebarCollapsed, setSidebarCollapsed } =
     useBoardSettings(boardId);
 
@@ -319,6 +327,21 @@ const BoardView = ({
                       onClearMessages={ai.clearMessages}
                     />
                   </Suspense>
+                </TabsContent>
+                <TabsContent
+                  value='comments'
+                  className='flex-1 min-h-0 mt-2 overflow-hidden flex flex-col'
+                  data-testid='comments-tab-content'
+                >
+                  <CommentPanel
+                    comments={selectedObjectComments}
+                    selectedObjectId={selectedObjectId}
+                    currentUserId={user.uid}
+                    currentUserDisplayName={user.displayName ?? user.email ?? undefined}
+                    loading={commentsLoading}
+                    onCreateComment={createComment}
+                    onDeleteComment={deleteCommentFn}
+                  />
                 </TabsContent>
               </>
             ) : (

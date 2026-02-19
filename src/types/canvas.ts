@@ -11,7 +11,7 @@ import type { IDragBoundFunc } from './shapes';
 import type { IKonvaDragEvent } from './konva';
 
 /** Right sidebar tab. Used by useBoardSettings and RightSidebar. */
-export type SidebarTab = 'boards' | 'properties' | 'ai';
+export type SidebarTab = 'boards' | 'properties' | 'ai' | 'comments';
 
 /** Selection drag rect (visible + bounds). Used by SelectionLayer and BoardCanvas. */
 export interface ISelectionRect {

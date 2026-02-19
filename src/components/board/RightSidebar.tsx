@@ -1,7 +1,7 @@
 import { type ReactElement } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PanelRightClose, PanelRightOpen, LayoutDashboard, Settings, Bot } from 'lucide-react';
+import { PanelRightClose, PanelRightOpen, LayoutDashboard, Settings, Bot, MessageSquare } from 'lucide-react';
 import type { IRightSidebarProps } from '@/types';
 
 /**
@@ -27,7 +27,7 @@ export const RightSidebar = ({
       <Tabs
         value={boardsOnly ? 'boards' : sidebarTab}
         onValueChange={(value) => {
-          if (value === 'boards' || value === 'properties' || value === 'ai') {
+          if (value === 'boards' || value === 'properties' || value === 'ai' || value === 'comments') {
             setSidebarTab(value);
           }
         }}
@@ -86,6 +86,21 @@ export const RightSidebar = ({
                 >
                   <Bot className='h-4 w-4' aria-hidden />
                 </Button>
+                <Button
+                  type='button'
+                  variant={sidebarTab === 'comments' ? 'secondary' : 'ghost'}
+                  size='icon'
+                  className='h-9 w-9 shrink-0'
+                  onClick={() => {
+                    setSidebarTab('comments');
+                    setSidebarCollapsed(false);
+                  }}
+                  title='Comments'
+                  aria-label='Comments'
+                  data-testid='sidebar-rail-tab-comments'
+                >
+                  <MessageSquare className='h-4 w-4' aria-hidden />
+                </Button>
               </>
             )}
             <div className='flex-1 min-h-2' />
@@ -105,7 +120,7 @@ export const RightSidebar = ({
         ) : (
           <>
             <TabsList
-              className={`w-full shrink-0 bg-muted ${boardsOnly ? 'grid grid-cols-1' : 'grid grid-cols-3'}`}
+              className={`w-full shrink-0 bg-muted ${boardsOnly ? 'grid grid-cols-1' : 'grid grid-cols-4'}`}
             >
               <TabsTrigger
                 value='boards'
@@ -126,6 +141,12 @@ export const RightSidebar = ({
                     className='text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground'
                   >
                     AI
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value='comments'
+                    className='text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground'
+                  >
+                    Comments
                   </TabsTrigger>
                 </>
               )}

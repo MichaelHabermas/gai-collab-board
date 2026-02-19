@@ -65,3 +65,4 @@ export type {
   IKonvaTouchEvent,
   IKonvaEvent,
 } from './konva';
+export type { IComment, ICreateCommentParams } from './comment';
