@@ -273,6 +273,14 @@ export const BoardCanvas = memo(
       () => visibleObjects.map((object) => object.id).join('|'),
       [visibleObjects]
     );
+    // Frames always render behind non-frames (stable sort: frames first)
+    const objectsInRenderOrder = useMemo(
+      () =>
+        [...visibleObjects].sort(
+          (a, b) => (a.type === 'frame' ? 0 : 1) - (b.type === 'frame' ? 0 : 1)
+        ),
+      [visibleObjects]
+    );
     const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
     const objectsById = useMemo(
       () => new Map(objects.map((object) => [object.id, object])),
@@ -1199,7 +1207,7 @@ export const BoardCanvas = memo(
 
     const visibleObjectNodes = useMemo(
       () =>
-        visibleObjects.map((object) => (
+        objectsInRenderOrder.map((object) => (
           <CanvasShapeRenderer
             key={object.id}
             object={object}
@@ -1218,7 +1226,7 @@ export const BoardCanvas = memo(
           />
         )),
       [
-        visibleObjects,
+        objectsInRenderOrder,
         selectedIdSet,
         canEdit,
         objectsById,
