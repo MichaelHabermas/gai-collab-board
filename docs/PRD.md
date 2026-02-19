@@ -919,8 +919,8 @@ For non-owners, the action that removes a board from their view is "Leave board"
 
 **Verification (do not check until confirmed in browser or via E2E)**:
 
-- [ ] Non-owner "Leave board" (sidebar or Share dialog) removes the board from their list and navigates away if it was the current board.
-- [ ] Owner "Delete board" permanently deletes the board (board is gone for all members).
+- [x] Non-owner "Leave board" (sidebar or Share dialog) removes the board from their list and navigates away if it was the current board.
+- [x] Owner "Delete board" permanently deletes the board (board is gone for all members).
 
 #### Only owners can rename board names
 
@@ -965,10 +965,10 @@ Share link format remains `{origin}/board/{boardId}`; deep-link and post-login b
 
 **Verification (do not check until confirmed in browser or via E2E)**:
 
-- [ ] Refreshing the browser on `{origin}/board/{boardId}` keeps the user on that board (no "Not Found").
-- [ ] Visiting `{origin}/` when authenticated lands the user on their active board (last-visited owned, or last-visited, or first owned, or a newly created board).
-- [ ] "Leave board" sends the user to `/` and they land on their active board.
-- [ ] No hardcoded default board id in code; new boards get unique ids.
+- [x] Refreshing the browser on `{origin}/board/{boardId}` keeps the user on that board (no "Not Found").
+- [x] Visiting `{origin}/` when authenticated lands the user on their active board (last-visited owned, or last-visited, or first owned, or a newly created board).
+- [x] "Leave board" sends the user to `/` and they land on their active board.
+- [x] No hardcoded default board id in code; new boards get unique ids.
 
 **Branch**: `feature/auth-rbac`
 
@@ -1605,7 +1605,7 @@ while maintaining 60 FPS with 500+ objects.
 - [x] Change background color
 - [x] Drag to move
 - [x] Resize with handles
-- [ ] Change sticky note text **Font color** from the property inspector
+- [x] Change sticky note text **Font color** from the property inspector
 - [ ] Keep sticky note text editor overlay aligned inside the note while pan/zoom/rotation is active (implementation: overlay repositions on stage/node transform changes; verify in browser/E2E before checking)
 - Note (Feb 2026): Root cause was double-applying stage pan/zoom in overlay mapping (`getAbsoluteTransform()` already included ancestor transforms). Fix computes overlay coordinates from stage container bounds + absolute transformed points only, and keeps live stage/node listener updates during edit.
 
@@ -1737,13 +1737,13 @@ Lines are resizable **only along their length** (not in the perpendicular "width
 
 **Verification (do not check until confirmed in browser or E2E):**
 
-- [ ] Resizing a line (dragging Transformer handles) changes only its length; the line does not gain "width."
-- [ ] Rotating a line (Transformer rotation handle) works and the angle is persisted.
-- [ ] Property Inspector shows only stroke (no fill) when a line is selected.
-- [ ] Stroke width cannot be set below 1 for lines (and/or all stroke shapes).
-- [ ] Marquee select selects a line when the marquee overlaps the line.
-- [ ] Rotating a line uses the line center as pivot and persists correctly.
-- [ ] Dragging a line (including after marquee select) does not jump on mouse up; position persists correctly.
+- [x] Resizing a line (dragging Transformer handles) changes only its length; the line does not gain "width."
+- [x] Rotating a line (Transformer rotation handle) works and the angle is persisted.
+- [x] Property Inspector shows only stroke (no fill) when a line is selected.
+- [x] Stroke width cannot be set below 1 for lines (and/or all stroke shapes).
+- [x] Marquee select selects a line when the marquee overlaps the line.
+- [x] Rotating a line uses the line center as pivot and persists correctly.
+- [x] Dragging a line (including after marquee select) does not jump on mouse up; position persists correctly.
 
 ### Story 3.4: Connectors
 
@@ -1801,7 +1801,7 @@ Lines are resizable **only along their length** (not in the perpendicular "width
 
 **Acceptance Criteria**:
 
-- [ ] Change text element **Font color** from the property inspector
+- [x] Change text element **Font color** from the property inspector
 - [ ] Keep text element editor overlay aligned with text bounds while pan/zoom/rotation is active (implementation: overlay repositions on stage/node transform changes; verify in browser/E2E before checking)
 - Note (Feb 2026): Same root cause/fix as sticky notes. Overlay mapping no longer double-applies stage transform, and editing overlay repositions continuously on pan/zoom/rotation.
 
@@ -1822,7 +1822,7 @@ All canvas objects (sticky notes, rectangles, circles, lines, connectors, frames
 
 **Expected behavior:**
 
-- [ ] All canvas object types (sticky note, rectangle, circle, line, connector, frame, text) render with a consistent slight shadow.
+- [x] All canvas object types (sticky note, rectangle, circle, line, connector, frame, text) render with a consistent slight shadow.
 
 ### Property Inspector number inputs (spin box rapid-click)
 
@@ -1836,8 +1836,8 @@ Number inputs in the Property Inspector (e.g. stroke width, font size) use local
 
 **Verification (do not check until confirmed in browser or E2E):**
 
-- [ ] Rapidly clicking stroke width or font size spinner updates the display smoothly and commits the final value without stutter.
-- [ ] Changing selection or external sync updates the displayed number to the new object(s) value.
+- [x] Rapidly clicking stroke width or font size spinner updates the display smoothly and commits the final value without stutter.
+- [x] Changing selection or external sync updates the displayed number to the new object(s) value.
 
 ### Text editing overlay stability (Task 7)
 
@@ -1870,9 +1870,9 @@ Snap-to-grid uses the same 20px grid for both **drag** and **resize**. When "Sna
 
 **Verification (do not check until confirmed in browser or via E2E):**
 
-- [ ] With "Snap to grid" on, dragging an object keeps its position on grid lines during drag and on release.
-- [ ] With "Snap to grid" on, resizing an object leaves position and size grid-aligned on release.
-- [ ] Drag and resize show identical snap behavior to the grid when the option is enabled.
+- [x] With "Snap to grid" on, dragging an object keeps its position on grid lines during drag and on release.
+- [x] With "Snap to grid" on, resizing an object leaves position and size grid-aligned on release.
+- [x] Drag and resize show identical snap behavior to the grid when the option is enabled.
 
 #### Commit 1: Transformer Setup
 
@@ -1953,10 +1953,10 @@ Snap-to-grid, when enabled, applies to each moved object. Lines and connectors m
 
 **Verification (do not check until confirmed in browser or E2E):**
 
-- [ ] With 2+ objects selected, dragging one object moves all by the same delta on release.
+- [x] With 2+ objects selected, dragging one object moves all by the same delta on release.
 - [ ] With 2+ objects selected, clicking inside the selection marquee (empty space) and dragging moves the whole group; cursor shows grabbing during drag.
-- [ ] Snap-to-grid applies to every moved object when the option is enabled.
-- [ ] Moving a group uses a single batch write (e.g. verified by unit tests for useObjects.updateObjects and objectService.updateObjectsBatch).
+- [x] Snap-to-grid applies to every moved object when the option is enabled.
+- [x] Moving a group uses a single batch write (e.g. verified by unit tests for useObjects.updateObjects and objectService.updateObjectsBatch).
 
 ### Story 3.9: Operations (Delete, Duplicate, Copy/Paste)
 
@@ -1975,8 +1975,8 @@ Multi-select delete uses a single batched Firestore write (not N sequential dele
 
 **Verification (do not check until confirmed in browser or via tests)**:
 
-- [ ] Deleting 50+ selected objects completes in a short time and the UI stays responsive.
-- [ ] Multi-select delete results in a single batch write (verified by unit tests for objectService, useObjects, and useCanvasOperations).
+- [x] Deleting 50+ selected objects completes in a short time and the UI stays responsive.
+- [x] Multi-select delete results in a single batch write (verified by unit tests for objectService, useObjects, and useCanvasOperations).
 
 #### Commit 2: Duplicate
 
@@ -2065,8 +2065,8 @@ Multi-select delete uses a single batched Firestore write (not N sequential dele
 - [ ] Chromium benchmark `maintains high frame throughput during pan and zoom interactions` meets the PRD target (`>=58 FPS`).
 - [ ] Multi-user benchmark `supports 5 concurrent users with shared object propagation` passes reliably in repeated runs.
 - [ ] Sync latency integration benchmarks remain within target envelopes (`<50ms` cursor write, `<100ms` object update).
-- [ ] Incremental object sync preserves unchanged object references in unit regression tests.
-- [ ] Presence and context regression tests confirm no unnecessary subscription churn or rerender cascades.
+- [x] Incremental object sync preserves unchanged object references in unit regression tests.
+- [x] Presence and context regression tests confirm no unnecessary subscription churn or rerender cascades.
 
 ---
 

@@ -494,3 +494,101 @@ describe('useObjects', () => {
     expect(result.current.objects[1]?.text).toBe('B2');
   });
 });
+
+// ─── Group drag: same delta applied via single batch write ───────────────────
+
+describe('useObjects – updateObjects for group drag', () => {
+  let subscriptionCallback:
+    | ((update: {
+        objects: IBoardObject[];
+        changes: Array<{ type: 'added' | 'modified' | 'removed'; object: IBoardObject }>;
+        isInitialSnapshot: boolean;
+      }) => void)
+    | null = null;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    subscriptionCallback = null;
+    const unsubSpy = vi.fn();
+    mockSubscribeToObjectsWithChanges.mockImplementation(
+      (
+        _boardId: string,
+        cb: (update: {
+          objects: IBoardObject[];
+          changes: Array<{ type: 'added' | 'modified' | 'removed'; object: IBoardObject }>;
+          isInitialSnapshot: boolean;
+        }) => void
+      ) => {
+        subscriptionCallback = cb;
+        return unsubSpy;
+      }
+    );
+    mockUpdateObjectsBatch.mockResolvedValue(undefined);
+  });
+
+  it('moving 2+ selected objects applies same delta to all and uses one batch write', async () => {
+    const objA = createBoardObject({ id: 'a', x: 10, y: 20 });
+    const objB = createBoardObject({ id: 'b', x: 50, y: 80 });
+    const { result } = renderHook(() =>
+      useObjects({ boardId: 'board-1', user: createUser() })
+    );
+
+    act(() => {
+      subscriptionCallback?.({
+        objects: [objA, objB],
+        changes: [
+          { type: 'added', object: objA },
+          { type: 'added', object: objB },
+        ],
+        isInitialSnapshot: true,
+      });
+    });
+
+    // Simulate dragging obj A from (10,20) to (30,40) → delta (+20, +20)
+    const dx = 20;
+    const dy = 20;
+    await act(async () => {
+      await result.current.updateObjects([
+        { objectId: 'a', updates: { x: objA.x + dx, y: objA.y + dy } },
+        { objectId: 'b', updates: { x: objB.x + dx, y: objB.y + dy } },
+      ]);
+    });
+
+    // Single batch write, not two separate writes
+    expect(mockUpdateObjectsBatch).toHaveBeenCalledTimes(1);
+    expect(mockUpdateObjectsBatch).toHaveBeenCalledWith('board-1', [
+      { objectId: 'a', updates: { x: 30, y: 40 } },
+      { objectId: 'b', updates: { x: 70, y: 100 } },
+    ]);
+    // Optimistic state reflects the delta
+    expect(result.current.objects.find((o) => o.id === 'a')).toMatchObject({ x: 30, y: 40 });
+    expect(result.current.objects.find((o) => o.id === 'b')).toMatchObject({ x: 70, y: 100 });
+  });
+
+  it('batch delete of 50+ objects calls deleteObjectsBatch once (not per-object)', async () => {
+    const ids = Array.from({ length: 50 }, (_, i) => `obj-bulk-${i}`);
+    const objects = ids.map((id) => createBoardObject({ id }));
+    mockDeleteObjectsBatch.mockResolvedValue(undefined);
+
+    const { result } = renderHook(() =>
+      useObjects({ boardId: 'board-1', user: createUser() })
+    );
+
+    act(() => {
+      subscriptionCallback?.({
+        objects,
+        changes: objects.map((o) => ({ type: 'added' as const, object: o })),
+        isInitialSnapshot: true,
+      });
+    });
+
+    await act(async () => {
+      await result.current.deleteObjects(ids);
+    });
+
+    expect(mockDeleteObjectsBatch).toHaveBeenCalledTimes(1);
+    expect(mockDeleteObjectsBatch).toHaveBeenCalledWith('board-1', ids);
+    expect(mockDeleteObject).not.toHaveBeenCalled();
+    expect(result.current.objects).toHaveLength(0);
+  });
+});

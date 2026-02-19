@@ -1,8 +1,7 @@
 import { Text } from 'react-konva';
-import { forwardRef, useCallback, useRef, useState, useMemo, memo } from 'react';
+import { forwardRef, useCallback, useRef, useState, memo } from 'react';
 import type { ReactElement } from 'react';
 import Konva from 'konva';
-import { useTheme } from '@/hooks/useTheme';
 import { useShapeDragHandler } from '@/hooks/useShapeDragHandler';
 import { useShapeTransformHandler } from '@/hooks/useShapeTransformHandler';
 import { getShapeShadowProps } from '@/lib/shapeShadowProps';
@@ -43,14 +42,6 @@ export const TextElement = memo(
     ): ReactElement => {
       const [isEditing, setIsEditing] = useState(false);
       const textRef = useRef<Konva.Text>(null);
-      const { theme } = useTheme();
-      const selectionColor = useMemo(
-        () =>
-          (typeof document !== 'undefined'
-            ? getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim()
-            : '') || '#3b82f6',
-        [theme]
-      );
 
       // Handle double-click to start editing. Position overlay from node's transformed rect
       // so it stays aligned for any rotation/zoom.
@@ -185,7 +176,7 @@ export const TextElement = memo(
           text={text || 'Double-click to edit'}
           fontSize={fontSize}
           fontFamily='Inter, system-ui, sans-serif'
-          fill={isSelected ? selectionColor : fill}
+          fill={fill}
           width={width}
           opacity={opacity}
           rotation={rotation}

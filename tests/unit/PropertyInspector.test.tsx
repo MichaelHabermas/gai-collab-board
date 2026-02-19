@@ -217,6 +217,85 @@ describe('PropertyInspector', () => {
     expect(mockOnObjectUpdate).toHaveBeenCalledWith('obj-1', { strokeWidth: 5 });
   });
 
+  it('entering 0 for stroke width does not commit (value below min=1 is rejected)', () => {
+    const lineObj = createMockObject({
+      id: 'line-1',
+      type: 'line',
+      stroke: '#000000',
+      strokeWidth: 3,
+      points: [0, 0, 100, 0],
+      fill: 'transparent',
+    });
+    render(
+      <TestSelectionWrapper selectedIds={['line-1']}>
+        <PropertyInspector objects={[lineObj]} onObjectUpdate={mockOnObjectUpdate} />
+      </TestSelectionWrapper>
+    );
+    const strokeWidthInput = screen.getByTestId('property-inspector-stroke-width');
+    fireEvent.change(strokeWidthInput, { target: { value: '0' } });
+    fireEvent.blur(strokeWidthInput);
+    // Entering 0 (below min 1) does not fire a commit
+    expect(mockOnObjectUpdate).not.toHaveBeenCalled();
+  });
+
+  it('stroke width of 1 is accepted as minimum valid value for line objects', () => {
+    const lineObj = createMockObject({
+      id: 'line-1',
+      type: 'line',
+      stroke: '#000000',
+      strokeWidth: 3,
+      points: [0, 0, 100, 0],
+      fill: 'transparent',
+    });
+    render(
+      <TestSelectionWrapper selectedIds={['line-1']}>
+        <PropertyInspector objects={[lineObj]} onObjectUpdate={mockOnObjectUpdate} />
+      </TestSelectionWrapper>
+    );
+    const strokeWidthInput = screen.getByTestId('property-inspector-stroke-width');
+    fireEvent.change(strokeWidthInput, { target: { value: '1' } });
+    fireEvent.blur(strokeWidthInput);
+    expect(mockOnObjectUpdate).toHaveBeenCalledWith('line-1', { strokeWidth: 1 });
+  });
+
+  it('font color shows textFill for sticky when textFill is set; changing updates textFill not fill', () => {
+    const sticky = createMockObject({
+      id: 'sticky-2',
+      type: 'sticky',
+      fill: '#fef08a',
+      textFill: '#374151',
+    });
+    render(
+      <TestSelectionWrapper selectedIds={['sticky-2']}>
+        <PropertyInspector objects={[sticky]} onObjectUpdate={mockOnObjectUpdate} />
+      </TestSelectionWrapper>
+    );
+    const fontColorInput = screen.getByTestId('property-inspector-font-color-input');
+    expect(fontColorInput).toHaveValue('#374151');
+    fireEvent.change(fontColorInput, { target: { value: '#dc2626' } });
+    expect(mockOnObjectUpdate).toHaveBeenCalledWith('sticky-2', { textFill: '#dc2626' });
+    // Must not update fill (background color)
+    expect(mockOnObjectUpdate).not.toHaveBeenCalledWith('sticky-2', { fill: '#dc2626' });
+  });
+
+  it('no font color control shown when only line is selected', () => {
+    const lineObj = createMockObject({
+      id: 'line-2',
+      type: 'line',
+      stroke: '#333',
+      points: [0, 0, 50, 50],
+      fill: 'transparent',
+    });
+    render(
+      <TestSelectionWrapper selectedIds={['line-2']}>
+        <PropertyInspector objects={[lineObj]} onObjectUpdate={mockOnObjectUpdate} />
+      </TestSelectionWrapper>
+    );
+    expect(screen.queryByTestId('property-inspector-font-color-color')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('property-inspector-font-color-input')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('property-inspector-font-size')).not.toBeInTheDocument();
+  });
+
   it('shows opacity slider and calls onObjectUpdate when changed', () => {
     const obj = createMockObject({ id: 'obj-1', type: 'rectangle', opacity: 1 });
     render(

@@ -302,6 +302,7 @@ export const ShareDialog = ({
                 onClick={handleLeaveBoard}
                 disabled={isLoading || leaveInProgress}
                 className='w-full border-slate-600 hover:bg-slate-700'
+                data-testid='share-dialog-leave-board'
               >
                 Leave board
               </Button>
@@ -317,6 +318,7 @@ export const ShareDialog = ({
                 onClick={handleDeleteBoard}
                 disabled={isLoading || deleteInProgress}
                 className='w-full'
+                data-testid='share-dialog-delete-board'
               >
                 <Trash className='h-4 w-4 mr-2' />
                 Delete board

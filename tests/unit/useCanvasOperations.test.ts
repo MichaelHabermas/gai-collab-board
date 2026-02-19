@@ -70,6 +70,31 @@ describe('useCanvasOperations', () => {
       expect(clearSelection).toHaveBeenCalled();
     });
 
+    it('deleting 50+ selected objects uses a single batch write (not N individual deletes)', () => {
+      const ids = Array.from({ length: 55 }, (_, i) => `obj-${i}`);
+      const objects: IBoardObject[] = ids.map((id) => ({
+        ...mockObject,
+        id,
+      }));
+      const props = {
+        objects,
+        selectedIds: ids,
+        onObjectCreate,
+        onObjectDelete,
+        onObjectsDeleteBatch,
+        clearSelection,
+      };
+      const { result } = renderHook(() => useCanvasOperations(props));
+      act(() => {
+        result.current.handleDelete();
+      });
+      // Single batch write, not 55 individual calls
+      expect(onObjectsDeleteBatch).toHaveBeenCalledTimes(1);
+      expect(onObjectsDeleteBatch).toHaveBeenCalledWith(ids);
+      expect(onObjectDelete).not.toHaveBeenCalled();
+      expect(clearSelection).toHaveBeenCalled();
+    });
+
     it('handleDelete with 2+ selected and no onObjectsDeleteBatch falls back to per-id onObjectDelete', () => {
       const props = {
         ...getDefaultProps(),
