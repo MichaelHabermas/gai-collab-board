@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 import { readFileSync, existsSync } from 'fs';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 const GROQ_ORIGIN = 'https://api.groq.com/openai';
 const SECONDARY_ORIGIN = 'https://integrate.api.nvidia.com';
@@ -75,7 +76,19 @@ export default defineConfig(({ mode }) => {
   const aiProxy = getAiProxyConfig(env);
 
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react(),
+      tailwindcss(),
+      ...(mode === 'production'
+        ? [
+            visualizer({
+              filename: 'dist/stats.html',
+              gzipSize: true,
+              template: 'treemap',
+            }),
+          ]
+        : []),
+    ],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
@@ -117,6 +130,7 @@ export default defineConfig(({ mode }) => {
             vendor: ['react', 'react-dom'],
             firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/database'],
             konva: ['konva', 'react-konva'],
+            openai: ['openai'],
           },
         },
       },

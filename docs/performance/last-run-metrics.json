@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-02-19T18:10:49.204Z",
+  "capturedAt": "2026-02-19T18:20:11.366Z",
   "source": "sync.latency.test.ts",
   "metrics": [
     {
@@ -9,12 +9,12 @@
     },
     {
       "name": "object_update_latency",
-      "value": 26,
+      "value": 30,
       "unit": "ms"
     },
     {
       "name": "batch_500_objects",
-      "value": 75,
+      "value": 85,
       "unit": "ms"
     }
   ]

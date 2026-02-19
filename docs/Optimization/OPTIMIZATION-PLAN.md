@@ -310,15 +310,15 @@ In `vite.config.ts`, add the visualizer to the `plugins` array (build only). Aft
 
 #### Checklist
 
-- [ ] (Before) Confirm `tests/e2e/benchmark.spec.ts` and `tests/integration/sync.latency.test.ts` exist and pass.
-- [ ] (Before) Check current bundle (no visualizer yet vs. existing config).
-- [ ] `rollup-plugin-visualizer` or `vite-bundle-visualizer` added; build run; top 3–5 heaviest deps identified.
-- [ ] Non–tree-shakable usage replaced or trimmed (e.g. moment → date-fns, lodash → single imports).
-- [ ] Named imports for Radix UI and Lucide; only used components bundled.
-- [ ] `manualChunks` tuned in `vite.config` if needed.
-- [ ] Bundle size reduced or main chunk smaller (measured).
-- [ ] (After) Run full benchmark suite; FPS ≥58, object &lt;100 ms, cursor &lt;50 ms, 500-object, 5-user pass.
-- [ ] LCP/load time improved or unchanged; no runtime regression.
+- [x] (Before) Confirm `tests/e2e/benchmark.spec.ts` and `tests/integration/sync.latency.test.ts` exist and pass.
+- [x] (Before) Check current bundle (no visualizer yet vs. existing config).
+- [x] `rollup-plugin-visualizer` or `vite-bundle-visualizer` added; build run; top 3–5 heaviest deps identified.
+- [x] Non–tree-shakable usage replaced or trimmed (e.g. moment → date-fns, lodash → single imports).
+- [x] Named imports for Radix UI and Lucide; only used components bundled.
+- [x] `manualChunks` tuned in `vite.config` if needed.
+- [x] Bundle size reduced or main chunk smaller (measured).
+- [x] (After) Run full benchmark suite; FPS ≥58, object &lt;100 ms, cursor &lt;50 ms, 500-object, 5-user pass.
+- [x] LCP/load time improved or unchanged; no runtime regression.
 
 ---
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, type ReactElement } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense, type ReactElement } from 'react';
 import { useParams, useNavigate, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/modules/auth';
 import { AuthPage } from '@/components/auth/AuthPage';
@@ -25,7 +25,9 @@ import { getActiveBoardId } from '@/lib/activeBoard';
 import { ConnectionStatus } from '@/components/ui/ConnectionStatus';
 import { PresenceAvatars } from '@/components/presence/PresenceAvatars';
 import { usePresence } from '@/hooks/usePresence';
-import { AIChatPanel } from '@/components/ai/AIChatPanel';
+const AIChatPanel = lazy(() =>
+  import('@/components/ai/AIChatPanel').then((m) => ({ default: m.AIChatPanel }))
+);
 import { TabsContent } from '@/components/ui/tabs';
 import {
   Dialog,
@@ -307,14 +309,16 @@ const BoardView = ({
                   value='ai'
                   className='flex-1 min-h-0 mt-2 overflow-hidden flex flex-col'
                 >
-                  <AIChatPanel
-                    messages={ai.messages}
-                    loading={ai.loading}
-                    error={ai.error}
-                    onSend={ai.processCommand}
-                    onClearError={ai.clearError}
-                    onClearMessages={ai.clearMessages}
-                  />
+                  <Suspense fallback={null}>
+                    <AIChatPanel
+                      messages={ai.messages}
+                      loading={ai.loading}
+                      error={ai.error}
+                      onSend={ai.processCommand}
+                      onClearError={ai.clearError}
+                      onClearMessages={ai.clearMessages}
+                    />
+                  </Suspense>
                 </TabsContent>
               </>
             ) : (
