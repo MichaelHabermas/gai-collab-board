@@ -1,6 +1,6 @@
 ## Summary
 
-This report summarizes the chosen tech stack (Firebase, React/Vite/Bun/TS/Shadcn/Konva/Tailwind v4, Kimi 2.5, Netlify) with pros and cons per layer and for the full stack. It is the concise "what we use and why" reference that complements the tradeoffs and ADR documents.
+This report summarizes the chosen tech stack (Firebase, React/Vite/Bun/TS/Shadcn/Konva/Tailwind v4, Kimi 2.5, Render) with pros and cons per layer and for the full stack. It is the concise "what we use and why" reference that complements the tradeoffs and ADR documents.
 
 ---
 
@@ -24,12 +24,12 @@ This report summarizes the chosen tech stack (Firebase, React/Vite/Bun/TS/Shadcn
 
 ## Deployment
 
-* Netlify:
-  * Pros - Easy Git deploys, auto CI/CD, serverless functions, global CDN, scalable for JAMstack/full-stack with Firebase, free tier, HTTPS/rollbacks.
-  * Cons - Better for static (dynamic cold starts), bandwidth limits, not ideal for heavy DB/stateful apps, plugin quality varies.
+* Render:
+  * Pros - Easy Git deploys, static sites and Web Services, in-repo AI proxy, global CDN, scalable with Firebase, free tier, HTTPS.
+  * Cons - Cold starts on free tier, bandwidth limits, not ideal for heavy DB/stateful apps.
 
 ## Full Stack
 
-* Firebase + React/Vite/Bun/TS/Shadcn/Konva/Tailwind v4 + Kimi 2.5 + Netlify:
+* Firebase + React/Vite/Bun/TS/Shadcn/Konva/Tailwind v4 + Kimi 2.5 + Render:
   * Pros - Seamless real-time/AI integration, fast prototyping/dev, cost-effective, open-source flexibility, performant UI/canvas.
   * Cons - Vendor lock-in (Firebase), potential rate limits/dev friction, maturity gaps in Bun/Shadcn.

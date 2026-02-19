@@ -19,7 +19,7 @@ This is the final v2 Product Requirements Document. It is the single source for 
 - [INITIAL-RESEARCH.md](./INITIAL-RESEARCH.md) — Build order and rationale
 - [PRD-V2.md](./PRD-V2.md) — Expanded execution spec (source for this document)
 - [AI-DEVELOPMENT-LOG.md](../../AI-DEVELOPMENT-LOG.md) — Tools, MCP usage, effective prompts, learnings
-- [DEPLOYMENT.md](../../DEPLOYMENT.md) — Netlify and environment variables
+- [DEPLOYMENT.md](../../DEPLOYMENT.md) — Render and environment variables
 - **Technology guides:** [docs/guides/README.md](../../guides/README.md) — [Firebase](../../guides/FIREBASE-GUIDE.md), [Konva + React](../../guides/KONVA-REACT-GUIDE.md), [Tailwind + Shadcn](../../guides/TAILWIND-SHADCN-GUIDE.md), [AI Integration](../../guides/AI-INTEGRATION-GUIDE.md), [Testing](../../guides/TESTING-GUIDE.md), [Development Environment](../../guides/DEVELOPMENT-ENVIRONMENT-GUIDE.md)
 
 ---
@@ -1450,7 +1450,7 @@ Do not jump to implementation without a plan; follow the command chain (e.g. spe
 - [INITIAL-RESEARCH.md](./INITIAL-RESEARCH.md) — Build order and rationale
 - [PRD-V2.md](./PRD-V2.md) — Expanded execution spec (source for this document)
 - [AI-DEVELOPMENT-LOG.md](../../AI-DEVELOPMENT-LOG.md) — Tools, MCP, prompts, learnings
-- [DEPLOYMENT.md](../../DEPLOYMENT.md) — Netlify, environment variables
+- [DEPLOYMENT.md](../../DEPLOYMENT.md) — Render, environment variables
 - [docs/guides/README.md](../../guides/README.md) — Technology guides index
 - [FIREBASE-GUIDE.md](../../guides/FIREBASE-GUIDE.md) — Auth, Firestore, Realtime DB, security
 - [KONVA-REACT-GUIDE.md](../../guides/KONVA-REACT-GUIDE.md) — Canvas, shapes, viewport, export
@@ -1475,7 +1475,7 @@ Do not jump to implementation without a plan; follow the command chain (e.g. spe
 
 ## Appendix B: Deployment and environment
 
-v2 does not introduce new deployment targets. Continue using Netlify per [DEPLOYMENT.md](../../DEPLOYMENT.md). Environment variables remain as in the main PRD; if v2 adds server-side or client-side env vars, document them in [DEPLOYMENT.md](../../DEPLOYMENT.md) and in `.env.example`.
+v2 does not introduce new deployment targets. Continue using Render per [DEPLOYMENT.md](../../DEPLOYMENT.md). Environment variables remain as in the main PRD; if v2 adds server-side or client-side env vars, document them in [DEPLOYMENT.md](../../DEPLOYMENT.md) and in `.env.example`.
 
 ---
 

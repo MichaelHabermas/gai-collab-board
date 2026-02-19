@@ -25,7 +25,7 @@ Legend:
 | Multiplayer cursors with names | Cursor stream + labels | `src/hooks/useCursors.ts`, `src/components/canvas/CursorLayer.tsx` | `tests/unit/realtimeService.test.ts`, `tests/integration/sync.test.ts` | PASS | No latency SLA assertion (<50ms) |
 | Presence awareness | Online users visible | `src/hooks/usePresence.ts`, `src/components/presence/PresenceAvatars.tsx` | `tests/integration/sync.test.ts`, `tests/e2e/collaboration.spec.ts` | PASS | No explicit churn stress test |
 | User authentication | Login/signup/session | `src/modules/auth/authService.ts`, `src/modules/auth/useAuth.ts` | `tests/unit/authService.test.ts`, `tests/e2e/collaboration.spec.ts` | PASS | E2E auth flow relies on env/project readiness |
-| Deployed and publicly accessible | Public URL | `README.md`, `netlify.toml`, `docs/DEPLOYMENT.md` | Manual deploy evidence | PARTIAL | README points to Render URL; deployment target consistency should be verified |
+| Deployed and publicly accessible | Public URL | `README.md`, `docs/DEPLOYMENT.md` | Manual deploy evidence | PARTIAL | README points to Render URL |
 
 ## Performance And AI Benchmark Criteria
 

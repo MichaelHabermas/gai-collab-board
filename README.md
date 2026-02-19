@@ -51,7 +51,7 @@ Natural language commands to manipulate the board:
 | **UI Components**  | Shadcn/ui + Tailwind CSS v4                                       |
 | **Canvas**         | Konva.js                                                          |
 | **AI Integration** | Groq (free tier, default) or secondary provider (e.g. NVIDIA API) |
-| **Deployment**     | Netlify                                                           |
+| **Deployment**     | Render                                                            |
 | **Testing**        | Vitest + Playwright                                               |
 | **Linting**        | ESLint + Prettier                                                 |
 
@@ -92,7 +92,7 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 VITE_FIREBASE_DATABASE_URL=https://your_project.firebaseio.com
 
-# AI: Groq (recommended, free) or secondary provider. Production: set GROQ_API_KEY or NVIDIA_API_KEY in Netlify.
+# AI: Groq (recommended, free) or secondary provider. Production: set GROQ_API_KEY or NVIDIA_API_KEY on the Render proxy service.
 VITE_AI_PROVIDER=groq
 VITE_GROQ_API_KEY=your_groq_api_key
 # VITE_NVIDIA_API_KEY=your_secondary_provider_key
@@ -117,7 +117,7 @@ The app will be available at `http://localhost:5173`
 
 ## Deployment
 
-To deploy to Netlify, link the GitHub repository in Netlify (Site settings → Build & deploy → Repository) and configure environment variables (Site settings → Environment variables). See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for details.
+To deploy to Render, see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for build, proxy, and environment variables.
 
 ## Usage
 
@@ -170,7 +170,7 @@ CollabBoard/
 │   ├── hooks/           # React hooks (canvas, selection, presence, AI)
 │   ├── lib/             # Firebase, AI client, utilities
 │   └── types/           # TypeScript type definitions
-├── netlify/functions/   # Serverless functions (e.g. AI chat)
+├── server/               # AI proxy (Render)
 ├── docs/
 │   ├── guides/          # Development, Firebase, testing, AI integration
 │   └── research/        # Design documents and research
@@ -207,7 +207,7 @@ E2E tests run automatically on push/PR to `development` or `main` (see [.github/
 
 ## Documentation
 
-- [Deployment](docs/DEPLOYMENT.md) — Netlify setup and environment variables
+- [Deployment](docs/DEPLOYMENT.md) — Render and Firebase setup and environment variables
 - [Guides](docs/guides/README.md) — Development environment, Firebase, testing, AI integration, Konva, Tailwind/Shadcn
 - [AI Cost Analysis](docs/AI-COST-ANALYSIS.md) — AI usage and cost notes
 

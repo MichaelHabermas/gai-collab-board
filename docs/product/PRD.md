@@ -387,21 +387,7 @@ test(canvas): add sticky note creation tests
 
 ### CI/CD Pipeline
 
-```yaml
-# netlify.toml
-[build]
-  command = "bun run build"
-  publish = "dist"
-
-[build.environment]
-  NODE_VERSION = "20"
-  BUN_VERSION = "1.0"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-```
+See [docs/operations/DEPLOYMENT.md](docs/operations/DEPLOYMENT.md) for Render: build (`bun run build` → `dist/`), SPA rewrite (`/*` → `/index.html`), and environment variables.
 
 ---
 
@@ -2641,33 +2627,6 @@ document the AI development process.
 
 (Check the boxes only after manual verification on Render and after tests pass.)
 
-#### Optional: Netlify
-
-- **Subtask 1**: Create `netlify.toml` (if using Netlify)
-
-  ```toml
-  [build]
-    command = "bun run build"
-    publish = "dist"
-
-  [build.environment]
-    NODE_VERSION = "20"
-
-  [[redirects]]
-    from = "/*"
-    to = "/index.html"
-    status = 200
-
-  [[headers]]
-    for = "/*"
-    [headers.values]
-      X-Frame-Options = "DENY"
-      X-Content-Type-Options = "nosniff"
-  ```
-
-- **Subtask 2**: Link GitHub repository
-- **Subtask 3**: Configure environment variables (including `VITE_AI_PROXY_PATH=/.netlify/functions/ai-chat/v1` for production AI)
-
 ### Story 5.3: Documentation
 
 **As a developer**, I have documented the AI development process and costs.
@@ -2950,7 +2909,7 @@ interface IPresenceData {
 | `VITE_FIREBASE_DATABASE_URL`        | Yes         | Realtime Database URL                   |
 | `VITE_AI_PROVIDER`                  | No          | `groq` (default) or `nvidia`            |
 | `VITE_AI_PROXY_URL`                 | No (prod)   | Full URL of AI proxy when on another host (e.g. Render Web Service) |
-| `VITE_AI_PROXY_PATH`                | No (prod)   | Path on same origin (default `/api/ai/v1`); e.g. `/.netlify/functions/ai-chat/v1` for Netlify |
+| `VITE_AI_PROXY_PATH`                | No (prod)   | Path on same origin (default `/api/ai/v1`) |
 | `VITE_GROQ_API_KEY`                 | Yes (Groq, dev) | Groq API key (dev); production uses server-side `GROQ_API_KEY` on proxy |
 | `VITE_NVIDIA_API_KEY`               | No (Nvidia) | Nvidia API key for Kimi 2.5 (dev); production uses server-side `NVIDIA_API_KEY` on proxy |
 

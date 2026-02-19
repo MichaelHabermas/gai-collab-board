@@ -1,6 +1,6 @@
 /**
  * Shared AI proxy config: provider/key resolution and base URLs.
- * Used by the Render proxy server and (optionally) Netlify function.
+ * Used by the Render proxy server.
  */
 
 export const GROQ_BASE = 'https://api.groq.com/openai';

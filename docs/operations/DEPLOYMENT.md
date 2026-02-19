@@ -28,7 +28,7 @@ If you serve the app from a **Web Service** (one service serving `dist/` and the
 
 ## AI Proxy (required for AI commands in production)
 
-The app calls an AI proxy so the API key stays server-side. On Render there are no Netlify Functions, so you must run the included proxy server.
+The app calls an AI proxy so the API key stays server-side. You must run the included proxy server on Render.
 
 If you see **"AI service returned an unexpected response"** on the deployed site, ensure the proxy Web Service is deployed and `VITE_AI_PROXY_URL` is set on the frontend, then redeploy the frontend (Vite inlines env at build time).
 
@@ -79,15 +79,3 @@ If the frontend is on the same origin as the proxy, you do not need `VITE_AI_PRO
 - **CORS:** Set `CORS_ALLOWED_ORIGINS=https://gai-collab-board.onrender.com` (or your static site origin) so the proxy only allows that origin. If unset, the proxy uses `Access-Control-Allow-Origin: *`. Redeploy the proxy after changing this.
 
 Use the same Firebase values as in your local `.env`. Redeploy after changing variables.
-
----
-
-# Netlify (optional)
-
-If you deploy to Netlify instead of Render:
-
-1. Link the GitHub repo; Netlify uses `netlify.toml` for build and publish.
-2. Set **Firebase** and **App** env vars as above. For AI, set **server-side** `GROQ_API_KEY` and/or `NVIDIA_API_KEY`; the Netlify function at `/.netlify/functions/ai-chat` will use them.
-3. Set `VITE_AI_PROXY_PATH=/.netlify/functions/ai-chat/v1` so the client calls the Netlify function in production.
-
-See the Netlify function source in `netlify/functions/ai-chat.ts`.

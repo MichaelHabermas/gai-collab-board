@@ -15,7 +15,7 @@ This log records how AI was used during development: tools (Cursor, Context7 MCP
 - **Context7** for Konva.js and react-konva patterns (Stage, Layer, shapes, transforms)
 - **Context7** for Firebase (Firestore, Realtime Database) queries and security rules
 - **Context7** for Tailwind v4 and Shadcn/ui component usage
-- Documentation queries for OpenAI/Anthropic API usage and Netlify serverless functions
+- Documentation queries for OpenAI/Anthropic API usage and server-side AI proxy
 
 ## Effective Prompts
 
@@ -180,7 +180,7 @@ This log records how AI was used during development: tools (Cursor, Context7 MCP
 
 ## AI proxy on Render / production fix (Feb 2026)
 
-**Scope:** Fix "Cannot read properties of undefined (reading '0')" when using AI commands (e.g. add a sticky note) on the deployed site (Render). Root causes: (1) production hardcoded `/.netlify/functions/ai-chat/v1` so requests on Render hit a non-existent path and returned a non-OpenAI response; (2) `aiService` read `response.choices[0]` without validating that `choices` existed, causing a TypeError.
+**Scope:** Fix "Cannot read properties of undefined (reading '0')" when using AI commands (e.g. add a sticky note) on the deployed site (Render). Root causes: (1) production used a path that did not exist on Render, so requests returned a non-OpenAI response; (2) `aiService` read `response.choices[0]` without validating that `choices` existed, causing a TypeError.
 
 **Implementation:**
 

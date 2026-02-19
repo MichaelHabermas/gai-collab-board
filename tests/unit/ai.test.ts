@@ -23,10 +23,10 @@ describe('getProxyBaseURLFromEnv', () => {
   it('uses origin + VITE_AI_PROXY_PATH in production when path is set', () => {
     expect(
       getProxyBaseURLFromEnv(
-        { DEV: false, VITE_AI_PROXY_PATH: '/.netlify/functions/ai-chat/v1' },
+        { DEV: false, VITE_AI_PROXY_PATH: '/api/ai/v1' },
         'https://app.onrender.com'
       )
-    ).toBe('https://app.onrender.com/.netlify/functions/ai-chat/v1');
+    ).toBe('https://app.onrender.com/api/ai/v1');
   });
 
   it('uses origin + default prod path when no URL/path env in production', () => {

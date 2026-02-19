@@ -577,15 +577,15 @@ sequenceDiagram
 
 Intent: Responsive, deploy, docs. Add accessibility, i18n prep.
 
-#### Story 5.1: Deploy Netlify
+#### Story 5.1: Deploy Render
 
-Features: CI, functions.
+Features: CI, proxy.
 
-Branch: feature/deploy-netlify
+Branch: feature/deploy-render
 
 Commit 1: Config.
 
-- Subtask 1: netlify.toml
+- Subtask 1: render.yaml / proxy server
 - Subtask 2: Build
 
 Commit 2: Deploy.
@@ -629,7 +629,7 @@ gantt
     section UI
     Responsive :2026-02-08, 1d
     section Deploy
-    Netlify :after Responsive, 1d
+    Render :after Responsive, 1d
     section Docs
     Log/Costs :after Deploy, 1d
 ```

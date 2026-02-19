@@ -92,13 +92,13 @@
 |------|---------|------------|---------------|
 | `research/DESIGN-DOCUMENT.md` | Original CollabBoard design: hard requirements, tech stack, high-level architecture, vision | `design`, `requirements`, `MVP`, `architecture` | 2026-02-18 |
 | `research/IDENTIFY-TRADEOFFS.md` | Early tradeoffs: backend, canvas, AI, deployment options with brief pros/cons | `tradeoffs`, `Firebase`, `Konva`, `historical` | 2026-02-17 |
-| `research/IDENTIFY-TRADEOFFS-V2.md` | Structured tradeoffs: what was gained and given up per technology choice (current stack) | `tradeoffs`, `Firebase`, `Konva`, `Kimi`, `Netlify` | 2026-02-17 |
+| `research/IDENTIFY-TRADEOFFS-V2.md` | Structured tradeoffs: what was gained and given up per technology choice (current stack) | `tradeoffs`, `Firebase`, `Konva`, `Kimi`, `Render` | 2026-02-17 |
 | `research/PRD-V1.md` | Initial PRD: tech stack, architecture, Git workflow, agile breakdown (first executable plan) | `PRD`, `tech stack`, `epics`, `historical` | 2026-02-18 |
 | `research/PRD-V2.md` | Expanded PRD: epics, timelines, Mermaid diagrams, refined scope | `PRD`, `epics`, `timeline`, `historical` | 2026-02-17 |
 | `research/RECORD-ARCHITECTURE-DECISIONS.md` | Earlier ADR: Supabase, Claude, Vercel (superseded by V2); kept for history | `ADR`, `Supabase`, `Claude`, `deprecated` | 2026-02-17 |
-| `research/RECORD-ARCHITECTURE-DECISIONS-V2.md` | Current ADR: Firebase, React/Vite/Bun/Shadcn/Konva/Tailwind, Kimi 2.5, Netlify; rationale and alternatives | `ADR`, `Firebase`, `Kimi`, `architecture`, `decisions` | 2026-02-17 |
+| `research/RECORD-ARCHITECTURE-DECISIONS-V2.md` | Current ADR: Firebase, React/Vite/Bun/Shadcn/Konva/Tailwind, Kimi 2.5, Render; rationale and alternatives | `ADR`, `Firebase`, `Kimi`, `architecture`, `decisions` | 2026-02-17 |
 | `research/TECH-STACK-OPTIONS.md` | Original tech-stack exploration: backend, frontend, canvas, AI, deployment options | `tech stack`, `options`, `Firebase`, `Konva`, `historical` | 2026-02-17 |
-| `research/TECH-STACK-OPTIONS-V2.md` | Chosen stack with pros/cons per layer; concise "what we use and why" | `tech stack`, `Firebase`, `Kimi`, `Netlify`, `rationale` | 2026-02-17 |
+| `research/TECH-STACK-OPTIONS-V2.md` | Chosen stack with pros/cons per layer; concise "what we use and why" | `tech stack`, `Firebase`, `Kimi`, `Render`, `rationale` | 2026-02-17 |
 
 ### Theme
 
@@ -141,5 +141,5 @@
 | Backend: Supabase, Claude, Vercel (earlier) | deprecated | `research/RECORD-ARCHITECTURE-DECISIONS.md` |
 | Canvas: Konva.js chosen | accepted | `research/RECORD-ARCHITECTURE-DECISIONS-V2.md`, `research/IDENTIFY-TRADEOFFS-V2.md` |
 | AI: Kimi 2.5 chosen | accepted | `research/RECORD-ARCHITECTURE-DECISIONS-V2.md` |
-| Deployment: Netlify (doc); Render in practice | accepted | `research/RECORD-ARCHITECTURE-DECISIONS-V2.md`, `operations/DEPLOYMENT.md` |
+| Deployment: Render + Firebase | accepted | `research/RECORD-ARCHITECTURE-DECISIONS-V2.md`, `operations/DEPLOYMENT.md` |
 | Tradeoffs (current stack) | accepted | `research/IDENTIFY-TRADEOFFS-V2.md` |

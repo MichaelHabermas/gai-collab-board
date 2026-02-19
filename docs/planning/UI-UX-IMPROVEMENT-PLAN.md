@@ -39,7 +39,7 @@
 - Primary files:
   - [src/App.tsx](src/App.tsx)
   - [src/components/board/ShareDialog.tsx](src/components/board/ShareDialog.tsx)
-  - [netlify.toml](netlify.toml)
+  - [render.yaml](../../render.yaml) / [DEPLOYMENT.md](../operations/DEPLOYMENT.md)
 - Verify:
   - Copy link from share dialog -> paste in new browser -> lands on same board.
   - Logged-out flow redirects to auth, then returns to target board.

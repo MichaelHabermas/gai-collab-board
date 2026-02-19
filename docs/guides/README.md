@@ -69,7 +69,7 @@ Ensure quality with the [Testing Guide](./TESTING-GUIDE.md):
 ```mermaid
 graph TB
     subgraph Deployment["🚀 DEPLOYMENT"]
-        Netlify["Netlify"]
+        Render["Render"]
     end
     
     subgraph Frontend["💻 FRONTEND"]
@@ -95,7 +95,7 @@ graph TB
         Playwright["Playwright"]
     end
     
-    Netlify --> Frontend
+    Render --> Frontend
     Frontend --> Backend
     Frontend --> AI
     Backend --> Tooling

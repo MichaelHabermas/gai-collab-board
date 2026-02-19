@@ -26,7 +26,6 @@
       },
       "devDependencies": {
         "@eslint/js": "^9.39.2",
-        "@netlify/functions": "^5.1.2",
         "@playwright/test": "^1.58.1",
         "@stylistic/eslint-plugin": "^4.0.0",
         "@tailwindcss/vite": "^4.1.18",
@@ -306,10 +305,6 @@
     "@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.5.5", "", {}, "sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og=="],
 
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
-
-    "@netlify/functions": ["@netlify/functions@5.1.2", "", { "dependencies": { "@netlify/types": "2.3.0" } }, "sha512-tpPiLSkQatuexH8AdAZ8RlALvT7ixOE9VhvpkzQGNvihcms8hzmvUDuSxQa7UneTj/sHsdirnXmnJ+nmf+Nx/w=="],
-
-    "@netlify/types": ["@netlify/types@2.3.0", "", {}, "sha512-5gxMWh/S7wr0uHKSTbMv4bjWmWSpwpeLYvErWeVNAPll5/QNFo9aWimMAUuh8ReLY3/fg92XAroVVu7+z27Snw=="],
 
     "@playwright/test": ["@playwright/test@1.58.2", "", { "dependencies": { "playwright": "1.58.2" }, "bin": { "playwright": "cli.js" } }, "sha512-akea+6bHYBBfA9uQqSYmlJXn61cTa+jbO87xVLCWbTqbWadRVmhxlXATaOjOgcBaWU4ePo0wB41KMFv3o35IXA=="],
 

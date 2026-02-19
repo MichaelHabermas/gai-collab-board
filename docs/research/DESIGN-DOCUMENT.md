@@ -94,7 +94,7 @@ Pre-Search completed: Tech stack locked; tradeoffs identified; decisions recorde
 - **AI Integration**:
   - Kimi 2.5 (Moonshot AI via Nvidia API) - [Docs](https://build.nvidia.com/moonshotai/kimi-k2.5)
 - **Deployment**:
-  - Netlify - [Docs](https://docs.netlify.com/)
+  - Render - [Docs](https://render.com/docs)
 
 ## Architecture
 
@@ -121,7 +121,7 @@ High-level flow:
   - getBoardState for context
   - multi-step planning.
 - Deployment:
-  - Netlify for CI/CD, serverless functions for AI calls.
+  - Render for CI/CD and AI proxy server.
 - Auth:
   - Firebase Auth (email/Google).
 - Conflicts:
@@ -196,7 +196,7 @@ Agile methodology: 1-week sprint; vertical slices; daily testing. Breakdown into
 
 ### Epic 5: UI, Deployment, and Polish
 
-- Story 1: As a developer, I can deploy to Netlify with CI/CD, so the app is public and scalable.
+- Story 1: As a developer, I can deploy to Render with CI/CD, so the app is public and scalable.
 - Story 2: As a user, I see responsive UI with Shadcn components and Tailwind styling, so experience is modern.
 - Story 3: As a developer, I document AI dev log and cost analysis, so process is tracked.
 

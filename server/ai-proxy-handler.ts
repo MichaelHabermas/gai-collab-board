@@ -1,6 +1,6 @@
 /**
  * Shared AI proxy request handler: forwards requests to Groq or NVIDIA.
- * Used by the Render proxy server and (optionally) Netlify function.
+ * Used by the Render proxy server.
  */
 
 import {

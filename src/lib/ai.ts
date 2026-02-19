@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 
 /** Proxy base paths to avoid CORS and keep API key server-side. */
 const DEV_PROXY_PATH = '/api/ai/v1';
-/** Default production path (Render-friendly); Netlify users can set VITE_AI_PROXY_PATH. */
+/** Default production path (Render). Set VITE_AI_PROXY_PATH to override. */
 const DEFAULT_PROD_PROXY_PATH = '/api/ai/v1';
 
 const GROQ_MODEL = 'llama-3.3-70b-versatile';

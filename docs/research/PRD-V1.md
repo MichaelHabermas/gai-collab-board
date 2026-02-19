@@ -15,7 +15,7 @@ CollabBoard is a real-time collaborative whiteboard app for brainstorming, idea 
 - Backend: Firebase (Realtime DB/Firestore/Auth) - [Docs](https://firebase.google.com/docs)
 - Frontend: React + Vite + Bun + TypeScript + Shadcn + Konva.js + Tailwind v4 - Links in design doc
 - AI: Kimi 2.5 (Nvidia API) - [Docs](https://build.nvidia.com/moonshotai/kimi-k2.5)
-- Deployment: Netlify - [Docs](https://docs.netlify.com/)
+- Deployment: Render - [Docs](https://render.com/docs)
 - Testing: Vitest (unit/integration), Playwright (e2e), 60% coverage
 - Tooling: ESLint/Prettier
 
@@ -31,7 +31,7 @@ flowchart TD
     C --> E[Backend: Firebase DB]
     D --> E
     E --> F[Persistence: Firestore]
-    B --> G[Deployment: Netlify]
+    B --> G[Deployment: Render]
 ```
 
 ## Git Workflow
@@ -411,18 +411,18 @@ Commit 4: Tests.
 
 ### Epic 5: UI, Deployment, and Polish
 
-#### Story 5.1: As a dev, deploy to Netlify
+#### Story 5.1: As a dev, deploy to Render
 
 Features:
 
 - CI/CD setup.
-- Serverless AI.
+- AI proxy server.
 
-Branch: feature/deploy-netlify
+Branch: feature/deploy-render
 
-Commit 1: Netlify config.
+Commit 1: Render config.
 
-- Subtask 1: netlify.toml.
+- Subtask 1: render.yaml / proxy server.
 - Subtask 2: Build script.
 
 Commit 2: Deploy.

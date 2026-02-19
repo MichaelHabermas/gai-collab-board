@@ -1,6 +1,6 @@
 ## Summary
 
-This document records the pros and cons of the main technology choices (backend, canvas, frontend stack, AI, deployment) in a structured way. It explains what was gained and what was given up (e.g. Firebase vs Supabase, Konva vs Fabric, Kimi vs GPT-4/Claude, Netlify vs alternatives) and touches on performance vs cost and scalability vs complexity. It supports explaining and defending the stack when questioned.
+This document records the pros and cons of the main technology choices (backend, canvas, frontend stack, AI, deployment) in a structured way. It explains what was gained and what was given up (e.g. Firebase vs Supabase, Konva vs Fabric, Kimi vs GPT-4/Claude, Render vs alternatives) and touches on performance vs cost and scalability vs complexity. It supports explaining and defending the stack when questioned.
 
 ---
 
@@ -50,25 +50,21 @@ This document records the pros and cons of the main technology choices (backend,
 
 ## Deployment
 
-- Netlify (chosen):
-  - Pros - Easy Git deploys, auto CI/CD, serverless functions, global CDN, scalable for JAMstack/full-stack with Firebase, free tier, HTTPS/rollbacks;
-  - Cons - Better for static (dynamic cold starts), bandwidth limits, not ideal for heavy DB/stateful apps, plugin quality varies.
+- Render (chosen):
+  - Pros - Easy Git deploys, static sites and Web Services (e.g. AI proxy), global CDN, scalable with Firebase, free tier, HTTPS;
+  - Cons - Cold starts on free tier, bandwidth limits, not ideal for heavy DB/stateful apps.
 - Vercel:
   - Pros - Fast git deploys, global CDN, free tier;
-  - Cons - No websockets, cold starts, frontend-focused—skipped for Netlify's similar DX with better Firebase fit.
+  - Cons - No websockets, cold starts, frontend-focused—skipped for Render's proxy + static support.
 - Firebase Hosting:
   - Pros - Integrated real-time/auth, scalable;
-  - Cons - Limited to static/Functions, Google-dependent—avoided for Netlify's broader support.
-- Render:
-  - Pros - Websockets/stateful support, autoscaling;
-  - Cons - Usage-based billing, less polished DX—skipped for Netlify's ease.
-
+  - Cons - Limited to static/Functions, Google-dependent—avoided for Render's broader DX.
 ## Performance vs. Cost
 
-- Firebase/Netlify low initial cost (free tiers) but scale expenses via usage;
+- Firebase/Render low initial cost (free tiers) but scale expenses via usage;
 - Kimi 2.5 adds cheap AI but rate limits; Bun/Vite boost dev speed at minor maturity cost vs. heavier stacks.
 
 ## Scalability vs. Complexity
 
-- Managed services (Firebase/Netlify) simpler for quick setup/scaling but less flexible (lock-in, limits);
+- Managed services (Firebase/Render) simpler for quick setup/scaling but less flexible (lock-in, limits);
 - vs. custom (AWS) for high load but higher complexity—chosen stack balances simplicity with performance.

@@ -1,6 +1,6 @@
 ## Summary
 
-This guide is the single reference for integrating AI providers (Groq recommended, NVIDIA/Kimi optional) into CollabBoard. It defines how to configure API keys (local and Netlify), implement OpenAI-compatible function-calling tools for board actions (create, move, resize, align, etc.), and handle context, errors, and rate limits. Its purpose is to let any developer add or switch AI backends and maintain consistent behavior; it also documents the proxy pattern so API keys stay server-side in production.
+This guide is the single reference for integrating AI providers (Groq recommended, NVIDIA/Kimi optional) into CollabBoard. It defines how to configure API keys (local and production on Render), implement OpenAI-compatible function-calling tools for board actions (create, move, resize, align, etc.), and handle context, errors, and rate limits. Its purpose is to let any developer add or switch AI backends and maintain consistent behavior; it also documents the proxy pattern so API keys stay server-side in production.
 
 ---
 
@@ -82,12 +82,12 @@ VITE_GROQ_API_KEY=gsk_your_key_here
 # VITE_NVIDIA_API_KEY=nvapi-xxxx-xxxx-xxxx
 ```
 
-**Production (Netlify)** — in Site → Environment variables:
+**Production (Render)** — on the AI proxy Web Service, set environment variables:
 
 - **Groq:** `GROQ_API_KEY` = your Groq API key (and optionally `AI_PROVIDER=groq`).
 - **NVIDIA:** `NVIDIA_API_KEY` = your NVIDIA API key (and optionally `AI_PROVIDER=nvidia`).
 
-The app uses a single proxy (`/.netlify/functions/ai-chat`). The proxy chooses the provider from `AI_PROVIDER` or from which key is set (Groq preferred if both are set).
+The app uses a single proxy at `/api/ai/v1`. The proxy chooses the provider from `AI_PROVIDER` or from which key is set (Groq preferred if both are set). See [DEPLOYMENT.md](../operations/DEPLOYMENT.md) for Render setup.
 
 ### Install Dependencies
 
@@ -97,7 +97,7 @@ bun add openai  # OpenAI-compatible API for Groq and NVIDIA
 
 ### API Client (existing)
 
-`src/lib/ai.ts` is already set up to use the unified proxy path (`/api/ai/v1` in dev, `/.netlify/functions/ai-chat/v1` in prod). The client resolves the provider from `VITE_AI_PROVIDER` and key env vars, and selects the model (Groq: `llama-3.3-70b-versatile`, NVIDIA: `moonshotai/kimi-k2.5`). The proxy injects the API key in both dev (Vite proxy) and prod (Netlify function).
+`src/lib/ai.ts` is already set up to use the unified proxy path (`/api/ai/v1` in dev and prod). The client resolves the provider from `VITE_AI_PROVIDER` and key env vars, and selects the model (Groq: `llama-3.3-70b-versatile`, NVIDIA: `moonshotai/kimi-k2.5`). The proxy injects the API key in dev (Vite proxy) and in production (Render proxy server).
 
 ---
 
