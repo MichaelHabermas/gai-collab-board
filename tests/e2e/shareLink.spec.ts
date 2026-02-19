@@ -17,8 +17,9 @@ const createCredential = (): ICredential => {
 };
 
 const signUp = async (page: Page, credential: ICredential): Promise<void> => {
-  await page.goto('/login');
-  await page.locator('button[role="tab"]:has-text("Sign Up")').click();
+  await page.goto('/login?tab=signup');
+  await page.waitForLoadState('load');
+  await page.locator('#signup-email').waitFor({ state: 'visible', timeout: 10_000 });
   await page.locator('#signup-email').fill(credential.email);
   await page.locator('#signup-password').fill(credential.password);
   await page.locator('#confirm-password').fill(credential.password);

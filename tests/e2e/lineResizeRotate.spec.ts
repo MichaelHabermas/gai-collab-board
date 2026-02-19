@@ -10,19 +10,19 @@ const waitForBoardVisible = async (page: Page): Promise<void> => {
 
 const ensureOnBoard = async (page: Page): Promise<void> => {
   await page.waitForLoadState('load');
-  const isAuth = await page.locator('form').isVisible().catch(() => false);
-  if (isAuth) {
-    const suffix = `line-${Date.now()}@example.com`;
-    const pwd = `Line!${Date.now()}`;
-    await page.locator('button[role="tab"]:has-text("Sign Up")').click();
-    await page.locator('#signup-email').fill(suffix);
-    await page.locator('#signup-password').fill(pwd);
-    await page.locator('#confirm-password').fill(pwd);
-    await page.locator('button:has-text("Create Account")').click();
-    await waitForBoardVisible(page);
-  } else {
-    await waitForBoardVisible(page);
+  const boardVisible = await page.locator('[data-testid="board-canvas"]').isVisible().catch(() => false);
+  if (boardVisible) {
+    return;
   }
+  await page.goto('/login?tab=signup');
+  await page.locator('#signup-email').waitFor({ state: 'visible', timeout: 10_000 });
+  const suffix = `line-${Date.now()}@example.com`;
+  const pwd = `Line!${Date.now()}`;
+  await page.locator('#signup-email').fill(suffix);
+  await page.locator('#signup-password').fill(pwd);
+  await page.locator('#confirm-password').fill(pwd);
+  await page.locator('button:has-text("Create Account")').click();
+  await waitForBoardVisible(page);
 };
 
 /**

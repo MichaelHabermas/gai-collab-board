@@ -70,7 +70,12 @@ const createFreshBoardForBenchmark = async (page: Page, suffix: string): Promise
 };
 
 const trySignUp = async (page: Page, credential: ICredential): Promise<void> => {
-  await page.locator('button[role="tab"]:has-text("Sign Up")').click();
+  const url = page.url();
+  const onSignupTab = url.includes('/login') && url.includes('tab=signup');
+  if (!onSignupTab) {
+    await page.locator('button[role="tab"]:has-text("Sign Up")').click();
+  }
+  await page.locator('#signup-email').waitFor({ state: 'visible', timeout: 10_000 });
   await page.locator('#signup-email').fill(credential.email);
   await page.locator('#signup-password').fill(credential.password);
   await page.locator('#confirm-password').fill(credential.password);
@@ -111,9 +116,16 @@ const ensureAuthenticated = async (page: Page, credential: ICredential): Promise
   }
 };
 
+const openAIPanel = async (page: Page): Promise<void> => {
+  const sidebar = page.locator('[data-testid="sidebar"]');
+  const aiTab = sidebar.locator('[data-testid="sidebar-rail-tab-ai"]').or(sidebar.getByRole('tab', { name: 'AI' }));
+  await aiTab.first().waitFor({ state: 'visible', timeout: 15_000 });
+  await aiTab.first().click();
+};
+
 const createStickyWithAI = async (page: Page): Promise<void> => {
   const initialCount = await getObjectCount(page);
-  await page.getByRole('tab', { name: 'AI' }).click();
+  await openAIPanel(page);
   const aiInput = page.getByPlaceholder('Ask to create or edit board items...');
   await expect(aiInput).toBeVisible({ timeout: 10_000 });
   await aiInput.fill('Create one yellow sticky note with text "propagation benchmark".');
@@ -254,7 +266,7 @@ test.describe('MVP Benchmarks', () => {
     await createFreshBoardForBenchmark(page, 'ai');
 
     const initialCount = await getObjectCount(page);
-    await page.getByRole('tab', { name: 'AI' }).click();
+    await openAIPanel(page);
 
     const aiInput = page.getByPlaceholder('Ask to create or edit board items...');
     await expect(aiInput).toBeVisible({ timeout: 10_000 });

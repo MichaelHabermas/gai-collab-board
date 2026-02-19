@@ -16,7 +16,6 @@ const createCredential = (): ICredential => {
 };
 
 const signUp = async (page: Page, credential: ICredential): Promise<void> => {
-  await page.locator('button[role="tab"]:has-text("Sign Up")').click();
   await page.locator('#signup-email').fill(credential.email);
   await page.locator('#signup-password').fill(credential.password);
   await page.locator('#confirm-password').fill(credential.password);
@@ -34,8 +33,9 @@ test.describe('Snap-to-grid drag parity', () => {
 
   test('with snap to grid on, drag object and board remains consistent', async ({ page }) => {
     const credential = createCredential();
-    await page.goto('/');
+    await page.goto('/login?tab=signup');
     await page.waitForLoadState('load');
+    await page.locator('#signup-email').waitFor({ state: 'visible', timeout: 10_000 });
 
     await signUp(page, credential);
     await waitForBoardVisible(page);

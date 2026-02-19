@@ -17,6 +17,7 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright install && playwright test",
     "test:ai-connection": "bun run scripts/test-ai-connection.ts",
+    "perf:check": "bun run scripts/run-performance-check.ts",
     "clear-boards": "bun run scripts/clear-boards.ts",
     "proxy": "bun run server/index.ts",
     "validate": "bun run format && bun run typecheck && bun run lint && bun run test:run",
@@ -25,8 +26,8 @@
     "smoke:ai-proxy": "bun run scripts/smoke-ai-proxy.ts",
     "benchmark:strict": "bun run scripts/release-gate.ts --skip-proxy-smoke",
     "release:gate": "bun run scripts/release-gate.ts",
-    "perf:check": "bun run scripts/run-performance-check.ts",
-    "cleanup": "bun run lint:fix && bun run format"
+    "cleanup": "bun run lint:fix && bun run format",
+    "test:all": "bun run cleanup && bun run validate && bun run test:e2e && bun run test:e2e:ui && bun run test:coverage && bun run perf:check && bun run test:ai-connection"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
