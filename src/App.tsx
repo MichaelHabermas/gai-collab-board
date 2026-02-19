@@ -74,6 +74,7 @@ const BoardView = ({
     loading: objectsLoading,
     createObject,
     updateObject,
+    updateObjects,
     deleteObject,
     deleteObjects,
   } = useObjects({ boardId, user });
@@ -250,6 +251,7 @@ const BoardView = ({
               objects={objects}
               canEdit={canEdit}
               onObjectUpdate={updateObject}
+              onObjectsUpdate={updateObjects}
               onObjectCreate={createObject}
               onObjectDelete={deleteObject}
               onObjectsDeleteBatch={deleteObjects}

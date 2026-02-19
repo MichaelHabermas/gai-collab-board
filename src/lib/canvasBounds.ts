@@ -89,6 +89,13 @@ export function getSelectionBounds(objects: IBoardObject[], selectedIds: string[
 }
 
 /**
+ * Returns whether a point (canvas coords) is inside the given axis-aligned bounds.
+ */
+export function isPointInBounds(px: number, py: number, bounds: IBounds): boolean {
+  return px >= bounds.x1 && px <= bounds.x2 && py >= bounds.y1 && py <= bounds.y2;
+}
+
+/**
  * Returns the axis-aligned bounding box of all board objects, or null if board is empty.
  */
 export function getBoardBounds(objects: IBoardObject[]): IBounds | null {

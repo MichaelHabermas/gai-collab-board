@@ -27,6 +27,7 @@ import type {
   IAlignmentCandidate,
   ToolMode,
   IKonvaMouseEvent,
+  IKonvaDragEvent,
   ISelectionRect,
   ExportImageFormat,
   IViewportActionsValue,
@@ -55,6 +56,7 @@ interface IBoardCanvasProps {
   objects: IBoardObject[];
   canEdit?: boolean;
   onObjectUpdate?: (objectId: string, updates: Partial<IBoardObject>) => void;
+  onObjectsUpdate?: (updates: Array<{ objectId: string; updates: Partial<IBoardObject> }>) => void;
   onObjectCreate?: (params: Omit<ICreateObjectParams, 'createdBy'>) => Promise<IBoardObject | null>;
   onObjectDelete?: (objectId: string) => Promise<void>;
   onObjectsDeleteBatch?: (objectIds: string[]) => Promise<void>;
@@ -110,6 +112,7 @@ export const BoardCanvas = memo(
     objects,
     canEdit = true,
     onObjectUpdate,
+    onObjectsUpdate,
     onObjectCreate,
     onObjectDelete,
     onObjectsDeleteBatch,
@@ -140,6 +143,13 @@ export const BoardCanvas = memo(
     const selectionStartRef = useRef<{ x1: number; y1: number } | null>(null);
     // When true, the next click is the release of a marquee; skip empty-area deselect so selection is not cleared
     const justDidMarqueeSelectionRef = useRef(false);
+    /** Bounds at start of selection-drag-handle drag (used in onDragMove/onDragEnd). */
+    const selectionDragBoundsRef = useRef<{ x1: number; y1: number; x2: number; y2: number } | null>(
+      null
+    );
+    const [groupDragOffset, setGroupDragOffset] = useState<{ dx: number; dy: number } | null>(null);
+    const groupDragOffsetRef = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
+    const [isHoveringSelectionHandle, setIsHoveringSelectionHandle] = useState(false);
     const [connectorFrom, setConnectorFrom] = useState<{
       shapeId: string;
       anchor: ConnectorAnchor;
@@ -802,10 +812,45 @@ export const BoardCanvas = memo(
       [setSelectedIds]
     );
 
-    // Handle object drag end (optionally snap position to grid); clear alignment guides
+    // Handle object drag end (optionally snap position to grid); clear alignment guides.
+    // When multiple objects are selected, apply same delta to all (batch update).
     const handleObjectDragEnd = useCallback(
       (objectId: string, x: number, y: number) => {
         setAlignmentGuides(null);
+        const draggedObj = objectsById.get(objectId);
+        const multiSelected =
+          selectedIds.length > 1 &&
+          selectedIds.includes(objectId) &&
+          onObjectsUpdate &&
+          draggedObj != null;
+
+        if (multiSelected) {
+          const dx = x - draggedObj.x;
+          const dy = y - draggedObj.y;
+          const updates: Array<{ objectId: string; updates: Partial<IBoardObject> }> = [];
+          for (const id of selectedIds) {
+            const obj = objectsById.get(id);
+            if (!obj) {
+              continue;
+            }
+
+            let newX = obj.x + dx;
+            let newY = obj.y + dy;
+            if (snapToGridEnabled) {
+              const snapped = snapPositionToGrid(newX, newY, GRID_SIZE);
+              newX = snapped.x;
+              newY = snapped.y;
+            }
+
+            updates.push({ objectId: id, updates: { x: newX, y: newY } });
+          }
+          if (updates.length > 0) {
+            onObjectsUpdate(updates);
+          }
+
+          return;
+        }
+
         let finalX = x;
         let finalY = y;
         if (snapToGridEnabled) {
@@ -816,8 +861,82 @@ export const BoardCanvas = memo(
 
         onObjectUpdate?.(objectId, { x: finalX, y: finalY });
       },
-      [onObjectUpdate, snapToGridEnabled]
+      [onObjectUpdate, onObjectsUpdate, snapToGridEnabled, selectedIds, objectsById]
     );
+
+    // Selection bounds when 2+ selected (for draggable handle over empty space in selection)
+    const selectionBounds = useMemo(() => {
+      if (selectedIds.length < 2) {
+        return null;
+      }
+
+      return getSelectionBounds(objects, selectedIds);
+    }, [objects, selectedIds]);
+
+    /** Only show grab cursor when the selection-drag handle is visible and hovered. */
+    const isHoveringSelectionHandleEffective =
+      selectionBounds != null && isHoveringSelectionHandle;
+
+    const handleSelectionDragStart = useCallback(
+      (bounds: { x1: number; y1: number; x2: number; y2: number }) => {
+        setAlignmentGuides(null);
+        selectionDragBoundsRef.current = bounds;
+      },
+      []
+    );
+
+    const handleSelectionDragMove = useCallback(
+      (e: IKonvaDragEvent) => {
+        const b = selectionDragBoundsRef.current;
+        if (!b) {
+          return;
+        }
+
+        const offset = {
+          dx: e.target.x() - b.x1,
+          dy: e.target.y() - b.y1,
+        };
+        groupDragOffsetRef.current = offset;
+        setGroupDragOffset(offset);
+      },
+      []
+    );
+
+    const handleSelectionDragEnd = useCallback(() => {
+      const b = selectionDragBoundsRef.current;
+      if (!b || !onObjectsUpdate) {
+        selectionDragBoundsRef.current = null;
+        setGroupDragOffset(null);
+        return;
+      }
+
+      const { dx, dy } = groupDragOffsetRef.current;
+      const updates: Array<{ objectId: string; updates: Partial<IBoardObject> }> = [];
+
+      for (const id of selectedIds) {
+        const obj = objectsById.get(id);
+        if (!obj) {
+          continue;
+        }
+
+        let newX = obj.x + dx;
+        let newY = obj.y + dy;
+        if (snapToGridEnabled) {
+          const snapped = snapPositionToGrid(newX, newY, GRID_SIZE);
+          newX = snapped.x;
+          newY = snapped.y;
+        }
+
+        updates.push({ objectId: id, updates: { x: newX, y: newY } });
+      }
+
+      if (updates.length > 0) {
+        onObjectsUpdate(updates);
+      }
+
+      selectionDragBoundsRef.current = null;
+      setGroupDragOffset(null);
+    }, [onObjectsUpdate, selectedIds, objectsById, snapToGridEnabled]);
 
     // Throttle guide updates via RAF; ref only used in effect and in drag handler (not during render).
     const alignmentGuidesRafIdRef = useRef<number>(0);
@@ -1058,6 +1177,7 @@ export const BoardCanvas = memo(
             canEdit={canEdit}
             objectsById={objectsById}
             selectionColor={selectionColor}
+            groupDragOffset={groupDragOffset}
             getSelectHandler={getSelectHandler}
             getDragEndHandler={getDragEndHandler}
             getTextChangeHandler={getTextChangeHandler}
@@ -1072,6 +1192,7 @@ export const BoardCanvas = memo(
         canEdit,
         objectsById,
         selectionColor,
+        groupDragOffset,
         getSelectHandler,
         getDragEndHandler,
         getTextChangeHandler,
@@ -1350,13 +1471,18 @@ export const BoardCanvas = memo(
           style={{
             backgroundColor: getBoardCanvasBackgroundColor(theme),
             forcedColorAdjust: 'none',
-            cursor: isMiddlePanning
-              ? 'grabbing'
-              : activeTool === 'pan'
-                ? 'grab'
-                : activeTool === 'select'
-                  ? 'default'
-                  : 'crosshair',
+            cursor:
+              groupDragOffset != null
+                ? 'grabbing'
+                : isHoveringSelectionHandleEffective
+                  ? 'grab'
+                  : isMiddlePanning
+                    ? 'grabbing'
+                    : activeTool === 'pan'
+                      ? 'grab'
+                      : activeTool === 'select'
+                        ? 'default'
+                        : 'crosshair',
           }}
         >
           {/* Background grid layer - static, no interaction; only when show grid is on */}
@@ -1378,6 +1504,26 @@ export const BoardCanvas = memo(
               name='background'
               listening={true}
             />
+            {/* Transparent draggable rect over selection bounds: drag from empty space inside selection moves whole group */}
+            {selectionBounds != null && canEdit && onObjectsUpdate && (
+              <Rect
+                x={selectionBounds.x1 + (groupDragOffset?.dx ?? 0)}
+                y={selectionBounds.y1 + (groupDragOffset?.dy ?? 0)}
+                width={selectionBounds.x2 - selectionBounds.x1}
+                height={selectionBounds.y2 - selectionBounds.y1}
+                fill='transparent'
+                name='selection-drag-handle'
+                listening={true}
+                draggable={true}
+                onDragStart={() => {
+                  handleSelectionDragStart(selectionBounds);
+                }}
+                onDragMove={handleSelectionDragMove}
+                onDragEnd={handleSelectionDragEnd}
+                onMouseEnter={() => setIsHoveringSelectionHandle(true)}
+                onMouseLeave={() => setIsHoveringSelectionHandle(false)}
+              />
+            )}
             {visibleObjectNodes}
           </Layer>
 

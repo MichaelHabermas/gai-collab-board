@@ -3,6 +3,7 @@ import {
   getObjectBounds,
   getSelectionBounds,
   getBoardBounds,
+  isPointInBounds,
   computeViewportToFitBounds,
 } from '@/lib/canvasBounds';
 import type { IBoardObject } from '@/types';
@@ -58,6 +59,23 @@ describe('canvasBounds', () => {
         x2: 120,
         y2: 70,
       });
+    });
+  });
+
+  describe('isPointInBounds', () => {
+    it('returns true when point is inside bounds', () => {
+      const bounds = { x1: 10, y1: 20, x2: 100, y2: 80 };
+      expect(isPointInBounds(50, 50, bounds)).toBe(true);
+      expect(isPointInBounds(10, 20, bounds)).toBe(true);
+      expect(isPointInBounds(100, 80, bounds)).toBe(true);
+    });
+
+    it('returns false when point is outside bounds', () => {
+      const bounds = { x1: 10, y1: 20, x2: 100, y2: 80 };
+      expect(isPointInBounds(9, 20, bounds)).toBe(false);
+      expect(isPointInBounds(10, 19, bounds)).toBe(false);
+      expect(isPointInBounds(101, 80, bounds)).toBe(false);
+      expect(isPointInBounds(10, 81, bounds)).toBe(false);
     });
   });
 

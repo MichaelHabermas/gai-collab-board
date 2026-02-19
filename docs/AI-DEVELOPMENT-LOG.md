@@ -349,3 +349,27 @@ This log records how AI was used during development: tools (Cursor, Context7 MCP
 - Approximate cumulative tokens across logged sessions: ~387k input / ~135k output (estimate)
 
 **Deployment impact (expected):** UI-only; debounced number fields run in client. No change to LLM usage, API calls, or production cost. Production projections and token mix unchanged.
+
+## Move groups of selected objects (Feb 2026)
+
+**Scope:** UI-UX item 12 — move groups of selected objects. Two interactions: (1) Drag any selected object → same delta applied to all on release (batch update). (2) Click anywhere inside the selection marquee (empty space within selection bounds) and drag → whole group moves during drag (groupDragOffset), committed in one batch on release.
+
+**Implementation:**
+
+- **useObjects:** [src/hooks/useObjects.ts](../src/hooks/useObjects.ts) — added `updateObjects(updates)` using `updateObjectsBatch` from objectService; optimistic apply + rollback on failure.
+- **BoardCanvas:** [src/components/canvas/BoardCanvas.tsx](../src/components/canvas/BoardCanvas.tsx) — `onObjectsUpdate` prop; `handleObjectDragEnd` multi-select path (delta from dragged object, batch); group-drag-from-empty-area: mousedown inside selection bounds starts group drag, mouse move updates `groupDragOffset`, mouse up commits batch and sets `justDidGroupDragRef`; click handler skips deselect when `justDidGroupDragRef`.
+- **CanvasShapeRenderer:** [src/components/canvas/CanvasShapeRenderer.tsx](../src/components/canvas/CanvasShapeRenderer.tsx) — `groupDragOffset` prop; selected objects render at `(x+dx, y+dy)` during group drag.
+- **canvasBounds:** [src/lib/canvasBounds.ts](../src/lib/canvasBounds.ts) — `isPointInBounds(px, py, bounds)` for selection-marquee hit test.
+- **Types:** [src/types/canvas.ts](../src/types/canvas.ts) — `IGroupDragOffset`, optional `groupDragOffset` on `ICanvasShapeRendererProps`.
+- **PRD:** [docs/PRD.md](PRD.md) — "Move groups of selected objects" subsection under Story 3.8 with expected behaviour and verification checkboxes (unchecked until browser/E2E).
+- **Tests:** [tests/unit/useObjects.test.ts](../tests/unit/useObjects.test.ts) — `updateObjects` batch and rollback; [tests/unit/canvasBounds.test.ts](../tests/unit/canvasBounds.test.ts) — `isPointInBounds`.
+
+**Cost & usage (this session):** Development via Cursor; no external LLM API. Approximate token use: ~25k input / ~10k output (estimate).
+
+**Running totals (development):**
+
+- Cursor subscription: $20/month
+- External API spend during development: $0
+- Approximate cumulative tokens across logged sessions: ~412k input / ~145k output (estimate)
+
+**Deployment impact (expected):** Client/sync only; no new AI endpoints or LLM usage. Production cost and token mix unchanged.

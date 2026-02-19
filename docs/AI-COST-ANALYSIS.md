@@ -123,3 +123,7 @@ Snap-to-grid parity (drag position constrained to grid during drag, not only on 
 ### Spin box rapid-click polish (Feb 2026) — production relevance
 
 Property Inspector number inputs (stroke width, font size) use debounced commit and local display state for smooth rapid-click behavior. UI-only; no LLM usage or API impact. Production projections unchanged.
+
+### Move groups of selected objects (Feb 2026) — production relevance
+
+Group move (drag one selected or drag from selection marquee) is client-side canvas and batch Firestore position updates only. No new AI endpoints, no change to command volume or token mix. **LLM cost:** unchanged. Focus production cost on what is actually used: AI chat (Groq/NVIDIA) and the projections table above.

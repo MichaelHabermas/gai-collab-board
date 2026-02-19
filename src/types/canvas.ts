@@ -42,6 +42,12 @@ export interface IViewportActionsValue {
   exportFullBoard?: (format?: ExportImageFormat) => void;
 }
 
+/** Offset applied to selected objects during group-drag-from-empty-area. */
+export interface IGroupDragOffset {
+  dx: number;
+  dy: number;
+}
+
 /** Props for CanvasShapeRenderer. */
 export interface ICanvasShapeRendererProps {
   object: IBoardObject;
@@ -49,6 +55,8 @@ export interface ICanvasShapeRendererProps {
   canEdit: boolean;
   objectsById: Map<string, IBoardObject>;
   selectionColor: string;
+  /** When set, selected objects are rendered at (object.x + dx, object.y + dy) during group drag. */
+  groupDragOffset?: IGroupDragOffset | null;
   getSelectHandler: (id: string) => () => void;
   getDragEndHandler: (id: string) => (x: number, y: number) => void;
   getTextChangeHandler: (id: string) => (text: string) => void;

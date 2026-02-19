@@ -4,6 +4,7 @@ import type { IBoardObject } from '@/types';
 import {
   createObject,
   updateObject,
+  updateObjectsBatch,
   deleteObject,
   deleteObjectsBatch,
   subscribeToObjectsWithChanges,
@@ -19,12 +20,15 @@ interface IUseObjectsParams {
   user: User | null;
 }
 
+export type IObjectUpdateEntry = { objectId: string; updates: IUpdateObjectParams };
+
 interface IUseObjectsReturn {
   objects: IBoardObject[];
   loading: boolean;
   error: string | null;
   createObject: (params: Omit<ICreateObjectParams, 'createdBy'>) => Promise<IBoardObject | null>;
   updateObject: (objectId: string, updates: IUpdateObjectParams) => Promise<void>;
+  updateObjects: (updates: IObjectUpdateEntry[]) => Promise<void>;
   deleteObject: (objectId: string) => Promise<void>;
   deleteObjects: (objectIds: string[]) => Promise<void>;
 }
@@ -274,6 +278,51 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
     [boardId, objects]
   );
 
+  // Update multiple objects in one batch (optimistic update + rollback)
+  const handleUpdateObjects = useCallback(
+    async (updates: IObjectUpdateEntry[]): Promise<void> => {
+      if (!boardId) {
+        setError('Cannot update objects: not connected to board');
+        return;
+      }
+
+      if (updates.length === 0) {
+        return;
+      }
+
+      const objectIds = updates.map((u) => u.objectId);
+      const originals = objectIds
+        .map((id) => objects.find((obj) => obj.id === id))
+        .filter(Boolean) as IBoardObject[];
+      for (const obj of originals) {
+        pendingUpdatesRef.current.set(obj.id, obj);
+      }
+
+      setObjects((prev) =>
+        prev.map((obj) => {
+          const entry = updates.find((u) => u.objectId === obj.id);
+          return entry ? { ...obj, ...entry.updates } : obj;
+        })
+      );
+
+      try {
+        setError('');
+        await updateObjectsBatch(boardId, updates);
+        for (const id of objectIds) {
+          pendingUpdatesRef.current.delete(id);
+        }
+      } catch (err) {
+        for (const original of originals) {
+          setObjects((prev) => prev.map((o) => (o.id === original.id ? original : o)));
+          pendingUpdatesRef.current.delete(original.id);
+        }
+        const errorMessage = err instanceof Error ? err.message : 'Failed to update objects';
+        setError(errorMessage);
+      }
+    },
+    [boardId, objects]
+  );
+
   // Delete multiple objects in one batch (optimistic update + rollback)
   const handleDeleteObjects = useCallback(
     async (objectIds: string[]): Promise<void> => {
@@ -317,6 +366,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
     error,
     createObject: handleCreateObject,
     updateObject: handleUpdateObject,
+    updateObjects: handleUpdateObjects,
     deleteObject: handleDeleteObject,
     deleteObjects: handleDeleteObjects,
   };

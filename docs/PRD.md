@@ -1930,6 +1930,22 @@ Snap-to-grid uses the same 20px grid for both **drag** and **resize**. When "Sna
 - **Subtask 1**: Move multiple selected objects
 - **Subtask 2**: Delete multiple selected objects
 
+#### Move groups of selected objects
+
+When multiple objects are selected, the user can move them as a group in two ways:
+
+1. **Drag any selected object**: Dragging one of the selected shapes applies the same position delta to all selected objects on drag end (relative positions preserved). A single batch write is used for sync.
+2. **Click anywhere in the selection marquee and drag**: Clicking on empty space inside the selection bounds (the axis-aligned box around all selected objects) and dragging moves the whole group; all selected objects update together during drag and are committed in one batch on release.
+
+Snap-to-grid, when enabled, applies to each moved object. Lines and connectors move by updating their `x`/`y`; points are relative so they stay correct.
+
+**Verification (do not check until confirmed in browser or E2E):**
+
+- [ ] With 2+ objects selected, dragging one object moves all by the same delta on release.
+- [ ] With 2+ objects selected, clicking inside the selection marquee (empty space) and dragging moves the whole group; cursor shows grabbing during drag.
+- [ ] Snap-to-grid applies to every moved object when the option is enabled.
+- [ ] Moving a group uses a single batch write (e.g. verified by unit tests for useObjects.updateObjects and objectService.updateObjectsBatch).
+
 ### Story 3.9: Operations (Delete, Duplicate, Copy/Paste)
 
 **As a user**, I can delete, duplicate, and copy/paste objects.

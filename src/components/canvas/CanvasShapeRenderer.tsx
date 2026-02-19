@@ -22,6 +22,7 @@ export const CanvasShapeRenderer = memo(
     canEdit,
     objectsById,
     selectionColor,
+    groupDragOffset,
     getSelectHandler,
     getDragEndHandler,
     getTextChangeHandler,
@@ -29,14 +30,18 @@ export const CanvasShapeRenderer = memo(
     handleObjectSelect,
     handleObjectDragEnd,
   }: ICanvasShapeRendererProps): ReactElement => {
+    const offset = isSelected && groupDragOffset ? groupDragOffset : null;
+    const displayX = obj.x + (offset?.dx ?? 0);
+    const displayY = obj.y + (offset?.dy ?? 0);
+
     switch (obj.type) {
       case 'sticky':
         return (
           <StickyNote
             key={obj.id}
             id={obj.id}
-            x={obj.x}
-            y={obj.y}
+            x={displayX}
+            y={displayY}
             width={obj.width}
             height={obj.height}
             text={obj.text || ''}
@@ -59,8 +64,8 @@ export const CanvasShapeRenderer = memo(
           <RectangleShape
             key={obj.id}
             id={obj.id}
-            x={obj.x}
-            y={obj.y}
+            x={displayX}
+            y={displayY}
             width={obj.width}
             height={obj.height}
             fill={obj.fill}
@@ -82,8 +87,8 @@ export const CanvasShapeRenderer = memo(
           <CircleShape
             key={obj.id}
             id={obj.id}
-            x={obj.x}
-            y={obj.y}
+            x={displayX}
+            y={displayY}
             width={obj.width}
             height={obj.height}
             fill={obj.fill}
@@ -118,8 +123,8 @@ export const CanvasShapeRenderer = memo(
           <LineShape
             key={obj.id}
             id={obj.id}
-            x={obj.x}
-            y={obj.y}
+            x={displayX}
+            y={displayY}
             points={obj.points || [0, 0, 100, 100]}
             stroke={obj.stroke || obj.fill}
             strokeWidth={obj.strokeWidth}
@@ -139,9 +144,14 @@ export const CanvasShapeRenderer = memo(
         if (fromObj && toObj && obj.fromAnchor != null && obj.toAnchor != null) {
           const fromPos = getAnchorPosition(fromObj, obj.fromAnchor);
           const toPos = getAnchorPosition(toObj, obj.toAnchor);
-          const { x } = fromPos;
-          const { y } = fromPos;
-          const points: [number, number, number, number] = [0, 0, toPos.x - x, toPos.y - y];
+          const x = fromPos.x + (offset?.dx ?? 0);
+          const y = fromPos.y + (offset?.dy ?? 0);
+          const points: [number, number, number, number] = [
+            0,
+            0,
+            toPos.x - fromPos.x,
+            toPos.y - fromPos.y,
+          ];
           return (
             <Connector
               key={obj.id}
@@ -162,15 +172,13 @@ export const CanvasShapeRenderer = memo(
           );
         }
 
-        const { x } = obj;
-        const { y } = obj;
         const points = obj.points || [0, 0, 100, 100];
         return (
           <Connector
             key={obj.id}
             id={obj.id}
-            x={x}
-            y={y}
+            x={displayX}
+            y={displayY}
             points={points}
             stroke={obj.stroke || obj.fill}
             strokeWidth={obj.strokeWidth}
@@ -191,8 +199,8 @@ export const CanvasShapeRenderer = memo(
           <TextElement
             key={obj.id}
             id={obj.id}
-            x={obj.x}
-            y={obj.y}
+            x={displayX}
+            y={displayY}
             text={obj.text || ''}
             fontSize={obj.fontSize}
             fill={obj.fill}
@@ -213,8 +221,8 @@ export const CanvasShapeRenderer = memo(
           <Frame
             key={obj.id}
             id={obj.id}
-            x={obj.x}
-            y={obj.y}
+            x={displayX}
+            y={displayY}
             width={obj.width}
             height={obj.height}
             text={obj.text || 'Frame'}
@@ -238,8 +246,8 @@ export const CanvasShapeRenderer = memo(
             key={obj.id}
             id={obj.id}
             name='shape'
-            x={obj.x}
-            y={obj.y}
+            x={displayX}
+            y={displayY}
             width={obj.width}
             height={obj.height}
             fill={obj.fill}

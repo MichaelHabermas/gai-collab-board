@@ -171,12 +171,16 @@
 
 - Why now: high usefulness, moderate complexity.
 - What to change:
-  - Add delta-based multi-drag behavior for selected set, preserving relative positions.
+  - Delta-based multi-drag for selected set, preserving relative positions.
+  - Two interactions: (1) Drag any selected object → all move together on release; (2) Click anywhere inside the selection marquee (empty space within selection bounds) and drag → whole group moves during drag, committed in one batch on release.
 - Primary files:
   - [src/components/canvas/BoardCanvas.tsx](src/components/canvas/BoardCanvas.tsx)
-  - [src/hooks/useShapeDragHandler.ts](src/hooks/useShapeDragHandler.ts)
-- Verify:
-  - Multi-selected objects move together as one group.
+  - [src/hooks/useObjects.ts](src/hooks/useObjects.ts)
+  - [src/components/canvas/CanvasShapeRenderer.tsx](src/components/canvas/CanvasShapeRenderer.tsx)
+  - [src/lib/canvasBounds.ts](src/lib/canvasBounds.ts)
+- Verify (check only after confirming in browser or E2E):
+  - Multi-selected objects move together when dragging one of them.
+  - Clicking inside the selection marquee and dragging moves the whole group with live feedback (grabbing cursor, all shapes move during drag).
 - **Scores (1–10):** Ease `5` · Usefulness `9` · App need `8` · Risk `7` · Speed `5` · Wow `7` → **Overall `7`**
 
 13. [ ] **Address `only-export-components` violations**
