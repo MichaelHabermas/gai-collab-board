@@ -34,6 +34,7 @@ export const TextElement = memo(
         onSelect,
         onDragStart,
         onDragEnd,
+        onDragMove,
         dragBoundFunc,
         onTextChange,
         onTransformEnd,
@@ -197,6 +198,7 @@ export const TextElement = memo(
           onDblTap={handleDblClick}
           onDragStart={onDragStart}
           onDragEnd={handleDragEnd}
+          onDragMove={onDragMove}
           dragBoundFunc={dragBoundFunc}
           onTransformEnd={handleTransformEnd}
           visible={!isEditing}

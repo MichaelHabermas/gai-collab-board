@@ -32,6 +32,7 @@ export const CircleShape = memo(
         onSelect,
         onDragStart,
         onDragEnd,
+        onDragMove,
         dragBoundFunc,
         onTransformEnd,
       },
@@ -69,6 +70,7 @@ export const CircleShape = memo(
           onTap={onSelect}
           onDragStart={onDragStart}
           onDragEnd={handleDragEnd}
+          onDragMove={onDragMove}
           dragBoundFunc={dragBoundFunc}
           onTransformEnd={handleTransformEnd}
           {...getShapeShadowProps(isSelected, { includeShadowForStrokeEnabled: true })}

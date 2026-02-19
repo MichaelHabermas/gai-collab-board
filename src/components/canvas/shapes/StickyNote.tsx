@@ -16,7 +16,7 @@ import {
 } from '@/lib/canvasShadows';
 import { getOverlayRectFromLocalCorners } from '@/lib/canvasOverlayPosition';
 import { attachOverlayRepositionLifecycle } from '@/lib/canvasTextEditOverlay';
-import type { IDragBoundFunc, ITransformEndRectAttrs } from '@/types';
+import type { IDragBoundFunc, ITransformEndRectAttrs, IKonvaDragEvent } from '@/types';
 
 // Sticky note color palette
 export const STICKY_COLORS = {
@@ -51,6 +51,7 @@ interface IStickyNoteProps {
   onSelect?: () => void;
   onDragStart?: () => void;
   onDragEnd?: (x: number, y: number) => void;
+  onDragMove?: (e: IKonvaDragEvent) => void;
   dragBoundFunc?: IDragBoundFunc;
   onTextChange?: (text: string) => void;
   onTransformEnd?: (attrs: ITransformEndRectAttrs) => void;
@@ -80,6 +81,7 @@ export const StickyNote = memo(
         onSelect,
         onDragStart,
         onDragEnd,
+        onDragMove,
         dragBoundFunc,
         onTextChange,
         onTransformEnd: _onTransformEnd,
@@ -235,6 +237,7 @@ export const StickyNote = memo(
           onDblTap={handleDblClick}
           onDragStart={onDragStart}
           onDragEnd={handleDragEnd}
+          onDragMove={onDragMove}
           dragBoundFunc={dragBoundFunc}
         >
           {/* Background with shadow */}

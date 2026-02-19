@@ -41,7 +41,11 @@ import {
   computeSnappedPositionFromGuides,
 } from '@/lib/alignmentGuides';
 import { cn } from '@/lib/utils';
-import { snapPositionToGrid, snapSizeToGrid } from '@/lib/snapToGrid';
+import {
+  applySnapPositionToNode,
+  snapPositionToGrid,
+  snapResizeRectToGrid,
+} from '@/lib/snapToGrid';
 import { ConnectionNodesLayer } from './ConnectionNodesLayer';
 import { AlignToolbar } from './AlignToolbar';
 import { AlignmentGuidesLayer } from './AlignmentGuidesLayer';
@@ -144,9 +148,12 @@ export const BoardCanvas = memo(
     // When true, the next click is the release of a marquee; skip empty-area deselect so selection is not cleared
     const justDidMarqueeSelectionRef = useRef(false);
     /** Bounds at start of selection-drag-handle drag (used in onDragMove/onDragEnd). */
-    const selectionDragBoundsRef = useRef<{ x1: number; y1: number; x2: number; y2: number } | null>(
-      null
-    );
+    const selectionDragBoundsRef = useRef<{
+      x1: number;
+      y1: number;
+      x2: number;
+      y2: number;
+    } | null>(null);
     const [groupDragOffset, setGroupDragOffset] = useState<{ dx: number; dy: number } | null>(null);
     const groupDragOffsetRef = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
     const [isHoveringSelectionHandle, setIsHoveringSelectionHandle] = useState(false);
@@ -874,8 +881,7 @@ export const BoardCanvas = memo(
     }, [objects, selectedIds]);
 
     /** Only show grab cursor when the selection-drag handle is visible and hovered. */
-    const isHoveringSelectionHandleEffective =
-      selectionBounds != null && isHoveringSelectionHandle;
+    const isHoveringSelectionHandleEffective = selectionBounds != null && isHoveringSelectionHandle;
 
     const handleSelectionDragStart = useCallback(
       (bounds: { x1: number; y1: number; x2: number; y2: number }) => {
@@ -885,22 +891,19 @@ export const BoardCanvas = memo(
       []
     );
 
-    const handleSelectionDragMove = useCallback(
-      (e: IKonvaDragEvent) => {
-        const b = selectionDragBoundsRef.current;
-        if (!b) {
-          return;
-        }
+    const handleSelectionDragMove = useCallback((e: IKonvaDragEvent) => {
+      const b = selectionDragBoundsRef.current;
+      if (!b) {
+        return;
+      }
 
-        const offset = {
-          dx: e.target.x() - b.x1,
-          dy: e.target.y() - b.y1,
-        };
-        groupDragOffsetRef.current = offset;
-        setGroupDragOffset(offset);
-      },
-      []
-    );
+      const offset = {
+        dx: e.target.x() - b.x1,
+        dy: e.target.y() - b.y1,
+      };
+      groupDragOffsetRef.current = offset;
+      setGroupDragOffset(offset);
+    }, []);
 
     const handleSelectionDragEnd = useCallback(() => {
       const b = selectionDragBoundsRef.current;
@@ -987,6 +990,11 @@ export const BoardCanvas = memo(
         .map((candidate) => candidate.candidate);
 
       const nextDragBoundFunc = (pos: IPosition) => {
+        if (snapToGridEnabledRef.current) {
+          setGuidesThrottledRef.current({ horizontal: [], vertical: [] });
+          return snapPositionToGrid(pos.x, pos.y, GRID_SIZE);
+        }
+
         const dragged = {
           x1: pos.x,
           y1: pos.y,
@@ -994,10 +1002,7 @@ export const BoardCanvas = memo(
           y2: pos.y + height,
         };
         const guides = computeAlignmentGuidesWithCandidates(dragged, otherCandidates);
-        let snapped = computeSnappedPositionFromGuides(guides, pos, width, height);
-        if (snapToGridEnabledRef.current) {
-          snapped = snapPositionToGrid(snapped.x, snapped.y, GRID_SIZE);
-        }
+        const snapped = computeSnappedPositionFromGuides(guides, pos, width, height);
 
         setGuidesThrottledRef.current(guides);
         return snapped;
@@ -1055,6 +1060,20 @@ export const BoardCanvas = memo(
       [handleObjectDragEnd]
     );
 
+    /** When snap-to-grid is on, force node position to grid on every drag move so it lines up during drag. */
+    const handleDragMove = useCallback(
+      (e: IKonvaDragEvent) => {
+        if (!snapToGridEnabledRef.current) {
+          return;
+        }
+
+        applySnapPositionToNode(e.target, objectsById, GRID_SIZE);
+      },
+      [objectsById]
+    );
+
+    const onDragMoveProp = canEdit ? handleDragMove : undefined;
+
     const getTextChangeHandler = useCallback(
       (objectId: string) => {
         const existingHandler = textChangeHandlerMapRef.current.get(objectId);
@@ -1092,15 +1111,26 @@ export const BoardCanvas = memo(
         let finalAttrs = attrs;
         if (snapToGridEnabled) {
           if ('width' in attrs && 'height' in attrs) {
-            const snappedPos = snapPositionToGrid(attrs.x, attrs.y, GRID_SIZE);
-            const snappedSize = snapSizeToGrid(attrs.width, attrs.height, GRID_SIZE);
-            finalAttrs = {
-              ...attrs,
-              x: snappedPos.x,
-              y: snappedPos.y,
-              width: snappedSize.width,
-              height: snappedSize.height,
-            };
+            const object = objectsById.get(objectId);
+            if (object) {
+              const snappedRect = snapResizeRectToGrid(
+                { x: object.x, y: object.y, width: object.width, height: object.height },
+                { x: attrs.x, y: attrs.y, width: attrs.width, height: attrs.height },
+                GRID_SIZE
+              );
+              finalAttrs = {
+                ...attrs,
+                x: snappedRect.x,
+                y: snappedRect.y,
+                width: snappedRect.width,
+                height: snappedRect.height,
+              };
+            } else {
+              finalAttrs = {
+                ...attrs,
+                ...snapPositionToGrid(attrs.x, attrs.y, GRID_SIZE),
+              };
+            }
           } else if ('points' in attrs) {
             const snappedPos = snapPositionToGrid(attrs.x, attrs.y, GRID_SIZE);
             finalAttrs = {
@@ -1113,7 +1143,7 @@ export const BoardCanvas = memo(
 
         onObjectUpdate?.(objectId, finalAttrs as Partial<IBoardObject>);
       },
-      [onObjectUpdate, snapToGridEnabled]
+      [onObjectUpdate, snapToGridEnabled, objectsById]
     );
 
     const gridNodes = useMemo(() => {
@@ -1182,6 +1212,7 @@ export const BoardCanvas = memo(
             getDragEndHandler={getDragEndHandler}
             getTextChangeHandler={getTextChangeHandler}
             getDragBoundFunc={getDragBoundFunc}
+            onDragMove={onDragMoveProp}
             handleObjectSelect={handleObjectSelect}
             handleObjectDragEnd={handleObjectDragEnd}
           />
@@ -1197,6 +1228,7 @@ export const BoardCanvas = memo(
         getDragEndHandler,
         getTextChangeHandler,
         getDragBoundFunc,
+        onDragMoveProp,
         handleObjectSelect,
         handleObjectDragEnd,
       ]

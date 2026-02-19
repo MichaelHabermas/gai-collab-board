@@ -4,6 +4,7 @@ import type {
   ITransformEndRectAttrs,
   ITransformEndTextAttrs,
 } from './transform';
+import type { IKonvaDragEvent } from './konva';
 
 export type IDragBoundFunc = (pos: IPosition) => IPosition;
 
@@ -18,6 +19,7 @@ export interface IBaseShapeProps {
   onSelect?: () => void;
   onDragStart?: () => void;
   onDragEnd?: (x: number, y: number) => void;
+  onDragMove?: (e: IKonvaDragEvent) => void;
   dragBoundFunc?: IDragBoundFunc;
 }
 

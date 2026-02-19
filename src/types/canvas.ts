@@ -8,6 +8,7 @@
 import type { ReactNode } from 'react';
 import type { IBoardObject } from './board';
 import type { IDragBoundFunc } from './shapes';
+import type { IKonvaDragEvent } from './konva';
 
 /** Right sidebar tab. Used by useBoardSettings and RightSidebar. */
 export type SidebarTab = 'boards' | 'properties' | 'ai';
@@ -61,6 +62,7 @@ export interface ICanvasShapeRendererProps {
   getDragEndHandler: (id: string) => (x: number, y: number) => void;
   getTextChangeHandler: (id: string) => (text: string) => void;
   getDragBoundFunc: (id: string, width: number, height: number) => IDragBoundFunc | undefined;
+  onDragMove?: (e: IKonvaDragEvent) => void;
   handleObjectSelect: (id: string) => void;
   handleObjectDragEnd: (id: string, x: number, y: number) => void;
 }

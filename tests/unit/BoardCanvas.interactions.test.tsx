@@ -542,5 +542,6 @@ describe('BoardCanvas interactions', () => {
     expect(result).toEqual({ x: 20, y: 20 });
     expect((result?.x ?? 0) % GRID_SIZE).toBe(0);
     expect((result?.y ?? 0) % GRID_SIZE).toBe(0);
+    expect(typeof props?.onDragMove).toBe('function');
   });
 });

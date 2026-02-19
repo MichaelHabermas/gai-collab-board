@@ -27,6 +27,7 @@ export const CanvasShapeRenderer = memo(
     getDragEndHandler,
     getTextChangeHandler,
     getDragBoundFunc,
+    onDragMove,
     handleObjectSelect,
     handleObjectDragEnd,
   }: ICanvasShapeRendererProps): ReactElement => {
@@ -54,6 +55,7 @@ export const CanvasShapeRenderer = memo(
             draggable={canEdit}
             onSelect={getSelectHandler(obj.id)}
             onDragEnd={getDragEndHandler(obj.id)}
+            onDragMove={canEdit ? onDragMove : undefined}
             dragBoundFunc={canEdit ? getDragBoundFunc(obj.id, obj.width, obj.height) : undefined}
             onTextChange={canEdit ? getTextChangeHandler(obj.id) : undefined}
           />
@@ -77,6 +79,7 @@ export const CanvasShapeRenderer = memo(
             draggable={canEdit}
             onSelect={getSelectHandler(obj.id)}
             onDragEnd={getDragEndHandler(obj.id)}
+            onDragMove={canEdit ? onDragMove : undefined}
             dragBoundFunc={getDragBoundFunc(obj.id, obj.width, obj.height)}
           />
         );
@@ -100,6 +103,7 @@ export const CanvasShapeRenderer = memo(
             draggable={canEdit}
             onSelect={getSelectHandler(obj.id)}
             onDragEnd={getDragEndHandler(obj.id)}
+            onDragMove={canEdit ? onDragMove : undefined}
             dragBoundFunc={
               boundFunc
                 ? (pos) => {
@@ -134,6 +138,7 @@ export const CanvasShapeRenderer = memo(
             draggable={canEdit}
             onSelect={getSelectHandler(obj.id)}
             onDragEnd={getDragEndHandler(obj.id)}
+            onDragMove={canEdit ? onDragMove : undefined}
             dragBoundFunc={getDragBoundFunc(obj.id, obj.width, obj.height)}
           />
         );
@@ -189,6 +194,7 @@ export const CanvasShapeRenderer = memo(
             hasArrow={true}
             onSelect={getSelectHandler(obj.id)}
             onDragEnd={getDragEndHandler(obj.id)}
+            onDragMove={canEdit ? onDragMove : undefined}
             dragBoundFunc={getDragBoundFunc(obj.id, obj.width, obj.height)}
           />
         );
@@ -211,6 +217,7 @@ export const CanvasShapeRenderer = memo(
             draggable={canEdit}
             onSelect={getSelectHandler(obj.id)}
             onDragEnd={getDragEndHandler(obj.id)}
+            onDragMove={canEdit ? onDragMove : undefined}
             dragBoundFunc={getDragBoundFunc(obj.id, obj.width, obj.height)}
             onTextChange={canEdit ? getTextChangeHandler(obj.id) : undefined}
           />
@@ -235,6 +242,7 @@ export const CanvasShapeRenderer = memo(
             draggable={canEdit}
             onSelect={getSelectHandler(obj.id)}
             onDragEnd={getDragEndHandler(obj.id)}
+            onDragMove={canEdit ? onDragMove : undefined}
             dragBoundFunc={getDragBoundFunc(obj.id, obj.width, obj.height)}
             onTextChange={canEdit ? getTextChangeHandler(obj.id) : undefined}
           />

@@ -30,6 +30,7 @@ export const LineShape = memo(
         onSelect,
         onDragStart,
         onDragEnd,
+        onDragMove,
         dragBoundFunc,
         onTransformEnd,
       },
@@ -62,6 +63,7 @@ export const LineShape = memo(
           onTap={onSelect}
           onDragStart={onDragStart}
           onDragEnd={handleDragEnd}
+          onDragMove={onDragMove}
           dragBoundFunc={dragBoundFunc}
           onTransformEnd={handleTransformEnd}
           perfectDrawEnabled={false}

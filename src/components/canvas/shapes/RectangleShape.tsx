@@ -31,6 +31,7 @@ export const RectangleShape = memo(
         onSelect,
         onDragStart,
         onDragEnd,
+        onDragMove,
         dragBoundFunc,
         onTransformEnd,
       },
@@ -61,6 +62,7 @@ export const RectangleShape = memo(
           onTap={onSelect}
           onDragStart={onDragStart}
           onDragEnd={handleDragEnd}
+          onDragMove={onDragMove}
           dragBoundFunc={dragBoundFunc}
           onTransformEnd={handleTransformEnd}
           {...getShapeShadowProps(isSelected, { includeShadowForStrokeEnabled: true })}

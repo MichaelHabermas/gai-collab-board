@@ -1853,8 +1853,8 @@ While editing text in place (sticky note, text element, or frame title), the HTM
 
 Snap-to-grid uses the same 20px grid for both **drag** and **resize**. When "Snap to grid" is enabled in board settings:
 
-- **Drag:** Position is constrained to the grid **during** drag (via `dragBoundFunc`) and snapped again on drag end.
-- **Resize:** Position and size are snapped to the grid on transform end.
+- **Drag:** Position is constrained to the grid **during** drag (via `dragBoundFunc` and `onDragMove`, so the node stays on grid lines while moving) and snapped again on drag end.
+- **Resize:** On transform end, the edge being dragged snaps to the nearest grid line; the opposite edge stays fixed (e.g. dragging the right edge snaps only the right edge; top-left of the bounding box can stay put).
 
 **Verification (do not check until confirmed in browser or via E2E):**
 

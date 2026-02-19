@@ -7,7 +7,7 @@ import { useShapeDragHandler } from '@/hooks/useShapeDragHandler';
 import { getShapeShadowProps } from '@/lib/shapeShadowProps';
 import { getOverlayRectFromLocalCorners } from '@/lib/canvasOverlayPosition';
 import { attachOverlayRepositionLifecycle } from '@/lib/canvasTextEditOverlay';
-import type { IDragBoundFunc, ITransformEndRectAttrs } from '@/types';
+import type { IDragBoundFunc, ITransformEndRectAttrs, IKonvaDragEvent } from '@/types';
 
 interface IFrameProps {
   id: string;
@@ -26,6 +26,7 @@ interface IFrameProps {
   onSelect?: () => void;
   onDragStart?: () => void;
   onDragEnd?: (x: number, y: number) => void;
+  onDragMove?: (e: IKonvaDragEvent) => void;
   dragBoundFunc?: IDragBoundFunc;
   onTextChange?: (text: string) => void;
   onTransformEnd?: (attrs: ITransformEndRectAttrs) => void;
@@ -58,6 +59,7 @@ export const Frame = memo(
         onSelect,
         onDragStart,
         onDragEnd,
+        onDragMove,
         dragBoundFunc,
         onTextChange,
         onTransformEnd: _onTransformEnd,
@@ -207,6 +209,7 @@ export const Frame = memo(
           onTap={onSelect}
           onDragStart={onDragStart}
           onDragEnd={handleDragEnd}
+          onDragMove={onDragMove}
           dragBoundFunc={dragBoundFunc}
         >
           {/* Title bar background */}
