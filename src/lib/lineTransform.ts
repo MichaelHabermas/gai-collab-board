@@ -4,13 +4,20 @@ function distance(x1: number, y1: number, x2: number, y2: number): number {
   return Math.hypot(x2 - x1, y2 - y1);
 }
 
+export interface IPointsBbox {
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+}
+
 /**
- * Returns axis-aligned width and height for a flat points array [x0,y0, x1,y1, ...].
- * Points are relative to origin (e.g. line position).
+ * Returns the axis-aligned bounding box of a flat points array [x0,y0, x1,y1, ...].
+ * Returns null if fewer than 2 values.
  */
-export function getWidthHeightFromPoints(points: number[]): { width: number; height: number } {
-  if (points.length < 4) {
-    return { width: 0, height: 0 };
+function getPointsBbox(points: number[]): IPointsBbox | null {
+  if (points.length < 2) {
+    return null;
   }
 
   let minX = points[0] ?? 0;
@@ -25,9 +32,38 @@ export function getWidthHeightFromPoints(points: number[]): { width: number; hei
     minY = Math.min(minY, py);
     maxY = Math.max(maxY, py);
   }
+
+  return { minX, maxX, minY, maxY };
+}
+
+/**
+ * Returns the center of the bounding box of a flat points array [x0,y0, x1,y1, ...].
+ */
+export function getPointsCenter(points: number[]): { x: number; y: number } {
+  const bbox = getPointsBbox(points);
+  if (!bbox) {
+    return { x: 0, y: 0 };
+  }
+
   return {
-    width: Math.max(0, maxX - minX),
-    height: Math.max(0, maxY - minY),
+    x: (bbox.minX + bbox.maxX) / 2,
+    y: (bbox.minY + bbox.maxY) / 2,
+  };
+}
+
+/**
+ * Returns axis-aligned width and height for a flat points array [x0,y0, x1,y1, ...].
+ * Points are relative to origin (e.g. line position).
+ */
+export function getWidthHeightFromPoints(points: number[]): { width: number; height: number } {
+  const bbox = getPointsBbox(points);
+  if (!bbox || points.length < 4) {
+    return { width: 0, height: 0 };
+  }
+
+  return {
+    width: Math.max(0, bbox.maxX - bbox.minX),
+    height: Math.max(0, bbox.maxY - bbox.minY),
   };
 }
 

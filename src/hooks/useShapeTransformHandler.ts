@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import Konva from 'konva';
 import type { ITransformEndAttrsUnion, IKonvaEvent } from '@/types';
-import { scaleLinePointsLengthOnly } from '@/lib/lineTransform';
+import { getPointsCenter, scaleLinePointsLengthOnly } from '@/lib/lineTransform';
 
 const MIN_SIZE = 10;
 const MIN_FONT_SIZE = 8;
@@ -67,9 +67,10 @@ export const useShapeTransformHandler = (
         const lineNode = node as Konva.Line;
         const currentPoints = lineNode.points();
         const { points } = scaleLinePointsLengthOnly(currentPoints, scaleX, scaleY);
+        const center = getPointsCenter(points);
         onTransformEnd?.({
-          x: lineNode.x(),
-          y: lineNode.y(),
+          x: lineNode.x() - center.x,
+          y: lineNode.y() - center.y,
           points,
           rotation: lineNode.rotation(),
         });

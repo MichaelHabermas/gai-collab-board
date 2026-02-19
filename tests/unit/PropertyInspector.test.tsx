@@ -84,6 +84,26 @@ describe('PropertyInspector', () => {
     expect(screen.getByTestId('property-inspector-stroke-width')).toBeInTheDocument();
   });
 
+  it('shows only stroke controls when line is selected (no fill)', () => {
+    const lineObj = createMockObject({
+      id: 'line-1',
+      type: 'line',
+      fill: 'transparent',
+      stroke: '#1e40af',
+      strokeWidth: 3,
+      points: [0, 0, 100, 50],
+    });
+    render(
+      <TestSelectionWrapper selectedIds={['line-1']}>
+        <PropertyInspector objects={[lineObj]} onObjectUpdate={mockOnObjectUpdate} />
+      </TestSelectionWrapper>
+    );
+    expect(screen.queryByTestId('property-inspector-fill-color')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('property-inspector-fill-input')).not.toBeInTheDocument();
+    expect(screen.getByTestId('property-inspector-stroke-color')).toBeInTheDocument();
+    expect(screen.getByTestId('property-inspector-stroke-width')).toBeInTheDocument();
+  });
+
   it('shows empty state when selected id not in objects list', () => {
     render(
       <TestSelectionWrapper selectedIds={['nonexistent']}>

@@ -40,6 +40,30 @@ describe('canvasBounds', () => {
       expect(b.x2).toBe(100);
       expect(b.y2).toBe(50);
     });
+
+    it('returns non-zero bounds for line with only 2 points', () => {
+      const obj: IBoardObject = {
+        ...makeSticky({ id: 'line-2pt', x: 0, y: 0, width: 0, height: 0 }),
+        type: 'line',
+        points: [10, 20],
+      };
+      const b = getObjectBounds(obj);
+      expect(b.x2 - b.x1).toBeGreaterThan(0);
+      expect(b.y2 - b.y1).toBeGreaterThan(0);
+      expect(b.x1).toBeLessThanOrEqual(b.x2);
+      expect(b.y1).toBeLessThanOrEqual(b.y2);
+    });
+
+    it('returns bounds for connector with 2 points so marquee can select', () => {
+      const obj: IBoardObject = {
+        ...makeSticky({ id: 'conn-2pt', x: 5, y: 5, width: 0, height: 0 }),
+        type: 'connector',
+        points: [0, 0],
+      };
+      const b = getObjectBounds(obj);
+      expect(b.x2 - b.x1).toBeGreaterThan(0);
+      expect(b.y2 - b.y1).toBeGreaterThan(0);
+    });
   });
 
   describe('getSelectionBounds', () => {

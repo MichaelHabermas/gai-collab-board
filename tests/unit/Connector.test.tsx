@@ -75,8 +75,8 @@ describe('Connector', () => {
         y: () => 80,
       },
     });
-
-    expect(onDragEnd).toHaveBeenCalledWith(120, 80);
+    // points [0,0, 25,25] => center (12.5, 12.5). Persist origin: (120 - 12.5, 80 - 12.5)
+    expect(onDragEnd).toHaveBeenCalledWith(107.5, 67.5);
   });
 
   it('scales points on transform end and resets node scale', () => {
@@ -120,8 +120,14 @@ describe('Connector', () => {
 
     transformEndHandler?.({ target: node });
 
-    const attrs = onTransformEnd.mock.calls[0][0];
-    expect(attrs).toMatchObject({ x: 5, y: 6, rotation: 30 });
+    const call = onTransformEnd.mock.calls[0];
+    if (!call) {
+      throw new Error('expected onTransformEnd to be called');
+    }
+    const attrs = call[0];
+    expect(attrs).toMatchObject({ rotation: 30 });
+    expect(attrs.x).toBeCloseTo(0, 1);
+    expect(attrs.y).toBeCloseTo(-4, 1);
     expect(attrs.points).toHaveLength(4);
     expect(attrs.points[0]).toBeCloseTo(-9.14, 1);
     expect(attrs.points[1]).toBeCloseTo(-18.28, 1);

@@ -2,7 +2,18 @@ import { describe, expect, it } from 'vitest';
 import {
   scaleLinePointsLengthOnly,
   getWidthHeightFromPoints,
+  getPointsCenter,
 } from '@/lib/lineTransform';
+
+describe('getPointsCenter', () => {
+  it('returns center of points bbox', () => {
+    expect(getPointsCenter([0, 0, 100, 50])).toEqual({ x: 50, y: 25 });
+    expect(getPointsCenter([10, 20])).toEqual({ x: 10, y: 20 });
+  });
+  it('returns 0,0 for fewer than 2 values', () => {
+    expect(getPointsCenter([])).toEqual({ x: 0, y: 0 });
+  });
+});
 
 describe('getWidthHeightFromPoints', () => {
   it('returns width and height from points bounding box', () => {
@@ -27,7 +38,10 @@ describe('scaleLinePointsLengthOnly', () => {
   it('scales only length: uniform scale from center for diagonal line', () => {
     const points = [0, 0, 100, 50];
     const { points: result, width, height } = scaleLinePointsLengthOnly(points, 2, 2);
-    const [x0, y0, x1, y1] = result;
+    const x0 = result[0] ?? 0;
+    const y0 = result[1] ?? 0;
+    const x1 = result[2] ?? 0;
+    const y1 = result[3] ?? 0;
     expect(x0).toBeCloseTo(-50, 0);
     expect(y0).toBeCloseTo(-25, 0);
     expect(x1).toBeCloseTo(150, 0);
@@ -42,11 +56,13 @@ describe('scaleLinePointsLengthOnly', () => {
   it('preserves direction when scaleX and scaleY differ (length-only)', () => {
     const points = [0, 0, 10, 20];
     const { points: result } = scaleLinePointsLengthOnly(points, 2, 3);
-    const [x0, y0, x1, y1] = result;
+    const x0 = result[0] ?? 0;
+    const y0 = result[1] ?? 0;
+    const x1 = result[2] ?? 0;
+    const y1 = result[3] ?? 0;
     const dx = (x1 - x0) / 10;
     const dy = (y1 - y0) / 20;
     expect(dx).toBeCloseTo(dy, 5);
-    const oldLen = Math.hypot(10, 20);
     const rawScaledLen = Math.hypot(20, 60);
     const resultLen = Math.hypot(x1 - x0, y1 - y0);
     expect(resultLen).toBeCloseTo(rawScaledLen, 0);

@@ -339,11 +339,12 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           strokeWidth: number;
         };
         if (strokeWidth < 0) {
-          return { success: false, message: 'Stroke width must be non-negative' };
+          return { success: false, message: 'Stroke width must be at least 1' };
         }
 
-        await ctx.updateObject(boardId, objectId, { strokeWidth });
-        return { success: true, message: `Set stroke width to ${strokeWidth}px` };
+        const clamped = Math.max(1, strokeWidth);
+        await ctx.updateObject(boardId, objectId, { strokeWidth: clamped });
+        return { success: true, message: `Set stroke width to ${clamped}px` };
       }
 
       case 'setOpacity': {

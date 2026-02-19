@@ -3,7 +3,7 @@ import { useRef, useEffect, memo } from 'react';
 import type { ReactElement, RefObject } from 'react';
 import Konva from 'konva';
 import type { ITransformEndAttrs } from '@/types';
-import { scaleLinePointsLengthOnly } from '@/lib/lineTransform';
+import { getPointsCenter, scaleLinePointsLengthOnly } from '@/lib/lineTransform';
 export type { ITransformEndRectAttrs, ITransformEndLineAttrs, ITransformEndAttrs } from '@/types';
 
 interface ITransformHandlerProps {
@@ -38,18 +38,13 @@ export const TransformHandler = memo(
     useEffect(() => {
       if (!transformerRef.current || !layerRef.current) return;
 
-      const ids =
-        excludedFromTransformIds?.length && excludedFromTransformIds.length > 0
-          ? selectedIds.filter((id) => !excludedFromTransformIds.includes(id))
-          : selectedIds;
-
-      const nodes = ids
+      const nodes = transformableIds
         .map((id) => layerRef.current?.findOne(`#${id}`))
         .filter((node): node is Konva.Node => node !== undefined && node !== null);
 
       transformerRef.current.nodes(nodes);
       transformerRef.current.getLayer()?.batchDraw();
-    }, [selectedIds, excludedFromTransformIds, layerRef]);
+    }, [transformableIds, layerRef]);
 
     // Handle transform end with shape-aware attrs
     const handleTransformEnd = () => {
@@ -117,9 +112,10 @@ export const TransformHandler = memo(
           const { points } = scaleLinePointsLengthOnly(currentPoints, scaleX, scaleY);
           node.scaleX(1);
           node.scaleY(1);
+          const center = getPointsCenter(points);
           attrs = {
-            x: node.x(),
-            y: node.y(),
+            x: node.x() - center.x,
+            y: node.y() - center.y,
             points,
             rotation: node.rotation(),
           };

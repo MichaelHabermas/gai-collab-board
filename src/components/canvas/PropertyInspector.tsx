@@ -15,7 +15,7 @@ interface IPropertyInspectorProps {
 }
 
 const supportsFill = (type: IBoardObject['type']): boolean => {
-  return ['sticky', 'rectangle', 'circle', 'line', 'frame'].includes(type);
+  return ['sticky', 'rectangle', 'circle', 'frame'].includes(type);
 };
 
 const supportsStroke = (type: IBoardObject['type']): boolean => {
@@ -158,9 +158,10 @@ export const PropertyInspector = ({
 
   const handleStrokeWidthCommit = useCallback(
     (num: number) => {
+      const clamped = Math.max(1, num);
       selectedObjects.forEach((obj) => {
         if (supportsStroke(obj.type)) {
-          onObjectUpdate(obj.id, { strokeWidth: num });
+          onObjectUpdate(obj.id, { strokeWidth: clamped });
         }
       });
     },
@@ -179,7 +180,7 @@ export const PropertyInspector = ({
   );
 
   const strokeWidthField = useDebouncedNumberField(strokeWidthValue, handleStrokeWidthCommit, {
-    min: 0,
+    min: 1,
   });
 
   const fontSizeField = useDebouncedNumberField(fontSizeValue, handleFontSizeCommit, {
@@ -289,7 +290,7 @@ export const PropertyInspector = ({
             <Input
               id='property-inspector-stroke-width'
               type='number'
-              min={0}
+              min={1}
               value={strokeWidthField.value}
               onChange={strokeWidthField.onChange}
               onBlur={strokeWidthField.onBlur}

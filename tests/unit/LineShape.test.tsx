@@ -56,9 +56,9 @@ describe('LineShape', () => {
     expect(latestLineProps?.shadowBlur).toBe(SHADOW_BLUR_DEFAULT);
   });
 
-  it('reports drag end coordinates', () => {
+  it('reports origin coordinates on drag end so line does not jump', () => {
     const onDragEnd = vi.fn();
-
+    // points [0,0, 10,10] => center (5, 5). Node is drawn at (x+5, y+5); we must persist (node - offset).
     render(
       <LineShape
         id='line-2'
@@ -78,7 +78,7 @@ describe('LineShape', () => {
       },
     });
 
-    expect(onDragEnd).toHaveBeenCalledWith(42, 24);
+    expect(onDragEnd).toHaveBeenCalledWith(37, 19);
   });
 
   it('scales points length-only on transform and resets scale', () => {
@@ -121,8 +121,14 @@ describe('LineShape', () => {
 
     transformEndHandler?.({ target: node });
 
-    const attrs = onTransformEnd.mock.calls[0][0];
-    expect(attrs).toMatchObject({ x: 7, y: 9, rotation: 35 });
+    const call = onTransformEnd.mock.calls[0];
+    if (!call) {
+      throw new Error('expected onTransformEnd to be called');
+    }
+    const attrs = call[0];
+    expect(attrs).toMatchObject({ rotation: 35 });
+    expect(attrs.x).toBeCloseTo(4.5, 1);
+    expect(attrs.y).toBeCloseTo(4, 1);
     expect(attrs.points).toBeDefined();
     const pts = attrs.points as number[];
     expect(pts).toHaveLength(4);

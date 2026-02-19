@@ -2,10 +2,9 @@ import { Line } from 'react-konva';
 import { forwardRef, memo } from 'react';
 import type { ReactElement } from 'react';
 import Konva from 'konva';
-import { useShapeDragHandler } from '@/hooks/useShapeDragHandler';
-import { useShapeTransformHandler } from '@/hooks/useShapeTransformHandler';
+import { useLineLikeShape } from '@/hooks/useLineLikeShape';
 import { getShapeShadowProps } from '@/lib/shapeShadowProps';
-import type { ILineLikeShapeProps, ITransformEndAttrsUnion } from '@/types';
+import type { ILineLikeShapeProps } from '@/types';
 
 type ILineShapeProps = ILineLikeShapeProps;
 
@@ -36,19 +35,21 @@ export const LineShape = memo(
       },
       ref
     ): ReactElement => {
-      const handleDragEnd = useShapeDragHandler(onDragEnd);
-      const handleTransformEnd = useShapeTransformHandler(
-        'line',
-        onTransformEnd as ((attrs: ITransformEndAttrsUnion) => void) | undefined
-      );
+      const { offset, handleDragEnd, handleTransformEnd } = useLineLikeShape({
+        points,
+        onDragEnd,
+        onTransformEnd,
+      });
 
       return (
         <Line
           ref={ref}
           id={id}
           name='shape line'
-          x={x}
-          y={y}
+          x={x + offset.x}
+          y={y + offset.y}
+          offsetX={offset.x}
+          offsetY={offset.y}
           points={points}
           stroke={isSelected ? '#3b82f6' : stroke}
           strokeWidth={isSelected ? strokeWidth + 1 : strokeWidth}

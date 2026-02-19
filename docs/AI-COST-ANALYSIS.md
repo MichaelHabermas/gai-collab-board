@@ -131,3 +131,9 @@ Group move (drag one selected or drag from selection marquee) is client-side can
 ### Line resize/rotation (Feb 2026) — production relevance
 
 Line length-only resize and rotation fix is UI/canvas only: shared helper, useShapeTransformHandler and TransformHandler for Line/Arrow, BoardCanvas persisting width/height from points. No LLM usage or API impact. Production projections and token mix unchanged.
+
+### Line tool and marquee improvements (Feb 2026) — production relevance
+
+Line fill hidden in Property Inspector, minimum stroke width 1, marquee bounds for lines (points.length >= 2), and line/connector rotation pivot at center are UI/canvas only. No LLM or API change. Production projections unchanged.
+
+Line drag fix (drag end reports origin so line does not jump) and refactor pass (lineTransform DRY, useLineLikeShape hook, TransformHandler dedupe) are UI/canvas and code quality only. No LLM or API change. Keep this file ~1 page.

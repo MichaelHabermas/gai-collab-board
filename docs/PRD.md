@@ -1733,12 +1733,17 @@ while maintaining 60 FPS with 500+ objects.
 
 #### Line resize and rotation
 
-Lines are resizable **only along their length** (not in the perpendicular "width" direction). Lines are **rotatable** via the Transformer rotation handle; rotation is persisted.
+Lines are resizable **only along their length** (not in the perpendicular "width" direction). Lines are **rotatable** via the Transformer rotation handle; rotation is persisted. **Line tool:** Property Inspector shows **stroke only** (no fill control) when a line is selected. **Minimum stroke width** is 1 for lines and all stroke-supporting shapes. **Marquee selection:** Lines are selected when the selection rectangle intersects their bounds (bounds computed from points for line/connector). **Rotation:** Lines (and connectors) rotate around their **center** (pivot); rotation is persisted.
 
 **Verification (do not check until confirmed in browser or E2E):**
 
 - [ ] Resizing a line (dragging Transformer handles) changes only its length; the line does not gain "width."
 - [ ] Rotating a line (Transformer rotation handle) works and the angle is persisted.
+- [ ] Property Inspector shows only stroke (no fill) when a line is selected.
+- [ ] Stroke width cannot be set below 1 for lines (and/or all stroke shapes).
+- [ ] Marquee select selects a line when the marquee overlaps the line.
+- [ ] Rotating a line uses the line center as pivot and persists correctly.
+- [ ] Dragging a line (including after marquee select) does not jump on mouse up; position persists correctly.
 
 ### Story 3.4: Connectors
 

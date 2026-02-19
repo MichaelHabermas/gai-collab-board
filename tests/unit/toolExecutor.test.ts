@@ -709,7 +709,7 @@ describe('toolExecutor', () => {
       expect(mockUpdateObject).not.toHaveBeenCalled();
       expect(result).toEqual({
         success: false,
-        message: 'Stroke width must be non-negative',
+        message: 'Stroke width must be at least 1',
       });
     });
   });

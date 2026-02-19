@@ -12,7 +12,7 @@ export function getObjectBounds(obj: IBoardObject): IBounds {
   if (
     (obj.type === 'line' || obj.type === 'connector') &&
     obj.points != null &&
-    obj.points.length >= 4
+    obj.points.length >= 2
   ) {
     const pts = obj.points;
     const p0 = pts[0] ?? 0;

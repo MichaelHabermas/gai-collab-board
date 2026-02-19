@@ -223,8 +223,8 @@ describe('TransformHandler', () => {
     transformerProps?.onTransformEnd?.();
 
     expect(onTransformEnd).toHaveBeenCalledWith('line-1', {
-      x: 8,
-      y: 12,
+      x: -42,
+      y: -13,
       points: [-50, -25, 150, 75],
       rotation: 30,
     });

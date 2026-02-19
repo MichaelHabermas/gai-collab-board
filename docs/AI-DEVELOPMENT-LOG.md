@@ -394,3 +394,19 @@ This log records how AI was used during development: tools (Cursor, Context7 MCP
 - Approximate cumulative tokens across logged sessions: ~442k input / ~157k output (estimate)
 
 **Deployment impact (expected):** Canvas-only behaviour; no LLM or API change. Production cost unchanged.
+
+## Line tool and marquee improvements (Feb 2026)
+
+**Scope:** Property Inspector: no fill for line (stroke only); minimum stroke width 1. Marquee selection: lines selectable when selection rect intersects their bounds (canvasBounds for line/connector with points.length >= 2). Line/connector rotation: pivot at center of points bbox; persist position as origin so rotation is stable.
+
+**Implementation:** PropertyInspector: removed `'line'` from `supportsFill`; stroke width `min: 1`, clamp in `handleStrokeWidthCommit` and in toolExecutor `setStrokeWidth`. canvasBounds: line/connector use points-based bounds when `points.length >= 2` (was >= 4). LineShape and Connector: `getPointsCenter(points)` for offset; rotation around center; useShapeTransformHandler/TransformHandler persist `x: node.x() - center.x`, `y: node.y() - center.y`. Tests: canvasBounds (2-point line/connector non-zero bounds), PropertyInspector (no fill for line), lineTransform getPointsCenter, LineShape/TransformHandler/Connector transform-end attrs; toolExecutor stroke-width message updated. PRD Story 3.3 updated with verification checkboxes.
+
+**Cost & usage (this session):** Development via Cursor; no external LLM API. Approximate token use: ~40k input / ~14k output (estimate). **Running total (development):** Cursor $20/mo; API $0. **Deployment (expected):** UI/canvas only; no LLM or API change.
+
+## Line drag fix and refactor pass (Feb 2026)
+
+**Scope:** Fix line/connector drag jump on mouse up (drag end was persisting node position instead of origin). Then refactor for DRY and clarity without behavior or performance regression.
+
+**Implementation:** (1) LineShape and Connector pass points-center offset into `useShapeDragHandler` so drag end reports origin `(node.x() - offset.x, node.y() - offset.y)` and position no longer jumps. (2) **lineTransform:** Added internal `getPointsBbox(points)`; `getPointsCenter` and `getWidthHeightFromPoints` use it to avoid duplicate points loop. (3) **useLineLikeShape** hook: shared offset + handleDragEnd + handleTransformEnd for LineShape and Connector. (4) **TransformHandler:** Reuse `transformableIds` inside effect instead of recomputing `ids`. (5) PRD Story 3.3: added verification checkbox for "Dragging a line (including after marquee select) does not jump on mouse up." (6) Tests: useShapeDragHandler offset, LineShape/Connector drag end origin expectations, useLineLikeShape (offset and drag end); lineTransform tests updated for possibly-undefined array access; mock call guards in LineShape/Connector tests. **Validate:** format, typecheck, lint, full test run (470 tests) — all pass.
+
+**Cost & usage (this session):** Cursor; no external LLM API. Approximate token use: ~25k input / ~10k output (estimate). **Deployment (expected):** UI/canvas only; no LLM or API change.
