@@ -25,7 +25,7 @@ Before writing ANY code, run this sequence in order:
 
 1. **QUESTION THE REQUIREMENT** — Is this actually needed? What happens if we don't do it? Who asked for this and why?
 2. **DELETE** — What existing code, features, or abstractions can be removed? What's dead weight?
-3. **SIMPLIFY** — What's the simplest possible solution? Can this be done in fewer files, functions, or lines?
+3. **SIMPLIFY** — What's the simplest possible solution? Can this be done in fewer files, functions, or lines? Does the tool, type, or interface already exist? Can we use existing ones and extend them?
 4. **ACCELERATE** — Only now think about optimization. Where are the actual bottlenecks (measured, not guessed)?
 5. **AUTOMATE** — What can be automated to prevent future manual work?
 

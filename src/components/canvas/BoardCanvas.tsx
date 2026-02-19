@@ -22,10 +22,8 @@ import type {
   ConnectorAnchor,
   IPosition,
   ITransformEndAttrs,
-  IViewportPosition,
   IViewportState,
   IAlignmentGuides,
-  IAlignmentCandidate,
   ToolMode,
   IKonvaMouseEvent,
   IKonvaDragEvent,
@@ -38,7 +36,6 @@ import { getAnchorPosition } from '@/lib/connectorAnchors';
 import { getObjectBounds, getSelectionBounds, getBoardBounds } from '@/lib/canvasBounds';
 import {
   computeAlignmentGuidesWithCandidates,
-  getAlignmentPositions,
   computeSnappedPositionFromGuides,
 } from '@/lib/alignmentGuides';
 import { cn } from '@/lib/utils';
@@ -54,6 +51,9 @@ import { AlignmentGuidesLayer } from './AlignmentGuidesLayer';
 import { useExportAsImage } from '@/hooks/useExportAsImage';
 import { useTheme, type Theme } from '@/hooks/useTheme';
 import { useBoardSettings } from '@/hooks/useBoardSettings';
+import { useMiddleMousePanListeners } from '@/hooks/useMiddleMousePanListeners';
+import { useCanvasKeyboardShortcuts } from '@/hooks/useCanvasKeyboardShortcuts';
+import { useAlignmentGuideCache } from '@/hooks/useAlignmentGuideCache';
 
 interface IBoardCanvasProps {
   boardId: string;
@@ -175,10 +175,6 @@ export const BoardCanvas = memo(
     const pointerFrameRef = useRef<number | null>(null);
     const viewportPersistTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const [isMiddlePanning, setIsMiddlePanning] = useState<boolean>(false);
-    const middlePanStartClientRef = useRef<IPosition | null>(null);
-    const middlePanStartPositionRef = useRef<IViewportPosition | null>(null);
-
     const {
       viewport: persistedViewport,
       setViewport: setPersistedViewport,
@@ -187,11 +183,6 @@ export const BoardCanvas = memo(
       snapToGrid: snapToGridEnabled,
       setSnapToGrid: setSnapToGridEnabled,
     } = useBoardSettings(boardId);
-
-    const snapToGridEnabledRef = useRef<boolean>(snapToGridEnabled);
-    useEffect(() => {
-      snapToGridEnabledRef.current = snapToGridEnabled;
-    }, [snapToGridEnabled]);
 
     const { theme } = useTheme();
     const gridColor = useMemo(() => getBoardGridColor(theme), [theme]);
@@ -240,33 +231,12 @@ export const BoardCanvas = memo(
       stageRef,
     });
 
-    useEffect(() => {
-      if (!isMiddlePanning) {
-        return;
-      }
-
-      const onWindowMouseMove = (e: MouseEvent) => {
-        const startClient = middlePanStartClientRef.current;
-        const startPosition = middlePanStartPositionRef.current;
-        if (!startClient || !startPosition) {
-          return;
-        }
-
-        panTo({
-          x: startPosition.x + (e.clientX - startClient.x),
-          y: startPosition.y + (e.clientY - startClient.y),
-        });
-      };
-      const onWindowMouseUp = () => {
-        setIsMiddlePanning(false);
-      };
-      window.addEventListener('mousemove', onWindowMouseMove);
-      window.addEventListener('mouseup', onWindowMouseUp);
-      return () => {
-        window.removeEventListener('mousemove', onWindowMouseMove);
-        window.removeEventListener('mouseup', onWindowMouseUp);
-      };
-    }, [isMiddlePanning, panTo]);
+    const {
+      isMiddlePanning,
+      setIsMiddlePanning,
+      middlePanStartClientRef,
+      middlePanStartPositionRef,
+    } = useMiddleMousePanListeners({ panTo });
 
     const { exportViewport, exportFullBoard } = useExportAsImage({
       stageRef,
@@ -312,57 +282,18 @@ export const BoardCanvas = memo(
       [activeCursors, user.uid]
     );
 
-    // Keep event-driven refs synced with render state.
+    // Keep event-driven refs synced with render state (effect required; ref assignment during render is disallowed).
     useEffect(() => {
       activeToolRef.current = activeTool;
       drawingActiveRef.current = drawingState.isDrawing;
       selectingActiveRef.current = isSelecting;
     }, [activeTool, drawingState.isDrawing, isSelecting]);
 
-    // Tool keyboard shortcuts (V, Space, S, R, C, L, T, F, A) — same focus rule as useCanvasOperations
-    useEffect(() => {
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (
-          e.target instanceof HTMLInputElement ||
-          e.target instanceof HTMLTextAreaElement
-        ) {
-          return;
-        }
-        const key = e.key.toLowerCase();
-        let next: ToolMode | null = null;
-        if (key === 'v') {
-          next = 'select';
-        } else if (e.key === ' ') {
-          next = 'pan';
-          e.preventDefault();
-        } else if (key === 's') {
-          next = 'sticky';
-        } else if (key === 'r') {
-          next = 'rectangle';
-        } else if (key === 'c') {
-          next = 'circle';
-        } else if (key === 'l') {
-          next = 'line';
-        } else if (key === 't') {
-          next = 'text';
-        } else if (key === 'f') {
-          next = 'frame';
-        } else if (key === 'a') {
-          next = 'connector';
-        }
-        if (next === null) {
-          return;
-        }
-        const requiresEdit = next !== 'select' && next !== 'pan';
-        if (requiresEdit && !canEdit) {
-          return;
-        }
-        setActiveTool(next);
-        activeToolRef.current = next;
-      };
-      window.addEventListener('keydown', handleKeyDown);
-      return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [canEdit]);
+    useCanvasKeyboardShortcuts({
+      setActiveTool,
+      canEdit,
+      activeToolRef,
+    });
 
     // Clear selection helper
     const clearSelection = useCallback(() => {
@@ -406,7 +337,7 @@ export const BoardCanvas = memo(
         if (!pointer) return;
 
         const shouldTrackPointer = drawingActiveRef.current || selectingActiveRef.current;
-        const shouldBroadcastCursor = hasRemoteCursors && activeToolRef.current !== 'pan';
+        const shouldBroadcastCursor = activeToolRef.current !== 'pan';
 
         if (!shouldTrackPointer && !shouldBroadcastCursor) {
           return;
@@ -448,7 +379,7 @@ export const BoardCanvas = memo(
           });
         }
       },
-      [handleMouseMove, getCanvasCoords, hasRemoteCursors]
+      [handleMouseMove, getCanvasCoords]
     );
 
     // Check if click is on empty area (not on a shape)
@@ -998,80 +929,71 @@ export const BoardCanvas = memo(
       setGroupDragOffset(null);
     }, [onObjectsUpdate, selectedIds, objectsById, snapToGridEnabled]);
 
-    // Throttle guide updates via RAF; ref only used in effect and in drag handler (not during render).
+    // Throttle guide updates via RAF; ref used by drag handler so it sees latest setter without effect.
     const alignmentGuidesRafIdRef = useRef<number>(0);
     const setGuidesThrottledRef = useRef<(g: IAlignmentGuides) => void>(() => {});
-    useEffect(() => {
-      setGuidesThrottledRef.current = (guides: IAlignmentGuides) => {
-        const prev = alignmentGuidesRafIdRef.current;
-        if (prev !== 0) {
-          cancelAnimationFrame(prev);
-        }
-
-        alignmentGuidesRafIdRef.current = requestAnimationFrame(() => {
-          setAlignmentGuides(guides);
-          alignmentGuidesRafIdRef.current = 0;
-        });
-      };
-    });
-
-    const dragBoundFuncCacheRef = useRef<
-      Map<string, { width: number; height: number; fn: (pos: IPosition) => IPosition }>
-    >(new Map());
-    const guideCandidateBoundsRef = useRef<Array<{ id: string; candidate: IAlignmentCandidate }>>(
-      []
-    );
-    useEffect(() => {
-      const candidateObjects = visibleObjects.length > 0 ? visibleObjects : objects;
-      guideCandidateBoundsRef.current = candidateObjects.map((object) => ({
-        id: object.id,
-        candidate: (() => {
-          const bounds = getObjectBounds(object);
-          return {
-            bounds,
-            positions: getAlignmentPositions(bounds),
-          };
-        })(),
-      }));
-      dragBoundFuncCacheRef.current.clear();
-    }, [objects, visibleObjectIdsKey, visibleObjects]);
-
-    const getDragBoundFunc = useCallback((objectId: string, width: number, height: number) => {
-      const cached = dragBoundFuncCacheRef.current.get(objectId);
-      if (cached && cached.width === width && cached.height === height) {
-        return cached.fn;
+    const setGuidesThrottled = useCallback((guides: IAlignmentGuides) => {
+      const prev = alignmentGuidesRafIdRef.current;
+      if (prev !== 0) {
+        cancelAnimationFrame(prev);
       }
 
-      const otherCandidates = guideCandidateBoundsRef.current
-        .filter((candidate) => candidate.id !== objectId)
-        .map((candidate) => candidate.candidate);
+      alignmentGuidesRafIdRef.current = requestAnimationFrame(() => {
+        setAlignmentGuides(guides);
+        alignmentGuidesRafIdRef.current = 0;
+      });
+    }, []);
 
-      const nextDragBoundFunc = (pos: IPosition) => {
-        if (snapToGridEnabledRef.current) {
-          setGuidesThrottledRef.current({ horizontal: [], vertical: [] });
-          return snapPositionToGrid(pos.x, pos.y, GRID_SIZE);
+    useEffect(() => {
+      setGuidesThrottledRef.current = setGuidesThrottled;
+    });
+
+    const { guideCandidateBoundsRef, dragBoundFuncCacheRef } = useAlignmentGuideCache({
+      objects,
+      visibleObjects,
+      visibleObjectIdsKey,
+      snapToGridEnabled,
+    });
+
+    const getDragBoundFunc = useCallback(
+      (objectId: string, width: number, height: number) => {
+        const cached = dragBoundFuncCacheRef.current.get(objectId);
+        if (cached && cached.width === width && cached.height === height) {
+          return cached.fn;
         }
 
-        const dragged = {
-          x1: pos.x,
-          y1: pos.y,
-          x2: pos.x + width,
-          y2: pos.y + height,
+        const otherCandidates = guideCandidateBoundsRef.current
+          .filter((candidate) => candidate.id !== objectId)
+          .map((candidate) => candidate.candidate);
+
+        const nextDragBoundFunc = (pos: IPosition) => {
+          if (snapToGridEnabled) {
+            setGuidesThrottledRef.current({ horizontal: [], vertical: [] });
+            return snapPositionToGrid(pos.x, pos.y, GRID_SIZE);
+          }
+
+          const dragged = {
+            x1: pos.x,
+            y1: pos.y,
+            x2: pos.x + width,
+            y2: pos.y + height,
+          };
+          const guides = computeAlignmentGuidesWithCandidates(dragged, otherCandidates);
+          const snapped = computeSnappedPositionFromGuides(guides, pos, width, height);
+
+          setGuidesThrottledRef.current(guides);
+          return snapped;
         };
-        const guides = computeAlignmentGuidesWithCandidates(dragged, otherCandidates);
-        const snapped = computeSnappedPositionFromGuides(guides, pos, width, height);
 
-        setGuidesThrottledRef.current(guides);
-        return snapped;
-      };
-
-      dragBoundFuncCacheRef.current.set(objectId, {
-        width,
-        height,
-        fn: nextDragBoundFunc,
-      });
-      return nextDragBoundFunc;
-    }, []);
+        dragBoundFuncCacheRef.current.set(objectId, {
+          width,
+          height,
+          fn: nextDragBoundFunc,
+        });
+        return nextDragBoundFunc;
+      },
+      [snapToGridEnabled, dragBoundFuncCacheRef, guideCandidateBoundsRef]
+    );
 
     // Handle text change for sticky notes
     const handleTextChange = useCallback(
@@ -1120,13 +1042,13 @@ export const BoardCanvas = memo(
     /** When snap-to-grid is on, force node position to grid on every drag move so it lines up during drag. */
     const handleDragMove = useCallback(
       (e: IKonvaDragEvent) => {
-        if (!snapToGridEnabledRef.current) {
+        if (!snapToGridEnabled) {
           return;
         }
 
         applySnapPositionToNode(e.target, objectsById, GRID_SIZE);
       },
-      [objectsById]
+      [objectsById, snapToGridEnabled]
     );
 
     const onDragMoveProp = canEdit ? handleDragMove : undefined;
@@ -1160,7 +1082,7 @@ export const BoardCanvas = memo(
       pruneStaleHandlers(dragEndHandlerMapRef.current);
       pruneStaleHandlers(textChangeHandlerMapRef.current);
       pruneStaleHandlers(dragBoundFuncCacheRef.current);
-    }, [objects]);
+    }, [objects, dragBoundFuncCacheRef]);
 
     // Handle transform end from TransformHandler (shape-aware attrs: rect-like or points for line/connector)
     const handleTransformEnd = useCallback(
@@ -1373,7 +1295,7 @@ export const BoardCanvas = memo(
 
     // Stage is draggable only in pan mode so marquee selection is not stolen by pan
     const isDraggable = activeTool === 'pan';
-    const shouldHandleMouseMove = hasRemoteCursors || drawingState.isDrawing || isSelecting;
+    const shouldHandleMouseMove = activeTool !== 'pan' || drawingState.isDrawing || isSelecting;
     const shouldHandlePointerMutations = activeTool !== 'pan';
 
     const handleStageMouseDownWithMiddlePan = useCallback(
@@ -1393,7 +1315,14 @@ export const BoardCanvas = memo(
           handleStageMouseDown(e);
         }
       },
-      [viewport.position, shouldHandlePointerMutations, handleStageMouseDown]
+      [
+        viewport.position,
+        shouldHandlePointerMutations,
+        handleStageMouseDown,
+        middlePanStartClientRef,
+        middlePanStartPositionRef,
+        setIsMiddlePanning,
+      ]
     );
 
     const handleStageMouseUpWithMiddlePan = useCallback(
@@ -1407,7 +1336,7 @@ export const BoardCanvas = memo(
           void handleStageMouseUp(e);
         }
       },
-      [shouldHandlePointerMutations, handleStageMouseUp]
+      [shouldHandlePointerMutations, handleStageMouseUp, setIsMiddlePanning]
     );
 
     const handleZoomToSelection = useCallback(() => {

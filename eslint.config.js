@@ -38,6 +38,7 @@ export default tseslint.config(
         { blankLine: "always", prev: "if", next: "*" },
       ],
       "local/prefer-falsy-over-explicit-nullish": "warn",
+      "local/max-use-effect-count": ["warn", { max: 2 }],
       "prefer-destructuring": [
         "warn",
         {

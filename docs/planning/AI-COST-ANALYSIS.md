@@ -136,4 +136,8 @@ Line length-only resize and rotation fix is UI/canvas only: shared helper, useSh
 
 Line fill hidden in Property Inspector, minimum stroke width 1, marquee bounds for lines (points.length >= 2), and line/connector rotation pivot at center are UI/canvas only. No LLM or API change. Production projections unchanged.
 
-Line drag fix (drag end reports origin so line does not jump) and refactor pass (lineTransform DRY, useLineLikeShape hook, TransformHandler dedupe) are UI/canvas and code quality only. No LLM or API change. Keep this file ~1 page.
+Line drag fix (drag end reports origin so line does not jump) and refactor pass (lineTransform DRY, useLineLikeShape hook, TransformHandler dedupe) are UI/canvas and code quality only. No LLM or API change.
+
+### Cursor broadcast regression fix (Feb 2026) — production relevance
+
+Fix restores visibility of other users' cursors when sharing a board. Cursor sync uses Firebase Realtime Database only; no LLM usage or API change. Production projections and token mix unchanged. What we actually use in production: AI chat (Groq/NVIDIA) and the table above; cursor/presence remain Realtime DB. Keep this file ~1 page.

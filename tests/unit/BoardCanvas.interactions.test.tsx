@@ -104,10 +104,14 @@ vi.mock('@/hooks/useCanvasViewport', () => ({
   }),
 }));
 
+const { mockHandleMouseMove } = vi.hoisted(() => ({
+  mockHandleMouseMove: vi.fn(),
+}));
+
 vi.mock('@/hooks/useCursors', () => ({
   useCursors: () => ({
     cursors: {},
-    handleMouseMove: vi.fn(),
+    handleMouseMove: mockHandleMouseMove,
   }),
 }));
 
@@ -272,6 +276,7 @@ describe('BoardCanvas interactions', () => {
     mockSelectedIds = [];
     mockSetSelectedIds.mockReset();
     mockClearSelection.mockReset();
+    mockHandleMouseMove.mockClear();
     vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
       callback(0);
       return 1;
@@ -329,6 +334,25 @@ describe('BoardCanvas interactions', () => {
         fireEvent.keyDown(input, { key: 's' });
       });
       expect(screen.getByTestId('active-tool')).toHaveAttribute('data-value', 'select');
+    });
+
+    it('broadcasts cursor position when not in pan mode even with no remote cursors', async () => {
+      render(
+        <BoardCanvas
+          boardId='board-1'
+          boardName='Board'
+          user={createUser()}
+          objects={[]}
+          canEdit={true}
+        />
+      );
+      expect(screen.getByTestId('active-tool')).toHaveAttribute('data-value', 'select');
+
+      await act(async () => {
+        latestStageProps.onMouseMove?.(createStageEvent({ x: 100, y: 150 }));
+      });
+
+      expect(mockHandleMouseMove).toHaveBeenCalledWith(100, 150);
     });
 
     it('does not switch to edit-required tool when canEdit is false', () => {

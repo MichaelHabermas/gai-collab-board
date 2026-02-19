@@ -852,6 +852,10 @@ Components with three or more `useEffect` calls are refactored so that related e
 
 #### Why it matters Many effects in one component are hard to reason about and test; extracting them into hooks (e.g. `usePresenceSync`, `useCanvasEvents`) improves maintainability and testability
 
+#### Prevention strategy
+
+Before adding a new `useEffect`, ask: Can this be computed during render? Handled in an event handler? Derived from props/state without a side effect? Use `useEffect` only for true side effects (subscriptions, cleanup, external sync). When a component reaches 2 effects, consider grouping related logic into a custom hook. See `docs/Optimization/USE-EFFECT-CENSUS.md` for the per-file census and `local/max-use-effect-count` ESLint rule (warn at 2+ per file).
+
 #### Implementation
 
 Audit the codebase for components that have 3+ `useEffect` hooks. For each, group effects by concern (e.g. subscription, sync, event wiring). Extract each group into a custom hook with a clear name and document what it does. Update the component to call the new hooks. Add or update unit tests that target the hooks directly. Do not change observable behavior; run the full benchmark suite to confirm.

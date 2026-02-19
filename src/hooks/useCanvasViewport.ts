@@ -64,6 +64,7 @@ function applyViewportToStage(
   if (!stage) {
     return;
   }
+
   stage.x(v.position.x);
   stage.y(v.position.y);
   stage.scaleX(v.scale.x);
@@ -74,11 +75,6 @@ export const useCanvasViewport = (
   options?: IUseCanvasViewportOptions
 ): IUseCanvasViewportReturn => {
   const { initialViewport, onViewportChange, stageRef } = options ?? {};
-  const onViewportChangeRef = useRef(onViewportChange);
-
-  useEffect(() => {
-    onViewportChangeRef.current = onViewportChange;
-  }, [onViewportChange]);
 
   const [viewport, setViewport] = useState<IViewportState>(() => {
     const width = typeof window !== 'undefined' ? window.innerWidth : 800;
@@ -118,6 +114,7 @@ export const useCanvasViewport = (
       clearTimeout(throttleTimeoutRef.current);
       throttleTimeoutRef.current = null;
     }
+
     setViewport({ ...viewportRef.current });
     lastFlushRef.current = Date.now();
   }, []);
@@ -129,9 +126,11 @@ export const useCanvasViewport = (
       flushThrottledState();
       return;
     }
+
     if (throttleTimeoutRef.current) {
       return;
     }
+
     throttleTimeoutRef.current = setTimeout(() => {
       throttleTimeoutRef.current = null;
       flushThrottledState();
@@ -155,8 +154,8 @@ export const useCanvasViewport = (
       return;
     }
 
-    onViewportChangeRef.current?.(viewport);
-  }, [viewport]);
+    onViewportChange?.(viewport);
+  }, [viewport, onViewportChange]);
 
   // When initialViewport changes (e.g. board switch), reset viewport to the new initial and skip one notify
   useEffect(() => {
@@ -306,7 +305,7 @@ export const useCanvasViewport = (
         return;
       }
 
-      const current = viewportRef.current;
+      const { current } = viewportRef;
       const { lastCenter } = touchStateRef.current;
       const scale = current.scale.x * (dist / touchStateRef.current.lastDist);
       const clampedScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale));
@@ -342,11 +341,9 @@ export const useCanvasViewport = (
   // Programmatic zoom to specific scale; sync ref and Stage.
   const zoomTo = useCallback(
     (scale: number, center?: IViewportPosition) => {
-      const current = viewportRef.current;
+      const { current } = viewportRef;
       const clampedScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale));
-      const zoomCenter =
-        center ||
-        { x: current.width / 2, y: current.height / 2 };
+      const zoomCenter = center || { x: current.width / 2, y: current.height / 2 };
 
       const pointTo = {
         x: (zoomCenter.x - current.position.x) / current.scale.x,
@@ -385,7 +382,7 @@ export const useCanvasViewport = (
   // Zoom and pan so the given bounds fit in the viewport with padding; sync ref and Stage.
   const zoomToFitBounds = useCallback(
     (bounds: IBounds, padding: number = 40) => {
-      const current = viewportRef.current;
+      const { current } = viewportRef;
       const { scale, position } = computeViewportToFitBounds(
         current.width,
         current.height,

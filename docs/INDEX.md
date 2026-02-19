@@ -3,7 +3,7 @@
 > Quick-reference guide for AI agents and LLMs. Use this to locate relevant documentation without loading everything into context. Always check this index FIRST before searching the codebase.
 
 **Last Updated:** 2026-02-19
-**Total Documents:** 40
+**Total Documents:** 41
 
 ## How to Use This Index
 
@@ -43,6 +43,7 @@
 | `optimization/OPTIMIZATION-PLAN-2.md` | Agent-executable plan: viewport off React hot path, useBatchDraw, Zustand selection | `viewport`, `FPS`, `Zustand`, `batch draw` | 2026-02-18 |
 | `optimization/OPTIMIZATION-PLAN-3.md` | Prioritized task list (welcome page, share link, trackpad, text edit, delete perf, etc.) with scores | `prioritization`, `UX`, `performance`, `tasks` | 2026-02-18 |
 | `optimization/OPTIMIZATION-PLAN.md` | Cumulative optimization plan: de-duplicated tasks, benchmark guardrails, 20% improvement target | `benchmarks`, `FPS`, `sync latency`, `no regression` | 2026-02-19 |
+| `Optimization/USE-EFFECT-CENSUS.md` | Per-file useEffect census: keep/remove/extract/defer with rationale and decision standard | `useEffect`, `refactor`, `hooks`, `census`, `BoardCanvas` | 2026-02-19 |
 
 ### Performance
 
@@ -82,7 +83,7 @@
 |------|---------|------------|---------------|
 | `reports/mvp-audit-matrix.md` | MVP and benchmark criteria vs implementation and test evidence (PASS/PARTIAL/FAIL) | `MVP`, `audit`, `benchmarks`, `evidence matrix` | 2026-02-18 |
 | `reports/mvp-audit-report.md` | MVP compliance audit: commands run, code/test additions, results summary | `MVP`, `audit`, `verification`, `benchmarks` | 2026-02-18 |
-| `reports/refactor-audit/REFACTOR_AUDIT_REPORT.md` | Phase A refactor audit: hook census, event handlers, pattern analysis, implementation backlog | `refactor`, `hooks`, `useEffect`, `audit`, `BoardCanvas` | 2026-02-18 |
+| `reports/refactor-audit/REFACTOR_AUDIT_REPORT.md` | Phase A refactor audit: hook census, event handlers, pattern analysis, useEffect prevention guidelines, implementation backlog | `refactor`, `hooks`, `useEffect`, `audit`, `BoardCanvas` | 2026-02-19 |
 | `reports/refactor-audit/TYPE_MIGRATION_CHECKLIST.md` | Type migration patterns: IPosition, IDimensions, bounds, layout types; find-and-replace reference | `types`, `migration`, `IPosition`, `IDimensions`, `checklist` | 2026-02-18 |
 
 ### Research
@@ -126,6 +127,7 @@
 | `PRD` | `product/PRD.md`, `product/PRD-UNCHECKED-TRACKER.md`, `phases/version-2/PRD.md`, `research/PRD-V1.md`, `research/PRD-V2.md` |
 | `theme` | `theme/THEME-VISUAL-GUIDE.md`, `theme/theme-screenshots/README.md`, `planning/UI-UX-IMPROVEMENT-PLAN.md`, `guides/TAILWIND-SHADCN-GUIDE.md` |
 | `tradeoffs` | `research/IDENTIFY-TRADEOFFS-V2.md`, `research/IDENTIFY-TRADEOFFS.md` |
+| `useEffect` | `Optimization/USE-EFFECT-CENSUS.md`, `optimization/OPTIMIZATION-PLAN.md`, `reports/refactor-audit/REFACTOR_AUDIT_REPORT.md` |
 | `v2` | `phases/version-2/PRD.md`, `phases/version-2/FEATURES.md`, `phases/version-2/INITIAL-RESEARCH.md`, `phases/version-2/DESIGN-DOCUMENT.md` |
 | `Zustand` | `optimization/OPTIMIZATION-PLAN-1.md`, `optimization/OPTIMIZATION-PLAN-2.md`, `optimization/OPTIMIZATION-PLAN.md` |
 

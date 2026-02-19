@@ -47,7 +47,13 @@ alwaysApply: false
 ## Component Design
 
 - **Check for reusable components first** before creating new ones
-- **Limit `useEffect` to max 2 per file** → Extract complex logic into custom hooks
+- **Limit `useEffect` to max 2 per file** → Extract complex logic into custom hooks. Enforced by `local/max-use-effect-count` (warn).
+- **Question every `useEffect`** before adding one:
+  - Can this be computed during render instead? → Use `useMemo` or derive in render.
+  - Can this be handled in an event handler? → Prefer direct invocation over effect-driven state.
+  - Can this be one-time init? → Use `useState(initializer)` or `useRef` instead.
+  - Only use `useEffect` for true side effects: subscriptions (Firebase, listeners), cleanup (unsubscribe, timers), or syncing with external systems (DOM, storage).
+- **When a file needs more than 2 effects**, extract related effects into named custom hooks (e.g. `useMiddleMousePanListeners`, `useCanvasKeyboardShortcuts`).
 - **Use `memo` for components with stable props** to optimize re-renders
 - Design components to be reusable and composable
 - **Example structure:**

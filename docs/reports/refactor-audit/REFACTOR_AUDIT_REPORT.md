@@ -201,6 +201,15 @@ All shape components declare their own props interface with overlapping fields:
 | Consolidate ref-sync useEffects | Safe refactor | Same behavior, fewer effects |
 | Other dead-code candidates | Guarded / keep | No further high-confidence removals without broader usage scan |
 
+### 3.6 Prevention guidelines for useEffect
+
+To minimize unnecessary `useEffect` accumulation:
+
+1. **Pre-render check:** Before adding `useEffect`, verify it is not solvable via: derived state during render, an event handler, `useState` initializer, or `useRef` for one-time setup.
+2. **Extract early:** When a component reaches 2 `useEffect` calls, evaluate grouping into a custom hook (e.g. `useMiddleMousePanListeners`, `useCanvasKeyboardShortcuts`).
+3. **Document exceptions:** If an effect is required, document why alternatives do not apply (subscription lifecycle, cleanup, external sync).
+4. **Review threshold:** Components with 3+ effects should trigger a refactor or extraction review. The `local/max-use-effect-count` ESLint rule warns at 2+ per file.
+
 ---
 
 ## 4. Minimal Hook Architecture (2+ consumers, net LOC reduction)

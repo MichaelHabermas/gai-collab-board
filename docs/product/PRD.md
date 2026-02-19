@@ -1093,6 +1093,12 @@ real-time (<50ms latency).
 - [x] Cursors disappear when user leaves
 - [x] Latency under 50ms (typical on local/LAN; depends on network)
 
+**Verification (regression checks)**:
+
+- [x] Each user's cursor is broadcast whenever they are not in pan mode, so other users see them; broadcast is not gated on already seeing remote cursors (fix: bugfix/cursor-broadcast-regression).
+- [x] Stage mouse-move handler is attached when active tool is not pan (so cursor position is sent); not only when remote cursors are already present.
+- [x] Unit test: "broadcasts cursor position when not in pan mode even with no remote cursors" in BoardCanvas.interactions.test.tsx.
+
 **Branch**: `feature/collab-cursors`
 
 #### Commit 1: Presence Database Setup

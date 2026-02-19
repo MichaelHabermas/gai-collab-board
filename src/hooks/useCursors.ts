@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { User } from 'firebase/auth';
 import type { Cursors } from '@/types';
 import {
@@ -28,14 +28,7 @@ const DEBOUNCE_MS = 16; // ~60fps
 export const useCursors = ({ boardId, user }: IUseCursorsParams): IUseCursorsReturn => {
   const [cursors, setCursors] = useState<Cursors>({});
   const lastUpdateRef = useRef<number>(0);
-  const userColorRef = useRef<string>('');
-
-  // Generate consistent color for user
-  useEffect(() => {
-    if (user?.uid) {
-      userColorRef.current = getUserColor(user.uid);
-    }
-  }, [user?.uid]);
+  const userColor = useMemo(() => (user?.uid ? getUserColor(user.uid) : ''), [user]);
 
   // Subscribe to cursor updates and setup disconnect handler
   useEffect(() => {
@@ -73,9 +66,9 @@ export const useCursors = ({ boardId, user }: IUseCursorsParams): IUseCursorsRet
 
       const displayName = user.displayName || user.email?.split('@')[0] || 'Anonymous';
 
-      updateCursor(boardId, user.uid, x, y, displayName, userColorRef.current);
+      updateCursor(boardId, user.uid, x, y, displayName, userColor);
     },
-    [boardId, user]
+    [boardId, user, userColor]
   );
 
   return {

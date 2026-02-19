@@ -53,3 +53,11 @@ else doOther();
 ## Prefer destructuring
 
 - **Prefer object destructuring** when declaring variables or assigning from an object (e.g. `const { a, b } = obj` instead of `const a = obj.a; const b = obj.b`). Enforced by `prefer-destructuring` (warn).
+
+## Minimize unnecessary useEffect
+
+- **Avoid `useEffect` for derived state.** Compute during render or use `useMemo` instead of syncing state in an effect.
+- **Avoid `useEffect` for event handling.** Handle user actions in event handlers, not via effects that react to state.
+- **Avoid `useEffect` for one-time setup when possible.** Use `useState(initializer)` or `useRef` for init that runs once.
+- **Use `useEffect` only for:** subscriptions (Firebase, WebSocket, `addEventListener`), cleanup (unsubscribe, clear timers/RAF), or syncing with external systems (DOM, storage, callbacks to parent).
+- **Files with 3+ effects** should trigger extraction of related effects into custom hooks with a single responsibility.
