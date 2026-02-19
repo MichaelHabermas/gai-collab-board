@@ -1,6 +1,6 @@
 ## Summary
 
-This file records the final architecture decisions: Firebase, React/Vite/Bun/TypeScript/Shadcn/Konva/Tailwind v4, Kimi 2.5, Render—with rationale, alternatives considered, and assumptions/constraints. It is the decision log that answers "what we chose and why," so the architecture can be explained and future changes can be compared against these decisions.
+This file records the final architecture decisions: Firebase, React/Vite/Bun/TypeScript/Shadcn/Konva/Tailwind v4, Groq, Render—with rationale, alternatives considered, and assumptions/constraints. It is the decision log that answers "what we chose and why," so the architecture can be explained and future changes can be compared against these decisions.
 
 ---
 
@@ -10,14 +10,14 @@ This file records the final architecture decisions: Firebase, React/Vite/Bun/Typ
 
 - Firebase backend
 - React with Vite + Bun + TypeScript + Shadcn + Konva.js + Tailwind v4 frontend
-- Kimi 2.5 AI integration
+- Groq AI integration
 - Render deployment.
 
 ## Rationale
 
 - Firebase for mature real-time sync, offline support, quick prototyping with Google integration.
 - React stack for fast dev (Vite HMR, Bun speed), type safety (TS), customizable UI (Shadcn + Tailwind v4), performant canvas (Konva 60fps with 1000+ objects).
-- Kimi 2.5 for 256K context, multimodal/agentic capabilities, cost-effective (10x cheaper), OpenAI-compatible with free dev credits.
+- Groq for fast inference, cost-effective free tier, OpenAI-compatible API with server-side proxy.
 - Render for Git deploys, static sites and Web Services (e.g. AI proxy), global CDN, scalable with Firebase.
 
 ## Alternatives Considered
@@ -26,8 +26,8 @@ This file records the final architecture decisions: Firebase, React/Vite/Bun/Typ
 - AWS/Custom (avoided for complexity)
 - Fabric.js (rejected for slower performance vs. Konva)
 - PixiJS (skipped for overkill on simple shapes)
-- GPT-4 (skipped for Kimi's efficiency/multimodal edge)
-- Claude (avoided for Kimi's agentic/cost advantages)
+- GPT-4 (skipped for Groq's efficiency and free tier)
+- Claude (avoided for Groq's cost advantages)
 - Vercel (skipped for Render's proxy + static support)
 - Firebase Hosting (avoided for Render's broader DX)
 

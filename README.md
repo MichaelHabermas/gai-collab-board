@@ -54,7 +54,7 @@ Natural language commands to manipulate the board:
 | **Frontend**       | React 19 + Vite + Bun + TypeScript                                |
 | **UI Components**  | Shadcn/ui + Tailwind CSS v4                                       |
 | **Canvas**         | Konva.js                                                          |
-| **AI Integration** | Groq (free tier, default) or secondary provider (e.g. NVIDIA API) |
+| **AI Integration** | Groq (free tier) |
 | **Deployment**     | Render                                                            |
 | **Testing**        | Vitest + Playwright                                               |
 | **Linting**        | ESLint + Prettier                                                 |
@@ -64,8 +64,7 @@ Natural language commands to manipulate the board:
 - [Bun](https://bun.sh/) v1.0+ (recommended) or Node.js v20+
 - [Git](https://git-scm.com/)
 - Firebase account
-- Groq API key (free at [console.groq.com](https://console.groq.com)) or
-  secondary provider API key (e.g. NVIDIA)
+- Groq API key (free at [console.groq.com](https://console.groq.com))
 
 ## Setup
 
@@ -96,10 +95,8 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 VITE_FIREBASE_DATABASE_URL=https://your_project.firebaseio.com
 
-# AI: Groq (recommended, free) or secondary provider. Production: set GROQ_API_KEY or NVIDIA_API_KEY on the Render proxy service.
-VITE_AI_PROVIDER=groq
+# AI: Groq. Production: set GROQ_API_KEY on the Render proxy service.
 VITE_GROQ_API_KEY=your_groq_api_key
-# VITE_NVIDIA_API_KEY=your_secondary_provider_key
 ```
 
 ### 4. Firebase Setup

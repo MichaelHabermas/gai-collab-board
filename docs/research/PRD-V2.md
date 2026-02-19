@@ -481,7 +481,7 @@ Features: Parse, execute createStickyNote etc.
 
 Branch: feature/ai-creation
 
-Commit 1: Kimi setup.
+Commit 1: Groq setup.
 
 - Subtask 1: .env key
 - Subtask 2: Client
@@ -567,8 +567,8 @@ Commit 3: Tests simultaneous.
 ```mermaid
 sequenceDiagram
     User->>AI: Command
-    AI->>Kimi: Call Tools
-    Kimi-->>AI: Plan/Exec
+    AI->>Groq: Call Tools
+    Groq-->>AI: Plan/Exec
     AI->>Canvas: Changes
     Canvas->>Sync: Broadcast
 ```

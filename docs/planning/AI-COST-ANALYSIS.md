@@ -13,19 +13,18 @@ Development cost is fixed and does not scale with end-user count.
 
 Monthly LLM API cost to run CollabBoard's AI feature at scale. Assumptions: 4 sessions/user/month, 2.5 AI commands/session = **10 commands/user/month**.
 
-| Users   | Commands/User/Month | Groq (Llama 3.3 70B) | NVIDIA (Kimi 2.5) |
-| ------- | ------------------- | --------------------- | ------------------ |
-| 100     | 10                  | $0.72/month           | $1.44/month        |
-| 1,000   | 10                  | $7.25/month           | $14.40/month       |
-| 10,000  | 10                  | $72.48/month          | $144.00/month      |
-| 100,000 | 10                  | $724.80/month         | $1,440.00/month    |
+| Users   | Commands/User/Month | Groq (Llama 3.3 70B) |
+| ------- | ------------------- | --------------------- |
+| 100     | 10                  | $0.72/month           |
+| 1,000   | 10                  | $7.25/month           |
+| 10,000  | 10                  | $72.48/month          |
+| 100,000 | 10                  | $724.80/month         |
 
 Costs scale linearly with commands per user per month.
 
 ## Pricing Sources
 
 - **Groq (Llama 3.3 70B):** $0.59/1M input, $0.79/1M output — [groq.com/pricing](https://groq.com/pricing) (Feb 2026)
-- **NVIDIA (Kimi 2.5):** $0.60/1M input, $3.00/1M output — [build.nvidia.com](https://build.nvidia.com/moonshotai/kimi-k2.5) (Feb 2026)
 
 ## Token Mix Per Command
 
@@ -38,6 +37,6 @@ Costs scale linearly with commands per user per month.
 ## Key Findings
 
 - Development cost is dominated by Cursor subscription ($20/mo); production cost scales with user count and command volume
-- Groq is roughly half the cost of NVIDIA at this token mix; choose by capability vs. budget
+- Cost scales with command volume; choose model/capability vs. budget
 - Doubling commands per user per month doubles monthly cost
-- At 100K users, the most expensive option (NVIDIA) costs ~$1,440/month — well within typical SaaS margins
+- At 100K users, Groq costs ~$725/month — well within typical SaaS margins

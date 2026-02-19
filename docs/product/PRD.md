@@ -107,7 +107,7 @@ graph TB
 | **Frontend**   | React 19 + Vite + Bun                 | Fast dev (Vite HMR, Bun speed), type safety (TS), modern React features                   |
 | **Canvas**     | Konva.js                              | High performance (60fps with 1000+ objects), layered structure, React integration         |
 | **UI**         | Shadcn/ui + Tailwind v4               | Customizable components, CSS-first approach, accessible by default                        |
-| **AI**         | Groq (default) or secondary provider  | Groq: free tier, Llama 3.3 70B; secondary (e.g. NVIDIA): OpenAI-compatible, function calling |
+| **AI**         | Groq  | Groq: free tier, Llama 3.3 70B, OpenAI-compatible, function calling |
 | **Deployment** | Render + Firebase                     | Render: static site and/or Web Service for AI proxy; Firebase: auth, persistence, realtime |
 
 ### SOLID Principles Application
@@ -509,7 +509,7 @@ environment variables.
   ```bash
   bun add react@19 react-dom@19 firebase konva react-konva
   bun add clsx tailwind-merge class-variance-authority
-  bun add openai  # For Kimi 2.5 API
+  bun add openai  # For Groq API
   ```
 
 - **Subtask 3**: Install dev dependencies
@@ -637,10 +637,8 @@ environment variables.
   VITE_FIREBASE_APP_ID=1:123456789:web:abc123
   VITE_FIREBASE_DATABASE_URL=https://your-project.firebaseio.com
 
-  # AI: Groq (free) or NVIDIA/Kimi 2.5. Production: set GROQ_API_KEY or NVIDIA_API_KEY on the AI proxy (e.g. Render).
-  VITE_AI_PROVIDER=groq
+  # AI: Groq. Production: set GROQ_API_KEY on the AI proxy (e.g. Render).
   VITE_GROQ_API_KEY=gsk_xxxx
-  VITE_NVIDIA_API_KEY=nvapi-xxxx-xxxx-xxxx
 
   # App Configuration
   VITE_APP_NAME=CollabBoard
@@ -2080,13 +2078,13 @@ Multi-select delete uses a single batched Firestore write (not N sequential dele
 
 ### Intent for Epic 4
 
-Implement an AI agent using Kimi 2.5 that can manipulate the board through
+Implement an AI agent using Groq that can manipulate the board through
 natural language commands. Support 6+ command types, multi-step operations, and
 shared real-time results.
 
 ### Story 4.1: AI Service Setup
 
-**As a developer**, I can connect to Kimi 2.5 API for AI commands.
+**As a developer**, I can connect to Groq API for AI commands.
 
 **Branch**: `feature/ai-setup`
 
@@ -2097,18 +2095,16 @@ shared real-time results.
   ```typescript
   import OpenAI from 'openai';
 
-  const NVIDIA_API_BASE = 'https://integrate.api.nvidia.com/v1';
+  const GROQ_MODEL = 'llama-3.3-70b-versatile';
+  const DEV_PROXY_PATH = '/api/ai/v1';
 
   export const createAIClient = (): OpenAI => {
-    const apiKey = import.meta.env.VITE_NVIDIA_API_KEY;
-
-    if (!apiKey) {
-      throw new Error('VITE_NVIDIA_API_KEY is not configured');
-    }
-
+    const baseURL = typeof window !== 'undefined' && window.location?.origin
+      ? window.location.origin + DEV_PROXY_PATH
+      : DEV_PROXY_PATH;
     return new OpenAI({
-      apiKey,
-      baseURL: NVIDIA_API_BASE,
+      apiKey: 'proxy',
+      baseURL,
       dangerouslyAllowBrowser: true,
     });
   };
@@ -2116,9 +2112,9 @@ shared real-time results.
   export const aiClient = createAIClient();
 
   export const AI_CONFIG = {
-    model: 'moonshotai/kimi-k2.5',
+    model: GROQ_MODEL,
     maxTokens: 4096,
-    temperature: 0.7,
+    temperature: 0.3,
     topP: 0.9,
   } as const;
   ```
@@ -2513,14 +2509,14 @@ AI generates:
 sequenceDiagram
     participant User
     participant AIService
-    participant Kimi as Kimi 2.5
+    participant Groq as Groq
     participant ToolExecutor
     participant SyncService
     participant OtherUsers
 
     User->>AIService: "Create SWOT template"
-    AIService->>Kimi: Process command
-    Kimi-->>AIService: Tool calls (4 frames)
+    AIService->>Groq: Process command
+    Groq-->>AIService: Tool calls (4 frames)
     loop For each tool call
         AIService->>ToolExecutor: Execute tool
         ToolExecutor->>SyncService: Update board
@@ -2618,7 +2614,7 @@ document the AI development process.
 
 - **Frontend**: Build `bun run build`; publish `dist/` as a Render Static Site (or serve from a Web Service).
 - **AI proxy**: Must run server-side. Options: (1) Same origin: serve static and proxy at `/api/ai/v1` from one Render Web Service; (2) Separate service: run `bun run proxy` (see `server/index.ts`) as a second Web Service and set `VITE_AI_PROXY_URL` on the frontend to that service base URL (e.g. `https://your-proxy.onrender.com/api/ai/v1`).
-- **Environment variables**: Firebase `VITE_*` on frontend; `GROQ_API_KEY` or `NVIDIA_API_KEY` (and optionally `AI_PROVIDER`) on the proxy service. Optional frontend: `VITE_AI_PROXY_URL`, `VITE_AI_PROXY_PATH`, `VITE_AI_PROVIDER`.
+- **Environment variables**: Firebase `VITE_*` on frontend; `GROQ_API_KEY` on the proxy service. Optional frontend: `VITE_AI_PROXY_URL`, `VITE_AI_PROXY_PATH`.
 
 #### Expected behaviour (verify before checking)
 
@@ -2907,11 +2903,9 @@ interface IPresenceData {
 | `VITE_FIREBASE_MESSAGING_SENDER_ID` | Yes         | Firebase messaging sender ID            |
 | `VITE_FIREBASE_APP_ID`              | Yes         | Firebase app ID                         |
 | `VITE_FIREBASE_DATABASE_URL`        | Yes         | Realtime Database URL                   |
-| `VITE_AI_PROVIDER`                  | No          | `groq` (default) or `nvidia`            |
 | `VITE_AI_PROXY_URL`                 | No (prod)   | Full URL of AI proxy when on another host (e.g. Render Web Service) |
 | `VITE_AI_PROXY_PATH`                | No (prod)   | Path on same origin (default `/api/ai/v1`) |
-| `VITE_GROQ_API_KEY`                 | Yes (Groq, dev) | Groq API key (dev); production uses server-side `GROQ_API_KEY` on proxy |
-| `VITE_NVIDIA_API_KEY`               | No (Nvidia) | Nvidia API key for Kimi 2.5 (dev); production uses server-side `NVIDIA_API_KEY` on proxy |
+| `VITE_GROQ_API_KEY`                 | Yes (dev)   | Groq API key (dev); production uses server-side `GROQ_API_KEY` on proxy |
 
 ### Appendix D: Deployment Checklist
 
@@ -2930,25 +2924,7 @@ interface IPresenceData {
 
 ### Appendix E: AI Cost Projections
 
-**Kimi 2.5 Pricing**:
-
-- Input: $0.60 per 1M tokens
-- Output: $3.00 per 1M tokens
-
-**Per Command Estimate**:
-
-- Simple command: ~500 input, ~200 output = $0.0009
-- Medium command: ~1,000 input, ~400 output = $0.0018
-- Complex command: ~2,000 input, ~800 output = $0.0036
-
-**Monthly Projections** (10 commands/user/month):
-
-| Users   | Simple (60%) | Medium (30%) | Complex (10%) | Total     |
-| ------- | ------------ | ------------ | ------------- | --------- |
-| 100     | $0.54        | $0.54        | $0.36         | $1.44     |
-| 1,000   | $5.40        | $5.40        | $3.60         | $14.40    |
-| 10,000  | $54.00       | $54.00       | $36.00        | $144.00   |
-| 100,000 | $540.00      | $540.00      | $360.00       | $1,440.00 |
+See [AI-COST-ANALYSIS.md](planning/AI-COST-ANALYSIS.md) for Groq pricing, token mix, and monthly projections at scale.
 
 ---
 
@@ -2960,7 +2936,7 @@ interface IPresenceData {
 - [Tailwind CSS v4 Documentation](https://tailwindcss.com/docs)
 - [Shadcn/ui Documentation](https://ui.shadcn.com/docs)
 - [Vite Documentation](https://vitejs.dev/guide/)
-- [Kimi 2.5 API (Nvidia)](https://build.nvidia.com/moonshotai/kimi-k2.5)
+- [Groq Console & API](https://console.groq.com)
 - [Vitest Documentation](https://vitest.dev/)
 - [Playwright Documentation](https://playwright.dev/)
 

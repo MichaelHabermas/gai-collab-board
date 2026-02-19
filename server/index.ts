@@ -1,11 +1,11 @@
 /**
  * Minimal AI proxy server for Render (or any Node host).
- * Serves POST /api/ai/v1/* by forwarding to Groq or NVIDIA with server-side API key.
+ * Serves POST /api/ai/v1/* by forwarding to Groq with server-side API key.
  *
  * Run: PORT=3001 bun run server/index.ts
  * Or:  set PORT=3001 && bun run server/index.ts (Windows)
  *
- * Env: GROQ_API_KEY or NVIDIA_API_KEY, optionally AI_PROVIDER=groq|nvidia
+ * Env: GROQ_API_KEY
  *      CORS_ALLOWED_ORIGINS (optional, comma-separated) for strict origin allowlist.
  */
 

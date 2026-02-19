@@ -15,7 +15,7 @@ This directory contains comprehensive technical guides for each technology in th
 | [Tailwind + Shadcn Guide](./TAILWIND-SHADCN-GUIDE.md) | UI styling | Theming, Components, Dark Mode, Animations |
 | [Dev Environment Guide](./DEVELOPMENT-ENVIRONMENT-GUIDE.md) | Project setup | Vite, Bun, TypeScript, ESLint, Git |
 | [Testing Guide](./TESTING-GUIDE.md) | Test strategy | Vitest, Playwright, Mocking, Coverage |
-| [AI Integration Guide](./AI-INTEGRATION-GUIDE.md) | AI commands | Kimi 2.5, Function Calling, Tool Schema |
+| [AI Integration Guide](./AI-INTEGRATION-GUIDE.md) | AI commands | Groq, Function Calling, Tool Schema |
 
 ---
 
@@ -85,7 +85,7 @@ graph TB
     end
     
     subgraph AI["🤖 AI INTEGRATION"]
-        Kimi["Kimi 2.5<br/>(via Nvidia API)<br/>Function Calling for Board Commands"]
+        Groq["Groq<br/>(Llama 3.3 70B)<br/>Function Calling for Board Commands"]
     end
     
     subgraph Tooling["🛠️ TOOLING"]

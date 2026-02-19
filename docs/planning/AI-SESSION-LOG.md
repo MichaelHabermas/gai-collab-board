@@ -134,7 +134,7 @@
 
 - **Configurable AI base URL** ([src/lib/ai.ts](src/lib/ai.ts)): Added `VITE_AI_PROXY_URL` (full URL) and `VITE_AI_PROXY_PATH` (path on same origin). Production default path is now `/api/ai/v1` (Render-friendly). Exported `getProxyBaseURLFromEnv(env, origin)` for tests.
 - **Defensive response handling** ([src/modules/ai/aiService.ts](src/modules/ai/aiService.ts)): Introduced `getFirstAssistantMessage(response)` that validates `response?.choices` is a non-empty array before reading `[0]`; throws `AIError` with a clear message if not. Used for both initial and follow-up responses; follow-up uses a safe fallback string if the follow-up response is malformed.
-- **Render-ready AI proxy** ([server/](server/)): Extracted shared proxy logic into `server/ai-proxy-config.ts` and `server/ai-proxy-handler.ts`. Added `server/index.ts` (Node HTTP server) that serves `POST /api/ai/v1/*` and forwards to Groq/NVIDIA. Run with `bun run proxy`; env: `GROQ_API_KEY` or `NVIDIA_API_KEY`, optionally `AI_PROVIDER`. Documented in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+- **Render-ready AI proxy** ([server/](server/)): Extracted shared proxy logic into `server/ai-proxy-config.ts` and `server/ai-proxy-handler.ts`. Added `server/index.ts` (Node HTTP server) that serves `POST /api/ai/v1/*` and forwards to Groq. Run with `bun run proxy`; env: `GROQ_API_KEY`. Documented in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 - **PRD:** Updated deployment to Render + Firebase; Story 5.2 refocused on Render, AI proxy options, and two verification checkboxes (AI proxy in production; malformed response handling). Appendix C (env) and D (checklist) updated; architecture diagram and stack rationale updated.
 - **Tests:** [tests/unit/aiService.test.ts](tests/unit/aiService.test.ts) — throw `AIError` when response has no `choices` or empty `choices`; safe fallback when follow-up has no `choices`. [tests/unit/ai.test.ts](tests/unit/ai.test.ts) — `getProxyBaseURLFromEnv` for full URL, path, default prod path, dev path, and trimming.
 
@@ -146,7 +146,7 @@
 - External API spend during development: $0
 - Approximate cumulative tokens across logged sessions: ~240k input / ~84k output (estimate)
 
-**Deployment impact (expected):** No change to per-command token economics or LLM cost. Fix is configuration (proxy URL/path) and resilience (defensive parsing). Production stack is Render + Firebase; AI proxy must run server-side; same Groq/NVIDIA and token assumptions as in AI-COST-ANALYSIS.md.
+**Deployment impact (expected):** No change to per-command token economics or LLM cost. Fix is configuration (proxy URL/path) and resilience (defensive parsing). Production stack is Render + Firebase; AI proxy must run server-side; same Groq and token assumptions as in AI-COST-ANALYSIS.md.
 
 ## Render refresh and active board (Feb 2026)
 

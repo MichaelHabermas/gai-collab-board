@@ -14,7 +14,7 @@ CollabBoard is a real-time collaborative whiteboard app for brainstorming, idea 
 
 - Backend: Firebase (Realtime DB/Firestore/Auth) - [Docs](https://firebase.google.com/docs)
 - Frontend: React + Vite + Bun + TypeScript + Shadcn + Konva.js + Tailwind v4 - Links in design doc
-- AI: Kimi 2.5 (Nvidia API) - [Docs](https://build.nvidia.com/moonshotai/kimi-k2.5)
+- AI: Groq (Llama 3.3 70B) - [Docs](https://console.groq.com)
 - Deployment: Render - [Docs](https://render.com/docs)
 - Testing: Vitest (unit/integration), Playwright (e2e), 60% coverage
 - Tooling: ESLint/Prettier
@@ -27,7 +27,7 @@ Modular: Modules for auth, sync, canvas, ai, ui. SOLID: Single responsibility (o
 flowchart TD
     A[User] --> B[Frontend: React/Konva/UI]
     B --> C[Sync Module: Firebase Realtime]
-    B --> D[AI Module: Kimi 2.5 Tools]
+    B --> D[AI Module: Groq Tools]
     C --> E[Backend: Firebase DB]
     D --> E
     E --> F[Persistence: Firestore]
@@ -61,7 +61,7 @@ gitGraph
 
 Create .cursor/rules.md with:
 
-- Tech stack specifics: Use React hooks, Konva layers, Firebase listeners, Kimi function calls.
+- Tech stack specifics: Use React hooks, Konva layers, Firebase listeners, Groq function calls.
 - SOLID: Enforce in prompts (e.g., "Design class with single responsibility").
 - Modular: Separate concerns, interfaces for extensibility.
 - Git: Follow workflow above; commit messages: "feat: add X", "test: cover Y".
@@ -391,7 +391,7 @@ Features:
 
 Branch: feature/ai-creation
 
-Commit 1: Setup Kimi API.
+Commit 1: Setup Groq API.
 
 - Subtask 1: Env key.
 - Subtask 2: Client init.

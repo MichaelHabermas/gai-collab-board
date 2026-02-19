@@ -12,9 +12,6 @@ const INITIAL_BACKOFF_MS = 1000;
 /** Timeout per request so the UI does not hang if the API or proxy never responds. */
 const REQUEST_TIMEOUT_MS = 90_000;
 
-/** Extra body for providers that support disabling thinking mode (e.g. some OpenAI-compatible APIs). */
-const PROVIDER_EXTRA_BODY = { thinking: { type: 'disabled' as const } };
-
 const UNEXPECTED_RESPONSE_MESSAGE =
   'AI service returned an unexpected response. Check that the AI proxy is configured and reachable.';
 
@@ -101,7 +98,6 @@ export class AIService {
       { role: 'user', content: userMessage },
     ];
 
-    const providerExtra = AI_CONFIG.provider === 'nvidia' ? PROVIDER_EXTRA_BODY : {};
     const response = await this.throttledRequest(() =>
       this.withRetry(() =>
         aiClient.chat.completions.create(
@@ -113,7 +109,6 @@ export class AIService {
             max_tokens: AI_CONFIG.maxTokens,
             temperature: AI_CONFIG.temperature,
             top_p: AI_CONFIG.topP,
-            ...providerExtra,
           },
           { timeout: REQUEST_TIMEOUT_MS }
         )
@@ -183,7 +178,6 @@ export class AIService {
       ...toolResults,
     ];
 
-    const providerExtraFollowUp = AI_CONFIG.provider === 'nvidia' ? PROVIDER_EXTRA_BODY : {};
     const followUpResponse = await this.throttledRequest(() =>
       this.withRetry(() =>
         aiClient.chat.completions.create(
@@ -192,7 +186,6 @@ export class AIService {
             messages: followUpMessages,
             max_tokens: AI_CONFIG.maxTokens,
             temperature: AI_CONFIG.temperature,
-            ...providerExtraFollowUp,
           },
           { timeout: REQUEST_TIMEOUT_MS }
         )

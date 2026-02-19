@@ -1,13 +1,9 @@
 /**
- * Shared AI proxy request handler: forwards requests to Groq or NVIDIA.
+ * Shared AI proxy request handler: forwards requests to Groq.
  * Used by the Render proxy server.
  */
 
-import {
-  getProviderAndKey,
-  GROQ_BASE,
-  SECONDARY_API_BASE,
-} from './ai-proxy-config.js';
+import { getProviderAndKey, GROQ_BASE } from './ai-proxy-config.js';
 
 export interface IProxyResult {
   statusCode: number;
@@ -18,7 +14,7 @@ export interface IProxyResult {
 const FORWARD_HEADERS = ['content-type'];
 
 /**
- * Handles a proxy request: resolves provider, builds upstream URL, forwards request, returns response.
+ * Handles a proxy request: resolves Groq key, builds upstream URL, forwards request, returns response.
  */
 export async function handleProxyRequest(
   method: string,
@@ -33,8 +29,7 @@ export async function handleProxyRequest(
       statusCode: 503,
       body: JSON.stringify({
         error: {
-          message:
-            'No AI provider configured. Set GROQ_API_KEY or NVIDIA_API_KEY (and optionally AI_PROVIDER) on the server.',
+          message: 'No AI provider configured. Set GROQ_API_KEY on the server.',
         },
       }),
       headers: { 'Content-Type': 'application/json' },
@@ -42,8 +37,7 @@ export async function handleProxyRequest(
   }
 
   const path = pathSuffix.startsWith('/') ? pathSuffix : `/${pathSuffix}`;
-  const base = config.provider === 'groq' ? GROQ_BASE : SECONDARY_API_BASE;
-  const url = `${base}${path}`;
+  const url = `${GROQ_BASE}${path}`;
 
   const headers: Record<string, string> = {
     Authorization: `Bearer ${config.apiKey}`,

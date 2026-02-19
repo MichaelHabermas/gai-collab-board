@@ -1,7 +1,7 @@
 /**
- * Runs the dedicated performance check: sync latency tests, appends to metrics
- * history, and updates docs/performance/PERFORMANCE_LOG.md with latest metrics
- * and a Mermaid line chart of progress over time.
+ * Runs the dedicated performance check: sync latency tests (which write
+ * last-run-metrics.json and append to metrics-history.json), then updates
+ * docs/performance/PERFORMANCE_LOG.md with latest metrics and a Mermaid chart.
  *
  * Usage: bun run scripts/run-performance-check.ts
  * Or:    bun run perf:check
@@ -13,24 +13,10 @@ import { join } from 'path';
 
 const ROOT = join(import.meta.dir, '..');
 const PERF_DIR = join(ROOT, 'docs/performance');
-const LAST_RUN_PATH = join(PERF_DIR, 'last-run-metrics.json');
 const HISTORY_PATH = join(PERF_DIR, 'metrics-history.json');
 const LOG_PATH = join(PERF_DIR, 'PERFORMANCE_LOG.md');
 
 const MAX_CHART_POINTS = 15;
-
-interface IMetricEntry {
-  name: string;
-  value: number;
-  unit: string;
-}
-
-interface ILastRunMetrics {
-  capturedAt: string;
-  capturedAtMs?: number;
-  source: string;
-  metrics: IMetricEntry[];
-}
 
 interface IHistoryEntry {
   date: string;
@@ -62,37 +48,6 @@ function runSyncLatencyTests(): boolean {
 function readJson<T>(path: string): T {
   const raw = readFileSync(path, 'utf-8');
   return JSON.parse(raw) as T;
-}
-
-function writeJson(path: string, data: unknown): void {
-  writeFileSync(path, JSON.stringify(data, null, 2), 'utf-8');
-}
-
-function getMetricValue(metrics: IMetricEntry[], name: string): number {
-  const entry = metrics.find((m) => m.name === name);
-  return entry?.value ?? 0;
-}
-
-function appendToHistory(last: ILastRunMetrics, history: IMetricsHistory): void {
-  const cursor = getMetricValue(last.metrics, 'cursor_latency');
-  const objectUpdate = getMetricValue(last.metrics, 'object_update_latency');
-  const batch500 = getMetricValue(last.metrics, 'batch_500_objects');
-
-  const date = last.capturedAt.slice(0, 10);
-  const timestampMs =
-    last.capturedAtMs ?? new Date(last.capturedAt).getTime();
-  const entry: IHistoryEntry = {
-    date,
-    timestamp: last.capturedAt,
-    timestamp_ms: timestampMs,
-    cursor_latency_ms: cursor,
-    object_update_latency_ms: objectUpdate,
-    batch_500_objects_ms: batch500,
-  };
-
-  history.history.push(entry);
-  writeJson(HISTORY_PATH, history);
-  process.stdout.write(`[perf-check] Appended metrics for ${date}.\n`);
 }
 
 function formatChartLabel(entry: IHistoryEntry): string {
@@ -206,26 +161,21 @@ function main(): void {
     process.exit(1);
   }
 
-  let last: ILastRunMetrics;
-  try {
-    last = readJson<ILastRunMetrics>(LAST_RUN_PATH);
-  } catch (e) {
-    process.stderr.write(`[perf-check] Could not read ${LAST_RUN_PATH}. ${String(e)}\n`);
-    process.exit(1);
-  }
-
   let history: IMetricsHistory;
   try {
     history = readJson<IMetricsHistory>(HISTORY_PATH);
-  } catch {
-    history = { history: [] };
+  } catch (e) {
+    process.stderr.write(
+      `[perf-check] Could not read ${HISTORY_PATH}. Sync test writes both last-run and history. ${String(e)}\n`
+    );
+    process.exit(1);
   }
 
-  if (!Array.isArray(history.history)) {
-    history.history = [];
+  if (!Array.isArray(history.history) || history.history.length === 0) {
+    process.stderr.write('[perf-check] No history entries; sync test should have appended one.\n');
+    process.exit(1);
   }
 
-  appendToHistory(last, history);
   updatePerformanceLog(history);
 
   process.stdout.write('[perf-check] Done.\n');

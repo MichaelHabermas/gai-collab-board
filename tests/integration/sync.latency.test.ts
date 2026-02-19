@@ -132,18 +132,45 @@ describe('Sync Benchmark Integration Tests', () => {
     if (collectedMetrics.length === 0) {
       return;
     }
-    const { writeFileSync } = await import('fs');
+    const { readFileSync, writeFileSync, existsSync } = await import('fs');
     const { join } = await import('path');
-    const outPath = join(process.cwd(), 'docs/performance/last-run-metrics.json');
+    const perfDir = join(process.cwd(), 'docs/performance');
+    const lastRunPath = join(perfDir, 'last-run-metrics.json');
+    const historyPath = join(perfDir, 'metrics-history.json');
+
     const capturedAtMs = Date.now();
     const capturedAt = new Date(capturedAtMs).toISOString();
-    writeFileSync(
-      outPath,
-      JSON.stringify(
-        { capturedAt, capturedAtMs, source: 'sync.latency.test.ts', metrics: collectedMetrics },
-        null,
-        2
-      )
-    );
+    const lastRun = {
+      capturedAt,
+      capturedAtMs,
+      source: 'sync.latency.test.ts',
+      metrics: collectedMetrics,
+    };
+    writeFileSync(lastRunPath, JSON.stringify(lastRun, null, 2), 'utf-8');
+
+    const getMetric = (name: string): number =>
+      collectedMetrics.find((m) => m.name === name)?.value ?? 0;
+    const date = capturedAt.slice(0, 10);
+    const historyEntry = {
+      date,
+      timestamp: capturedAt,
+      timestamp_ms: capturedAtMs,
+      cursor_latency_ms: getMetric('cursor_latency'),
+      object_update_latency_ms: getMetric('object_update_latency'),
+      batch_500_objects_ms: getMetric('batch_500_objects'),
+    };
+
+    let history: { history: typeof historyEntry[] };
+    if (existsSync(historyPath)) {
+      const raw = readFileSync(historyPath, 'utf-8');
+      history = JSON.parse(raw) as { history: typeof historyEntry[] };
+    } else {
+      history = { history: [] };
+    }
+    if (!Array.isArray(history.history)) {
+      history.history = [];
+    }
+    history.history.push(historyEntry);
+    writeFileSync(historyPath, JSON.stringify(history, null, 2), 'utf-8');
   });
 });

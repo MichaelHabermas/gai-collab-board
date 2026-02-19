@@ -6,7 +6,6 @@ import { readFileSync, existsSync } from 'fs';
 import { visualizer } from 'rollup-plugin-visualizer';
 
 const GROQ_ORIGIN = 'https://api.groq.com/openai';
-const SECONDARY_ORIGIN = 'https://integrate.api.nvidia.com';
 
 function parseEnvFile(envDir: string): Record<string, string> {
   const envPath = path.resolve(envDir, '.env');
@@ -36,29 +35,11 @@ function parseEnvFile(envDir: string): Record<string, string> {
 }
 
 function getAiProxyConfig(env: Record<string, string>) {
-  const configured = (env.VITE_AI_PROVIDER ?? '').toLowerCase();
   const groqKey = (env.VITE_GROQ_API_KEY ?? '').trim();
-  const secondaryKey = (env.VITE_NVIDIA_API_KEY ?? '').trim();
-
-  const useSecondary =
-    (configured === 'nvidia' && secondaryKey !== '') ||
-    (configured !== 'groq' && groqKey === '' && secondaryKey !== '');
-  const useGroq =
-    (configured === 'groq' && groqKey !== '') ||
-    groqKey !== '' ||
-    (secondaryKey === '' && configured !== 'nvidia');
-
-  if (useGroq && groqKey !== '') {
+  if (groqKey) {
     return {
       target: GROQ_ORIGIN,
       apiKey: groqKey,
-      rewrite: (pathSegment: string) => pathSegment.replace(/^\/api\/ai/, ''),
-    };
-  }
-  if (useSecondary && secondaryKey !== '') {
-    return {
-      target: SECONDARY_ORIGIN,
-      apiKey: secondaryKey,
       rewrite: (pathSegment: string) => pathSegment.replace(/^\/api\/ai/, ''),
     };
   }

@@ -45,11 +45,11 @@
 
 **Production projections** (monthly LLM API cost at scale, 10 AI commands/user/month):
 
-| Users   | Groq (Llama 3.3 70B) | NVIDIA (Kimi 2.5) |
-| ------- | --------------------- | ------------------ |
-| 100     | $0.72                 | $1.44              |
-| 1,000   | $7.25                 | $14.40             |
-| 10,000  | $72.48                | $144.00            |
-| 100,000 | $724.80               | $1,440.00          |
+| Users   | Groq (Llama 3.3 70B) |
+| ------- | --------------------- |
+| 100     | $0.72                 |
+| 1,000   | $7.25                 |
+| 10,000  | $72.48                |
+| 100,000 | $724.80               |
 
 See [AI-COST-ANALYSIS.md](AI-COST-ANALYSIS.md) for assumptions, token mix, and pricing sources. Detailed per-session notes are in [AI-SESSION-LOG.md](AI-SESSION-LOG.md).

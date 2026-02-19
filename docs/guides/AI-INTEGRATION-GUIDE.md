@@ -1,6 +1,6 @@
 ## Summary
 
-This guide is the single reference for integrating AI providers (Groq recommended, NVIDIA/Kimi optional) into CollabBoard. It defines how to configure API keys (local and production on Render), implement OpenAI-compatible function-calling tools for board actions (create, move, resize, align, etc.), and handle context, errors, and rate limits. Its purpose is to let any developer add or switch AI backends and maintain consistent behavior; it also documents the proxy pattern so API keys stay server-side in production.
+This guide is the single reference for integrating the Groq AI provider into CollabBoard. It defines how to configure API keys (local and production on Render), implement OpenAI-compatible function-calling tools for board actions (create, move, resize, align, etc.), and handle context, errors, and rate limits. Its purpose is to let any developer set up and maintain the AI backend; it also documents the proxy pattern so API keys stay server-side in production.
 
 ---
 
@@ -8,12 +8,11 @@ This guide is the single reference for integrating AI providers (Groq recommende
 
 ## Overview
 
-CollabBoard supports multiple AI providers for board manipulation via natural language. The **recommended option** is **Groq** (free tier, no credit card). You can also use a secondary provider (e.g. NVIDIA API for Kimi 2.5). Both use the same OpenAI-compatible client and proxy; the key stays server-side in production.
+CollabBoard uses **Groq** for board manipulation via natural language (free tier, no credit card). The OpenAI-compatible client and proxy keep the API key server-side in production.
 
 **API Documentation**:
 
-- [Groq Console & API Keys](https://console.groq.com/keys) (recommended, free tier)
-- [Nvidia Kimi 2.5 API](https://build.nvidia.com/moonshotai/kimi-k2.5) (optional)
+- [Groq Console & API Keys](https://console.groq.com/keys)
 
 ---
 
@@ -34,7 +33,7 @@ CollabBoard supports multiple AI providers for board manipulation via natural la
 
 ## Provider Options
 
-### Groq (recommended, free)
+### Groq
 
 | Feature | Value |
 | -------- | ----- |
@@ -42,15 +41,6 @@ CollabBoard supports multiple AI providers for board manipulation via natural la
 | Model | Llama 3.3 70B Versatile |
 | Function calling | Yes (OpenAI-compatible) |
 | Setup | Sign up at [console.groq.com](https://console.groq.com) → Create API key |
-
-### Kimi 2.5 via NVIDIA (optional)
-
-| Feature | Value |
-| -------- | ----- |
-| Cost | 5,000 free API credits, then paid |
-| Model | Kimi K2.5 (256K context) |
-| Function calling | Yes (OpenAI-compatible) |
-| Setup | [Nvidia Build](https://build.nvidia.com/moonshotai/kimi-k2.5) → API key |
 
 ---
 
@@ -62,42 +52,29 @@ CollabBoard supports multiple AI providers for board manipulation via natural la
 2. Open [API Keys](https://console.groq.com/keys) and create a new key (e.g. `gsk_...`).
 3. Copy the key and add it to your environment (see below).
 
-### NVIDIA / Kimi 2.5 (optional)
-
-1. Visit [Nvidia Build – Kimi 2.5](https://build.nvidia.com/moonshotai/kimi-k2.5).
-2. Sign up / Log in, then generate an API key.
-3. Add the key to your environment if you want to use NVIDIA.
-
 ### Environment Configuration
 
 **Local development** — in project root `.env` (create from `.env.example`):
 
 ```env
-# Prefer Groq (free)
-VITE_AI_PROVIDER=groq
 VITE_GROQ_API_KEY=gsk_your_key_here
-
-# Optional: use NVIDIA/Kimi 2.5 instead
-# VITE_AI_PROVIDER=nvidia
-# VITE_NVIDIA_API_KEY=nvapi-xxxx-xxxx-xxxx
 ```
 
-**Production (Render)** — on the AI proxy Web Service, set environment variables:
+**Production (Render)** — on the AI proxy Web Service, set:
 
-- **Groq:** `GROQ_API_KEY` = your Groq API key (and optionally `AI_PROVIDER=groq`).
-- **NVIDIA:** `NVIDIA_API_KEY` = your NVIDIA API key (and optionally `AI_PROVIDER=nvidia`).
+- `GROQ_API_KEY` = your Groq API key.
 
-The app uses a single proxy at `/api/ai/v1`. The proxy chooses the provider from `AI_PROVIDER` or from which key is set (Groq preferred if both are set). See [DEPLOYMENT.md](../operations/DEPLOYMENT.md) for Render setup.
+The app uses a single proxy at `/api/ai/v1`. See [DEPLOYMENT.md](../operations/DEPLOYMENT.md) for Render setup.
 
 ### Install Dependencies
 
 ```bash
-bun add openai  # OpenAI-compatible API for Groq and NVIDIA
+bun add openai  # OpenAI-compatible API for Groq
 ```
 
 ### API Client (existing)
 
-`src/lib/ai.ts` is already set up to use the unified proxy path (`/api/ai/v1` in dev and prod). The client resolves the provider from `VITE_AI_PROVIDER` and key env vars, and selects the model (Groq: `llama-3.3-70b-versatile`, NVIDIA: `moonshotai/kimi-k2.5`). The proxy injects the API key in dev (Vite proxy) and in production (Render proxy server).
+`src/lib/ai.ts` is set up to use the proxy path (`/api/ai/v1` in dev and prod) with model `llama-3.3-70b-versatile`. The proxy injects the API key in dev (Vite proxy) and in production (Render proxy server).
 
 ---
 
@@ -1261,7 +1238,7 @@ The AI automatically handles complex commands by generating multiple tool calls:
 
 ### AI Agent Planning
 
-For complex commands, Kimi 2.5 plans and executes steps sequentially:
+For complex commands, the model plans and executes steps sequentially:
 
 ```typescript
 // User: 'Create a Kanban board with To Do, In Progress, and Done columns'
@@ -1476,13 +1453,15 @@ const setCachedResponse = (key: string, response: string): void => {
 
 ## Cost Analysis
 
-### Pricing (Kimi 2.5 via Nvidia)
+### Pricing (Groq)
 
 | Metric | Cost |
 | ------- | ------- |
-| Input tokens | $0.60 per 1M tokens |
-| Output tokens | $3.00 per 1M tokens |
-| Free tier | Development credits available |
+| Input tokens | $0.59 per 1M tokens |
+| Output tokens | $0.79 per 1M tokens |
+| Free tier | Free tier, no credit card |
+
+See [AI-COST-ANALYSIS.md](../planning/AI-COST-ANALYSIS.md) for projections at scale.
 
 ### Estimating Costs
 
@@ -1513,9 +1492,9 @@ const estimateCommandCost = (
 
   const inputTokens = systemPromptTokens + boardStateTokens + userInputTokens;
 
-  // Cost calculation
-  const inputCost = (inputTokens / 1_000_000) * 0.6;
-  const outputCost = (outputTokens / 1_000_000) * 3.0;
+  // Cost calculation (Groq: $0.59/1M input, $0.79/1M output)
+  const inputCost = (inputTokens / 1_000_000) * 0.59;
+  const outputCost = (outputTokens / 1_000_000) * 0.79;
 
   return {
     inputTokens,

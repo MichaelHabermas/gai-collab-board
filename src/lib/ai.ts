@@ -6,26 +6,6 @@ const DEV_PROXY_PATH = '/api/ai/v1';
 const DEFAULT_PROD_PROXY_PATH = '/api/ai/v1';
 
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
-const SECONDARY_MODEL = 'moonshotai/kimi-k2.5';
-
-export type AIProvider = 'groq' | 'nvidia';
-
-function resolveProvider(): AIProvider {
-  const configured = (import.meta.env.VITE_AI_PROVIDER ?? '').toLowerCase();
-  if (configured === 'nvidia' && import.meta.env.VITE_NVIDIA_API_KEY) {
-    return 'nvidia';
-  }
-
-  if (configured === 'groq' || import.meta.env.VITE_GROQ_API_KEY) {
-    return 'groq';
-  }
-
-  if (import.meta.env.VITE_NVIDIA_API_KEY) {
-    return 'nvidia';
-  }
-
-  return 'groq';
-}
 
 export interface IAIProxyEnv {
   DEV?: boolean;
@@ -71,11 +51,8 @@ export const createAIClient = (): OpenAI => {
 
 export const aiClient = createAIClient();
 
-const provider = resolveProvider();
-
 export const AI_CONFIG = {
-  provider,
-  model: provider === 'groq' ? GROQ_MODEL : SECONDARY_MODEL,
+  model: GROQ_MODEL,
   maxTokens: 4096,
   temperature: 0.3,
   topP: 0.9,

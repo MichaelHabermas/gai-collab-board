@@ -14,12 +14,7 @@ const REQUIRED_FIREBASE_ENV_KEYS = [
 const OPTIONAL_PROXY_PATH_KEY = 'VITE_AI_PROXY_PATH';
 const OPTIONAL_PROXY_URL_KEY = 'VITE_AI_PROXY_URL';
 const FIREBASE_DEPLOY_PROJECT_KEYS = ['FIREBASE_PROJECT_ID', 'VITE_FIREBASE_PROJECT_ID'] as const;
-const AI_KEY_KEYS = [
-  'GROQ_API_KEY',
-  'NVIDIA_API_KEY',
-  'VITE_GROQ_API_KEY',
-  'VITE_NVIDIA_API_KEY',
-] as const;
+const AI_KEY_KEYS = ['GROQ_API_KEY', 'VITE_GROQ_API_KEY'] as const;
 
 const loadEnv = (): void => {
   const envPath = resolve(process.cwd(), '.env');
@@ -76,7 +71,7 @@ const run = (): void => {
   }
 
   if (!hasAnyValue(AI_KEY_KEYS)) {
-    missing.push('One of: GROQ_API_KEY, NVIDIA_API_KEY, VITE_GROQ_API_KEY, VITE_NVIDIA_API_KEY');
+    missing.push('One of: GROQ_API_KEY, VITE_GROQ_API_KEY');
   }
 
   if (missing.length > 0) {

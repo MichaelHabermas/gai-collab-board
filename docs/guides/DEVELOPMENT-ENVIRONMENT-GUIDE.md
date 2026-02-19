@@ -444,7 +444,7 @@ interface ImportMetaEnv {
   readonly VITE_FIREBASE_MESSAGING_SENDER_ID: string;
   readonly VITE_FIREBASE_APP_ID: string;
   readonly VITE_FIREBASE_DATABASE_URL: string;
-  readonly VITE_NVIDIA_API_KEY: string;
+  readonly VITE_GROQ_API_KEY: string;
 }
 
 interface ImportMeta {
@@ -583,8 +583,8 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
 VITE_FIREBASE_APP_ID=1:123456789:web:abc123
 VITE_FIREBASE_DATABASE_URL=https://your-project.firebaseio.com
 
-# AI Configuration (Kimi 2.5 via Nvidia API)
-VITE_NVIDIA_API_KEY=your_nvidia_api_key_here
+# AI Configuration (Groq)
+VITE_GROQ_API_KEY=gsk_your_key_here
 
 # App Configuration
 VITE_APP_NAME=CollabBoard

@@ -20,7 +20,7 @@
 
 | File | Summary | Key Topics | Last Modified |
 |------|---------|------------|---------------|
-| `guides/AI-INTEGRATION-GUIDE.md` | AI providers (Groq/NVIDIA), function-calling tools, proxy pattern, API keys server-side | `AI`, `Groq`, `Kimi`, `function-calling`, `proxy` | 2026-02-17 |
+| `guides/AI-INTEGRATION-GUIDE.md` | AI provider (Groq), function-calling tools, proxy pattern, API keys server-side | `AI`, `Groq`, `function-calling`, `proxy` | 2026-02-17 |
 | `guides/DEVELOPMENT-ENVIRONMENT-GUIDE.md` | Bun, Vite, TypeScript setup; directory layout, env vars, ESLint/Prettier, Git | `Bun`, `Vite`, `TypeScript`, `onboarding` | 2026-02-17 |
 | `guides/FIREBASE-GUIDE.md` | Firebase Auth, Firestore, Realtime DB, presence, security rules, offline behavior | `Firebase`, `Auth`, `Firestore`, `sync`, `security rules` | 2026-02-17 |
 | `guides/KONVA-REACT-GUIDE.md` | Konva.js and react-konva: Stage, Layer, shapes, events, transforms, pan/zoom, performance | `Konva`, `canvas`, `shapes`, `pan/zoom`, `performance` | 2026-02-17 |
@@ -67,7 +67,7 @@
 
 | File | Summary | Key Topics | Last Modified |
 |------|---------|------------|---------------|
-| `planning/AI-COST-ANALYSIS.md` | AI cost at scale: dev costs, production projections (100–100K users), Groq vs NVIDIA, assumptions | `AI cost`, `Groq`, `NVIDIA`, `scaling`, `LLM` | 2026-02-19 |
+| `planning/AI-COST-ANALYSIS.md` | AI cost at scale: dev costs, production projections (100–100K users), Groq assumptions | `AI cost`, `Groq`, `scaling`, `LLM` | 2026-02-19 |
 | `planning/AI-DEVELOPMENT-LOG.md` | 1-page AI dev log: tools, MCP usage, prompts, code split, strengths/limitations, learnings, cost | `AI-first`, `Cursor`, `MCP`, `workflow`, `learnings` | 2026-02-19 |
 | `planning/AI-SESSION-LOG.md` | Detailed per-session development notes (20+ sessions): scope, implementation, cost, running totals | `sessions`, `cost`, `running totals`, `implementation` | 2026-02-19 |
 | `planning/UI-UX-IMPROVEMENT-PLAN.md` | Prioritized UX improvements: share links, theme, panel collapse, balanced scoring, delivery plan | `UX`, `share links`, `theme`, `prioritization`, `P0/P1` | 2026-02-18 |
@@ -94,13 +94,13 @@
 |------|---------|------------|---------------|
 | `research/DESIGN-DOCUMENT.md` | Original CollabBoard design: hard requirements, tech stack, high-level architecture, vision | `design`, `requirements`, `MVP`, `architecture` | 2026-02-18 |
 | `research/IDENTIFY-TRADEOFFS.md` | Early tradeoffs: backend, canvas, AI, deployment options with brief pros/cons | `tradeoffs`, `Firebase`, `Konva`, `historical` | 2026-02-17 |
-| `research/IDENTIFY-TRADEOFFS-V2.md` | Structured tradeoffs: what was gained and given up per technology choice (current stack) | `tradeoffs`, `Firebase`, `Konva`, `Kimi`, `Render` | 2026-02-17 |
+| `research/IDENTIFY-TRADEOFFS-V2.md` | Structured tradeoffs: what was gained and given up per technology choice (current stack) | `tradeoffs`, `Firebase`, `Konva`, `Render` | 2026-02-17 |
 | `research/PRD-V1.md` | Initial PRD: tech stack, architecture, Git workflow, agile breakdown (first executable plan) | `PRD`, `tech stack`, `epics`, `historical` | 2026-02-18 |
 | `research/PRD-V2.md` | Expanded PRD: epics, timelines, Mermaid diagrams, refined scope | `PRD`, `epics`, `timeline`, `historical` | 2026-02-17 |
 | `research/RECORD-ARCHITECTURE-DECISIONS.md` | Earlier ADR: Supabase, Claude, Vercel (superseded by V2); kept for history | `ADR`, `Supabase`, `Claude`, `deprecated` | 2026-02-17 |
-| `research/RECORD-ARCHITECTURE-DECISIONS-V2.md` | Current ADR: Firebase, React/Vite/Bun/Shadcn/Konva/Tailwind, Kimi 2.5, Render; rationale and alternatives | `ADR`, `Firebase`, `Kimi`, `architecture`, `decisions` | 2026-02-17 |
+| `research/RECORD-ARCHITECTURE-DECISIONS-V2.md` | Current ADR: Firebase, React/Vite/Bun/Shadcn/Konva/Tailwind, Groq, Render; rationale and alternatives | `ADR`, `Firebase`, `architecture`, `decisions` | 2026-02-17 |
 | `research/TECH-STACK-OPTIONS.md` | Original tech-stack exploration: backend, frontend, canvas, AI, deployment options | `tech stack`, `options`, `Firebase`, `Konva`, `historical` | 2026-02-17 |
-| `research/TECH-STACK-OPTIONS-V2.md` | Chosen stack with pros/cons per layer; concise "what we use and why" | `tech stack`, `Firebase`, `Kimi`, `Render`, `rationale` | 2026-02-17 |
+| `research/TECH-STACK-OPTIONS-V2.md` | Chosen stack with pros/cons per layer; concise "what we use and why" | `tech stack`, `Firebase`, `Render`, `rationale` | 2026-02-17 |
 
 ### Theme
 
@@ -142,6 +142,6 @@
 | Backend: Firebase vs Supabase | accepted | `research/RECORD-ARCHITECTURE-DECISIONS-V2.md` |
 | Backend: Supabase, Claude, Vercel (earlier) | deprecated | `research/RECORD-ARCHITECTURE-DECISIONS.md` |
 | Canvas: Konva.js chosen | accepted | `research/RECORD-ARCHITECTURE-DECISIONS-V2.md`, `research/IDENTIFY-TRADEOFFS-V2.md` |
-| AI: Kimi 2.5 chosen | accepted | `research/RECORD-ARCHITECTURE-DECISIONS-V2.md` |
+| AI: Groq chosen | accepted | `research/RECORD-ARCHITECTURE-DECISIONS-V2.md` |
 | Deployment: Render + Firebase | accepted | `research/RECORD-ARCHITECTURE-DECISIONS-V2.md`, `operations/DEPLOYMENT.md` |
 | Tradeoffs (current stack) | accepted | `research/IDENTIFY-TRADEOFFS-V2.md` |

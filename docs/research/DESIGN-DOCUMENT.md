@@ -92,7 +92,7 @@ Pre-Search completed: Tech stack locked; tradeoffs identified; decisions recorde
   - Konva.js - [Docs](https://konvajs.org/docs)
   - Tailwind v4 - [Docs](https://tailwindcss.com/docs)
 - **AI Integration**:
-  - Kimi 2.5 (Moonshot AI via Nvidia API) - [Docs](https://build.nvidia.com/moonshotai/kimi-k2.5)
+  - Groq (Llama 3.3 70B) - [Docs](https://console.groq.com)
 - **Deployment**:
   - Render - [Docs](https://render.com/docs)
 
@@ -117,7 +117,7 @@ High-level flow:
   - Firebase Realtime DB for sync/presence/cursors
   - Firestore for persistence.
 - AI:
-  - Kimi 2.5 with function calling
+  - Groq with function calling
   - getBoardState for context
   - multi-step planning.
 - Deployment:
@@ -187,7 +187,7 @@ Agile methodology: 1-week sprint; vertical slices; daily testing. Breakdown into
 
 ### Epic 4: AI Integration and Board Agent
 
-- Story 1: As a user, I can issue creation commands (e.g., "Add yellow sticky note 'User Research'"), executed via Kimi 2.5 tools, so AI assists.
+- Story 1: As a user, I can issue creation commands (e.g., "Add yellow sticky note 'User Research'"), executed via Groq tools, so AI assists.
 - Story 2: As a user, I can issue manipulation commands (e.g., "Move pink notes right"), with board state context, so changes apply.
 - Story 3: As a user, I can issue layout commands (e.g., "Arrange in grid"), aligning elements, so organization automates.
 - Story 4: As a user, I can issue complex commands (e.g., "Create SWOT template"), multi-step with 4 quadrants, so templates generate.
@@ -202,4 +202,4 @@ Agile methodology: 1-week sprint; vertical slices; daily testing. Breakdown into
 
 ## AI-First Workflow
 
-Use Cursor and MCP integrations for code gen; prompts like "Implement Konva real-time sync with Firebase". Estimate 70% AI-generated code. Track costs: Free Kimi tier for dev; project $0.01-0.10/month at 100 users (1 command/session, 10 sessions/user, 1K tokens/command).
+Use Cursor and MCP integrations for code gen; prompts like "Implement Konva real-time sync with Firebase". Estimate 70% AI-generated code. Track costs: Free Groq tier for dev; project $0.01-0.10/month at 100 users (1 command/session, 10 sessions/user, 1K tokens/command).

@@ -1,6 +1,6 @@
 ## Summary
 
-This document records the pros and cons of the main technology choices (backend, canvas, frontend stack, AI, deployment) in a structured way. It explains what was gained and what was given up (e.g. Firebase vs Supabase, Konva vs Fabric, Kimi vs GPT-4/Claude, Render vs alternatives) and touches on performance vs cost and scalability vs complexity. It supports explaining and defending the stack when questioned.
+This document records the pros and cons of the main technology choices (backend, canvas, frontend stack, AI, deployment) in a structured way. It explains what was gained and what was given up (e.g. Firebase vs Supabase, Konva vs Fabric, Groq vs GPT-4/Claude, Render vs alternatives) and touches on performance vs cost and scalability vs complexity. It supports explaining and defending the stack when questioned.
 
 ---
 
@@ -38,15 +38,15 @@ This document records the pros and cons of the main technology choices (backend,
 
 ## AI
 
-- Kimi 2.5 (Moonshot AI Kimi K2.5, Nvidia API, chosen):
-  - Pros - Open-source 1T MoE (32B active), 256K context, multimodal (vision-text), agentic (Swarm up to 100 agents), beats/matches top models in coding/math (SWE-bench 76.8%), 10x-76% cheaper, OpenAI-compatible, free dev credits;
-  - Cons - Inconsistent real-world vs benchmarks, rate limits on free tier, less reliable than Claude on some reasoning, hallucinations possible.
+- Groq (Llama 3.3 70B, chosen):
+  - Pros - Fast inference, free tier, OpenAI-compatible API, server-side proxy keeps keys secure;
+  - Cons - Rate limits on free tier, less capable than top proprietary models on complex multi-step reasoning.
 - GPT-4:
   - Pros - Broad integrations (plugins/APIs), fast prototyping, creative/multimodal;
-  - Cons - Less reliable on complex multi-step tasks, higher token costs, shorter context (128K)—skipped for Kimi's cost/efficiency.
+  - Cons - Higher token costs, shorter context—skipped for Groq's cost/efficiency.
 - Claude:
   - Pros - Better at reasoning/long contexts (200K), agent SDK for tools, ethical safety;
-  - Cons - Newer API, fewer third-party plugins, less creative—avoided for Kimi's multimodal/agentic edge.
+  - Cons - Newer API, fewer third-party plugins—avoided for Groq's free tier and simplicity.
 
 ## Deployment
 
@@ -62,7 +62,7 @@ This document records the pros and cons of the main technology choices (backend,
 ## Performance vs. Cost
 
 - Firebase/Render low initial cost (free tiers) but scale expenses via usage;
-- Kimi 2.5 adds cheap AI but rate limits; Bun/Vite boost dev speed at minor maturity cost vs. heavier stacks.
+- Groq adds cheap AI (free tier) but rate limits; Bun/Vite boost dev speed at minor maturity cost vs. heavier stacks.
 
 ## Scalability vs. Complexity
 

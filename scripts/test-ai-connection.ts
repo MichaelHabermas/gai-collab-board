@@ -1,8 +1,8 @@
 /**
- * Quick connection test for the AI proxy (Groq or secondary provider).
+ * Quick connection test for the AI proxy (Groq).
  * Usage:
  *   bun run test:ai-connection           — POST to dev proxy (dev server must be running at 5173)
- *   bun run test:ai-connection -- --direct — POST to Groq or secondary provider directly (uses env key)
+ *   bun run test:ai-connection -- --direct — POST to Groq directly (uses env key)
  */
 
 import { readFileSync, existsSync } from 'fs';
@@ -38,9 +38,7 @@ loadEnv();
 
 const PROXY_URL = 'http://127.0.0.1:5173/api/ai/v1/chat/completions';
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const SECONDARY_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
-const SECONDARY_MODEL = 'moonshotai/kimi-k2.5';
 const SCRIPT_TIMEOUT_MS = 20_000;
 
 function parseArgs(): { direct: boolean } {
@@ -52,34 +50,13 @@ function getDirectConfig(): {
   url: string;
   model: string;
   apiKey: string;
-  bodyExtra: Record<string, unknown>;
 } | null {
   const groqKey = (process.env.GROQ_API_KEY ?? process.env.VITE_GROQ_API_KEY ?? '').trim();
-  const secondaryKey = (process.env.NVIDIA_API_KEY ?? process.env.VITE_NVIDIA_API_KEY ?? '').trim();
-  const provider = (process.env.AI_PROVIDER ?? process.env.VITE_AI_PROVIDER ?? '').toLowerCase();
-
-  if (provider === 'nvidia' && secondaryKey !== '') {
-    return {
-      url: SECONDARY_URL,
-      model: SECONDARY_MODEL,
-      apiKey: secondaryKey,
-      bodyExtra: { thinking: { type: 'disabled' as const } },
-    };
-  }
-  if (groqKey !== '') {
+  if (groqKey) {
     return {
       url: GROQ_URL,
       model: GROQ_MODEL,
       apiKey: groqKey,
-      bodyExtra: {},
-    };
-  }
-  if (secondaryKey !== '') {
-    return {
-      url: SECONDARY_URL,
-      model: SECONDARY_MODEL,
-      apiKey: secondaryKey,
-      bodyExtra: { thinking: { type: 'disabled' as const } },
     };
   }
   return null;
@@ -92,7 +69,7 @@ async function run(): Promise<void> {
     const config = getDirectConfig();
     if (!config) {
       process.stderr.write(
-        'Error: --direct requires GROQ_API_KEY/VITE_GROQ_API_KEY or NVIDIA_API_KEY/VITE_NVIDIA_API_KEY (secondary provider) in env.\n'
+        'Error: --direct requires GROQ_API_KEY or VITE_GROQ_API_KEY in env.\n'
       );
       process.exit(1);
     }
@@ -100,7 +77,6 @@ async function run(): Promise<void> {
       model: config.model,
       messages: [{ role: 'user' as const, content: 'Say OK' }],
       max_tokens: 10,
-      ...config.bodyExtra,
     };
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',

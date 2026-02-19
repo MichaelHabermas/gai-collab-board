@@ -791,7 +791,7 @@ import { http, HttpResponse } from 'msw';
 
 export const handlers = [
   // Mock AI API endpoint
-  http.post('https://integrate.api.nvidia.com/v1/chat/completions', () => {
+  http.post('https://api.groq.com/openai/v1/chat/completions', () => {
     return HttpResponse.json({
       choices: [
         {

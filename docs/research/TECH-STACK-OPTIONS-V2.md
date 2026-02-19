@@ -1,6 +1,6 @@
 ## Summary
 
-This report summarizes the chosen tech stack (Firebase, React/Vite/Bun/TS/Shadcn/Konva/Tailwind v4, Kimi 2.5, Render) with pros and cons per layer and for the full stack. It is the concise "what we use and why" reference that complements the tradeoffs and ADR documents.
+This report summarizes the chosen tech stack (Firebase, React/Vite/Bun/TS/Shadcn/Konva/Tailwind v4, Groq, Render) with pros and cons per layer and for the full stack. It is the concise "what we use and why" reference that complements the tradeoffs and ADR documents.
 
 ---
 
@@ -18,9 +18,9 @@ This report summarizes the chosen tech stack (Firebase, React/Vite/Bun/TS/Shadcn
 
 ## AI Integration
 
-* Kimi 2.5 (Moonshot AI Kimi K2.5, free Nvidia API):
-  * Pros - Open-source 1T MoE (32B active), 256K context, multimodal (vision-text), agentic (Swarm up to 100 agents), beats/matches GPT-5.2/Claude 4.5 in coding/math/agents (SWE-bench 76.8%), 10x-76% cheaper ($0.60/M input, $3/M output), OpenAI-compatible, free dev credits.
-  * Cons - Inconsistent real-world vs benchmarks, rate limits on free tier, less reliable than Claude on some reasoning, hallucinations possible.
+* Groq (Llama 3.3 70B):
+  * Pros - Fast inference, free tier, OpenAI-compatible API, server-side proxy keeps keys secure.
+  * Cons - Rate limits on free tier, less capable than top proprietary models on complex reasoning.
 
 ## Deployment
 
@@ -30,6 +30,6 @@ This report summarizes the chosen tech stack (Firebase, React/Vite/Bun/TS/Shadcn
 
 ## Full Stack
 
-* Firebase + React/Vite/Bun/TS/Shadcn/Konva/Tailwind v4 + Kimi 2.5 + Render:
+* Firebase + React/Vite/Bun/TS/Shadcn/Konva/Tailwind v4 + Groq + Render:
   * Pros - Seamless real-time/AI integration, fast prototyping/dev, cost-effective, open-source flexibility, performant UI/canvas.
   * Cons - Vendor lock-in (Firebase), potential rate limits/dev friction, maturity gaps in Bun/Shadcn.
