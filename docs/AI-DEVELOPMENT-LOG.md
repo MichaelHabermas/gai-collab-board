@@ -284,3 +284,25 @@ This log records how AI was used during development: tools (Cursor, Context7 MCP
 - Approximate cumulative tokens across logged sessions: ~330k input / ~116k output (estimate)
 
 **Deployment impact (expected):** UI-only; overlay reposition logic runs in client during text edit. No change to LLM usage, API calls, or production cost. Production projections and token mix unchanged.
+
+## Task 3 – Owner-only board rename (Feb 2026)
+
+**Scope:** UI-UX Task 3 — only owners can rename board names. UI already gated rename by owner in BoardListSidebar and App header; backend had no check and Firestore allowed editors to update board name.
+
+**Implementation:**
+
+- **boardService:** [src/modules/sync/boardService.ts](../src/modules/sync/boardService.ts) — `updateBoardName(boardId, name, userId)` now gets board via `getBoard`, checks `canUserManage(board, userId)`, throws "Board not found" or "Only the board owner can rename the board" before calling `updateDoc`. Call sites in [App.tsx](../src/App.tsx) and [BoardListSidebar.tsx](../src/components/board/BoardListSidebar.tsx) pass `user.uid`.
+- **Firestore rules:** [firestore.rules](../firestore.rules) — board `allow update` restricted so name may change only when `isOwner(boardId)`; editors can still update other fields; join flow (`canAddSelfAsMember`) unchanged.
+- **PRD:** Added "Only owners can rename board names" under Story 1.2 with expected behaviour and verification checkboxes (unchecked until browser/E2E).
+- **Tests:** [tests/unit/boardService.test.ts](../tests/unit/boardService.test.ts) — owner success, non-owner (editor/viewer) throw, board not found; [tests/unit/BoardListSidebar.test.tsx](../tests/unit/BoardListSidebar.test.tsx) — mock updated to three-arg `updateBoardName`, new test "does not show rename button for editor".
+- **Plan:** Task 3 marked complete in [UI-UX-IMPROVEMENT-PLAN.md](../UI-UX-IMPROVEMENT-PLAN.md).
+
+**Cost & usage (this session):** Development via Cursor; no external LLM API. Approximate token use: ~15k input / ~4k output (estimate).
+
+**Running totals (development):**
+
+- Cursor subscription: $20/month
+- External API spend during development: $0
+- Approximate cumulative tokens across logged sessions: ~345k input / ~120k output (estimate)
+
+**Deployment impact (expected):** Permissions/backend and UI consistency only. No new AI endpoints, no change to LLM usage or command volume. Production projections and token mix unchanged.

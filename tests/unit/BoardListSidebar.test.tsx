@@ -20,7 +20,8 @@ vi.mock('@/modules/sync/boardService', () => ({
   },
   deleteBoard: (boardId: string, userId?: string | null) => mockDeleteBoard(boardId, userId),
   removeBoardMember: (boardId: string, userId: string) => mockRemoveBoardMember(boardId, userId),
-  updateBoardName: (boardId: string, name: string) => mockUpdateBoardName(boardId, name),
+  updateBoardName: (boardId: string, name: string, userId: string) =>
+    mockUpdateBoardName(boardId, name, userId),
   canUserEdit: (board: { ownerId: string; members: Record<string, string> }, userId: string) =>
     board.ownerId === userId || board.members[userId] === 'editor' || board.members[userId] === 'owner',
   canUserManage: (board: { ownerId: string }, userId: string) => board.ownerId === userId,
@@ -381,8 +382,29 @@ describe('BoardListSidebar', () => {
     fireEvent.click(screen.getByTestId('board-list-rename-submit'));
 
     await waitFor(() => {
-      expect(mockUpdateBoardName).toHaveBeenCalledWith('board-1', 'Renamed Board');
+      expect(mockUpdateBoardName).toHaveBeenCalledWith('board-1', 'Renamed Board', mockUser.uid);
     });
+  });
+
+  it('does not show rename button for editor', async () => {
+    const ownerId = 'other-owner';
+    const boards = [
+      createMockBoardWhereUserIsMember('board-editor', 'Shared Board', ownerId, 'editor'),
+    ];
+    render(
+      <BoardListSidebar
+        user={mockUser}
+        currentBoardId='board-1'
+        onSelectBoard={vi.fn()}
+        onCreateNewBoard={vi.fn()}
+      />
+    );
+    triggerSubscriptions(boards);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('board-list-item-board-editor')).toBeInTheDocument();
+    });
+    expect(screen.queryByTestId('board-list-rename-board-editor')).not.toBeInTheDocument();
   });
 
   it('should delete last board and create new then select it', async () => {

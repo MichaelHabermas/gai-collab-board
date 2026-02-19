@@ -924,6 +924,21 @@ For non-owners, the action that removes a board from their view is "Leave board"
 - [ ] Non-owner "Leave board" (sidebar or Share dialog) removes the board from their list and navigates away if it was the current board.
 - [ ] Owner "Delete board" permanently deletes the board (board is gone for all members).
 
+#### Only owners can rename board names
+
+Only the board owner can rename the board. Viewers and editors cannot see or use rename controls; the service rejects rename from non-owners with a clear error.
+
+**Expected behaviour**:
+
+- **Owner:** Can rename the board from the board list sidebar and from the header when viewing the board.
+- **Viewer/editor:** Do not see rename control in the sidebar or in the header; the service rejects rename with "Only the board owner can rename the board" if called (e.g. via another client or devtools).
+
+**Verification (do not check until confirmed in browser or via E2E)**:
+
+- [ ] Viewer/editor do not see rename control in sidebar or header.
+- [ ] Owner can rename from sidebar and from header.
+- [ ] Calling rename as non-owner (e.g. via service with another user id) returns an error and does not change the name.
+
 #### Share links and deep-linking
 
 Share links allow opening a specific board by URL. Deep-linking must work when the user is logged in or when they sign in after opening the link.

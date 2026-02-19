@@ -95,7 +95,22 @@ export const subscribeToUserBoards = (
   });
 };
 
-export const updateBoardName = async (boardId: string, name: string): Promise<void> => {
+export const updateBoardName = async (
+  boardId: string,
+  name: string,
+  userId: string
+): Promise<void> => {
+  const board = await getBoard(boardId);
+  if (!board) {
+
+    throw new Error('Board not found');
+  }
+
+  if (!canUserManage(board, userId)) {
+
+    throw new Error('Only the board owner can rename the board');
+  }
+
   const boardRef = doc(firestore, BOARDS_COLLECTION, boardId);
   await updateDoc(boardRef, {
     name,

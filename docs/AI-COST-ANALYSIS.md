@@ -111,3 +111,7 @@ Verification, unit tests, and PRD subsection for Task 4 (bulk delete). Batch pat
 ### Task 7 overlay stability (Feb 2026) — production relevance
 
 Text editing overlay stability (sticky note, text element, frame title) is client-side UI only: overlay position/styles recompute on stage and node transform changes during edit. No new AI endpoints, no change to command volume or token mix. **LLM cost:** unchanged. Production projections (Groq/NVIDIA table) and assumptions remain the source of truth.
+
+### Owner-only board rename (Feb 2026) — production relevance
+
+Task 3 (only owners can rename board names) is permissions and backend alignment: service-layer owner check in `updateBoardName`, Firestore rule so only owner can change `name`. No new AI endpoints, no change to LLM usage or command volume. **LLM cost:** unchanged. Production projections and token mix unchanged. Focus remains on what is actually used in production: AI commands (Groq/NVIDIA) and the table above.

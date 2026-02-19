@@ -185,7 +185,7 @@ const BoardView = ({
                     size='sm'
                     onClick={async () => {
                       const name = headerRenameName.trim() || 'Untitled Board';
-                      await updateBoardName(boardId, name);
+                      await updateBoardName(boardId, name, user.uid);
                       setHeaderRenameOpen(false);
                     }}
                     data-testid='header-rename-submit'

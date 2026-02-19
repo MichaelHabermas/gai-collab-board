@@ -127,7 +127,7 @@ export const BoardListSidebar = memo(
       const name = renameBoardName.trim() || 'Untitled Board';
       setRenameError('');
       try {
-        await updateBoardName(renameBoardId, name);
+        await updateBoardName(renameBoardId, name, user.uid);
         setRenameBoardId(null);
       } catch (err) {
         setRenameError(err instanceof Error ? err.message : 'Failed to rename board');

@@ -61,7 +61,7 @@
   - Owner still can permanently delete board.
 - **Scores (1–10):** Ease `6` · Usefulness `8` · App need `8` · Risk `6` · Speed `6` · Wow `4` → **Overall `6`**
 
-3. [ ] **Only owners can rename board names**
+3. [x] **Only owners can rename board names**
 
 - Why now: permissions clarity and data integrity.
 - What to change:

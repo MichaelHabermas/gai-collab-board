@@ -43,8 +43,11 @@ service cloud.firestore {
         && request.resource.data.ownerId == request.auth.uid
         && request.resource.data.members[request.auth.uid] == 'owner';
       
-      // Members with edit permission can update; or a user can add themselves as editor/viewer
-      allow update: if isAuthenticated() && (canEdit(boardId) || canAddSelfAsMember());
+      // Members with edit permission can update (but only owner can change name); or a user can add themselves as editor/viewer
+      allow update: if isAuthenticated() && (
+        canAddSelfAsMember()
+        || (canEdit(boardId) && (request.resource.data.name == resource.data.name || isOwner(boardId)))
+      );
       
       // Only owners can delete
       allow delete: if isAuthenticated() && isOwner(boardId);
