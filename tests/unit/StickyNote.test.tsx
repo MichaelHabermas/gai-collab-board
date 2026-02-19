@@ -24,6 +24,11 @@ vi.mock('@/lib/canvasOverlayPosition', () => ({
   getOverlayRectFromLocalCorners: vi.fn(() => mockOverlayRect),
 }));
 
+const mockCleanupReposition = vi.fn();
+vi.mock('@/lib/canvasTextEditOverlay', () => ({
+  attachOverlayRepositionLifecycle: vi.fn(() => mockCleanupReposition),
+}));
+
 vi.mock('react-konva', () => ({
   Group: (props: Record<string, unknown>) => {
     const ref = props.ref as
@@ -67,6 +72,7 @@ describe('StickyNote', () => {
     latestTextProps = null;
     latestRectProps = [];
     document.body.innerHTML = '';
+    mockCleanupReposition.mockClear();
     vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
       callback(0);
       return 1;
@@ -170,5 +176,30 @@ describe('StickyNote', () => {
 
     expect(document.querySelector('.sticky-note-edit-overlay')).toBeNull();
     expect(onTextChange).not.toHaveBeenCalled();
+  });
+
+  it('calls overlay reposition cleanup when editor closes on blur', () => {
+    const onTextChange = vi.fn();
+
+    render(
+      <StickyNote
+        id='sticky-cleanup'
+        x={10}
+        y={20}
+        width={200}
+        height={120}
+        text='initial'
+        fill='#fef08a'
+        onTextChange={onTextChange}
+      />
+    );
+
+    fireEvent.doubleClick(screen.getByTestId('sticky-note-group'));
+    const textarea = document.querySelector('textarea.sticky-note-edit-overlay') as HTMLTextAreaElement;
+    expect(textarea).toBeTruthy();
+
+    fireEvent.blur(textarea);
+
+    expect(mockCleanupReposition).toHaveBeenCalledTimes(1);
   });
 });

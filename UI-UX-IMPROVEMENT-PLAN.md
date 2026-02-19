@@ -111,7 +111,7 @@
   - Windows mouse and Mac trackpad can pan without workaround.
 - **Scores (1–10):** Ease `5` · Usefulness `8` · App need `8` · Risk `7` · Speed `5` · Wow `6` → **Overall `7`**
 
-7. [ ] **Text editing overlay stability (“text moves” bug)**
+7. [x] **Text editing overlay stability (“text moves” bug)**
 
 - Why now: direct content editing must feel stable.
 - What to change:
@@ -124,6 +124,7 @@
   - [src/lib/canvasOverlayPosition.ts](src/lib/canvasOverlayPosition.ts)
 - Verify:
   - While editing text, pan/zoom does not cause visible text jump/drift.
+- **Implementation (fix/task-7-overlay-stability):** Added src/lib/canvasTextEditOverlay.ts to attach stage and node change listeners during edit; overlay position/styles recompute on pan/zoom/rotation. Wired into StickyNote, TextElement, and Frame title editor. Unit tests for lifecycle and cleanup; E2E spec in tests/e2e/textOverlayStability.spec.ts. PRD verification checkboxes remain unchecked until confirmed in browser or E2E.
 - **Scores (1–10):** Ease `5` · Usefulness `8` · App need `8` · Risk `8` · Speed `5` · Wow `5` → **Overall `7`**
 
 8. [ ] **Properties panel height increase**

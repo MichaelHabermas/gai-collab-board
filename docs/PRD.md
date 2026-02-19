@@ -1593,7 +1593,8 @@ while maintaining 60 FPS with 500+ objects.
 - [x] Drag to move
 - [x] Resize with handles
 - [ ] Change sticky note text **Font color** from the property inspector
-- [ ] Keep sticky note text editor overlay aligned inside the note while pan/zoom/rotation is active
+- [ ] Keep sticky note text editor overlay aligned inside the note while pan/zoom/rotation is active (implementation: overlay repositions on stage/node transform changes; verify in browser/E2E before checking)
+- Note (Feb 2026): Root cause was double-applying stage pan/zoom in overlay mapping (`getAbsoluteTransform()` already included ancestor transforms). Fix computes overlay coordinates from stage container bounds + absolute transformed points only, and keeps live stage/node listener updates during edit.
 
 **Branch**: `feature/canvas-sticky-notes`
 
@@ -1774,13 +1775,17 @@ while maintaining 60 FPS with 500+ objects.
 **Acceptance Criteria**:
 
 - [ ] Change text element **Font color** from the property inspector
-- [ ] Keep text element editor overlay aligned with text bounds while pan/zoom/rotation is active
+- [ ] Keep text element editor overlay aligned with text bounds while pan/zoom/rotation is active (implementation: overlay repositions on stage/node transform changes; verify in browser/E2E before checking)
+- Note (Feb 2026): Same root cause/fix as sticky notes. Overlay mapping no longer double-applies stage transform, and editing overlay repositions continuously on pan/zoom/rotation.
 
 **Branch**: `feature/canvas-text`
 
 ### Story 3.6: Frames
 
 **As a user**, I can create frames to group content.
+
+- [ ] Keep frame title editor overlay aligned with the title bar while pan/zoom/rotation is active (implementation: overlay repositions on stage/node transform changes; verify in browser/E2E before checking)
+- Note (Feb 2026): Same root cause/fix as sticky notes and text elements. Frame title input overlay uses corrected coordinate mapping plus live transform listeners.
 
 **Branch**: `feature/canvas-frames`
 
@@ -1791,6 +1796,22 @@ All canvas objects (sticky notes, rectangles, circles, lines, connectors, frames
 **Expected behavior:**
 
 - [ ] All canvas object types (sticky note, rectangle, circle, line, connector, frame, text) render with a consistent slight shadow.
+
+### Text editing overlay stability (Task 7)
+
+While editing text in place (sticky note, text element, or frame title), the HTML overlay stays aligned with the canvas shape when the user pans or zooms. Rotation is accounted for.
+
+**Root cause and fix note (Feb 2026):**
+
+- Root cause: overlay screen-coordinate mapping double-applied stage pan/zoom. The code used `node.getAbsoluteTransform()` (already includes ancestor transforms) and then also multiplied by stage scale and added stage position again, which produced drift/jumps while editing.
+- Fix: compute screen coordinates from `stage.container().getBoundingClientRect()` plus the absolute transformed points only; keep continuous overlay reposition listeners for stage/node transform events during active editing.
+- Regression guard: added unit coverage for the "no double-apply stage transform" case and E2E assertions that check pan delta/zoom scale behavior (not just overlay visibility).
+
+**Verification (check only after confirming in browser or E2E):**
+
+- [ ] Sticky note: while the textarea overlay is open, pan and zoom keep the overlay aligned with the note; no visible jump or drift.
+- [ ] Text element: while the textarea overlay is open, pan and zoom keep the overlay aligned with the text bounds; no visible jump or drift.
+- [ ] Frame title: while the title input overlay is open, pan and zoom keep the overlay aligned with the title bar; no visible jump or drift.
 
 ### Story 3.7: Transforms (Move, Resize, Rotate)
 

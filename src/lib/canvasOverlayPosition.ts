@@ -13,15 +13,14 @@ export const getOverlayRectFromLocalCorners = (
   localCorners: IPosition[]
 ): IOverlayRect => {
   const stageBox = stage.container().getBoundingClientRect();
-  const stagePos = stage.position();
-  const scaleX = stage.scaleX();
-  const scaleY = stage.scaleY();
 
   const screenPoints = localCorners.map((point) => {
+    // `transform` comes from node.getAbsoluteTransform(), so ancestor transforms
+    // (including stage pan/zoom) are already baked into stagePoint.
     const stagePoint = transform.point(point);
     return {
-      x: stageBox.left + stagePoint.x * scaleX + stagePos.x,
-      y: stageBox.top + stagePoint.y * scaleY + stagePos.y,
+      x: stageBox.left + stagePoint.x,
+      y: stageBox.top + stagePoint.y,
     };
   });
 
@@ -35,6 +34,6 @@ export const getOverlayRectFromLocalCorners = (
     top,
     width: Math.max(1, right - left),
     height: Math.max(1, bottom - top),
-    avgScale: (scaleX + scaleY) / 2,
+    avgScale: (stage.scaleX() + stage.scaleY()) / 2,
   };
 };

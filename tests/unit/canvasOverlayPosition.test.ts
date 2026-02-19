@@ -49,10 +49,10 @@ describe('canvasOverlayPosition', () => {
       { x: 0, y: 20 },
     ]);
 
-    expect(result.left).toBe(120);
-    expect(result.top).toBe(100);
-    expect(result.width).toBe(20);
-    expect(result.height).toBe(60);
+    expect(result.left).toBe(105);
+    expect(result.top).toBe(60);
+    expect(result.width).toBe(10);
+    expect(result.height).toBe(20);
     expect(result.avgScale).toBe(2.5);
   });
 
@@ -71,5 +71,26 @@ describe('canvasOverlayPosition', () => {
     expect(result.top).toBe(20);
     expect(result.width).toBe(1);
     expect(result.height).toBe(1);
+  });
+
+  it('does not double-apply stage pan/zoom when using absolute transforms', () => {
+    const stage = createStageMock({ left: 100, top: 200, x: 30, y: 40, scaleX: 2, scaleY: 2 });
+    const transform = createTransformMock((point) => ({
+      // Simulate node.getAbsoluteTransform().point(point): already includes stage transforms.
+      x: 130 + point.x * 2,
+      y: 70 + point.y * 2,
+    }));
+
+    const result = getOverlayRectFromLocalCorners(stage, transform, [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 20 },
+      { x: 0, y: 20 },
+    ]);
+
+    expect(result.left).toBe(230);
+    expect(result.top).toBe(270);
+    expect(result.width).toBe(20);
+    expect(result.height).toBe(40);
   });
 });

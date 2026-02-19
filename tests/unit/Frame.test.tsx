@@ -30,6 +30,10 @@ vi.mock('@/lib/canvasOverlayPosition', () => ({
   getOverlayRectFromLocalCorners: vi.fn(() => mockOverlayRect),
 }));
 
+vi.mock('@/lib/canvasTextEditOverlay', () => ({
+  attachOverlayRepositionLifecycle: vi.fn(() => () => {}),
+}));
+
 vi.mock('react-konva', () => ({
   Group: (props: Record<string, unknown>) => {
     latestGroupProps = props;

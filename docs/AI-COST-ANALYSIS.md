@@ -107,3 +107,7 @@ Verification and documentation only: PRD subsection, unit tests for `removeBoard
 ### Bulk delete performance verification (Feb 2026) — production relevance
 
 Verification, unit tests, and PRD subsection for Task 4 (bulk delete). Batch path was already in place; no new runtime behaviour. Client/sync only: multi-select delete uses a single Firestore batch write. **LLM cost:** unchanged. Production cost and token mix unchanged. Focus remains on what is actually used in production: AI commands (Groq/NVIDIA) and the table above.
+
+### Task 7 overlay stability (Feb 2026) — production relevance
+
+Text editing overlay stability (sticky note, text element, frame title) is client-side UI only: overlay position/styles recompute on stage and node transform changes during edit. No new AI endpoints, no change to command volume or token mix. **LLM cost:** unchanged. Production projections (Groq/NVIDIA table) and assumptions remain the source of truth.

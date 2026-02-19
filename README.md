@@ -190,7 +190,7 @@ bun run preview         # Preview production build
 # Testing
 bun run test            # Run unit tests (watch)
 bun run test:run        # Run unit tests once
-bun run test:e2e        # Run Playwright E2E tests
+bun run test:e2e        # Run Playwright E2E tests (installs browsers if needed)
 bun run test:e2e:ui     # Run E2E tests with Playwright UI
 bun run test:coverage   # Run tests with coverage
 bun run test:ai-connection  # Test AI provider connectivity
@@ -202,6 +202,8 @@ bun run lint:fix        # ESLint with auto-fix
 bun run format          # Format with Prettier
 bun run validate        # typecheck + lint + test:run
 ```
+
+E2E tests run automatically on push/PR to `development` or `main` (see [.github/workflows/e2e.yml](.github/workflows/e2e.yml)). Configure Firebase secrets in the repo for overlay/sign-up tests. If `playwright install` fails (e.g. proxy), run it once with network access or set `HTTP_PROXY`/`HTTPS_PROXY`.
 
 ## Documentation
 

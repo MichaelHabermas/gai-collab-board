@@ -15,6 +15,7 @@ import {
   STICKY_NOTE_SHADOW_OPACITY_SELECTED,
 } from '@/lib/canvasShadows';
 import { getOverlayRectFromLocalCorners } from '@/lib/canvasOverlayPosition';
+import { attachOverlayRepositionLifecycle } from '@/lib/canvasTextEditOverlay';
 import type { IDragBoundFunc, ITransformEndRectAttrs } from '@/types';
 
 // Sticky note color palette
@@ -155,10 +156,25 @@ export const StickyNote = memo(
           textarea.style.color = textFillColor;
           textarea.style.zIndex = '1000';
 
+          const cleanupReposition = attachOverlayRepositionLifecycle({
+            stage,
+            node: group,
+            localCorners,
+            overlayElement: textarea,
+            applyStyle: (el, rect) => {
+              el.style.top = `${rect.top}px`;
+              el.style.left = `${rect.left}px`;
+              el.style.width = `${rect.width}px`;
+              el.style.height = `${rect.height}px`;
+              el.style.fontSize = `${fontSize * rect.avgScale}px`;
+            },
+          });
+
           textarea.focus();
           textarea.select();
 
           const removeTextarea = () => {
+            cleanupReposition();
             if (document.body.contains(textarea)) {
               document.body.removeChild(textarea);
             }

@@ -6,6 +6,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useShapeDragHandler } from '@/hooks/useShapeDragHandler';
 import { getShapeShadowProps } from '@/lib/shapeShadowProps';
 import { getOverlayRectFromLocalCorners } from '@/lib/canvasOverlayPosition';
+import { attachOverlayRepositionLifecycle } from '@/lib/canvasTextEditOverlay';
 import type { IDragBoundFunc, ITransformEndRectAttrs } from '@/types';
 
 interface IFrameProps {
@@ -129,10 +130,25 @@ export const Frame = memo(
           input.style.fontFamily = 'Inter, system-ui, sans-serif';
           input.style.zIndex = '1000';
 
+          const cleanupReposition = attachOverlayRepositionLifecycle({
+            stage,
+            node: group,
+            localCorners,
+            overlayElement: input,
+            applyStyle: (el, rect) => {
+              el.style.top = `${rect.top}px`;
+              el.style.left = `${rect.left}px`;
+              el.style.width = `${rect.width}px`;
+              el.style.height = `${rect.height}px`;
+              el.style.fontSize = `${14 * rect.avgScale}px`;
+            },
+          });
+
           input.focus();
           input.select();
 
           const removeInput = () => {
+            cleanupReposition();
             if (document.body.contains(input)) {
               document.body.removeChild(input);
             }

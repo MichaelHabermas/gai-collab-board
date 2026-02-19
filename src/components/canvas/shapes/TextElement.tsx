@@ -7,6 +7,7 @@ import { useShapeDragHandler } from '@/hooks/useShapeDragHandler';
 import { useShapeTransformHandler } from '@/hooks/useShapeTransformHandler';
 import { getShapeShadowProps } from '@/lib/shapeShadowProps';
 import { getOverlayRectFromLocalCorners } from '@/lib/canvasOverlayPosition';
+import { attachOverlayRepositionLifecycle } from '@/lib/canvasTextEditOverlay';
 import type { ITextLikeShapeProps, ITransformEndAttrsUnion } from '@/types';
 
 type ITextElementProps = ITextLikeShapeProps;
@@ -100,10 +101,26 @@ export const TextElement = memo(
           textarea.style.lineHeight = '1.4';
           textarea.style.zIndex = '1000';
 
+          const cleanupReposition = attachOverlayRepositionLifecycle({
+            stage,
+            node: textNode,
+            localCorners,
+            overlayElement: textarea,
+            applyStyle: (el, rect) => {
+              const w = Math.max(100, rect.width);
+              el.style.top = `${rect.top}px`;
+              el.style.left = `${rect.left}px`;
+              el.style.width = `${w}px`;
+              el.style.height = `${rect.height}px`;
+              el.style.fontSize = `${fontSize * rect.avgScale}px`;
+            },
+          });
+
           textarea.focus();
           textarea.select();
 
           const removeTextarea = () => {
+            cleanupReposition();
             if (document.body.contains(textarea)) {
               document.body.removeChild(textarea);
             }

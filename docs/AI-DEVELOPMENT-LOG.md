@@ -263,3 +263,24 @@ This log records how AI was used during development: tools (Cursor, Context7 MCP
 - Approximate cumulative tokens across logged sessions: ~305k input / ~107k output (estimate)
 
 **Deployment impact (expected):** None; client/sync path only. No new LLM usage or production cost.
+
+## Task 7 overlay stability (Feb 2026)
+
+**Scope:** UI-UX Task 7 — text editing overlay stability during pan/zoom/rotation. Overlays (sticky note, text element, frame title) were positioned once on edit start and did not update when viewport or node transforms changed.
+
+**Implementation:**
+
+- **Library:** [src/lib/canvasTextEditOverlay.ts](../src/lib/canvasTextEditOverlay.ts) — reusable lifecycle: subscribe to stage (x, y, scaleX, scaleY) and node (x, y, rotation, width, height, scale) change events; on any change recompute overlay rect via `getOverlayRectFromLocalCorners` and apply styles; return cleanup that removes all listeners.
+- **Components:** Wired into StickyNote, TextElement, and Frame title editor; overlay position/size/fontSize update continuously during edit when pan/zoom/rotation change; cleanup on commit/cancel/unmount.
+- **Tests:** [tests/unit/canvasTextEditOverlay.test.ts](../tests/unit/canvasTextEditOverlay.test.ts) (lifecycle, cleanup, detached overlay); StickyNote/TextElement/Frame unit tests mock overlay lifecycle; [tests/e2e/textOverlayStability.spec.ts](../tests/e2e/textOverlayStability.spec.ts) for pan/zoom regression (run where Playwright browsers installed).
+- **Docs:** PRD subsection "Text editing overlay stability (Task 7)" with verification checkboxes (unchecked until browser/E2E); Task 7 marked complete in UI-UX-IMPROVEMENT-PLAN.md with implementation note.
+
+**Cost & usage (this session):** Development via Cursor; no external LLM API. Approximate token use: ~25k input / ~9k output (estimate).
+
+**Running totals (development):**
+
+- Cursor subscription: $20/month
+- External API spend during development: $0
+- Approximate cumulative tokens across logged sessions: ~330k input / ~116k output (estimate)
+
+**Deployment impact (expected):** UI-only; overlay reposition logic runs in client during text edit. No change to LLM usage, API calls, or production cost. Production projections and token mix unchanged.
