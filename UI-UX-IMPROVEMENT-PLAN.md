@@ -98,7 +98,7 @@
   - Drag and resize both show identical snap behavior to grid.
 - **Scores (1–10):** Ease `6` · Usefulness `7` · App need `7` · Risk `8` · Speed `6` · Wow `5` → **Overall `7`**
 
-6. [ ] **Panning reliability pass (middle mouse + Mac trackpad)**
+6. [x] **Panning reliability pass (middle mouse + Mac trackpad)**
 
 - Why now: navigation reliability is foundational.
 - What to change:
@@ -127,7 +127,7 @@
 - **Implementation (fix/task-7-overlay-stability):** Added src/lib/canvasTextEditOverlay.ts to attach stage and node change listeners during edit; overlay position/styles recompute on pan/zoom/rotation. Wired into StickyNote, TextElement, and Frame title editor. Unit tests for lifecycle and cleanup; E2E spec in tests/e2e/textOverlayStability.spec.ts. PRD verification checkboxes remain unchecked until confirmed in browser or E2E.
 - **Scores (1–10):** Ease `5` · Usefulness `8` · App need `8` · Risk `8` · Speed `5` · Wow `5` → **Overall `7`**
 
-9. [ ] **Spin box rapid-click polish**
+9. [x] **Spin box rapid-click polish**
 
 - Why now: small polish item, low risk.
 - What to change:
