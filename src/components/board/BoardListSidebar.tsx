@@ -133,7 +133,7 @@ export const BoardListSidebar = memo(
       } catch (err) {
         setRenameError(err instanceof Error ? err.message : 'Failed to rename board');
       }
-    }, [renameBoardId, renameBoardName]);
+    }, [renameBoardId, renameBoardName, user.uid]);
 
     const handleRenameDialogClose = useCallback((open: boolean) => {
       if (!open) {

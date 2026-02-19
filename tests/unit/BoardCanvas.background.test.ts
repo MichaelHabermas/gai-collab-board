@@ -7,8 +7,8 @@ import {
   BOARD_CANVAS_BACKGROUND_DARK,
   BOARD_GRID_COLOR_LIGHT,
   BOARD_GRID_COLOR_DARK,
-  GRID_LINE_OPACITY,
-} from '@/components/canvas/BoardCanvas';
+} from '@/components/canvas/boardCanvasTheme';
+import { GRID_LINE_OPACITY } from '@/components/canvas/BoardCanvas';
 
 describe('BoardCanvas background', () => {
   it('uses app theme only for background (no token class); container has layout class', () => {

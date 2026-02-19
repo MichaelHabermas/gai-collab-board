@@ -69,7 +69,7 @@ export const usePresence = ({ boardId, user }: IUsePresenceParams): IUsePresence
       // Presence updates are best-effort; subscription remains active for retries on next change.
       console.error('Failed to update presence', error);
     });
-  }, [boardId, user?.uid, user?.displayName, user?.email, user?.photoURL, currentUserColor]);
+  }, [boardId, user, currentUserColor]);
 
   // Convert presence map to sorted array of online users
   const onlineUsers = useMemo(() => {

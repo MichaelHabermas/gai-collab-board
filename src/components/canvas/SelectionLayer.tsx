@@ -29,9 +29,11 @@ export const SelectionLayer = memo(
     const { theme } = useTheme();
     const selectionColor = useMemo(
       () =>
-        (typeof document !== 'undefined'
-          ? getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim()
-          : '') || '#3b82f6',
+        (theme &&
+          (typeof document !== 'undefined'
+            ? getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim()
+            : '')) ||
+        '#3b82f6',
       [theme]
     );
     const fillColor = useMemo(() => hexToRgba(selectionColor, 0.1), [selectionColor]);

@@ -72,18 +72,22 @@ export const Frame = memo(
       const { theme } = useTheme();
       const selectionColor = useMemo(
         () =>
-          (typeof document !== 'undefined'
-            ? getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim()
-            : '') || '#3b82f6',
+          (theme &&
+            (typeof document !== 'undefined'
+              ? getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim()
+              : '')) ||
+          '#3b82f6',
         [theme]
       );
       const titleTextFill = useMemo(
         () =>
-          (typeof document !== 'undefined'
-            ? getComputedStyle(document.documentElement)
-                .getPropertyValue('--color-muted-foreground')
-                .trim()
-            : '') || '#475569',
+          (theme &&
+            (typeof document !== 'undefined'
+              ? getComputedStyle(document.documentElement)
+                  .getPropertyValue('--color-muted-foreground')
+                  .trim()
+              : '')) ||
+          '#475569',
         [theme]
       );
 

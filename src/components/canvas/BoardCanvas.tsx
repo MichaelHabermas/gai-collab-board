@@ -50,7 +50,8 @@ import { ConnectionNodesLayer } from './ConnectionNodesLayer';
 import { AlignToolbar } from './AlignToolbar';
 import { AlignmentGuidesLayer } from './AlignmentGuidesLayer';
 import { useExportAsImage } from '@/hooks/useExportAsImage';
-import { useTheme, type Theme } from '@/hooks/useTheme';
+import { useTheme } from '@/hooks/useTheme';
+import { getBoardCanvasBackgroundColor, getBoardGridColor, BOARD_CANVAS_CONTAINER_CLASS } from './boardCanvasTheme';
 import { useBoardSettings } from '@/hooks/useBoardSettings';
 import { useMiddleMousePanListeners } from '@/hooks/useMiddleMousePanListeners';
 import { useCanvasKeyboardShortcuts } from '@/hooks/useCanvasKeyboardShortcuts';
@@ -81,23 +82,6 @@ const ZOOM_PRESETS = [0.5, 1, 2] as const;
 const GRID_SIZE = 20;
 const GRID_STROKE_WIDTH = 1;
 export const GRID_LINE_OPACITY = 0.5;
-
-/** Board background colors driven only by app theme (ignore system/browser theme). */
-export const BOARD_CANVAS_BACKGROUND_LIGHT = '#ffffff';
-export const BOARD_CANVAS_BACKGROUND_DARK = '#1e293b';
-export const BOARD_GRID_COLOR_LIGHT = '#94a3b8';
-export const BOARD_GRID_COLOR_DARK = '#334155';
-
-export function getBoardCanvasBackgroundColor(theme: Theme): string {
-  return theme === 'dark' ? BOARD_CANVAS_BACKGROUND_DARK : BOARD_CANVAS_BACKGROUND_LIGHT;
-}
-
-export function getBoardGridColor(theme: Theme): string {
-  return theme === 'dark' ? BOARD_GRID_COLOR_DARK : BOARD_GRID_COLOR_LIGHT;
-}
-
-/** Board canvas container class; background is set via inline style from app theme. */
-export const BOARD_CANVAS_CONTAINER_CLASS = 'w-full h-full overflow-hidden relative';
 
 // Default sizes for new objects
 const DEFAULT_STICKY_SIZE = { width: 200, height: 200 };
@@ -197,9 +181,11 @@ export const BoardCanvas = memo(
     const gridColor = useMemo(() => getBoardGridColor(theme), [theme]);
     const selectionColor = useMemo(
       () =>
-        (typeof document !== 'undefined'
-          ? getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim()
-          : '') || '#3b82f6',
+        (theme &&
+          (typeof document !== 'undefined'
+            ? getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim()
+            : '')) ||
+        '#3b82f6',
       [theme]
     );
 
