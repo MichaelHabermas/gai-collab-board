@@ -6,7 +6,7 @@ with an AI-first development approach.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
-- **Deployed site:** [collabboard-1-ovl2.onrender.com](https://collabboard-1-ovl2.onrender.com/)
+- **Deployed site:** [gai-collab-board.onrender.com](https://gai-collab-board.onrender.com/)
 - **Repository:** [github.com/MichaelHabermas/CollabBoard](https://github.com/MichaelHabermas/CollabBoard)
 
 ## Features
