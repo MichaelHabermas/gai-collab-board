@@ -69,11 +69,14 @@ vi.mock('@/components/canvas/shapes', () => {
 
 vi.mock('@/components/canvas/Toolbar', () => ({
   Toolbar: ({
+    activeTool,
     onToolChange,
   }: {
+    activeTool: string;
     onToolChange: (tool: 'select' | 'sticky' | 'rectangle' | 'connector' | 'text') => void;
   }) => (
     <div>
+      <span data-testid='active-tool' data-value={activeTool} />
       <button data-testid='set-tool-select' onClick={() => onToolChange('select')} />
       <button data-testid='set-tool-sticky' onClick={() => onToolChange('sticky')} />
       <button data-testid='set-tool-rectangle' onClick={() => onToolChange('rectangle')} />
@@ -274,6 +277,85 @@ describe('BoardCanvas interactions', () => {
       return 1;
     });
     vi.stubGlobal('cancelAnimationFrame', vi.fn());
+  });
+
+  describe('Tool keyboard shortcuts', () => {
+    it('switches tool when pressing shortcut key and focus is not in input', () => {
+      render(
+        <BoardCanvas
+          boardId='board-1'
+          boardName='Board'
+          user={createUser()}
+          objects={[]}
+          canEdit={true}
+        />
+      );
+      expect(screen.getByTestId('active-tool')).toHaveAttribute('data-value', 'select');
+
+      act(() => {
+        fireEvent.keyDown(document.body, { key: 's' });
+      });
+      expect(screen.getByTestId('active-tool')).toHaveAttribute('data-value', 'sticky');
+
+      act(() => {
+        fireEvent.keyDown(document.body, { key: 'v' });
+      });
+      expect(screen.getByTestId('active-tool')).toHaveAttribute('data-value', 'select');
+
+      act(() => {
+        fireEvent.keyDown(document.body, { key: ' ' });
+      });
+      expect(screen.getByTestId('active-tool')).toHaveAttribute('data-value', 'pan');
+    });
+
+    it('does not switch tool when focus is in an input', () => {
+      render(
+        <div>
+          <input data-testid='focus-trap' type='text' />
+          <BoardCanvas
+            boardId='board-1'
+            boardName='Board'
+            user={createUser()}
+            objects={[]}
+            canEdit={true}
+          />
+        </div>
+      );
+      const input = screen.getByTestId('focus-trap');
+      act(() => {
+        input.focus();
+      });
+      act(() => {
+        fireEvent.keyDown(input, { key: 's' });
+      });
+      expect(screen.getByTestId('active-tool')).toHaveAttribute('data-value', 'select');
+    });
+
+    it('does not switch to edit-required tool when canEdit is false', () => {
+      render(
+        <BoardCanvas
+          boardId='board-1'
+          boardName='Board'
+          user={createUser()}
+          objects={[]}
+          canEdit={false}
+        />
+      );
+      act(() => {
+        fireEvent.keyDown(document.body, { key: 's' });
+      });
+      expect(screen.getByTestId('active-tool')).toHaveAttribute('data-value', 'select');
+
+      act(() => {
+        fireEvent.keyDown(document.body, { key: 'v' });
+      });
+      expect(screen.getByTestId('active-tool')).toHaveAttribute('data-value', 'select');
+
+      act(() => {
+        fireEvent.keyDown(document.body, { key: ' ' });
+      });
+      expect(screen.getByTestId('active-tool')).toHaveAttribute('data-value', 'pan');
+    });
   });
 
   it('creates sticky note from empty-area click when sticky tool is selected', async () => {

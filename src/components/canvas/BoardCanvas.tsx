@@ -319,6 +319,51 @@ export const BoardCanvas = memo(
       selectingActiveRef.current = isSelecting;
     }, [activeTool, drawingState.isDrawing, isSelecting]);
 
+    // Tool keyboard shortcuts (V, Space, S, R, C, L, T, F, A) — same focus rule as useCanvasOperations
+    useEffect(() => {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement
+        ) {
+          return;
+        }
+        const key = e.key.toLowerCase();
+        let next: ToolMode | null = null;
+        if (key === 'v') {
+          next = 'select';
+        } else if (e.key === ' ') {
+          next = 'pan';
+          e.preventDefault();
+        } else if (key === 's') {
+          next = 'sticky';
+        } else if (key === 'r') {
+          next = 'rectangle';
+        } else if (key === 'c') {
+          next = 'circle';
+        } else if (key === 'l') {
+          next = 'line';
+        } else if (key === 't') {
+          next = 'text';
+        } else if (key === 'f') {
+          next = 'frame';
+        } else if (key === 'a') {
+          next = 'connector';
+        }
+        if (next === null) {
+          return;
+        }
+        const requiresEdit = next !== 'select' && next !== 'pan';
+        if (requiresEdit && !canEdit) {
+          return;
+        }
+        setActiveTool(next);
+        activeToolRef.current = next;
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [canEdit]);
+
     // Clear selection helper
     const clearSelection = useCallback(() => {
       clearSelectionFromStore();
