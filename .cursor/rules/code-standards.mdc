@@ -1,5 +1,5 @@
 ---
-description: Code standards for data-testid, non-null assertion, and control flow braces
+description: Code standards for data-testid, non-null assertion, control flow braces, useEffect/useRef minimization, and type guards over casts
 alwaysApply: true
 ---
 
@@ -54,10 +54,31 @@ else doOther();
 
 - **Prefer object destructuring** when declaring variables or assigning from an object (e.g. `const { a, b } = obj` instead of `const a = obj.a; const b = obj.b`). Enforced by `prefer-destructuring` (warn).
 
-## Minimize unnecessary useEffect
+## Minimize useEffect and useRef
 
+- **Use `useEffect` and `useRef` only when absolutely necessary or when they greatly improve performance.** Prefer derived state, event handlers, and render-time computation.
 - **Avoid `useEffect` for derived state.** Compute during render or use `useMemo` instead of syncing state in an effect.
 - **Avoid `useEffect` for event handling.** Handle user actions in event handlers, not via effects that react to state.
-- **Avoid `useEffect` for one-time setup when possible.** Use `useState(initializer)` or `useRef` for init that runs once.
+- **Avoid `useEffect` for one-time setup when possible.** Use `useState(initializer)` for init that runs once; use `useRef` only when you need a stable mutable reference (e.g. DOM node, imperative handle, or value that must not trigger re-renders).
 - **Use `useEffect` only for:** subscriptions (Firebase, WebSocket, `addEventListener`), cleanup (unsubscribe, clear timers/RAF), or syncing with external systems (DOM, storage, callbacks to parent).
+- **Use `useRef` only for:** DOM refs, storing mutable values that must not cause re-renders, or imperative handles. Do not use refs as a substitute for state when the UI must update.
 - **Files with 3+ effects** should trigger extraction of related effects into custom hooks with a single responsibility.
+
+## Avoid casts; prefer type guards
+
+- **Avoid type casts at all costs.** Do not use `as`, `as unknown as`, or angle-bracket casts except when interfacing with untyped APIs or when a type guard is not feasible.
+- **Prefer type guard functions** so TypeScript narrows types safely and the check is reusable.
+
+```typescript
+// ✅ CORRECT - type guard
+function isUser(value: unknown): value is User {
+  return typeof value === 'object' && value !== null && 'id' in value && 'name' in value;
+}
+if (isUser(data)) {
+  use(data.name);
+}
+
+// ❌ WRONG - cast
+const user = data as User;
+use(user.name);
+```
