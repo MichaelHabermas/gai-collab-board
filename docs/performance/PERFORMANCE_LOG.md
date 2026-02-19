@@ -17,20 +17,20 @@
 
 | Metric | Value | Target |
 |--------|-------|--------|
-| Cursor write latency | 20 ms | <50 ms |
+| Cursor write latency | 17 ms | <50 ms |
 | Object update latency | 32 ms | <100 ms |
-| 500-object batch | 60 ms | <1500 ms |
+| 500-object batch | 62 ms | <1500 ms |
 
 **Progress over time**
 
 ```mermaid
 xychart-beta
     title "Integration metrics over time (ms)"
-    x-axis ["2026-02-19", "2026-02-19", "2026-02-19"]
+    x-axis ["2026-02-19", "2026-02-19", "2026-02-19", "2026-02-19"]
     y-axis "Latency (ms)" 0 --> 88
-    line "Cursor write" [14, 25, 20]
-    line "Object update" [31, 18, 32]
-    line "Batch 500 objects" [62, 63, 60]
+    line "Cursor write" [14, 25, 20, 17]
+    line "Object update" [31, 18, 32, 32]
+    line "Batch 500 objects" [62, 63, 60, 62]
 ```
 
 ## Optimization History
@@ -104,9 +104,9 @@ E2E metrics (FPS, propagation, AI command) require running the benchmark spec wi
 
 | Metric | Value | Target | Source |
 |--------|-------|--------|--------|
-| Cursor write latency | 20 ms | <50 ms | `last-run-metrics.json` |
+| Cursor write latency | 17 ms | <50 ms | `last-run-metrics.json` |
 | Object update latency | 32 ms | <100 ms | `last-run-metrics.json` |
-| 500-object batch | 60 ms | <1500 ms | `last-run-metrics.json` |
+| 500-object batch | 62 ms | <1500 ms | `last-run-metrics.json` |
 
 **E2E:** FPS benchmark ("maintains high frame throughput during pan and zoom interactions") passed. Two other benchmark tests (5-user propagation, AI single-step) failed in this run due to AI/object-creation flow (object count never increased after AI command), not viewport changes.
 

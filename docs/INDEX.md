@@ -49,7 +49,7 @@
 
 | File | Summary | Key Topics | Last Modified |
 |------|---------|------------|---------------|
-| `performance/PERFORMANCE_LOG.md` | Task-level performance reviews, metrics-over-time graph, optimization history (A.1, A.2); run `bun run perf:check` to record and refresh | `performance`, `cleanup`, `optimization`, `perf:check`, `metrics over time`, `bulk delete` | 2026-02-19 |
+| `performance/PERFORMANCE_LOG.md` | Task-level performance reviews, metrics-over-time graph, optimization history (A.1, A.2, A.3); run `bun run perf:check` to record and refresh | `performance`, `cleanup`, `optimization`, `perf:check`, `metrics over time`, `viewport`, `A.3` | 2026-02-19 |
 
 ### Phases (version-2)
 
@@ -120,7 +120,7 @@
 | `canvas` | `guides/KONVA-REACT-GUIDE.md`, `product/PRD.md` |
 | `deployment` | `operations/DEPLOYMENT.md`, `operations/RELEASE-AUTOMATION.md` |
 | `Firebase` | `guides/FIREBASE-GUIDE.md`, `research/RECORD-ARCHITECTURE-DECISIONS-V2.md`, `research/TECH-STACK-OPTIONS-V2.md` |
-| `FPS` | `optimization/OPTIMIZATION-PLAN.md`, `optimization/OPTIMIZATION-PLAN-2.md` |
+| `FPS` | `optimization/OPTIMIZATION-PLAN.md`, `optimization/OPTIMIZATION-PLAN-2.md`, `performance/PERFORMANCE_LOG.md` |
 | `Konva` | `guides/KONVA-REACT-GUIDE.md`, `research/IDENTIFY-TRADEOFFS-V2.md` |
 | `MVP` | `product/PRD.md`, `reports/mvp-audit-report.md`, `reports/mvp-audit-matrix.md`, `research/DESIGN-DOCUMENT.md` |
 | `performance` | `performance/PERFORMANCE_LOG.md`, `optimization/OPTIMIZATION-PLAN.md` |

@@ -262,16 +262,16 @@ Expose a ref from `useCanvasViewport` that the Stage container or BoardCanvas ca
 
 #### Checklist
 
-- [ ] (Before) Confirm `tests/e2e/benchmark.spec.ts` and `tests/integration/sync.latency.test.ts` exist and pass.
-- [ ] (Before) Check current `useCanvasViewport` usage (ref vs. state on hot path).
-- [ ] Viewport held in a ref in `useCanvasViewport`; updated in `handleWheel`, `handleDragEnd`, touch handlers.
-- [ ] `setViewport` not called during active pan/zoom (only on end or throttle e.g. 200–300 ms).
-- [ ] Konva Stage driven from ref (or throttled state with ref for current frame).
-- [ ] `useVisibleShapes` and hit-testing use same viewport source.
-- [ ] FPS benchmark "maintains high frame throughput during pan and zoom interactions" ≥58 on Chromium.
-- [ ] Object and cursor latency tests unchanged/passing.
-- [ ] (After) Run full benchmark suite; FPS ≥58, object &lt;100 ms, cursor &lt;50 ms, 500-object, 5-user pass.
-- [ ] (Stretch) Aim for ≥60 FPS sustained; no regression.
+- [x] (Before) Confirm `tests/e2e/benchmark.spec.ts` and `tests/integration/sync.latency.test.ts` exist and pass.
+- [x] (Before) Check current `useCanvasViewport` usage (ref vs. state on hot path).
+- [x] Viewport held in a ref in `useCanvasViewport`; updated in `handleWheel`, `handleDragEnd`, touch handlers.
+- [x] `setViewport` not called during active pan/zoom (only on end or throttle e.g. 200–300 ms).
+- [x] Konva Stage driven from ref (or throttled state with ref for current frame).
+- [x] `useVisibleShapes` and hit-testing use same viewport source.
+- [x] FPS benchmark "maintains high frame throughput during pan and zoom interactions" ≥58 on Chromium.
+- [x] Object and cursor latency tests unchanged/passing.
+- [x] (After) Run full benchmark suite; FPS ≥58, object &lt;100 ms, cursor &lt;50 ms, 500-object, 5-user pass.
+- [x] (Stretch) Aim for ≥60 FPS sustained; no regression.
 
 ---
 

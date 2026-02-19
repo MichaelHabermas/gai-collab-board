@@ -86,7 +86,7 @@ describe('useCanvasViewport', () => {
   });
 
   describe('event handlers', () => {
-    it('handleWheel zooms around pointer position', () => {
+    it('handleWheel zooms around pointer position after throttle flush', () => {
       const stage = createStageMock();
       const preventDefault = vi.fn();
       const wheelEvent = {
@@ -101,10 +101,39 @@ describe('useCanvasViewport', () => {
       });
 
       expect(preventDefault).toHaveBeenCalledTimes(1);
+      // Hot path: state updates only after throttle; advance to flush
+      act(() => {
+        vi.advanceTimersByTime(250);
+      });
       expect(result.current.viewport.scale.x).toBeCloseTo(1.05, 5);
       expect(result.current.viewport.scale.y).toBeCloseTo(1.05, 5);
       expect(result.current.viewport.position.x).toBeCloseTo(-20, 5);
       expect(result.current.viewport.position.y).toBeCloseTo(-15, 5);
+    });
+
+    it('onViewportChange receives throttled viewport after flush', () => {
+      const stage = createStageMock();
+      const wheelEvent = {
+        evt: { preventDefault: vi.fn(), deltaY: -120 },
+        target: { getStage: () => stage },
+      } as unknown as Konva.KonvaEventObject<WheelEvent>;
+      const onViewportChange = vi.fn();
+
+      const { result } = renderHook(() =>
+        useCanvasViewport({ onViewportChange, stageRef: { current: null } })
+      );
+
+      act(() => {
+        result.current.handleWheel(wheelEvent);
+      });
+      act(() => {
+        vi.advanceTimersByTime(250);
+      });
+
+      expect(onViewportChange).toHaveBeenCalled();
+      const [payload] = onViewportChange.mock.calls[onViewportChange.mock.calls.length - 1] ?? [];
+      expect(payload?.scale.x).toBeCloseTo(1.05, 5);
+      expect(result.current.viewport.scale.x).toBeCloseTo(1.05, 5);
     });
 
     it('handleDragEnd updates viewport position when stage is dragged', () => {
