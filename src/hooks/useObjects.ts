@@ -14,6 +14,7 @@ import {
   ICreateObjectParams,
   IUpdateObjectParams,
 } from '@/modules/sync/objectService';
+import { useObjectsStore } from '@/stores/objectsStore';
 
 interface IUseObjectsParams {
   boardId: string | null;
@@ -41,6 +42,18 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
   const [objects, setObjects] = useState<IBoardObject[]>([]);
   const [loading, setLoading] = useState<boolean>(!boardId ? false : true);
   const [error, setError] = useState<string>('');
+
+  // Sync local objects state → Zustand objectsStore so per-shape subscribers get updates.
+  const storeSetAll = useObjectsStore((s) => s.setAll);
+  useEffect(() => {
+    storeSetAll(objects);
+  }, [objects, storeSetAll]);
+
+  // Clear store when unmounting or switching boards.
+  const storeClear = useObjectsStore((s) => s.clear);
+  useEffect(() => {
+    return () => { storeClear(); };
+  }, [boardId, storeClear]);
 
   // Keep track of pending updates for rollback
   const pendingUpdatesRef = useRef<Map<string, IBoardObject>>(new Map());

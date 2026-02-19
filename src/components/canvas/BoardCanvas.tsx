@@ -10,8 +10,9 @@ import { Toolbar } from './Toolbar';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { STICKY_COLORS } from './shapes';
-import { CanvasShapeRenderer } from './CanvasShapeRenderer';
+import { StoreShapeRenderer } from './StoreShapeRenderer';
 import { useCursors } from '@/hooks/useCursors';
+import { useVisibleShapeIds } from '@/hooks/useVisibleShapeIds';
 import { useCanvasOperations } from '@/hooks/useCanvasOperations';
 import { useVisibleShapes } from '@/hooks/useVisibleShapes';
 import { useBatchDraw } from '@/hooks/useBatchDraw';
@@ -245,19 +246,13 @@ export const BoardCanvas = memo(
 
     // Filter objects to only visible ones (viewport culling)
     const visibleObjects = useVisibleShapes({ objects, viewport });
+    // Store-driven visible IDs for per-shape subscription render loop (A.5 optimization).
+    // Already sorted with frames first (render order).
+    const visibleShapeIds = useVisibleShapeIds(viewport);
     const visibleObjectIdsKey = useMemo(
-      () => visibleObjects.map((object) => object.id).join('|'),
-      [visibleObjects]
+      () => visibleShapeIds.join('|'),
+      [visibleShapeIds]
     );
-    // Frames always render behind non-frames (stable sort: frames first)
-    const objectsInRenderOrder = useMemo(
-      () =>
-        [...visibleObjects].sort(
-          (a, b) => (a.type === 'frame' ? 0 : 1) - (b.type === 'frame' ? 0 : 1)
-        ),
-      [visibleObjects]
-    );
-    const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
     const objectsById = useMemo(
       () => new Map(objects.map((object) => [object.id, object])),
       [objects]
@@ -271,10 +266,18 @@ export const BoardCanvas = memo(
           .map((o) => o.id),
       [objects]
     );
+    // Track whether the canvas is actively being panned (pan-tool drag or middle-mouse pan).
+    // Stored as a ref so cursor throttle reads it without triggering re-renders.
+    const isPanningRef = useRef(false);
+    useEffect(() => {
+      isPanningRef.current = activeTool === 'pan' || isMiddlePanning;
+    }, [activeTool, isMiddlePanning]);
+
     // Cursor synchronization
     const { cursors, handleMouseMove } = useCursors({
       boardId,
       user,
+      isPanningRef,
     });
     const activeCursors = cursors;
     const hasRemoteCursors = useMemo(
@@ -1181,15 +1184,16 @@ export const BoardCanvas = memo(
       return gridLines;
     }, [showGrid, viewport, gridColor]);
 
+    // Per-shape subscription render loop (A.5): each StoreShapeRenderer subscribes
+    // to its own object in the Zustand store, so a single remote object change only
+    // re-renders that one shape instead of the entire tree.
     const visibleObjectNodes = useMemo(
       () =>
-        objectsInRenderOrder.map((object) => (
-          <CanvasShapeRenderer
-            key={object.id}
-            object={object}
-            isSelected={selectedIdSet.has(object.id)}
+        visibleShapeIds.map((id) => (
+          <StoreShapeRenderer
+            key={id}
+            id={id}
             canEdit={canEdit}
-            objectsById={objectsById}
             selectionColor={selectionColor}
             groupDragOffset={groupDragOffset}
             getSelectHandler={getSelectHandler}
@@ -1202,10 +1206,8 @@ export const BoardCanvas = memo(
           />
         )),
       [
-        objectsInRenderOrder,
-        selectedIdSet,
+        visibleShapeIds,
         canEdit,
-        objectsById,
         selectionColor,
         groupDragOffset,
         getSelectHandler,

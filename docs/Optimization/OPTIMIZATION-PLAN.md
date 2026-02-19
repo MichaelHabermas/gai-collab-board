@@ -207,8 +207,8 @@ Add or use a `deleteObjectsBatch(boardId, objectIds)` that builds one `writeBatc
 #### Checklist
 
 - [x] (Before) Confirm `tests/e2e/benchmark.spec.ts` and `tests/integration/sync.latency.test.ts` exist and pass.
-- [ ] (Before) Check whether batch delete or defer-redraw logic is already partially done.
-- [ ] Bulk delete profiled (Firestore vs. React re-renders vs. Konva redraws); bottleneck identified.
+- [x] (Before) Check whether batch delete or defer-redraw logic is already partially done.
+- [x] Bulk delete profiled (Firestore vs. React re-renders vs. Konva redraws); bottleneck identified.
 - [x] All deletes in a single Firestore `writeBatch`; canvas re-renders deferred until batch resolves.
 - [ ] Bulk delete for 20+ objects completes in &lt;300 ms (measured).
 - [ ] Optional: loading indicator for operations &gt;300 ms.
@@ -372,12 +372,12 @@ The sync hook (e.g. `useObjects`) should stay at a parent that has board scope; 
 
 #### Checklist
 
-- [ ] (Before) Confirm A.1 and A.3 are stable; benchmark and sync latency tests exist and pass.
-- [ ] (Before) Check whether objects are already partially in a store or still only from props.
-- [ ] `objectsStore` created with `objects`, `setObject`, `updateObject`, `deleteObject` (and create).
-- [ ] Firestore sync hook pushes updates into store; optimistic updates and rollback against store.
-- [ ] `BoardCanvas` no longer receives `objects` prop; visible IDs derived from store + viewport.
-- [ ] Each visible shape subscribes with `useObjectsStore((s) => s.objects[id])`; stable callbacks from store actions.
+- [x] (Before) Confirm A.1 and A.3 are stable; benchmark and sync latency tests exist and pass.
+- [x] (Before) Check whether objects are already partially in a store or still only from props.
+- [x] `objectsStore` created with `objects`, `setObject`, `updateObject`, `deleteObject` (and create).
+- [x] Firestore sync hook pushes updates into store; optimistic updates and rollback against store.
+- [x] `BoardCanvas` no longer receives `objects` prop; visible IDs derived from store + viewport.
+- [x] Each visible shape subscribes with `useObjectsStore((s) => s.objects[id])`; stable callbacks from store actions.
 - [ ] All `objects`/`objectsById`/`visibleObjects` reads migrated to store; `objects` prop removed from `BoardCanvas`.
 - [ ] CRUD and real-time sync behavior unchanged; only changed shapes re-render.
 - [ ] (After) Run full benchmark suite; FPS ≥58, object &lt;100 ms, cursor &lt;50 ms, 500-object batch and 5-user e2e pass.
@@ -415,10 +415,10 @@ In the same place where you call `updateCursor(...)`, check a flag or `stage.isD
 
 #### Checklist
 
-- [ ] (Before) Confirm `tests/e2e/benchmark.spec.ts` and `tests/integration/sync.latency.test.ts` exist and pass.
-- [ ] (Before) Check cursor update path and where pan/drag state is available.
-- [ ] When Stage is in pan mode and user is dragging, cursor writes skipped or heavily throttled.
-- [ ] Cursor updates again when pan ends.
+- [x] (Before) Confirm `tests/e2e/benchmark.spec.ts` and `tests/integration/sync.latency.test.ts` exist and pass.
+- [x] (Before) Check cursor update path and where pan/drag state is available.
+- [x] When Stage is in pan mode and user is dragging, cursor writes skipped or heavily throttled.
+- [x] Cursor updates again when pan ends.
 - [ ] `tests/integration/sync.latency.test.ts` cursor write test still &lt;50 ms.
 - [ ] 5-user e2e unchanged (no new failures).
 - [ ] (After) Run full benchmark suite; cursor &lt;50 ms, FPS and other gates pass.
