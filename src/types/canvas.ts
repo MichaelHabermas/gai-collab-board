@@ -74,4 +74,6 @@ export interface IRightSidebarProps {
   sidebarTab: SidebarTab;
   setSidebarTab: (v: SidebarTab) => void;
   expandedContent: ReactNode;
+  /** When true, only show the Boards tab (e.g. for viewers). */
+  boardsOnly?: boolean;
 }

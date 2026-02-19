@@ -14,6 +14,7 @@ export const RightSidebar = ({
   sidebarTab,
   setSidebarTab,
   expandedContent,
+  boardsOnly = false,
 }: IRightSidebarProps): ReactElement => {
   return (
     <aside
@@ -24,7 +25,7 @@ export const RightSidebar = ({
       aria-expanded={!sidebarCollapsed}
     >
       <Tabs
-        value={sidebarTab}
+        value={boardsOnly ? 'boards' : sidebarTab}
         onValueChange={(value) => {
           if (value === 'boards' || value === 'properties' || value === 'ai') {
             setSidebarTab(value);
@@ -53,36 +54,40 @@ export const RightSidebar = ({
             >
               <LayoutDashboard className='h-4 w-4' aria-hidden />
             </Button>
-            <Button
-              type='button'
-              variant={sidebarTab === 'properties' ? 'secondary' : 'ghost'}
-              size='icon'
-              className='h-9 w-9 shrink-0'
-              onClick={() => {
-                setSidebarTab('properties');
-                setSidebarCollapsed(false);
-              }}
-              title='Properties'
-              aria-label='Properties'
-              data-testid='sidebar-rail-tab-properties'
-            >
-              <Settings className='h-4 w-4' aria-hidden />
-            </Button>
-            <Button
-              type='button'
-              variant={sidebarTab === 'ai' ? 'secondary' : 'ghost'}
-              size='icon'
-              className='h-9 w-9 shrink-0'
-              onClick={() => {
-                setSidebarTab('ai');
-                setSidebarCollapsed(false);
-              }}
-              title='AI'
-              aria-label='AI'
-              data-testid='sidebar-rail-tab-ai'
-            >
-              <Bot className='h-4 w-4' aria-hidden />
-            </Button>
+            {!boardsOnly && (
+              <>
+                <Button
+                  type='button'
+                  variant={sidebarTab === 'properties' ? 'secondary' : 'ghost'}
+                  size='icon'
+                  className='h-9 w-9 shrink-0'
+                  onClick={() => {
+                    setSidebarTab('properties');
+                    setSidebarCollapsed(false);
+                  }}
+                  title='Properties'
+                  aria-label='Properties'
+                  data-testid='sidebar-rail-tab-properties'
+                >
+                  <Settings className='h-4 w-4' aria-hidden />
+                </Button>
+                <Button
+                  type='button'
+                  variant={sidebarTab === 'ai' ? 'secondary' : 'ghost'}
+                  size='icon'
+                  className='h-9 w-9 shrink-0'
+                  onClick={() => {
+                    setSidebarTab('ai');
+                    setSidebarCollapsed(false);
+                  }}
+                  title='AI'
+                  aria-label='AI'
+                  data-testid='sidebar-rail-tab-ai'
+                >
+                  <Bot className='h-4 w-4' aria-hidden />
+                </Button>
+              </>
+            )}
             <div className='flex-1 min-h-2' />
             <Button
               type='button'
@@ -99,25 +104,31 @@ export const RightSidebar = ({
           </div>
         ) : (
           <>
-            <TabsList className='w-full grid grid-cols-3 bg-muted shrink-0'>
+            <TabsList
+              className={`w-full shrink-0 bg-muted ${boardsOnly ? 'grid grid-cols-1' : 'grid grid-cols-3'}`}
+            >
               <TabsTrigger
                 value='boards'
                 className='text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground'
               >
                 Boards
               </TabsTrigger>
-              <TabsTrigger
-                value='properties'
-                className='text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground'
-              >
-                Properties
-              </TabsTrigger>
-              <TabsTrigger
-                value='ai'
-                className='text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground'
-              >
-                AI
-              </TabsTrigger>
+              {!boardsOnly && (
+                <>
+                  <TabsTrigger
+                    value='properties'
+                    className='text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground'
+                  >
+                    Properties
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value='ai'
+                    className='text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground'
+                  >
+                    AI
+                  </TabsTrigger>
+                </>
+              )}
             </TabsList>
             {expandedContent}
             <div className='flex justify-end shrink-0 pt-2 mt-auto'>

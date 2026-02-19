@@ -581,10 +581,11 @@ describe('BoardListSidebar', () => {
     expect(screen.queryByTestId('board-list-delete-board-2')).not.toBeInTheDocument();
   });
 
-  it('non-owner Leave board calls removeBoardMember and removeBoardIdFromPreferences and navigates away when current board', async () => {
+  it('non-owner Leave last board calls removeBoardMember and removeBoardIdFromPreferences then creates new board and selects it', async () => {
     const sharedBoard = createMockBoardWhereUserIsMember('board-2', 'Shared Board', 'other-owner', 'editor');
+    const newBoard = createMockBoard('board-new', 'Untitled Board', mockUser.uid);
     const onSelectBoard = vi.fn();
-    const onCreateNewBoard = vi.fn();
+    const onCreateNewBoard = vi.fn().mockResolvedValue(newBoard);
     const onLeaveBoard = vi.fn();
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
 
@@ -609,9 +610,47 @@ describe('BoardListSidebar', () => {
       expect(mockRemoveBoardMember).toHaveBeenCalledWith('board-2', 'user-1');
     });
     expect(mockRemoveBoardIdFromPreferences).toHaveBeenCalledWith('user-1', 'board-2');
-    expect(onLeaveBoard).toHaveBeenCalledTimes(1);
-    expect(onSelectBoard).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(onCreateNewBoard).toHaveBeenCalledTimes(1);
+    });
+    expect(onSelectBoard).toHaveBeenCalledWith('board-new');
+    expect(onLeaveBoard).not.toHaveBeenCalled();
+    confirmSpy.mockRestore();
+  });
+
+  it('non-owner Leave current board when other boards exist selects first other board', async () => {
+    const sharedBoard = createMockBoardWhereUserIsMember('board-2', 'Shared Board', 'other-owner', 'editor');
+    const ownedBoard = createMockBoard('board-1', 'My Board', mockUser.uid);
+    const initialBoards = [ownedBoard, sharedBoard];
+    const onSelectBoard = vi.fn();
+    const onCreateNewBoard = vi.fn();
+    const onLeaveBoard = vi.fn();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    render(
+      <BoardListSidebar
+        user={mockUser}
+        currentBoardId='board-2'
+        onSelectBoard={onSelectBoard}
+        onCreateNewBoard={onCreateNewBoard}
+        onLeaveBoard={onLeaveBoard}
+      />
+    );
+    triggerSubscriptions(initialBoards);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('board-list-leave-board-2')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTestId('board-list-leave-board-2'));
+
+    await waitFor(() => {
+      expect(mockRemoveBoardMember).toHaveBeenCalledWith('board-2', 'user-1');
+    });
+    expect(mockRemoveBoardIdFromPreferences).toHaveBeenCalledWith('user-1', 'board-2');
+    expect(onSelectBoard).toHaveBeenCalledWith('board-1');
     expect(onCreateNewBoard).not.toHaveBeenCalled();
+    expect(onLeaveBoard).not.toHaveBeenCalled();
     confirmSpy.mockRestore();
   });
 });

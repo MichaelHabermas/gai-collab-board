@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ShareDialog } from '@/components/board/ShareDialog';
 import { BoardListSidebar } from '@/components/board/BoardListSidebar';
 import { RightSidebar } from '@/components/board/RightSidebar';
-import { LogOut, Loader2, Share2, Sun, Moon, Pencil } from 'lucide-react';
+import { LogOut, Loader2, Share2, Sun, Moon, Pencil, PanelLeft } from 'lucide-react';
 import { BoardCanvas } from '@/components/canvas/BoardCanvas';
 import { useObjects } from '@/hooks/useObjects';
 import { useAI } from '@/hooks/useAI';
@@ -48,10 +48,11 @@ interface IBoardViewProps {
   boardId: string;
   onSelectBoard: (boardId: string) => void;
   onCreateNewBoard: (name?: string) => Promise<IBoard>;
-  onLeaveBoard: () => void;
+  onLeaveBoard: (leftBoardId?: string) => void;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
   onViewportActionsReady: (actions: IViewportActionsValue | null) => void;
+  skipAutoJoinBoardIdRef?: React.MutableRefObject<string | null>;
 }
 
 const BoardView = ({
@@ -62,6 +63,7 @@ const BoardView = ({
   theme,
   onToggleTheme,
   onViewportActionsReady,
+  skipAutoJoinBoardIdRef,
 }: IBoardViewProps): ReactElement => {
   const { user, signOut } = useAuth();
   const [board, setBoard] = useState<IBoard | null>(null);
@@ -99,6 +101,10 @@ const BoardView = ({
 
   // When opening a board the user is not a member of, add them as viewer
   useEffect(() => {
+    if (skipAutoJoinBoardIdRef?.current === boardId) {
+      skipAutoJoinBoardIdRef.current = null;
+      return;
+    }
     if (!board || !user || user.uid in board.members || joinedBoardIdsRef.current.has(boardId)) {
       return;
     }
@@ -107,7 +113,7 @@ const BoardView = ({
     addBoardMember(boardId, user.uid, 'viewer').catch(() => {
       joinedBoardIdsRef.current.delete(boardId);
     });
-  }, [board, user, boardId]);
+  }, [board, user, boardId, skipAutoJoinBoardIdRef]);
 
   if (!user) return <div />;
 
@@ -210,6 +216,20 @@ const BoardView = ({
                 </Button>
               </ShareDialog>
             )}
+            {board && !canUserManage(board, user.uid) && (
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                className='border-border text-foreground hover:bg-accent'
+                onClick={() => onLeaveBoard(boardId)}
+                title='Leave board'
+                data-testid='header-leave-board'
+              >
+                <PanelLeft className='h-4 w-4 mr-2' aria-hidden />
+                Leave board
+              </Button>
+            )}
           </div>
           <div className='flex items-center gap-5'>
             <PresenceAvatars
@@ -259,13 +279,14 @@ const BoardView = ({
               onViewportActionsReady={onViewportActionsReady}
             />
           </div>
-          {canEdit && (
-            <RightSidebar
-              sidebarCollapsed={sidebarCollapsed}
-              setSidebarCollapsed={setSidebarCollapsed}
-              sidebarTab={sidebarTab}
-              setSidebarTab={setSidebarTab}
-              expandedContent={
+          <RightSidebar
+            sidebarCollapsed={sidebarCollapsed}
+            setSidebarCollapsed={setSidebarCollapsed}
+            sidebarTab={sidebarTab}
+            setSidebarTab={setSidebarTab}
+            boardsOnly={!canEdit}
+            expandedContent={
+              canEdit ? (
                 <>
                   <TabsContent value='boards' className='flex-1 min-h-0 mt-2 overflow-auto'>
                     <BoardListSidebar
@@ -297,9 +318,19 @@ const BoardView = ({
                     />
                   </TabsContent>
                 </>
-              }
-            />
-          )}
+              ) : (
+                <TabsContent value='boards' className='flex-1 min-h-0 mt-2 overflow-auto'>
+                  <BoardListSidebar
+                    user={user}
+                    currentBoardId={boardId}
+                    onSelectBoard={onSelectBoard}
+                    onCreateNewBoard={onCreateNewBoard}
+                    onLeaveBoard={onLeaveBoard}
+                  />
+                </TabsContent>
+              )
+            }
+          />
         </SelectionProvider>
       </main>
     </div>
@@ -370,6 +401,7 @@ const BoardViewRoute = (): ReactElement => {
   const { user, loading } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [viewportActions, setViewportActions] = useState<IViewportActionsValue | null>(null);
+  const lastLeftBoardIdRef = useRef<string | null>(null);
 
   // Update recent boards when user opens a board (navigates to it)
   useEffect(() => {
@@ -404,9 +436,13 @@ const BoardViewRoute = (): ReactElement => {
     [user, navigate]
   );
 
-  const handleLeaveBoard = useCallback(() => {
-    navigate('/', { replace: false });
-  }, [navigate]);
+  const handleLeaveBoard = useCallback(
+    (leftBoardId?: string) => {
+      lastLeftBoardIdRef.current = leftBoardId ?? null;
+      navigate('/', { replace: false });
+    },
+    [navigate]
+  );
 
   if (loading) {
     return (
@@ -437,6 +473,7 @@ const BoardViewRoute = (): ReactElement => {
         theme={theme}
         onToggleTheme={toggleTheme}
         onViewportActionsReady={setViewportActions}
+        skipAutoJoinBoardIdRef={lastLeftBoardIdRef}
       />
     </ViewportActionsContext.Provider>
   );

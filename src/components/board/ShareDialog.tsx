@@ -32,7 +32,7 @@ import { Copy, Check, UserPlus, Trash2, Crown, Edit, Eye, Trash } from 'lucide-r
 interface ShareDialogProps {
   board: IBoard;
   currentUserId: string;
-  onLeaveBoard?: () => void;
+  onLeaveBoard?: (leftBoardId?: string) => void;
   children: ReactElement;
 }
 
@@ -134,7 +134,7 @@ export const ShareDialog = ({
     setError('');
     try {
       await deleteBoard(board.id, currentUserId);
-      onLeaveBoard?.();
+      onLeaveBoard?.(board.id);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -148,7 +148,7 @@ export const ShareDialog = ({
     try {
       await removeBoardMember(board.id, currentUserId);
       await removeBoardIdFromPreferences(currentUserId, board.id);
-      onLeaveBoard?.();
+      onLeaveBoard?.(board.id);
     } catch (err) {
       setError((err as Error).message);
     } finally {
