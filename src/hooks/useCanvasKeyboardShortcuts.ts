@@ -9,7 +9,8 @@ interface IUseCanvasKeyboardShortcutsParams {
 
 /**
  * Subscribes to window keydown for tool shortcuts (V, Space, S, R, C, L, T, F, A).
- * Skips when focus is in input/textarea. Syncs activeToolRef when tool changes.
+ * Skips when focus is in input/textarea. Defers Ctrl/Cmd+C, Ctrl/Cmd+V, Ctrl/Cmd+D
+ * to useCanvasOperations (copy, paste, duplicate). Syncs activeToolRef when tool changes.
  */
 export const useCanvasKeyboardShortcuts = ({
   setActiveTool,
@@ -22,7 +23,12 @@ export const useCanvasKeyboardShortcuts = ({
         return;
       }
 
+      const isCtrlOrCmd = e.ctrlKey || e.metaKey;
       const key = e.key.toLowerCase();
+      if (isCtrlOrCmd && (key === 'c' || key === 'v' || key === 'd')) {
+        return;
+      }
+
       let next: ToolMode | null = null;
 
       if (key === 'v') {

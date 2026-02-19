@@ -225,5 +225,45 @@ describe('useCanvasOperations', () => {
       });
       expect(clearSelection).toHaveBeenCalled();
     });
+
+    it('window keydown Ctrl+C copies selection to clipboard', () => {
+      const props = getDefaultProps();
+      const { result } = renderHook(() => useCanvasOperations(props));
+      document.body.focus();
+      act(() => {
+        window.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'c', ctrlKey: true, bubbles: true })
+        );
+      });
+      expect(result.current.clipboard).toHaveLength(1);
+      expect(result.current.clipboard[0]?.id).toBe('obj-1');
+    });
+
+    it('window keydown Ctrl+V pastes from clipboard and calls onObjectCreate', () => {
+      const props = getDefaultProps();
+      const { result } = renderHook(() => useCanvasOperations(props));
+      act(() => {
+        result.current.handleCopy();
+      });
+      document.body.focus();
+      act(() => {
+        window.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'v', ctrlKey: true, bubbles: true })
+        );
+      });
+      expect(onObjectCreate).toHaveBeenCalled();
+    });
+
+    it('window keydown Ctrl+C with no selection does not change clipboard', () => {
+      const props = { ...getDefaultProps(), selectedIds: [] as string[] };
+      const { result } = renderHook(() => useCanvasOperations(props));
+      document.body.focus();
+      act(() => {
+        window.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'c', ctrlKey: true, bubbles: true })
+        );
+      });
+      expect(result.current.clipboard).toHaveLength(0);
+    });
   });
 });
