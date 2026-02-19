@@ -678,7 +678,7 @@ export const BoardCanvas = memo(
               width: DEFAULT_STICKY_SIZE.width,
               height: DEFAULT_STICKY_SIZE.height,
               fill: activeColor,
-              text: '',
+              text: 'New note...',
               rotation: 0,
             };
 
