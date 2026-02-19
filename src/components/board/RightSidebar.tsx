@@ -1,7 +1,14 @@
 import { type ReactElement } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PanelRightClose, PanelRightOpen, LayoutDashboard, Settings, Bot, MessageSquare } from 'lucide-react';
+import {
+  PanelRightClose,
+  PanelRightOpen,
+  LayoutDashboard,
+  Settings,
+  Bot,
+  MessageSquare,
+} from 'lucide-react';
 import type { IRightSidebarProps } from '@/types';
 
 /**
@@ -27,7 +34,12 @@ export const RightSidebar = ({
       <Tabs
         value={boardsOnly ? 'boards' : sidebarTab}
         onValueChange={(value) => {
-          if (value === 'boards' || value === 'properties' || value === 'ai' || value === 'comments') {
+          if (
+            value === 'boards' ||
+            value === 'properties' ||
+            value === 'ai' ||
+            value === 'comments'
+          ) {
             setSidebarTab(value);
           }
         }}

@@ -24,17 +24,31 @@ const executeUndoCommand = async (
     case 'delete':
       // Undo delete → recreate with original data
       if (cmd.before) {
-        const { id, createdAt, updatedAt, createdBy, ...rest } = cmd.before;
+        const {
+          id: _id,
+          createdAt: _createdAt,
+          updatedAt: _updatedAt,
+          createdBy,
+          ...rest
+        } = cmd.before;
         await ctx.createObject({ ...rest, createdBy } as Omit<ICreateObjectParams, 'createdBy'>);
       }
+
       break;
 
     case 'update':
       // Undo update → apply the `before` state
       if (cmd.before) {
-        const { id, createdAt, updatedAt, createdBy, ...updates } = cmd.before;
+        const {
+          id: _id2,
+          createdAt: _createdAt2,
+          updatedAt: _updatedAt2,
+          createdBy: _createdBy2,
+          ...updates
+        } = cmd.before;
         await ctx.updateObject(cmd.objectId, updates as IUpdateObjectParams);
       }
+
       break;
   }
 };
@@ -50,9 +64,16 @@ const executeRedoCommand = async (
     case 'create':
       // Redo create → recreate
       if (cmd.after) {
-        const { id, createdAt, updatedAt, createdBy, ...rest } = cmd.after as IBoardObject;
+        const {
+          id: _id3,
+          createdAt: _createdAt3,
+          updatedAt: _updatedAt3,
+          createdBy,
+          ...rest
+        } = cmd.after as IBoardObject;
         await ctx.createObject({ ...rest, createdBy } as Omit<ICreateObjectParams, 'createdBy'>);
       }
+
       break;
 
     case 'delete':
@@ -63,9 +84,16 @@ const executeRedoCommand = async (
     case 'update':
       // Redo update → apply the `after` state
       if (cmd.after) {
-        const { id, createdAt, updatedAt, createdBy, ...updates } = cmd.after as IBoardObject;
+        const {
+          id: _id4,
+          createdAt: _createdAt4,
+          updatedAt: _updatedAt4,
+          createdBy: _createdBy4,
+          ...updates
+        } = cmd.after as IBoardObject;
         await ctx.updateObject(cmd.objectId, updates as IUpdateObjectParams);
       }
+
       break;
   }
 };

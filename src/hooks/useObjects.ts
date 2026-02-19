@@ -52,7 +52,9 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
   // Clear store when unmounting or switching boards.
   const storeClear = useObjectsStore((s) => s.clear);
   useEffect(() => {
-    return () => { storeClear(); };
+    return () => {
+      storeClear();
+    };
   }, [boardId, storeClear]);
 
   // Keep track of pending updates for rollback

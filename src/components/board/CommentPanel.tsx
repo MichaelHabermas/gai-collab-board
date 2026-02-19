@@ -91,10 +91,13 @@ export const CommentPanel = ({
 
   const formatTime = (timestamp: { toDate?: () => Date }): string => {
     if (!timestamp?.toDate) return '';
+
     const date = timestamp.toDate();
-    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) +
+    return (
+      date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) +
       ' ' +
-      date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+      date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+    );
   };
 
   const renderComment = (comment: IComment, isReply = false) => {
@@ -112,9 +115,7 @@ export const CommentPanel = ({
             <span className='text-xs font-medium text-foreground'>
               {comment.authorDisplayName || 'Anonymous'}
             </span>
-            <span className='text-xs text-muted-foreground'>
-              {formatTime(comment.createdAt)}
-            </span>
+            <span className='text-xs text-muted-foreground'>{formatTime(comment.createdAt)}</span>
           </div>
           <p className='text-sm text-foreground mt-1 break-words'>{comment.text}</p>
           <div className='flex items-center gap-1 mt-1'>
@@ -160,9 +161,7 @@ export const CommentPanel = ({
             No comments yet. Add one below.
           </p>
         ) : (
-          <div className='divide-y divide-border'>
-            {rootComments.map((c) => renderComment(c))}
-          </div>
+          <div className='divide-y divide-border'>{rootComments.map((c) => renderComment(c))}</div>
         )}
       </div>
 

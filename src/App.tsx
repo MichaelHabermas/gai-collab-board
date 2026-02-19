@@ -97,11 +97,17 @@ const BoardView = ({
 
   const { onlineUsers } = usePresence({ boardId, user });
   const ai = useAI({ boardId, user, objects });
-  const { commentsByObjectId, loading: commentsLoading, createComment, deleteComment: deleteCommentFn } =
-    useComments({ boardId });
+  const {
+    commentsByObjectId,
+    loading: commentsLoading,
+    createComment,
+    deleteComment: deleteCommentFn,
+  } = useComments({ boardId });
   const selectedIds = useSelectionStore((s) => s.selectedIds);
   const selectedObjectId = selectedIds.length === 1 ? (selectedIds[0] ?? null) : null;
-  const selectedObjectComments = selectedObjectId ? (commentsByObjectId.get(selectedObjectId) ?? []) : [];
+  const selectedObjectComments = selectedObjectId
+    ? (commentsByObjectId.get(selectedObjectId) ?? [])
+    : [];
   const { sidebarTab, setSidebarTab, sidebarCollapsed, setSidebarCollapsed } =
     useBoardSettings(boardId);
 

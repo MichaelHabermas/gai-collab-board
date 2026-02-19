@@ -28,7 +28,11 @@ const PAN_THROTTLE_MS = 200; // Heavily throttled during pan — still updates, 
  * Hook for managing cursor synchronization on a board.
  * Handles subscribing to other users' cursors and broadcasting own cursor position.
  */
-export const useCursors = ({ boardId, user, isPanningRef }: IUseCursorsParams): IUseCursorsReturn => {
+export const useCursors = ({
+  boardId,
+  user,
+  isPanningRef,
+}: IUseCursorsParams): IUseCursorsReturn => {
   const [cursors, setCursors] = useState<Cursors>({});
   const lastUpdateRef = useRef<number>(0);
   const userColor = useMemo(() => (user?.uid ? getUserColor(user.uid) : ''), [user]);

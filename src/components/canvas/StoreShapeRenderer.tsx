@@ -86,35 +86,30 @@ interface IInnerProps {
   handleObjectDragEnd: (id: string, x: number, y: number) => void;
 }
 
-const CanvasShapeRendererWithConnectorLookup = memo(
-  (props: IInnerProps): ReactElement => {
-    const { object } = props;
+const CanvasShapeRendererWithConnectorLookup = memo((props: IInnerProps): ReactElement => {
+  const { object } = props;
 
-    // For linked connectors, subscribe to from/to objects so we re-render
-    // when the connected shapes move. For non-connectors these are undefined (no extra subscription).
-    const fromObj = useObjectsStore(
-      object.fromObjectId != null ? selectObject(object.fromObjectId) : _selectUndefined
-    );
-    const toObj = useObjectsStore(
-      object.toObjectId != null ? selectObject(object.toObjectId) : _selectUndefined
-    );
+  // For linked connectors, subscribe to from/to objects so we re-render
+  // when the connected shapes move. For non-connectors these are undefined (no extra subscription).
+  const fromObj = useObjectsStore(
+    object.fromObjectId != null ? selectObject(object.fromObjectId) : _selectUndefined
+  );
+  const toObj = useObjectsStore(
+    object.toObjectId != null ? selectObject(object.toObjectId) : _selectUndefined
+  );
 
-    // Build a minimal objectsById Map containing only the objects this shape needs.
-    const objectsById = useMemo(() => {
-      const map = new Map<string, IBoardObject>();
-      if (fromObj) map.set(fromObj.id, fromObj);
-      if (toObj) map.set(toObj.id, toObj);
-      return map;
-    }, [fromObj, toObj]);
+  // Build a minimal objectsById Map containing only the objects this shape needs.
+  const objectsById = useMemo(() => {
+    const map = new Map<string, IBoardObject>();
+    if (fromObj) map.set(fromObj.id, fromObj);
 
-    return (
-      <CanvasShapeRenderer
-        {...props}
-        objectsById={objectsById}
-      />
-    );
-  }
-);
+    if (toObj) map.set(toObj.id, toObj);
+
+    return map;
+  }, [fromObj, toObj]);
+
+  return <CanvasShapeRenderer {...props} objectsById={objectsById} />;
+});
 
 CanvasShapeRendererWithConnectorLookup.displayName = 'CanvasShapeRendererWithConnectorLookup';
 

@@ -28,30 +28,32 @@ interface UseCommentsResult {
  * Subscribes to the comments subcollection and provides CRUD operations.
  */
 export const useComments = ({ boardId }: UseCommentsParams): UseCommentsResult => {
-  const [comments, setComments] = useState<IComment[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Key by boardId so we never setState synchronously in the effect; only in the subscription callback.
+  const [subscriptionData, setSubscriptionData] = useState<{
+    boardId: string;
+    comments: IComment[];
+  } | null>(null);
 
-  // Real-time subscription
   useEffect(() => {
-    if (!boardId) {
-      setComments([]);
-      setLoading(false);
-      return;
-    }
+    if (!boardId) return;
 
-    setLoading(true);
     const unsubscribe = subscribeToComments(boardId, (nextComments) => {
-      setComments(nextComments);
-      setLoading(false);
+      setSubscriptionData({ boardId, comments: nextComments });
     });
 
     return () => unsubscribe();
   }, [boardId]);
 
+  const effectiveComments =
+    subscriptionData && subscriptionData.boardId === boardId ? subscriptionData.comments : [];
+  const effectiveLoading = Boolean(
+    boardId && (!subscriptionData || subscriptionData.boardId !== boardId)
+  );
+
   // Group comments by objectId
   const commentsByObjectId = useMemo(() => {
     const map = new Map<string, IComment[]>();
-    for (const comment of comments) {
+    for (const comment of effectiveComments) {
       const existing = map.get(comment.objectId);
       if (existing) {
         existing.push(comment);
@@ -60,11 +62,12 @@ export const useComments = ({ boardId }: UseCommentsParams): UseCommentsResult =
       }
     }
     return map;
-  }, [comments]);
+  }, [effectiveComments]);
 
   const createComment = useCallback(
     async (params: ICreateCommentParams): Promise<IComment | null> => {
       if (!boardId) return null;
+
       return createCommentService(boardId, params);
     },
     [boardId]
@@ -73,10 +76,17 @@ export const useComments = ({ boardId }: UseCommentsParams): UseCommentsResult =
   const deleteComment = useCallback(
     async (commentId: string): Promise<void> => {
       if (!boardId) return;
+
       return deleteCommentService(boardId, commentId);
     },
     [boardId]
   );
 
-  return { comments, commentsByObjectId, loading, createComment, deleteComment };
+  return {
+    comments: effectiveComments,
+    commentsByObjectId,
+    loading: effectiveLoading,
+    createComment,
+    deleteComment,
+  };
 };

@@ -173,9 +173,11 @@ export const createObjectsBatch = async (
     if (params.opacity) {
       object.opacity = params.opacity;
     }
+
     if (params.arrowheads) {
       object.arrowheads = params.arrowheads;
     }
+
     if (params.strokeStyle) {
       object.strokeStyle = params.strokeStyle;
     }

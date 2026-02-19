@@ -256,10 +256,7 @@ export const BoardCanvas = memo(
     // Store-driven visible IDs for per-shape subscription render loop (A.5 optimization).
     // Already sorted with frames first (render order).
     const visibleShapeIds = useVisibleShapeIds(viewport);
-    const visibleObjectIdsKey = useMemo(
-      () => visibleShapeIds.join('|'),
-      [visibleShapeIds]
-    );
+    const visibleObjectIdsKey = useMemo(() => visibleShapeIds.join('|'), [visibleShapeIds]);
     const objectsById = useMemo(
       () => new Map(objects.map((object) => [object.id, object])),
       [objects]

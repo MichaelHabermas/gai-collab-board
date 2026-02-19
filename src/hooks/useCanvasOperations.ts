@@ -63,7 +63,6 @@ export const useCanvasOperations = ({
     const selectedObjects = getSelectedObjects();
 
     selectedObjects.forEach((obj) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = obj;
       onObjectCreate({
         ...rest,
@@ -83,7 +82,6 @@ export const useCanvasOperations = ({
   const handlePaste = useCallback(
     (offsetX: number = PASTE_OFFSET, offsetY: number = PASTE_OFFSET) => {
       clipboard.forEach((obj) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...rest } = obj;
         onObjectCreate({
           ...rest,

@@ -39,20 +39,25 @@ export const AIChatPanel = ({
 
   const handleExplainBoard = () => {
     if (loading || !hasBoardObjects) return;
+
     void onSend(
-      'Explain this board: describe what\'s on the board, the types of objects, their content, and how they relate to each other.'
+      "Explain this board: describe what's on the board, the types of objects, their content, and how they relate to each other."
     );
   };
 
   const handleSummarizeSelection = () => {
     if (loading || !hasSelection) return;
+
     void onSend(
       `Summarize these ${selectedIds.length} selected object(s): provide a concise overview of the selected items, their content, and any relationships between them.`
     );
   };
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = messagesEndRef.current;
+    if (el && typeof el.scrollIntoView === 'function') {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   useEffect(() => {

@@ -171,7 +171,11 @@ export const Connector = memo(
             onTransformEnd={handleTransformEnd}
           >
             {/* End arrow (normal direction) */}
-            <Arrow points={points} {...sharedArrowProps} hitStrokeWidth={Math.max(20, strokeWidth * 3)} />
+            <Arrow
+              points={points}
+              {...sharedArrowProps}
+              hitStrokeWidth={Math.max(20, strokeWidth * 3)}
+            />
             {/* Start arrow (reversed direction) — only draws the arrowhead visually */}
             <Arrow points={startOnlyPoints} {...sharedArrowProps} listening={false} />
           </Group>

@@ -1,10 +1,11 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import type { ReactNode } from 'react';
+import { useEffect, type ComponentProps, type ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { User } from 'firebase/auth';
 import type Konva from 'konva';
 import type { IBoardObject } from '@/types';
 import { BoardCanvas } from '@/components/canvas/BoardCanvas';
+import { useObjectsStore } from '@/stores/objectsStore';
 
 type KonvaEvent = Konva.KonvaEventObject<MouseEvent>;
 
@@ -200,6 +201,14 @@ vi.mock('@/components/canvas/TransformHandler', () => ({
   TransformHandler: () => <div data-testid='transform-handler-mock' />,
 }));
 
+/** Wrapper that syncs objects to the store so StoreShapeRenderer / useVisibleShapeIds see them. */
+const BoardCanvasWithStore = (props: ComponentProps<typeof BoardCanvas>) => {
+  useEffect(() => {
+    useObjectsStore.getState().setAll(props.objects);
+  }, [props.objects]);
+  return <BoardCanvas {...props} />;
+};
+
 const createUser = (): User =>
   ({
     uid: 'user-1',
@@ -277,6 +286,7 @@ describe('BoardCanvas interactions', () => {
     mockSetSelectedIds.mockReset();
     mockClearSelection.mockReset();
     mockHandleMouseMove.mockClear();
+    useObjectsStore.getState().clear();
     vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
       callback(0);
       return 1;
@@ -287,7 +297,7 @@ describe('BoardCanvas interactions', () => {
   describe('Tool keyboard shortcuts', () => {
     it('switches tool when pressing shortcut key and focus is not in input', () => {
       render(
-        <BoardCanvas
+        <BoardCanvasWithStore
           boardId='board-1'
           boardName='Board'
           user={createUser()}
@@ -317,7 +327,7 @@ describe('BoardCanvas interactions', () => {
       render(
         <div>
           <input data-testid='focus-trap' type='text' />
-          <BoardCanvas
+          <BoardCanvasWithStore
             boardId='board-1'
             boardName='Board'
             user={createUser()}
@@ -338,7 +348,7 @@ describe('BoardCanvas interactions', () => {
 
     it('broadcasts cursor position when not in pan mode even with no remote cursors', async () => {
       render(
-        <BoardCanvas
+        <BoardCanvasWithStore
           boardId='board-1'
           boardName='Board'
           user={createUser()}
@@ -357,7 +367,7 @@ describe('BoardCanvas interactions', () => {
 
     it('does not switch to edit-required tool when canEdit is false', () => {
       render(
-        <BoardCanvas
+        <BoardCanvasWithStore
           boardId='board-1'
           boardName='Board'
           user={createUser()}
@@ -386,7 +396,7 @@ describe('BoardCanvas interactions', () => {
     const onObjectCreate = vi.fn().mockResolvedValue(createObject({ id: 'new-sticky', type: 'sticky' }));
 
     render(
-      <BoardCanvas
+      <BoardCanvasWithStore
         boardId='board-1'
         boardName='Board'
         user={createUser()}
@@ -407,7 +417,7 @@ describe('BoardCanvas interactions', () => {
           y: 200,
           width: 200,
           height: 200,
-          text: '',
+          text: 'New note...',
         })
       );
     });
@@ -417,7 +427,7 @@ describe('BoardCanvas interactions', () => {
     const onObjectCreate = vi.fn().mockResolvedValue(createObject({ id: 'new-text', type: 'text' }));
 
     render(
-      <BoardCanvas
+      <BoardCanvasWithStore
         boardId='board-1'
         boardName='Board'
         user={createUser()}
@@ -453,7 +463,7 @@ describe('BoardCanvas interactions', () => {
     ];
 
     render(
-      <BoardCanvas
+      <BoardCanvasWithStore
         boardId='board-1'
         boardName='Board'
         user={createUser()}
@@ -491,7 +501,7 @@ describe('BoardCanvas interactions', () => {
     const onObjectCreate = vi.fn().mockResolvedValue(createObject({ id: 'rect-1', type: 'rectangle' }));
 
     render(
-      <BoardCanvas
+      <BoardCanvasWithStore
         boardId='board-1'
         boardName='Board'
         user={createUser()}
@@ -526,7 +536,7 @@ describe('BoardCanvas interactions', () => {
     ];
 
     render(
-      <BoardCanvas
+      <BoardCanvasWithStore
         boardId='board-1'
         boardName='Board'
         user={createUser()}
@@ -553,7 +563,7 @@ describe('BoardCanvas interactions', () => {
     const onObjectCreate = vi.fn().mockResolvedValue(createObject({ id: 'new-sticky', type: 'sticky' }));
 
     render(
-      <BoardCanvas
+      <BoardCanvasWithStore
         boardId='board-1'
         boardName='Board'
         user={createUser()}
@@ -586,7 +596,7 @@ describe('BoardCanvas interactions', () => {
   it('keeps drag bound behavior stable across rerenders for unchanged shapes', () => {
     const objects = [createObject({ id: 'shape-a', type: 'rectangle', x: 120, y: 140 })];
     const { rerender } = render(
-      <BoardCanvas
+      <BoardCanvasWithStore
         boardId='board-1'
         boardName='Board'
         user={createUser()}
@@ -600,7 +610,7 @@ describe('BoardCanvas interactions', () => {
     expect(typeof firstDragBoundFunc).toBe('function');
 
     rerender(
-      <BoardCanvas
+      <BoardCanvasWithStore
         boardId='board-1'
         boardName='Board'
         user={createUser()}
@@ -640,7 +650,7 @@ describe('BoardCanvas interactions', () => {
       }),
     ];
     render(
-      <BoardCanvas
+      <BoardCanvasWithStore
         boardId='board-1'
         boardName='Board'
         user={createUser()}
@@ -692,7 +702,7 @@ describe('BoardCanvas interactions', () => {
     ];
 
     render(
-      <BoardCanvas
+      <BoardCanvasWithStore
         boardId='board-1'
         boardName='Board'
         user={createUser()}

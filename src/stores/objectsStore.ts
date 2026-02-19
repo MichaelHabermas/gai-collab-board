@@ -56,6 +56,7 @@ export const useObjectsStore = create<IObjectsStore>()((set) => ({
     set((state) => {
       const existing = state.objects[id];
       if (!existing) return state;
+
       return {
         objects: { ...state.objects, [id]: { ...existing, ...updates } },
       };
@@ -64,7 +65,8 @@ export const useObjectsStore = create<IObjectsStore>()((set) => ({
 
   deleteObject: (id) => {
     set((state) => {
-      const { [id]: _removed, ...rest } = state.objects;
+      const rest = { ...state.objects };
+      delete rest[id];
       return { objects: rest };
     });
   },
@@ -87,13 +89,14 @@ export const useObjectsStore = create<IObjectsStore>()((set) => ({
 // ── Selectors ──────────────────────────────────────────────────────────
 
 /** Select a single object by ID (per-shape subscription). */
-export const selectObject = (id: string) => (state: IObjectsStore): IBoardObject | undefined =>
-  state.objects[id];
+export const selectObject =
+  (id: string) =>
+  (state: IObjectsStore): IBoardObject | undefined =>
+    state.objects[id];
 
 /** Select all objects as an array (use sparingly — causes re-render on any change). */
 export const selectAllObjects = (state: IObjectsStore): IBoardObject[] =>
   Object.values(state.objects);
 
 /** Select all object IDs. */
-export const selectObjectIds = (state: IObjectsStore): string[] =>
-  Object.keys(state.objects);
+export const selectObjectIds = (state: IObjectsStore): string[] => Object.keys(state.objects);

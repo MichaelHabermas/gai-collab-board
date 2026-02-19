@@ -6,7 +6,9 @@ import { executeUndo, executeRedo } from '@/modules/history/historyService';
 
 interface IUseHistoryParams {
   objects: IBoardObject[];
-  createObject: (params: Omit<import('@/types').ICreateObjectParams, 'createdBy'>) => Promise<IBoardObject | null>;
+  createObject: (
+    params: Omit<import('@/types').ICreateObjectParams, 'createdBy'>
+  ) => Promise<IBoardObject | null>;
   updateObject: (objectId: string, updates: IUpdateObjectParams) => Promise<void>;
   deleteObject: (objectId: string) => Promise<void>;
   boardId: string | null;
@@ -14,7 +16,9 @@ interface IUseHistoryParams {
 
 interface IUseHistoryReturn {
   /** Wrapped create that records history. */
-  createObject: (params: Omit<import('@/types').ICreateObjectParams, 'createdBy'>) => Promise<IBoardObject | null>;
+  createObject: (
+    params: Omit<import('@/types').ICreateObjectParams, 'createdBy'>
+  ) => Promise<IBoardObject | null>;
   /** Wrapped update that records history. */
   updateObject: (objectId: string, updates: IUpdateObjectParams) => Promise<void>;
   /** Wrapped delete that records history. */
@@ -47,7 +51,10 @@ export const useHistory = ({
 
   // Keep a ref to the latest objects for snapshot lookups during callbacks.
   const objectsRef = useRef<IBoardObject[]>(objects);
-  objectsRef.current = objects;
+
+  useEffect(() => {
+    objectsRef.current = objects;
+  }, [objects]);
 
   // Clear history on board switch.
   useEffect(() => {
@@ -55,11 +62,14 @@ export const useHistory = ({
   }, [boardId, clearHistory]);
 
   const wrappedCreate = useCallback(
-    async (params: Omit<import('@/types').ICreateObjectParams, 'createdBy'>): Promise<IBoardObject | null> => {
+    async (
+      params: Omit<import('@/types').ICreateObjectParams, 'createdBy'>
+    ): Promise<IBoardObject | null> => {
       const result = await createObject(params);
       if (result) {
         push([{ type: 'create', objectId: result.id, after: result }]);
       }
+
       return result;
     },
     [createObject, push]
@@ -92,9 +102,12 @@ export const useHistory = ({
   const rawCreateRef = useRef(createObject);
   const rawUpdateRef = useRef(updateObject);
   const rawDeleteRef = useRef(deleteObject);
-  rawCreateRef.current = createObject;
-  rawUpdateRef.current = updateObject;
-  rawDeleteRef.current = deleteObject;
+
+  useEffect(() => {
+    rawCreateRef.current = createObject;
+    rawUpdateRef.current = updateObject;
+    rawDeleteRef.current = deleteObject;
+  }, [createObject, updateObject, deleteObject]);
 
   const undo = useCallback(() => {
     const entry = undoFromStore();

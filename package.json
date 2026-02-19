@@ -25,7 +25,8 @@
     "smoke:ai-proxy": "bun run scripts/smoke-ai-proxy.ts",
     "benchmark:strict": "bun run scripts/release-gate.ts --skip-proxy-smoke",
     "release:gate": "bun run scripts/release-gate.ts",
-    "perf:check": "bun run scripts/run-performance-check.ts"
+    "perf:check": "bun run scripts/run-performance-check.ts",
+    "cleanup": "bun run lint:fix && bun run format"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
