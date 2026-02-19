@@ -136,6 +136,7 @@
   - [src/components/canvas/PropertyInspector.tsx](src/components/canvas/PropertyInspector.tsx)
 - Verify:
   - Rapid clicking does not stutter or visually glitch.
+- **Implementation (Task 9):** Added [src/hooks/useDebouncedNumberField.ts](src/hooks/useDebouncedNumberField.ts) for local display state and debounced commit; PropertyInspector stroke width and font size use it. PRD subsection and unit tests added. Check the box above only after confirming in browser or E2E.
 - **Scores (1–10):** Ease `8` · Usefulness `5` · App need `5` · Risk `9` · Speed `9` · Wow `3` → **Overall `7`**
 
 ### P1 - Product UX and maintainability improvements

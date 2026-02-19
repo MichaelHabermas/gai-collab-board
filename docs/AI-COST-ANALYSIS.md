@@ -119,3 +119,7 @@ Task 3 (only owners can rename board names) is permissions and backend alignment
 ### Snap-to-grid drag parity (Feb 2026) — production relevance
 
 Snap-to-grid parity (drag position constrained to grid during drag, not only on end) is client-side canvas behavior only. No new AI endpoints, no change to LLM usage, API calls, or command volume. **LLM cost:** unchanged. Production cost and token mix unchanged. Track production cost by what is actually used: AI chat (Groq/NVIDIA) and the projections table above.
+
+### Spin box rapid-click polish (Feb 2026) — production relevance
+
+Property Inspector number inputs (stroke width, font size) use debounced commit and local display state for smooth rapid-click behavior. UI-only; no LLM usage or API impact. Production projections unchanged.

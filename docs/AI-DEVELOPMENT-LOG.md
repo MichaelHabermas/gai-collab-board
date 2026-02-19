@@ -327,3 +327,25 @@ This log records how AI was used during development: tools (Cursor, Context7 MCP
 - Approximate cumulative tokens across logged sessions: ~367k input / ~128k output (estimate)
 
 **Deployment impact (expected):** UI-only; drag bound logic runs in client. No new AI endpoints, no change to LLM usage or command volume. Production projections and token mix unchanged.
+
+## Spin box rapid-click polish (Task 9, Feb 2026)
+
+**Scope:** UI-UX item 9 — smooth number input updates under rapid increment/decrement in the Property Inspector. Root cause: every change called `onObjectUpdate` immediately, causing many async writes and display stutter.
+
+**Implementation:**
+
+- **Hook:** [src/hooks/useDebouncedNumberField.ts](../src/hooks/useDebouncedNumberField.ts) — local display state, debounced commit (350 ms), flush on blur, sync from prop when selection or external sync changes; clears pending debounce when propValue changes.
+- **PropertyInspector:** [src/components/canvas/PropertyInspector.tsx](../src/components/canvas/PropertyInspector.tsx) — stroke width and font size use the hook; commit callbacks apply to selected objects.
+- **PRD:** [docs/PRD.md](PRD.md) — added "Property Inspector number inputs (spin box rapid-click)" with expected behaviour and verification checkboxes (unchecked until browser/E2E).
+- **Tests:** [tests/unit/useDebouncedNumberField.test.tsx](../tests/unit/useDebouncedNumberField.test.tsx) (debounce, blur flush, prop sync, validation); [tests/unit/PropertyInspector.test.tsx](../tests/unit/PropertyInspector.test.tsx) updated for commit-on-blur and rapid-change single-commit.
+- **Plan:** [UI-UX-IMPROVEMENT-PLAN.md](../UI-UX-IMPROVEMENT-PLAN.md) item 9 — implementation note added; checkbox remains unchecked until manual or E2E verification.
+
+**Cost & usage (this session):** Development via Cursor; no external LLM API. Approximate token use: ~20k input / ~7k output (estimate).
+
+**Running totals (development):**
+
+- Cursor subscription: $20/month
+- External API spend during development: $0
+- Approximate cumulative tokens across logged sessions: ~387k input / ~135k output (estimate)
+
+**Deployment impact (expected):** UI-only; debounced number fields run in client. No change to LLM usage, API calls, or production cost. Production projections and token mix unchanged.

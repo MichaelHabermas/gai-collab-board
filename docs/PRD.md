@@ -1812,6 +1812,21 @@ All canvas objects (sticky notes, rectangles, circles, lines, connectors, frames
 
 - [ ] All canvas object types (sticky note, rectangle, circle, line, connector, frame, text) render with a consistent slight shadow.
 
+### Property Inspector number inputs (spin box rapid-click)
+
+Number inputs in the Property Inspector (e.g. stroke width, font size) use local display state and debounced commit so that rapid increment/decrement (native spinner or keyboard) does not stutter or trigger many writes. The value commits to the board after a short pause or on blur.
+
+**Expected behaviour:**
+
+- Rapid increment/decrement (native spinner or keyboard) does not stutter or visually glitch; the displayed value updates smoothly.
+- The value commits to the board after a short pause (debounce) or when the field loses focus (blur).
+- When selection changes or external sync updates the property, the displayed number updates to the new object(s) value.
+
+**Verification (do not check until confirmed in browser or E2E):**
+
+- [ ] Rapidly clicking stroke width or font size spinner updates the display smoothly and commits the final value without stutter.
+- [ ] Changing selection or external sync updates the displayed number to the new object(s) value.
+
 ### Text editing overlay stability (Task 7)
 
 While editing text in place (sticky note, text element, or frame title), the HTML overlay stays aligned with the canvas shape when the user pans or zooms. Rotation is accounted for.

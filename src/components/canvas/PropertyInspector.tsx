@@ -1,7 +1,8 @@
-import { useMemo, type ReactElement } from 'react';
+import { useMemo, useCallback, type ReactElement } from 'react';
 import { useSelection } from '@/contexts/selectionContext';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { useDebouncedNumberField } from '@/hooks/useDebouncedNumberField';
 import type { IBoardObject } from '@/types';
 import type { IUpdateObjectParams } from '@/modules/sync/objectService';
 
@@ -155,31 +156,36 @@ export const PropertyInspector = ({
     });
   };
 
-  const handleStrokeWidthChange = (value: string) => {
-    if (value === MIXED_PLACEHOLDER) return;
+  const handleStrokeWidthCommit = useCallback(
+    (num: number) => {
+      selectedObjects.forEach((obj) => {
+        if (supportsStroke(obj.type)) {
+          onObjectUpdate(obj.id, { strokeWidth: num });
+        }
+      });
+    },
+    [selectedObjects, onObjectUpdate]
+  );
 
-    const num = Number(value);
-    if (Number.isNaN(num) || num < 0) return;
+  const handleFontSizeCommit = useCallback(
+    (num: number) => {
+      selectedObjects.forEach((obj) => {
+        if (supportsFontSize(obj.type)) {
+          onObjectUpdate(obj.id, { fontSize: num });
+        }
+      });
+    },
+    [selectedObjects, onObjectUpdate]
+  );
 
-    selectedObjects.forEach((obj) => {
-      if (supportsStroke(obj.type)) {
-        onObjectUpdate(obj.id, { strokeWidth: num });
-      }
-    });
-  };
+  const strokeWidthField = useDebouncedNumberField(strokeWidthValue, handleStrokeWidthCommit, {
+    min: 0,
+  });
 
-  const handleFontSizeChange = (value: string) => {
-    if (value === MIXED_PLACEHOLDER) return;
-
-    const num = Number(value);
-    if (Number.isNaN(num) || num < 8 || num > 72) return;
-
-    selectedObjects.forEach((obj) => {
-      if (supportsFontSize(obj.type)) {
-        onObjectUpdate(obj.id, { fontSize: num });
-      }
-    });
-  };
+  const fontSizeField = useDebouncedNumberField(fontSizeValue, handleFontSizeCommit, {
+    min: 8,
+    max: 72,
+  });
 
   const handleFontColorChange = (value: string) => {
     if (value === MIXED_PLACEHOLDER || value === '') return;
@@ -284,8 +290,9 @@ export const PropertyInspector = ({
               id='property-inspector-stroke-width'
               type='number'
               min={0}
-              value={strokeWidthValue}
-              onChange={(e) => handleStrokeWidthChange(e.target.value)}
+              value={strokeWidthField.value}
+              onChange={strokeWidthField.onChange}
+              onBlur={strokeWidthField.onBlur}
               disabled={strokeWidthValue === MIXED_PLACEHOLDER}
               className='font-mono'
               data-testid='property-inspector-stroke-width'
@@ -304,8 +311,9 @@ export const PropertyInspector = ({
             type='number'
             min={8}
             max={72}
-            value={fontSizeValue}
-            onChange={(e) => handleFontSizeChange(e.target.value)}
+            value={fontSizeField.value}
+            onChange={fontSizeField.onChange}
+            onBlur={fontSizeField.onBlur}
             disabled={fontSizeValue === MIXED_PLACEHOLDER}
             className='font-mono'
             data-testid='property-inspector-font-size'

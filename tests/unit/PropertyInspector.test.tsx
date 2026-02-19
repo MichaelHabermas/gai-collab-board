@@ -93,7 +93,7 @@ describe('PropertyInspector', () => {
     expect(screen.getByTestId('property-inspector-empty')).toBeInTheDocument();
   });
 
-  it('shows font size control for sticky and calls onObjectUpdate when changed', () => {
+  it('shows font size control for sticky and calls onObjectUpdate when changed (commit on blur)', () => {
     const sticky = createMockObject({
       id: 'sticky-1',
       type: 'sticky',
@@ -108,6 +108,8 @@ describe('PropertyInspector', () => {
     expect(fontInput).toBeInTheDocument();
     expect(fontInput).toHaveValue(14);
     fireEvent.change(fontInput, { target: { value: '18' } });
+    expect(mockOnObjectUpdate).not.toHaveBeenCalled();
+    fireEvent.blur(fontInput);
     expect(mockOnObjectUpdate).toHaveBeenCalledWith('sticky-1', { fontSize: 18 });
   });
 
@@ -164,7 +166,7 @@ describe('PropertyInspector', () => {
     expect(mockOnObjectUpdate).toHaveBeenCalledWith('obj-1', { fill: '#86efac' });
   });
 
-  it('changing stroke width calls onObjectUpdate', () => {
+  it('changing stroke width commits on blur and calls onObjectUpdate', () => {
     const obj = createMockObject({ id: 'obj-1', type: 'rectangle', strokeWidth: 2 });
     render(
       <TestSelectionWrapper selectedIds={['obj-1']}>
@@ -173,6 +175,25 @@ describe('PropertyInspector', () => {
     );
     const strokeWidthInput = screen.getByTestId('property-inspector-stroke-width');
     fireEvent.change(strokeWidthInput, { target: { value: '5' } });
+    expect(mockOnObjectUpdate).not.toHaveBeenCalled();
+    fireEvent.blur(strokeWidthInput);
+    expect(mockOnObjectUpdate).toHaveBeenCalledWith('obj-1', { strokeWidth: 5 });
+  });
+
+  it('rapid stroke width changes result in single commit on blur', () => {
+    const obj = createMockObject({ id: 'obj-1', type: 'rectangle', strokeWidth: 2 });
+    render(
+      <TestSelectionWrapper selectedIds={['obj-1']}>
+        <PropertyInspector objects={[obj]} onObjectUpdate={mockOnObjectUpdate} />
+      </TestSelectionWrapper>
+    );
+    const strokeWidthInput = screen.getByTestId('property-inspector-stroke-width');
+    fireEvent.change(strokeWidthInput, { target: { value: '3' } });
+    fireEvent.change(strokeWidthInput, { target: { value: '4' } });
+    fireEvent.change(strokeWidthInput, { target: { value: '5' } });
+    expect(mockOnObjectUpdate).not.toHaveBeenCalled();
+    fireEvent.blur(strokeWidthInput);
+    expect(mockOnObjectUpdate).toHaveBeenCalledTimes(1);
     expect(mockOnObjectUpdate).toHaveBeenCalledWith('obj-1', { strokeWidth: 5 });
   });
 

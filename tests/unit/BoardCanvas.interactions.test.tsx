@@ -534,7 +534,9 @@ describe('BoardCanvas interactions', () => {
     const nonGridPos = { x: 13, y: 17 };
     let result: { x: number; y: number } | undefined;
     act(() => {
-      result = dragBoundFunc(nonGridPos);
+      if (typeof dragBoundFunc === 'function') {
+        result = dragBoundFunc(nonGridPos);
+      }
     });
 
     expect(result).toEqual({ x: 20, y: 20 });
