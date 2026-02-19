@@ -1,10 +1,22 @@
 import { ReactElement } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoginForm } from './LoginForm';
 import { SignupForm } from './SignupForm';
 
+const resolveSafeReturnUrl = (raw: string | null): string => {
+  if (raw && raw.startsWith('/') && !raw.startsWith('//')) {
+    return raw;
+  }
+  return '/';
+};
+
 export const AuthPage = (): ReactElement => {
+  const [searchParams] = useSearchParams();
+  const defaultTab = searchParams.get('tab') === 'signup' ? 'signup' : 'login';
+  const returnUrl = resolveSafeReturnUrl(searchParams.get('returnUrl'));
+
   return (
     <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4'>
       <div className='w-full max-w-md'>
@@ -20,7 +32,7 @@ export const AuthPage = (): ReactElement => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue='login' className='w-full'>
+            <Tabs defaultValue={defaultTab} className='w-full'>
               <TabsList className='grid w-full grid-cols-2 bg-slate-700/50'>
                 <TabsTrigger
                   value='login'
@@ -36,10 +48,10 @@ export const AuthPage = (): ReactElement => {
                 </TabsTrigger>
               </TabsList>
               <TabsContent value='login' className='mt-4'>
-                <LoginForm />
+                <LoginForm returnUrl={returnUrl} />
               </TabsContent>
               <TabsContent value='signup' className='mt-4'>
-                <SignupForm />
+                <SignupForm returnUrl={returnUrl} />
               </TabsContent>
             </Tabs>
           </CardContent>

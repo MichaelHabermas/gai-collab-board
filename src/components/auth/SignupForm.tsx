@@ -1,17 +1,23 @@
 import { useState, ChangeEvent, SubmitEvent, ReactElement } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/modules/auth';
 import { Loader2 } from 'lucide-react';
 
-export const SignupForm = (): ReactElement => {
+interface ISignupFormProps {
+  returnUrl: string;
+}
+
+export const SignupForm = ({ returnUrl }: ISignupFormProps): ReactElement => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [validationError, setValidationError] = useState<string>('');
   const { signUp, signInGoogle, error, clearError } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: SubmitEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
@@ -29,15 +35,21 @@ export const SignupForm = (): ReactElement => {
     }
 
     setIsLoading(true);
-    await signUp(email, password);
+    const result = await signUp(email, password);
     setIsLoading(false);
+    if (!result.error) {
+      navigate(returnUrl, { replace: true });
+    }
   };
 
   const handleGoogleSignIn = async (): Promise<void> => {
     setIsLoading(true);
     clearError();
-    await signInGoogle();
+    const result = await signInGoogle();
     setIsLoading(false);
+    if (!result.error) {
+      navigate(returnUrl, { replace: true });
+    }
   };
 
   const displayError = validationError ?? error;

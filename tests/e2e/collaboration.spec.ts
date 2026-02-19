@@ -34,7 +34,7 @@ const isOnBoardPage = async (page: Page): Promise<boolean> => {
 
 test.describe('Authentication Flow', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/login');
     await waitForPageReady(page);
   });
 

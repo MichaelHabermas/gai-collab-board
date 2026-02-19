@@ -1,29 +1,41 @@
 import { useState, ChangeEvent, SubmitEvent, ReactElement } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/modules/auth';
 import { Loader2 } from 'lucide-react';
 
-export const LoginForm = (): ReactElement => {
+interface ILoginFormProps {
+  returnUrl: string;
+}
+
+export const LoginForm = ({ returnUrl }: ILoginFormProps): ReactElement => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { signIn, signInGoogle, error, clearError } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: SubmitEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setIsLoading(true);
     clearError();
-    await signIn(email, password);
+    const result = await signIn(email, password);
     setIsLoading(false);
+    if (!result.error) {
+      navigate(returnUrl, { replace: true });
+    }
   };
 
   const handleGoogleSignIn = async (): Promise<void> => {
     setIsLoading(true);
     clearError();
-    await signInGoogle();
+    const result = await signInGoogle();
     setIsLoading(false);
+    if (!result.error) {
+      navigate(returnUrl, { replace: true });
+    }
   };
 
   return (

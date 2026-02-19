@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, type ReactElement } from 'rea
 import { useParams, useNavigate, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/modules/auth';
 import { AuthPage } from '@/components/auth/AuthPage';
+import { WelcomePage } from '@/components/auth/WelcomePage';
 import { Button } from '@/components/ui/button';
 import { ShareDialog } from '@/components/board/ShareDialog';
 import { BoardListSidebar } from '@/components/board/BoardListSidebar';
@@ -441,6 +442,11 @@ const BoardViewRoute = (): ReactElement => {
   );
 };
 
+const LoggedOutBoardRedirect = (): ReactElement => {
+  const { boardId } = useParams<{ boardId: string }>();
+  return <Navigate to={`/login?returnUrl=/board/${boardId ?? ''}`} replace />;
+};
+
 export const App = (): ReactElement => {
   const { user, loading } = useAuth();
 
@@ -456,12 +462,20 @@ export const App = (): ReactElement => {
   }
 
   if (!user) {
-    return <AuthPage />;
+    return (
+      <Routes>
+        <Route path='/' element={<WelcomePage />} />
+        <Route path='/login' element={<AuthPage />} />
+        <Route path='/board/:boardId' element={<LoggedOutBoardRedirect />} />
+        <Route path='*' element={<Navigate to='/' replace />} />
+      </Routes>
+    );
   }
 
   return (
     <Routes>
       <Route path='/board/:boardId' element={<BoardViewRoute />} />
+      <Route path='/login' element={<Navigate to='/' replace />} />
       <Route path='/' element={<ResolveActiveBoardRoute />} />
       <Route path='*' element={<ResolveActiveBoardRoute />} />
     </Routes>
