@@ -4,11 +4,11 @@ import { useCanvasKeyboardShortcuts } from '@/hooks/useCanvasKeyboardShortcuts';
 import type { ToolMode } from '@/types';
 
 describe('useCanvasKeyboardShortcuts', () => {
-  let setActiveTool: ReturnType<typeof vi.fn>;
+  let setActiveTool: (tool: ToolMode) => void;
   let activeToolRef: { current: ToolMode };
 
   beforeEach(() => {
-    setActiveTool = vi.fn<(tool: ToolMode) => void>();
+    setActiveTool = vi.fn() as (tool: ToolMode) => void;
     activeToolRef = { current: 'select' };
   });
 
