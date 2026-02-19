@@ -1,8 +1,6 @@
-## Summary
+<!-- Summary
 
-This file records the v2 feature discovery and prioritization. Section A is a brainstorm of many candidate features; Section B is the ordered Top 20 with justification (user value, effort, risk). It explains why certain items were chosen and in what order, so the v2 roadmap is auditable and the priorities can be explained or revisited.
-
----
+This file records the v2 feature discovery and prioritization. Section A is a brainstorm of many candidate features; Section B is the ordered Top 20 with justification (user value, effort, risk). It explains why certain items were chosen and in what order, so the v2 roadmap is auditable and the priorities can be explained or revisited. -->
 
 # CollabBoard v2: Initial Research — Candidate Features and Priority List
 

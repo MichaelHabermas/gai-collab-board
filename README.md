@@ -16,12 +16,14 @@ with an AI-first development approach.
 - **Infinite Canvas** — Smooth pan and zoom at 60 FPS
 - **Sticky Notes** — Create, edit text, and change colors
 - **Shapes** — Rectangles, circles, and lines with customizable colors
-- **Connectors** — Lines and arrows linking objects together
+- **Connectors** — Lines and arrows with configurable arrowheads (none, start, end, both) and stroke styles (solid, dashed, dotted)
 - **Text Elements** — Standalone text labels
 - **Frames** — Group and organize content areas
 - **Transforms** — Move, resize, and rotate objects
 - **Selection** — Single and multi-select (shift-click, drag-to-select)
 - **Operations** — Delete, duplicate, copy/paste
+- **Comments** — Threaded comments on any object with real-time sync
+- **Undo/Redo** — Command-pattern history (Ctrl+Z / Ctrl+Shift+Z) for create, delete, move, resize, and property changes
 
 ### Real-Time Collaboration
 
@@ -41,6 +43,8 @@ Natural language commands to manipulate the board:
 - **Manipulation** — "Move all pink sticky notes to the right side"
 - **Layout** — "Arrange these sticky notes in a grid"
 - **Complex** — "Create a SWOT analysis template with four quadrants"
+- **Explain Board** — "Explain this board" for an AI-generated summary of all content
+- **Summarize Selection** — "Summarize selection" for a summary of selected objects
 
 ## Tech Stack
 
@@ -140,6 +144,8 @@ To deploy to Render, see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for build, pro
 | Duplicate    | Ctrl/Cmd + D                       |
 | Copy         | Ctrl/Cmd + C                       |
 | Paste        | Ctrl/Cmd + V                       |
+| Undo         | Ctrl/Cmd + Z                       |
+| Redo         | Ctrl/Cmd + Shift + Z               |
 | Deselect     | Escape                             |
 
 Shortcuts are disabled when focus is in an input or text-edit field.
@@ -209,7 +215,8 @@ E2E tests run automatically on push/PR to `development` or `main` (see [.github/
 
 - [Deployment](docs/DEPLOYMENT.md) — Render and Firebase setup and environment variables
 - [Guides](docs/guides/README.md) — Development environment, Firebase, testing, AI integration, Konva, Tailwind/Shadcn
-- [AI Cost Analysis](docs/AI-COST-ANALYSIS.md) — AI usage and cost notes
+- [AI Cost Analysis](docs/planning/AI-COST-ANALYSIS.md) — AI usage and cost projections
+- [AI Development Log](docs/planning/AI-DEVELOPMENT-LOG.md) — Tools, workflow, prompts, and learnings
 
 ## Architecture
 

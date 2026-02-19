@@ -3,7 +3,7 @@
 > Quick-reference guide for AI agents and LLMs. Use this to locate relevant documentation without loading everything into context. Always check this index FIRST before searching the codebase.
 
 **Last Updated:** 2026-02-19
-**Total Documents:** 41
+**Total Documents:** 43
 
 ## How to Use This Index
 
@@ -60,6 +60,7 @@
 | `phases/version-2/INITIAL-RESEARCH.md` | v2 feature brainstorm and prioritized Top 20 with justification (user value, effort, risk) | `v2`, `prioritization`, `candidates`, `roadmap` | 2026-02-17 |
 | `phases/version-2/PRD.md` | Final v2 PRD: single source for execution (EPICs, stories, features, branches, commits) | `v2`, `PRD`, `execution`, `scope` | 2026-02-17 |
 | `phases/version-2/PRD-V1.md` | Initial v2 PRD: git workflow, feature branches, EPIC/story/feature mapping | `v2`, `PRD`, `git workflow`, `feature branches` | 2026-02-17 |
+| `phases/version-2/PRE-SEARCH-DOCUMENT.md` | Phase 1-3 deliverable checklist: research, design, and implementation pre-search | `pre-search`, `checklist`, `deliverables`, `phases` | 2026-02-19 |
 | `phases/version-2/PRD-V2.md` | Expanded v2 PRD: success criteria, risks, dependencies, stakeholder value, diagrams | `v2`, `PRD`, `success criteria`, `planning` | 2026-02-17 |
 
 ### Planning
@@ -67,7 +68,8 @@
 | File | Summary | Key Topics | Last Modified |
 |------|---------|------------|---------------|
 | `planning/AI-COST-ANALYSIS.md` | AI cost at scale: dev costs, production projections (100–100K users), Groq vs NVIDIA, assumptions | `AI cost`, `Groq`, `NVIDIA`, `scaling`, `LLM` | 2026-02-19 |
-| `planning/AI-DEVELOPMENT-LOG.md` | How AI was used: Cursor, Context7 MCP, prompts, AI vs hand-written code split, learnings | `AI-first`, `Cursor`, `MCP`, `workflow`, `learnings` | 2026-02-19 |
+| `planning/AI-DEVELOPMENT-LOG.md` | 1-page AI dev log: tools, MCP usage, prompts, code split, strengths/limitations, learnings, cost | `AI-first`, `Cursor`, `MCP`, `workflow`, `learnings` | 2026-02-19 |
+| `planning/AI-SESSION-LOG.md` | Detailed per-session development notes (20+ sessions): scope, implementation, cost, running totals | `sessions`, `cost`, `running totals`, `implementation` | 2026-02-19 |
 | `planning/UI-UX-IMPROVEMENT-PLAN.md` | Prioritized UX improvements: share links, theme, panel collapse, balanced scoring, delivery plan | `UX`, `share links`, `theme`, `prioritization`, `P0/P1` | 2026-02-18 |
 
 ### Product
@@ -114,7 +116,7 @@
 | Topic/Keyword | Relevant Docs |
 |---------------|---------------|
 | `ADR` | `research/RECORD-ARCHITECTURE-DECISIONS-V2.md`, `research/RECORD-ARCHITECTURE-DECISIONS.md` |
-| `AI` | `guides/AI-INTEGRATION-GUIDE.md`, `planning/AI-COST-ANALYSIS.md`, `planning/AI-DEVELOPMENT-LOG.md`, `product/PRD.md` |
+| `AI` | `guides/AI-INTEGRATION-GUIDE.md`, `planning/AI-COST-ANALYSIS.md`, `planning/AI-DEVELOPMENT-LOG.md`, `planning/AI-SESSION-LOG.md`, `product/PRD.md` |
 | `audit` | `reports/mvp-audit-report.md`, `reports/mvp-audit-matrix.md`, `reports/refactor-audit/REFACTOR_AUDIT_REPORT.md` |
 | `benchmarks` | `optimization/OPTIMIZATION-PLAN.md`, `reports/mvp-audit-matrix.md`, `operations/RELEASE-AUTOMATION.md` |
 | `canvas` | `guides/KONVA-REACT-GUIDE.md`, `product/PRD.md` |
