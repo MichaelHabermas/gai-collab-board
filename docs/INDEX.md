@@ -49,7 +49,7 @@
 
 | File | Summary | Key Topics | Last Modified |
 |------|---------|------------|---------------|
-| `performance/PERFORMANCE_LOG.md` | Task-level performance reviews, metrics-over-time graph, optimization history (A.1–A.4); run `bun run perf:check` to record and refresh | `performance`, `cleanup`, `optimization`, `perf:check`, `metrics over time`, `viewport`, `A.4`, `bundle`, `tree-shaking`, `multi-drop` | 2026-02-19 |
+| `performance/PERFORMANCE_LOG.md` | Task-level performance reviews, metrics schema (timestamps for graphing), time-based progress chart, optimization history (A.1–A.4); run `bun run perf:check` to record and refresh | `performance`, `cleanup`, `optimization`, `perf:check`, `metrics over time`, `metrics schema`, `timestamps`, `graphing`, `viewport`, `A.4`, `bundle`, `tree-shaking`, `multi-drop` | 2026-02-19 |
 
 ### Phases (version-2)
 

@@ -135,10 +135,12 @@ describe('Sync Benchmark Integration Tests', () => {
     const { writeFileSync } = await import('fs');
     const { join } = await import('path');
     const outPath = join(process.cwd(), 'docs/performance/last-run-metrics.json');
+    const capturedAtMs = Date.now();
+    const capturedAt = new Date(capturedAtMs).toISOString();
     writeFileSync(
       outPath,
       JSON.stringify(
-        { capturedAt: new Date().toISOString(), source: 'sync.latency.test.ts', metrics: collectedMetrics },
+        { capturedAt, capturedAtMs, source: 'sync.latency.test.ts', metrics: collectedMetrics },
         null,
         2
       )

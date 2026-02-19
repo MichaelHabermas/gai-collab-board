@@ -27,12 +27,15 @@ interface IMetricEntry {
 
 interface ILastRunMetrics {
   capturedAt: string;
+  capturedAtMs?: number;
   source: string;
   metrics: IMetricEntry[];
 }
 
 interface IHistoryEntry {
   date: string;
+  timestamp?: string;
+  timestamp_ms?: number;
   cursor_latency_ms: number;
   object_update_latency_ms: number;
   batch_500_objects_ms: number;
@@ -75,8 +78,13 @@ function appendToHistory(last: ILastRunMetrics, history: IMetricsHistory): void 
   const objectUpdate = getMetricValue(last.metrics, 'object_update_latency');
   const batch500 = getMetricValue(last.metrics, 'batch_500_objects');
 
+  const date = last.capturedAt.slice(0, 10);
+  const timestampMs =
+    last.capturedAtMs ?? new Date(last.capturedAt).getTime();
   const entry: IHistoryEntry = {
-    date: last.capturedAt.slice(0, 10),
+    date,
+    timestamp: last.capturedAt,
+    timestamp_ms: timestampMs,
     cursor_latency_ms: cursor,
     object_update_latency_ms: objectUpdate,
     batch_500_objects_ms: batch500,
@@ -84,7 +92,20 @@ function appendToHistory(last: ILastRunMetrics, history: IMetricsHistory): void 
 
   history.history.push(entry);
   writeJson(HISTORY_PATH, history);
-  process.stdout.write(`[perf-check] Appended metrics for ${entry.date}.\n`);
+  process.stdout.write(`[perf-check] Appended metrics for ${date}.\n`);
+}
+
+function formatChartLabel(entry: IHistoryEntry): string {
+  const ms = entry.timestamp_ms ?? (entry.timestamp ? new Date(entry.timestamp).getTime() : NaN);
+  if (!Number.isNaN(ms)) {
+    const d = new Date(ms);
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    return `${mm}-${dd} ${hh}:${min}`;
+  }
+  return entry.date;
 }
 
 function buildMermaidChart(history: IHistoryEntry[]): string {
@@ -96,7 +117,7 @@ function buildMermaidChart(history: IHistoryEntry[]): string {
     return 'One data point so far. Run `bun run perf:check` again to see a trend.';
   }
 
-  const labels = slice.map((e) => e.date);
+  const labels = slice.map((e) => formatChartLabel(e));
   const cursor = slice.map((e) => e.cursor_latency_ms);
   const objectUpdate = slice.map((e) => e.object_update_latency_ms);
   const batch500 = slice.map((e) => e.batch_500_objects_ms);
@@ -147,10 +168,24 @@ function updatePerformanceLog(history: IMetricsHistory): void {
   const latestTable = latest ? buildLatestTable(latest) : '*No runs yet.*';
   const chart = buildMermaidChart(history.history);
 
+  const latestRunLabel =
+    latest && (latest.timestamp ?? latest.timestamp_ms !== undefined)
+      ? (() => {
+          const ms = latest.timestamp_ms ?? new Date(latest.timestamp).getTime();
+          const d = new Date(ms);
+          const y = d.getFullYear();
+          const mo = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          const hh = String(d.getHours()).padStart(2, '0');
+          const min = String(d.getMinutes()).padStart(2, '0');
+          return `${y}-${mo}-${day} ${hh}:${min}`;
+        })()
+      : latest?.date ?? 'n/a';
+
   const newSection = [
     '',
     '',
-    `**Latest run (${latest?.date ?? 'n/a'})**`,
+    `**Latest run (${latestRunLabel})**`,
     '',
     latestTable,
     '',

@@ -8,17 +8,23 @@
 - **Integration (sync latency):** Running `bun run test:run tests/integration/sync.latency.test.ts` measures cursor write, object update, and 500-object batch duration. Measured values are written to `docs/performance/last-run-metrics.json` after each run.
 - **E2E (FPS, propagation, AI):** Run `REPORT_METRICS=1 bun run test:e2e tests/e2e/benchmark.spec.ts` (Chromium only). When `REPORT_METRICS=1` is set, the spec logs `METRIC fps`, `METRIC propagation_ms`, and `METRIC ai_command_ms` to stdout. Paste those into this log after a run.
 - **Targets (PRD):** FPS ≥58, object sync <100 ms, cursor <50 ms, 500+ objects, 5-user propagation <3000 ms, AI single-step <2000 ms.
+- **Timestamps:** All metrics are stored with both ISO 8601 strings and epoch milliseconds so each run is uniquely identifiable and suitable for time-series graphing and external tooling.
+
+### Metrics schema
+
+- **last-run-metrics.json:** `capturedAt` (ISO 8601), `capturedAtMs` (epoch ms), `source`, `metrics[]` with `name`, `value`, `unit`.
+- **metrics-history.json:** `history[]` with `date` (YYYY-MM-DD), `timestamp` (ISO 8601), `timestamp_ms` (epoch ms), `cursor_latency_ms`, `object_update_latency_ms`, `batch_500_objects_ms`. The `timestamp` and `timestamp_ms` fields identify each run for the progress-over-time chart and for external time-series plots (use `timestamp_ms` for the x-axis).
 
 ---
 
 ## Metrics over time
 
-**Latest run (2026-02-19)**
+**Latest run (2026-02-19 16:14)**
 
 | Metric | Value | Target |
 |--------|-------|--------|
-| Cursor write latency | 19 ms | <50 ms |
-| Object update latency | 19 ms | <100 ms |
+| Cursor write latency | 25 ms | <50 ms |
+| Object update latency | 25 ms | <100 ms |
 | 500-object batch | 61 ms | <1500 ms |
 
 **Progress over time**
@@ -26,11 +32,11 @@
 ```mermaid
 xychart-beta
     title "Integration metrics over time (ms)"
-    x-axis ["2026-02-19", "2026-02-19", "2026-02-19", "2026-02-19", "2026-02-19", "2026-02-19"]
+    x-axis ["2026-02-19", "2026-02-19", "2026-02-19", "2026-02-19", "2026-02-19", "2026-02-19", "02-19 16:14"]
     y-axis "Latency (ms)" 0 --> 88
-    line "Cursor write" [14, 25, 20, 17, 22, 19]
-    line "Object update" [31, 18, 32, 32, 26, 19]
-    line "Batch 500 objects" [62, 63, 60, 62, 60, 61]
+    line "Cursor write" [14, 25, 20, 17, 22, 19, 25]
+    line "Object update" [31, 18, 32, 32, 26, 19, 25]
+    line "Batch 500 objects" [62, 63, 60, 62, 60, 61, 61]
 ```
 
 ## Optimization History

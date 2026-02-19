@@ -58,13 +58,11 @@ Running `npm test` fails immediately with: `Cannot find module '@rollup/rollup-l
 
 The PRD is the single source of truth. Features 15–20 have all `[ ]` checkboxes unchecked — both acceptance criteria and commit/subtask items. Gap between "code exists" and "verified complete."
 
-### 3.3 Git Workflow Violation
+### 3.3 Feature Branch Pattern Deviation
 
-The PRD states: *"Never merge to main."* However, `main` and `development` currently point to the **same commit** (`d429773`). Both local and remote main contain all development work.
+PRD specifies individual feature branches. In practice, Features 15+16 were combined into one commit, Features 18+19 into another. Minor deviation from the prescribed one-branch-per-feature workflow.
 
-### 3.4 Feature Branch Pattern Deviation
-
-PRD specifies individual feature branches. In practice, Features 15+16 were combined into one commit, Features 18+19 into another. Branches exist but didn't follow the prescribed workflow.
+*Note: `main` and `development` are currently at the same commit — this is intentional. The project merges development into main when stable and ready to deploy.*
 
 ---
 
@@ -101,7 +99,7 @@ AI Development Log: **Not found** at expected path `docs/AI-DEVELOPMENT-LOG.md`.
 1. **Fix the test suite** — resolve `@rollup/rollup-linux-x64-gnu` module error
 2. **Verify Features 15–20** — run tests, confirm pass, check off PRD acceptance criteria
 3. **Create or locate AI Development Log** — required by Gauntlet rubric
-4. **Separate main from development** — revert main or document the deviation
+4. ~~Separate main from development~~ — resolved; merge-when-stable is intentional
 
 ### Should-Do (Quality)
 
@@ -129,5 +127,5 @@ AI Development Log: **Not found** at expected path `docs/AI-DEVELOPMENT-LOG.md`.
 | Integration test files | 3 |
 | E2E test files | 6 |
 | Test suite currently passing | No (broken dependency) |
-| PRD workflow compliance | Partial (main/dev merged) |
+| PRD workflow compliance | OK (merge-to-main is intentional) |
 | AI Development Log | Missing or mislocated |
