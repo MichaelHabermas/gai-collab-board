@@ -325,6 +325,7 @@ const BoardView = ({
                       onSend={ai.processCommand}
                       onClearError={ai.clearError}
                       onClearMessages={ai.clearMessages}
+                      objects={objects}
                     />
                   </Suspense>
                 </TabsContent>

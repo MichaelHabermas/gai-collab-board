@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect, type ReactElement } from 'react';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, Lightbulb, ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { IChatMessage } from '@/hooks/useAI';
+import type { IBoardObject } from '@/types';
+import { useSelectionStore } from '@/stores/selectionStore';
 
 interface IAIChatPanelProps {
   messages: IChatMessage[];
@@ -14,6 +16,8 @@ interface IAIChatPanelProps {
   onClearError: () => void;
   onClearMessages: () => void;
   className?: string;
+  /** All board objects — used to check if board is non-empty for Explain Board. */
+  objects?: IBoardObject[];
 }
 
 export const AIChatPanel = ({
@@ -24,9 +28,28 @@ export const AIChatPanel = ({
   onClearError,
   onClearMessages,
   className,
+  objects = [],
 }: IAIChatPanelProps): ReactElement => {
   const [inputValue, setInputValue] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const selectedIds = useSelectionStore((s) => s.selectedIds);
+
+  const hasBoardObjects = objects.length > 0;
+  const hasSelection = selectedIds.length > 0;
+
+  const handleExplainBoard = () => {
+    if (loading || !hasBoardObjects) return;
+    void onSend(
+      'Explain this board: describe what\'s on the board, the types of objects, their content, and how they relate to each other.'
+    );
+  };
+
+  const handleSummarizeSelection = () => {
+    if (loading || !hasSelection) return;
+    void onSend(
+      `Summarize these ${selectedIds.length} selected object(s): provide a concise overview of the selected items, their content, and any relationships between them.`
+    );
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -109,6 +132,34 @@ export const AIChatPanel = ({
             </Button>
           </div>
         )}
+
+        {/* Quick AI actions */}
+        <div className='flex gap-1 mt-2' data-testid='ai-quick-actions'>
+          <Button
+            type='button'
+            variant='outline'
+            size='sm'
+            className='text-xs border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-slate-100'
+            disabled={loading || !hasBoardObjects}
+            onClick={handleExplainBoard}
+            data-testid='ai-explain-board'
+          >
+            <Lightbulb className='h-3 w-3 mr-1' />
+            Explain Board
+          </Button>
+          <Button
+            type='button'
+            variant='outline'
+            size='sm'
+            className='text-xs border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-slate-100'
+            disabled={loading || !hasSelection}
+            onClick={handleSummarizeSelection}
+            data-testid='ai-summarize-selection'
+          >
+            <ListChecks className='h-3 w-3 mr-1' />
+            Summarize Selection
+          </Button>
+        </div>
 
         <form onSubmit={handleSubmit} className='flex gap-2 mt-2'>
           <Input
