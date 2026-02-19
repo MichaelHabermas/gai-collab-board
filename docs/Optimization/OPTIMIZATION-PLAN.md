@@ -157,12 +157,12 @@ Keep `selectionStore` minimal: only `selectedIds: string[]` and actions. Use `us
 
 #### Checklist
 
-- [ ] (Before) Confirm `tests/e2e/benchmark.spec.ts` and `tests/integration/sync.latency.test.ts` exist and pass.
-- [ ] (Before) Check whether `useBatchDraw` and selection refactor are already partially done.
-- [ ] `useBatchDraw()` called in `BoardCanvas`; `requestBatchDraw(layerRef)` used for all object/selection-driven layer redraws.
-- [ ] Zustand added; `selectionStore` created with `selectedIds`, `setSelectedIds`, `clearSelection`.
-- [ ] `SelectionProvider` / `SelectionContext` / `useSelection` replaced with store in `BoardCanvas`, `PropertyInspector`, and all other consumers.
-- [ ] `SelectionProvider` and `selectionContext` removed from app tree; selection behavior (single/multi, clear on empty click) unchanged.
+- [x] (Before) Confirm `tests/e2e/benchmark.spec.ts` and `tests/integration/sync.latency.test.ts` exist and pass.
+- [x] (Before) Check whether `useBatchDraw` and selection refactor are already partially done.
+- [x] `useBatchDraw()` called in `BoardCanvas`; `requestBatchDraw(layerRef)` used for all object/selection-driven layer redraws.
+- [x] Zustand added; `selectionStore` created with `selectedIds`, `setSelectedIds`, `clearSelection`.
+- [x] `SelectionProvider` / `SelectionContext` / `useSelection` replaced with store in `BoardCanvas`, `PropertyInspector`, and all other consumers.
+- [x] `SelectionProvider` and `selectionContext` removed from app tree; selection behavior (single/multi, clear on empty click) unchanged.
 - [ ] Selection UI and unit/e2e tests for selection pass.
 - [ ] (After) Run full benchmark suite; FPS ≥58, object sync &lt;100 ms, cursor &lt;50 ms, 500-object and 5-user tests pass.
 - [ ] (Stretch) No regression; aim for FPS toward 60 if applicable.
@@ -206,10 +206,10 @@ Add or use a `deleteObjectsBatch(boardId, objectIds)` that builds one `writeBatc
 
 #### Checklist
 
-- [ ] (Before) Confirm `tests/e2e/benchmark.spec.ts` and `tests/integration/sync.latency.test.ts` exist and pass.
+- [x] (Before) Confirm `tests/e2e/benchmark.spec.ts` and `tests/integration/sync.latency.test.ts` exist and pass.
 - [ ] (Before) Check whether batch delete or defer-redraw logic is already partially done.
 - [ ] Bulk delete profiled (Firestore vs. React re-renders vs. Konva redraws); bottleneck identified.
-- [ ] All deletes in a single Firestore `writeBatch`; canvas re-renders deferred until batch resolves.
+- [x] All deletes in a single Firestore `writeBatch`; canvas re-renders deferred until batch resolves.
 - [ ] Bulk delete for 20+ objects completes in &lt;300 ms (measured).
 - [ ] Optional: loading indicator for operations &gt;300 ms.
 - [ ] 500-object and 5-user benchmarks still pass; bulk-delete assertion or e2e added.
@@ -480,11 +480,11 @@ flowchart TD
 
 #### Checklist
 
-- [ ] (Before) Confirm benchmark/sync tests exist and pass if any auth/routing change could affect them.
-- [ ] `/welcome` route created; renders only when user is not authenticated.
-- [ ] App name, tagline, feature highlights (real-time collab, AI tools, infinite canvas), demo/screenshot included.
-- [ ] Prominent Log In and Sign Up CTAs; auto-redirect authenticated users to board list.
-- [ ] Responsive; matches existing design system.
+- [x] (Before) Confirm benchmark/sync tests exist and pass if any auth/routing change could affect them.
+- [x] `/welcome` route created; renders only when user is not authenticated.
+- [x] App name, tagline, feature highlights (real-time collab, AI tools, infinite canvas), demo/screenshot included.
+- [x] Prominent Log In and Sign Up CTAs; auto-redirect authenticated users to board list.
+- [x] Responsive; matches existing design system.
 - [ ] (After) No regression in auth or benchmark gates.
 
 ### B.2 — Board deletion — Owner vs. non-owner (84%)
@@ -520,10 +520,10 @@ flowchart TD
 #### Checklist
 
 - [ ] (Before) Confirm Firestore rules and board list flows are understood.
-- [ ] Non-owner "delete" removes board from their list only (leave board / remove membership); board persists for others.
-- [ ] Owner delete shows confirmation dialog; hard-deletes Firestore document and associated objects.
-- [ ] Firebase security rules enforce owner vs. non-owner server-side.
-- [ ] UI: "Leave Board" for non-owners, "Delete Board" for owners.
+- [x] Non-owner "delete" removes board from their list only (leave board / remove membership); board persists for others.
+- [x] Owner delete shows confirmation dialog; hard-deletes Firestore document and associated objects.
+- [x] Firebase security rules enforce owner vs. non-owner server-side.
+- [x] UI: "Leave Board" for non-owners, "Delete Board" for owners.
 - [ ] (After) No regression in 5-user or object sync; board list and permissions correct.
 
 ### B.3 — Board name editing — Owner only (82%)
@@ -540,8 +540,8 @@ Ensure `ownerId` exists on the board document (same as B.2). In the board list s
 
 #### Checklist
 
-- [ ] `ownerId` derived or added on board document.
-- [ ] Editable name input only when `currentUser.uid === board.ownerId` (sidebar and header).
+- [x] `ownerId` derived or added on board document.
+- [x] Editable name input only when `currentUser.uid === board.ownerId` (sidebar and header).
 - [ ] Non-owners see read-only name; tooltip "Only the board owner can rename this board."
 - [ ] (After) No regression in board load or sync.
 
@@ -578,7 +578,7 @@ sequenceDiagram
 
 - [ ] (Before) Reproduce failure in incognito; audit URL and Firestore read rules.
 - [ ] URL encodes board ID correctly; unauthenticated or non-member read rules allow intended access.
-- [ ] App routes to correct board when shared link is followed (owner, invited member, stranger).
+- [x] App routes to correct board when shared link is followed (owner, invited member, stranger).
 - [ ] (After) Share link opens correct board; no regression in auth or benchmarks.
 
 ### B.5 — Fix trackpad panning (macOS) (80%)

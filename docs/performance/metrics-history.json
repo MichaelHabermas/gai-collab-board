@@ -11,6 +11,12 @@
       "cursor_latency_ms": 25,
       "object_update_latency_ms": 18,
       "batch_500_objects_ms": 63
+    },
+    {
+      "date": "2026-02-19",
+      "cursor_latency_ms": 20,
+      "object_update_latency_ms": 32,
+      "batch_500_objects_ms": 60
     }
   ]
 }

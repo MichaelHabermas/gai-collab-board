@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, type RefObject } from 'react';
 import { computeViewportToFitBounds } from '@/lib/canvasBounds';
 import type {
   IPersistedViewport,
@@ -11,6 +11,14 @@ import type {
 } from '@/types';
 
 export type IViewportPersistState = IPersistedViewport;
+
+/** Minimal Stage API used for imperative viewport updates (avoids importing Konva in hook). */
+interface IStageRefLike {
+  x: (v?: number) => number;
+  y: (v?: number) => number;
+  scaleX: (v?: number) => number;
+  scaleY: (v?: number) => number;
+}
 
 interface IUseCanvasViewportReturn {
   viewport: IViewportState;
@@ -29,11 +37,14 @@ interface IUseCanvasViewportOptions {
   initialViewport?: IViewportPersistState;
   /** Called when viewport changes (e.g. to persist). Debounce in the caller if needed. */
   onViewportChange?: (viewport: IViewportState) => void;
+  /** When provided, Stage transform is updated imperatively during pan/zoom to avoid React re-renders. */
+  stageRef?: RefObject<IStageRefLike | null>;
 }
 
 const SCALE_BY = 1.05;
 const MIN_SCALE = 0.1;
 const MAX_SCALE = 10;
+const VIEWPORT_THROTTLE_MS = 200;
 
 interface ITouchState {
   lastCenter: IViewportPosition | null;
@@ -45,10 +56,24 @@ interface ITouchState {
  * Provides handlers for wheel zoom, drag pan, and touch pinch-to-zoom.
  * Optionally accepts initial position/scale and a change callback for persistence.
  */
+function applyViewportToStage(
+  stageRef: RefObject<IStageRefLike | null> | undefined,
+  v: IViewportState
+): void {
+  const stage = stageRef?.current;
+  if (!stage) {
+    return;
+  }
+  stage.x(v.position.x);
+  stage.y(v.position.y);
+  stage.scaleX(v.scale.x);
+  stage.scaleY(v.scale.y);
+}
+
 export const useCanvasViewport = (
   options?: IUseCanvasViewportOptions
 ): IUseCanvasViewportReturn => {
-  const { initialViewport, onViewportChange } = options ?? {};
+  const { initialViewport, onViewportChange, stageRef } = options ?? {};
   const onViewportChangeRef = useRef(onViewportChange);
 
   useEffect(() => {
@@ -75,10 +100,52 @@ export const useCanvasViewport = (
     };
   });
 
+  const viewportRef = useRef<IViewportState>(viewport);
+  useEffect(() => {
+    viewportRef.current = viewport;
+  }, [viewport]);
+
   const touchStateRef = useRef<ITouchState>({
     lastCenter: null,
     lastDist: 0,
   });
+
+  const throttleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastFlushRef = useRef<number>(0);
+
+  const flushThrottledState = useCallback(() => {
+    if (throttleTimeoutRef.current) {
+      clearTimeout(throttleTimeoutRef.current);
+      throttleTimeoutRef.current = null;
+    }
+    setViewport({ ...viewportRef.current });
+    lastFlushRef.current = Date.now();
+  }, []);
+
+  const scheduleThrottledFlush = useCallback(() => {
+    const now = Date.now();
+    const elapsed = now - lastFlushRef.current;
+    if (elapsed >= VIEWPORT_THROTTLE_MS) {
+      flushThrottledState();
+      return;
+    }
+    if (throttleTimeoutRef.current) {
+      return;
+    }
+    throttleTimeoutRef.current = setTimeout(() => {
+      throttleTimeoutRef.current = null;
+      flushThrottledState();
+    }, VIEWPORT_THROTTLE_MS - elapsed);
+  }, [flushThrottledState]);
+
+  useEffect(() => {
+    return () => {
+      if (throttleTimeoutRef.current) {
+        clearTimeout(throttleTimeoutRef.current);
+        throttleTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   // Notify parent when viewport changes (for persistence). Skip initial mount and right after applying initialViewport.
   const skipNextNotifyRef = useRef(true);
@@ -110,11 +177,13 @@ export const useCanvasViewport = (
         }
 
         skipNextNotifyRef.current = true;
-        return {
+        const next = {
           ...prev,
           position: initialViewport.position,
           scale: initialViewport.scale,
         };
+        viewportRef.current = next;
+        return next;
       });
     }, 0);
     return () => {
@@ -122,74 +191,92 @@ export const useCanvasViewport = (
     };
   }, [initialViewport]);
 
-  // Handle window resize
+  // Handle window resize; keep ref in sync with state.
   useEffect(() => {
     const handleResize = () => {
-      setViewport((prev) => ({
-        ...prev,
+      const next = {
+        ...viewportRef.current,
         width: window.innerWidth,
         height: window.innerHeight,
-      }));
+      };
+      viewportRef.current = next;
+      setViewport(next);
     };
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Wheel zoom handler - zooms centered on cursor position
-  const handleWheel = useCallback((e: IKonvaWheelEvent) => {
-    e.evt.preventDefault();
+  // Wheel zoom handler - zooms centered on cursor position. Updates ref + Stage only; state via throttle.
+  const handleWheel = useCallback(
+    (e: IKonvaWheelEvent) => {
+      e.evt.preventDefault();
 
-    const stage = e.target.getStage();
-    if (!stage) return;
+      const stage = e.target.getStage();
+      if (!stage) {
+        return;
+      }
 
-    const oldScale = stage.scaleX();
-    const pointer = stage.getPointerPosition();
-    if (!pointer) return;
+      const oldScale = stage.scaleX();
+      const pointer = stage.getPointerPosition();
+      if (!pointer) {
+        return;
+      }
 
-    const mousePointTo = {
-      x: (pointer.x - stage.x()) / oldScale,
-      y: (pointer.y - stage.y()) / oldScale,
-    };
+      const mousePointTo = {
+        x: (pointer.x - stage.x()) / oldScale,
+        y: (pointer.y - stage.y()) / oldScale,
+      };
 
-    // Determine zoom direction
-    const direction = e.evt.deltaY > 0 ? -1 : 1;
-    const newScale = Math.min(
-      MAX_SCALE,
-      Math.max(MIN_SCALE, direction > 0 ? oldScale * SCALE_BY : oldScale / SCALE_BY)
-    );
+      const direction = e.evt.deltaY > 0 ? -1 : 1;
+      const newScale = Math.min(
+        MAX_SCALE,
+        Math.max(MIN_SCALE, direction > 0 ? oldScale * SCALE_BY : oldScale / SCALE_BY)
+      );
 
-    setViewport((prev) => ({
-      ...prev,
-      scale: { x: newScale, y: newScale },
-      position: {
-        x: pointer.x - mousePointTo.x * newScale,
-        y: pointer.y - mousePointTo.y * newScale,
-      },
-    }));
-  }, []);
+      const next: IViewportState = {
+        ...viewportRef.current,
+        scale: { x: newScale, y: newScale },
+        position: {
+          x: pointer.x - mousePointTo.x * newScale,
+          y: pointer.y - mousePointTo.y * newScale,
+        },
+      };
+      viewportRef.current = next;
+      applyViewportToStage(stageRef, next);
+      scheduleThrottledFlush();
+    },
+    [stageRef, scheduleThrottledFlush]
+  );
 
-  // Drag end handler for pan
-  const handleDragEnd = useCallback((e: IKonvaDragEvent) => {
-    const stage = e.target.getStage();
-    if (!stage || e.target !== stage) return;
+  // Drag end handler for pan. Konva already moved the Stage; sync ref and state once.
+  const handleDragEnd = useCallback(
+    (e: IKonvaDragEvent) => {
+      const stage = e.target.getStage();
+      if (!stage || e.target !== stage) {
+        return;
+      }
 
-    setViewport((prev) => ({
-      ...prev,
-      position: {
-        x: stage.x(),
-        y: stage.y(),
-      },
-    }));
-  }, []);
+      const next: IViewportState = {
+        ...viewportRef.current,
+        position: { x: stage.x(), y: stage.y() },
+      };
+      viewportRef.current = next;
+      applyViewportToStage(stageRef, next);
+      setViewport(next);
+    },
+    [stageRef]
+  );
 
-  // Touch move handler for pinch-to-zoom
+  // Touch move handler for pinch-to-zoom. Uses viewportRef; updates Stage + throttle only.
   const handleTouchMove = useCallback(
     (e: IKonvaTouchEvent) => {
       const touch1 = e.evt.touches[0];
       const touch2 = e.evt.touches[1];
 
-      if (!touch1 || !touch2) return;
+      if (!touch1 || !touch2) {
+        return;
+      }
 
       e.evt.preventDefault();
 
@@ -219,94 +306,115 @@ export const useCanvasViewport = (
         return;
       }
 
+      const current = viewportRef.current;
       const { lastCenter } = touchStateRef.current;
-      const scale = viewport.scale.x * (dist / touchStateRef.current.lastDist);
+      const scale = current.scale.x * (dist / touchStateRef.current.lastDist);
       const clampedScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale));
 
       const pointTo = {
-        x: (newCenter.x - viewport.position.x) / viewport.scale.x,
-        y: (newCenter.y - viewport.position.y) / viewport.scale.y,
+        x: (newCenter.x - current.position.x) / current.scale.x,
+        y: (newCenter.y - current.position.y) / current.scale.y,
       };
 
-      setViewport((prev) => ({
-        ...prev,
+      const next: IViewportState = {
+        ...current,
         scale: { x: clampedScale, y: clampedScale },
         position: {
           x: newCenter.x - pointTo.x * clampedScale + (newCenter.x - lastCenter.x),
           y: newCenter.y - pointTo.y * clampedScale + (newCenter.y - lastCenter.y),
         },
-      }));
+      };
+      viewportRef.current = next;
+      applyViewportToStage(stageRef, next);
+      scheduleThrottledFlush();
 
       touchStateRef.current = { lastCenter: newCenter, lastDist: dist };
     },
-    [viewport.scale, viewport.position]
+    [stageRef, scheduleThrottledFlush]
   );
 
-  // Touch end handler
+  // Touch end handler: flush viewport to state so UI and persistence see final position/scale.
   const handleTouchEnd = useCallback(() => {
     touchStateRef.current = { lastCenter: null, lastDist: 0 };
-  }, []);
+    flushThrottledState();
+  }, [flushThrottledState]);
 
-  // Programmatic zoom to specific scale
+  // Programmatic zoom to specific scale; sync ref and Stage.
   const zoomTo = useCallback(
     (scale: number, center?: IViewportPosition) => {
+      const current = viewportRef.current;
       const clampedScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale));
-      const zoomCenter = center || {
-        x: viewport.width / 2,
-        y: viewport.height / 2,
-      };
+      const zoomCenter =
+        center ||
+        { x: current.width / 2, y: current.height / 2 };
 
       const pointTo = {
-        x: (zoomCenter.x - viewport.position.x) / viewport.scale.x,
-        y: (zoomCenter.y - viewport.position.y) / viewport.scale.y,
+        x: (zoomCenter.x - current.position.x) / current.scale.x,
+        y: (zoomCenter.y - current.position.y) / current.scale.y,
       };
 
-      setViewport((prev) => ({
-        ...prev,
+      const next: IViewportState = {
+        ...current,
         scale: { x: clampedScale, y: clampedScale },
         position: {
           x: zoomCenter.x - pointTo.x * clampedScale,
           y: zoomCenter.y - pointTo.y * clampedScale,
         },
-      }));
+      };
+      viewportRef.current = next;
+      applyViewportToStage(stageRef, next);
+      setViewport(next);
     },
-    [viewport]
+    [stageRef]
   );
 
-  // Programmatic pan to position
-  const panTo = useCallback((position: IViewportPosition) => {
-    setViewport((prev) => ({
-      ...prev,
-      position,
-    }));
-  }, []);
+  // Programmatic pan to position; sync ref and Stage.
+  const panTo = useCallback(
+    (position: IViewportPosition) => {
+      const next: IViewportState = {
+        ...viewportRef.current,
+        position,
+      };
+      viewportRef.current = next;
+      applyViewportToStage(stageRef, next);
+      setViewport(next);
+    },
+    [stageRef]
+  );
 
-  // Zoom and pan so the given bounds fit in the viewport with padding
+  // Zoom and pan so the given bounds fit in the viewport with padding; sync ref and Stage.
   const zoomToFitBounds = useCallback(
     (bounds: IBounds, padding: number = 40) => {
+      const current = viewportRef.current;
       const { scale, position } = computeViewportToFitBounds(
-        viewport.width,
-        viewport.height,
+        current.width,
+        current.height,
         bounds,
         padding
       );
-      setViewport((prev) => ({
-        ...prev,
+      const next: IViewportState = {
+        ...current,
         scale: { x: scale, y: scale },
         position,
-      }));
+      };
+      viewportRef.current = next;
+      applyViewportToStage(stageRef, next);
+      setViewport(next);
     },
-    [viewport.width, viewport.height]
+    [stageRef]
   );
 
-  // Reset viewport to initial state
+  // Reset viewport to initial state; sync ref and Stage.
   const resetViewport = useCallback(() => {
-    setViewport((prev) => ({
-      ...prev,
+    const next: IViewportState = {
+      ...viewportRef.current,
       position: { x: 0, y: 0 },
       scale: { x: 1, y: 1 },
-    }));
-  }, []);
+    };
+    viewportRef.current = next;
+    applyViewportToStage(stageRef, next);
+    setViewport(next);
+  }, [stageRef]);
 
   return {
     viewport,

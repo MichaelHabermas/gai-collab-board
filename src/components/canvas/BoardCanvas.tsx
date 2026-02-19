@@ -237,6 +237,7 @@ export const BoardCanvas = memo(
     } = useCanvasViewport({
       initialViewport: persistedViewport,
       onViewportChange: handleViewportPersist,
+      stageRef,
     });
 
     useEffect(() => {
