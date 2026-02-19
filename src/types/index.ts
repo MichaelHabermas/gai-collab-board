@@ -2,6 +2,8 @@ export type { UserRole, IUser, IBoardMember, IUserPreferences } from './user';
 export type {
   ShapeType,
   ConnectorAnchor,
+  ArrowheadMode,
+  StrokeStyle,
   IBoardObject,
   IBoard,
   ICreateObjectParams,

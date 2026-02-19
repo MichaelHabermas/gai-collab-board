@@ -171,6 +171,8 @@ export const CanvasShapeRenderer = memo(
               isSelected={isSelected}
               draggable={false}
               hasArrow={true}
+              arrowheads={obj.arrowheads}
+              strokeStyle={obj.strokeStyle}
               onSelect={getSelectHandler(obj.id)}
               onDragEnd={getDragEndHandler(obj.id)}
             />
@@ -192,6 +194,8 @@ export const CanvasShapeRenderer = memo(
             isSelected={isSelected}
             draggable={canEdit}
             hasArrow={true}
+            arrowheads={obj.arrowheads}
+            strokeStyle={obj.strokeStyle}
             onSelect={getSelectHandler(obj.id)}
             onDragEnd={getDragEndHandler(obj.id)}
             onDragMove={canEdit ? onDragMove : undefined}

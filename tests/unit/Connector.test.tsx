@@ -9,15 +9,21 @@ import {
 
 let latestArrowProps: Record<string, unknown> | null = null;
 let latestLineProps: Record<string, unknown> | null = null;
+let arrowRenderCount = 0;
 
 vi.mock('react-konva', () => ({
   Arrow: (props: Record<string, unknown>) => {
     latestArrowProps = props;
+    arrowRenderCount++;
     return <div data-testid='connector-arrow' />;
   },
   Line: (props: Record<string, unknown>) => {
     latestLineProps = props;
     return <div data-testid='connector-line' />;
+  },
+  Group: (props: Record<string, unknown>) => {
+    const { children } = props;
+    return <div data-testid='connector-group'>{children as React.ReactNode}</div>;
   },
 }));
 
@@ -25,6 +31,7 @@ describe('Connector', () => {
   beforeEach(() => {
     latestArrowProps = null;
     latestLineProps = null;
+    arrowRenderCount = 0;
   });
 
   it('renders arrow mode by default and line mode when hasArrow is false', () => {
@@ -135,5 +142,93 @@ describe('Connector', () => {
     expect(attrs.points[3]).toBeCloseTo(38.28, 1);
     expect(scaleXValue).toBe(1);
     expect(scaleYValue).toBe(1);
+  });
+
+  // --- Feature 15: Arrowheads ---
+
+  describe('arrowheads', () => {
+    it('renders end arrow by default (arrowheads undefined)', () => {
+      render(
+        <Connector id='c-end' x={0} y={0} points={[0, 0, 100, 0]} stroke='#000' />
+      );
+      expect(screen.getByTestId('connector-arrow')).toBeInTheDocument();
+      expect(latestArrowProps?.pointerLength).toBe(10);
+      expect(latestArrowProps?.pointerWidth).toBe(10);
+    });
+
+    it('renders no arrow when arrowheads is "none"', () => {
+      render(
+        <Connector id='c-none' x={0} y={0} points={[0, 0, 100, 0]} stroke='#000' arrowheads='none' />
+      );
+      expect(screen.getByTestId('connector-line')).toBeInTheDocument();
+    });
+
+    it('renders end arrow when arrowheads is "end"', () => {
+      render(
+        <Connector id='c-end2' x={0} y={0} points={[0, 0, 100, 0]} stroke='#000' arrowheads='end' />
+      );
+      expect(screen.getByTestId('connector-arrow')).toBeInTheDocument();
+      // Points should be in normal order
+      expect(latestArrowProps?.points).toEqual([0, 0, 100, 0]);
+    });
+
+    it('renders start arrow with reversed points when arrowheads is "start"', () => {
+      render(
+        <Connector id='c-start' x={0} y={0} points={[0, 0, 100, 50]} stroke='#000' arrowheads='start' />
+      );
+      expect(screen.getByTestId('connector-arrow')).toBeInTheDocument();
+      // Points should be reversed: [100, 50, 0, 0]
+      expect(latestArrowProps?.points).toEqual([100, 50, 0, 0]);
+    });
+
+    it('renders both arrows as a group when arrowheads is "both"', () => {
+      render(
+        <Connector id='c-both' x={0} y={0} points={[0, 0, 100, 50]} stroke='#000' arrowheads='both' />
+      );
+      expect(screen.getByTestId('connector-group')).toBeInTheDocument();
+      // Should render two Arrow children inside the group
+      const arrows = screen.getAllByTestId('connector-arrow');
+      expect(arrows.length).toBe(2);
+    });
+
+    it('arrowheads prop overrides hasArrow', () => {
+      render(
+        <Connector id='c-override' x={0} y={0} points={[0, 0, 100, 0]} stroke='#000' hasArrow={true} arrowheads='none' />
+      );
+      expect(screen.getByTestId('connector-line')).toBeInTheDocument();
+    });
+  });
+
+  // --- Feature 16: Stroke styles ---
+
+  describe('strokeStyle', () => {
+    it('renders with no dash when strokeStyle is undefined (solid)', () => {
+      render(
+        <Connector id='c-solid' x={0} y={0} points={[0, 0, 100, 0]} stroke='#000' />
+      );
+      expect(latestArrowProps?.dash).toBeUndefined();
+    });
+
+    it('renders with dashed pattern when strokeStyle is "dashed"', () => {
+      render(
+        <Connector id='c-dashed' x={0} y={0} points={[0, 0, 100, 0]} stroke='#000' strokeStyle='dashed' />
+      );
+      expect(latestArrowProps?.dash).toEqual([8, 8]);
+    });
+
+    it('renders with dotted pattern when strokeStyle is "dotted"', () => {
+      render(
+        <Connector id='c-dotted' x={0} y={0} points={[0, 0, 100, 0]} stroke='#000' strokeStyle='dotted' />
+      );
+      expect(latestArrowProps?.dash).toEqual([2, 4]);
+    });
+
+    it('applies dash to "none" arrowheads (Line component)', () => {
+      render(
+        <Connector id='c-line-dash' x={0} y={0} points={[0, 0, 100, 0]} stroke='#000' arrowheads='none' strokeStyle='dashed' />
+      );
+      expect(screen.getByTestId('connector-line')).toBeInTheDocument();
+      expect(latestLineProps?.dash).toEqual([8, 8]);
+    });
   });
 });

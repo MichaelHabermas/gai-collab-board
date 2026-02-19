@@ -3,7 +3,7 @@ import { useSelectionStore } from '@/stores/selectionStore';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useDebouncedNumberField } from '@/hooks/useDebouncedNumberField';
-import type { IBoardObject } from '@/types';
+import type { IBoardObject, ArrowheadMode, StrokeStyle } from '@/types';
 import type { IUpdateObjectParams } from '@/modules/sync/objectService';
 
 const MIXED_PLACEHOLDER = 'Mixed';
@@ -29,6 +29,27 @@ const supportsFontSize = (type: IBoardObject['type']): boolean => {
 const supportsFontColor = (type: IBoardObject['type']): boolean => {
   return ['sticky', 'text'].includes(type);
 };
+
+const supportsArrowheads = (type: IBoardObject['type']): boolean => {
+  return type === 'connector';
+};
+
+const supportsStrokeStyle = (type: IBoardObject['type']): boolean => {
+  return type === 'connector';
+};
+
+const ARROWHEAD_OPTIONS: { value: ArrowheadMode; label: string }[] = [
+  { value: 'none', label: 'None' },
+  { value: 'start', label: 'Start' },
+  { value: 'end', label: 'End' },
+  { value: 'both', label: 'Both' },
+];
+
+const STROKE_STYLE_OPTIONS: { value: StrokeStyle; label: string }[] = [
+  { value: 'solid', label: 'Solid' },
+  { value: 'dashed', label: 'Dashed' },
+  { value: 'dotted', label: 'Dotted' },
+];
 
 const getObjectFontColor = (object: IBoardObject, defaultFontColor: string): string => {
   if (object.type === 'sticky') {
@@ -68,6 +89,8 @@ export const PropertyInspector = ({
   const showStroke = hasSelection && selectedObjects.some((o) => supportsStroke(o.type));
   const showFontSize = hasSelection && selectedObjects.some((o) => supportsFontSize(o.type));
   const showFontColor = hasSelection && selectedObjects.some((o) => supportsFontColor(o.type));
+  const showArrowheads = hasSelection && selectedObjects.some((o) => supportsArrowheads(o.type));
+  const showStrokeStyle = hasSelection && selectedObjects.some((o) => supportsStrokeStyle(o.type));
 
   const fillValue = useMemo(() => {
     if (selectedObjects.length === 0) return '';
@@ -132,6 +155,26 @@ export const PropertyInspector = ({
       ? String(Math.round((opacities[0] ?? 1) * 100))
       : MIXED_PLACEHOLDER;
   }, [selectedObjects]);
+  const arrowheadsValue = useMemo(() => {
+    if (selectedObjects.length === 0) return '';
+
+    const connectors = selectedObjects.filter((o) => supportsArrowheads(o.type));
+    if (connectors.length === 0) return '';
+
+    const values = [...new Set(connectors.map((o) => o.arrowheads ?? 'end'))];
+    return values.length === 1 ? (values[0] ?? 'end') : MIXED_PLACEHOLDER;
+  }, [selectedObjects]);
+
+  const strokeStyleValue = useMemo(() => {
+    if (selectedObjects.length === 0) return '';
+
+    const connectors = selectedObjects.filter((o) => supportsStrokeStyle(o.type));
+    if (connectors.length === 0) return '';
+
+    const values = [...new Set(connectors.map((o) => o.strokeStyle ?? 'solid'))];
+    return values.length === 1 ? (values[0] ?? 'solid') : MIXED_PLACEHOLDER;
+  }, [selectedObjects]);
+
   const selectedShapeCount = useMemo(() => {
     return objects.reduce((count, obj) => (selectedIdSet.has(obj.id) ? count + 1 : count), 0);
   }, [objects, selectedIdSet]);
@@ -209,6 +252,22 @@ export const PropertyInspector = ({
     const opacity = num / 100;
     selectedObjects.forEach((obj) => {
       onObjectUpdate(obj.id, { opacity });
+    });
+  };
+
+  const handleArrowheadsChange = (value: ArrowheadMode) => {
+    selectedObjects.forEach((obj) => {
+      if (supportsArrowheads(obj.type)) {
+        onObjectUpdate(obj.id, { arrowheads: value });
+      }
+    });
+  };
+
+  const handleStrokeStyleChange = (value: StrokeStyle) => {
+    selectedObjects.forEach((obj) => {
+      if (supportsStrokeStyle(obj.type)) {
+        onObjectUpdate(obj.id, { strokeStyle: value });
+      }
     });
   };
 
@@ -300,6 +359,54 @@ export const PropertyInspector = ({
             />
           </div>
         </>
+      )}
+
+      {showArrowheads && (
+        <div className='space-y-2'>
+          <Label className='text-foreground'>Arrowheads</Label>
+          <div className='flex gap-1' data-testid='property-inspector-arrowheads'>
+            {ARROWHEAD_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type='button'
+                onClick={() => handleArrowheadsChange(opt.value)}
+                disabled={arrowheadsValue === MIXED_PLACEHOLDER}
+                className={`flex-1 rounded px-2 py-1 text-xs border transition-colors ${
+                  arrowheadsValue === opt.value
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-muted text-muted-foreground border-border hover:bg-accent'
+                }`}
+                data-testid={`property-inspector-arrowheads-${opt.value}`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {showStrokeStyle && (
+        <div className='space-y-2'>
+          <Label className='text-foreground'>Line style</Label>
+          <div className='flex gap-1' data-testid='property-inspector-stroke-style'>
+            {STROKE_STYLE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type='button'
+                onClick={() => handleStrokeStyleChange(opt.value)}
+                disabled={strokeStyleValue === MIXED_PLACEHOLDER}
+                className={`flex-1 rounded px-2 py-1 text-xs border transition-colors ${
+                  strokeStyleValue === opt.value
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-muted text-muted-foreground border-border hover:bg-accent'
+                }`}
+                data-testid={`property-inspector-stroke-style-${opt.value}`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       {showFontSize && (

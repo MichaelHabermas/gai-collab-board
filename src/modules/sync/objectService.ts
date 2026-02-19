@@ -123,6 +123,14 @@ export const createObject = async (
     object.toAnchor = params.toAnchor;
   }
 
+  if (params.arrowheads) {
+    object.arrowheads = params.arrowheads;
+  }
+
+  if (params.strokeStyle) {
+    object.strokeStyle = params.strokeStyle;
+  }
+
   await setDoc(objectRef, object);
   return object;
 };
@@ -164,6 +172,12 @@ export const createObjectsBatch = async (
     };
     if (params.opacity) {
       object.opacity = params.opacity;
+    }
+    if (params.arrowheads) {
+      object.arrowheads = params.arrowheads;
+    }
+    if (params.strokeStyle) {
+      object.strokeStyle = params.strokeStyle;
     }
 
     batch.set(objectRef, object);

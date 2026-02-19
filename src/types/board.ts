@@ -5,6 +5,12 @@ export type ShapeType = 'sticky' | 'rectangle' | 'circle' | 'line' | 'text' | 'f
 
 export type ConnectorAnchor = 'top' | 'right' | 'bottom' | 'left';
 
+/** Arrowhead mode for connectors: which end(s) display arrowheads. */
+export type ArrowheadMode = 'none' | 'start' | 'end' | 'both';
+
+/** Stroke dash style for connectors. */
+export type StrokeStyle = 'solid' | 'dashed' | 'dotted';
+
 /** Parameters for creating a new board object. Used by objectService and toolExecutor. */
 export interface ICreateObjectParams {
   type: ShapeType;
@@ -25,6 +31,10 @@ export interface ICreateObjectParams {
   toObjectId?: string;
   fromAnchor?: ConnectorAnchor;
   toAnchor?: ConnectorAnchor;
+  /** Arrowhead mode for connectors; default 'end' when undefined */
+  arrowheads?: ArrowheadMode;
+  /** Stroke dash style for connectors; default 'solid' when undefined */
+  strokeStyle?: StrokeStyle;
   createdBy: string;
 }
 
@@ -55,6 +65,10 @@ export interface IBoardObject {
   toObjectId?: string;
   fromAnchor?: ConnectorAnchor;
   toAnchor?: ConnectorAnchor;
+  /** Arrowhead mode for connectors; default 'end' when undefined */
+  arrowheads?: ArrowheadMode;
+  /** Stroke dash style for connectors; default 'solid' when undefined */
+  strokeStyle?: StrokeStyle;
   // For circles
   radius?: number;
   createdBy: string;
