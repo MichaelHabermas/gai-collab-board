@@ -3,6 +3,7 @@ import { useRef, useEffect, memo } from 'react';
 import type { ReactElement, RefObject } from 'react';
 import Konva from 'konva';
 import type { ITransformEndAttrs } from '@/types';
+import { scaleLinePointsLengthOnly } from '@/lib/lineTransform';
 export type { ITransformEndRectAttrs, ITransformEndLineAttrs, ITransformEndAttrs } from '@/types';
 
 interface ITransformHandlerProps {
@@ -110,16 +111,16 @@ export const TransformHandler = memo(
             rotation: node.rotation(),
           };
         } else if (className === 'Line' || className === 'Arrow') {
-          // Line / Connector: persist scaled points, not width/height
+          // Line / Connector: length-only scaling so only length changes, not width
           const lineNode = node as Konva.Line;
           const currentPoints = lineNode.points();
-          const scaledPoints = currentPoints.map((p, i) => (i % 2 === 0 ? p * scaleX : p * scaleY));
+          const { points } = scaleLinePointsLengthOnly(currentPoints, scaleX, scaleY);
           node.scaleX(1);
           node.scaleY(1);
           attrs = {
             x: node.x(),
             y: node.y(),
-            points: scaledPoints,
+            points,
             rotation: node.rotation(),
           };
         } else {

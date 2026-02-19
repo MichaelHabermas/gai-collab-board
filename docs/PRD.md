@@ -1,8 +1,6 @@
-## Summary
+<!-- ## Summary
 
-The root Product Requirements Document is the main product and technical spec for CollabBoard. It defines the project (real-time collaborative whiteboard, AI-powered, Miro-inspired), MVP and success metrics, tech stack and architecture, SOLID application, naming, and detailed requirements (features, collaboration, AI, testing, appendices). It is the source of truth for scope and rationale so that implementation and prioritization stay aligned and can be explained from one document.
-
----
+The root Product Requirements Document is the main product and technical spec for CollabBoard. It defines the project (real-time collaborative whiteboard, AI-powered, Miro-inspired), MVP and success metrics, tech stack and architecture, SOLID application, naming, and detailed requirements (features, collaboration, AI, testing, appendices). It is the source of truth for scope and rationale so that implementation and prioritization stay aligned and can be explained from one document. -->
 
 # CollabBoard Product Requirements Document (PRD)
 
@@ -109,7 +107,7 @@ graph TB
 | **Frontend**   | React 19 + Vite + Bun                 | Fast dev (Vite HMR, Bun speed), type safety (TS), modern React features                   |
 | **Canvas**     | Konva.js                              | High performance (60fps with 1000+ objects), layered structure, React integration         |
 | **UI**         | Shadcn/ui + Tailwind v4               | Customizable components, CSS-first approach, accessible by default                        |
-| **AI**         | Groq (default) or secondary provider | Groq: free tier, Llama 3.3 70B; secondary (e.g. NVIDIA): OpenAI-compatible, function calling |
+| **AI**         | Groq (default) or secondary provider  | Groq: free tier, Llama 3.3 70B; secondary (e.g. NVIDIA): OpenAI-compatible, function calling |
 | **Deployment** | Render + Firebase                     | Render: static site and/or Web Service for AI proxy; Firebase: auth, persistence, realtime |
 
 ### SOLID Principles Application
@@ -1732,6 +1730,15 @@ while maintaining 60 FPS with 500+ objects.
 - **Subtask 1**: Connect shapes to sync module
 
 #### Commit 4: Shape Tests
+
+#### Line resize and rotation
+
+Lines are resizable **only along their length** (not in the perpendicular "width" direction). Lines are **rotatable** via the Transformer rotation handle; rotation is persisted.
+
+**Verification (do not check until confirmed in browser or E2E):**
+
+- [ ] Resizing a line (dragging Transformer handles) changes only its length; the line does not gain "width."
+- [ ] Rotating a line (Transformer rotation handle) works and the angle is persisted.
 
 ### Story 3.4: Connectors
 

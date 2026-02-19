@@ -120,12 +120,13 @@ describe('Connector', () => {
 
     transformEndHandler?.({ target: node });
 
-    expect(onTransformEnd).toHaveBeenCalledWith({
-      x: 5,
-      y: 6,
-      points: [0, 0, 20, 60],
-      rotation: 30,
-    });
+    const attrs = onTransformEnd.mock.calls[0][0];
+    expect(attrs).toMatchObject({ x: 5, y: 6, rotation: 30 });
+    expect(attrs.points).toHaveLength(4);
+    expect(attrs.points[0]).toBeCloseTo(-9.14, 1);
+    expect(attrs.points[1]).toBeCloseTo(-18.28, 1);
+    expect(attrs.points[2]).toBeCloseTo(19.14, 1);
+    expect(attrs.points[3]).toBeCloseTo(38.28, 1);
     expect(scaleXValue).toBe(1);
     expect(scaleYValue).toBe(1);
   });

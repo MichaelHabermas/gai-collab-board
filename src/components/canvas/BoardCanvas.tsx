@@ -41,6 +41,7 @@ import {
   computeSnappedPositionFromGuides,
 } from '@/lib/alignmentGuides';
 import { cn } from '@/lib/utils';
+import { getWidthHeightFromPoints } from '@/lib/lineTransform';
 import {
   applySnapPositionToNode,
   snapPositionToGrid,
@@ -1147,6 +1148,11 @@ export const BoardCanvas = memo(
               y: snappedPos.y,
             };
           }
+        }
+
+        if ('points' in finalAttrs && finalAttrs.points.length >= 4) {
+          const { width, height } = getWidthHeightFromPoints(finalAttrs.points);
+          finalAttrs = { ...finalAttrs, width, height };
         }
 
         onObjectUpdate?.(objectId, finalAttrs as Partial<IBoardObject>);

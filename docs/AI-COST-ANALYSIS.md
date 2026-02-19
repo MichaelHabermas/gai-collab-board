@@ -20,12 +20,12 @@ Development was primarily Cursor ($20/month) plus optional browser LLMs; fixed t
 
 Monthly LLM API cost to run the CollabBoard AI feature at scale (development tooling not included):
 
-| Users   | Commands/User/Month | Groq (Llama 3.3 70B) | NVIDIA (Kimi 2.5)   |
+| Users   | Commands/User/Month | Groq (Llama 3.3 70B) | NVIDIA (Kimi 2.5)    |
 | ------- | ------------------- | -------------------- | -------------------- |
 | 100     | 10                  | $0.72/month          | $1.44/month          |
 | 1,000   | 10                  | $7.25/month          | $14.40/month         |
 | 10,000  | 10                  | $72.48/month         | $144.00/month        |
-| 100,000 | 10                  | $724.80/month         | $1,440.00/month      |
+| 100,000 | 10                  | $724.80/month        | $1,440.00/month      |
 
 Costs scale linearly with commands per user per month; if usage doubles, costs double.
 
@@ -127,3 +127,7 @@ Property Inspector number inputs (stroke width, font size) use debounced commit 
 ### Move groups of selected objects (Feb 2026) — production relevance
 
 Group move (drag one selected or drag from selection marquee) is client-side canvas and batch Firestore position updates only. No new AI endpoints, no change to command volume or token mix. **LLM cost:** unchanged. Focus production cost on what is actually used: AI chat (Groq/NVIDIA) and the projections table above.
+
+### Line resize/rotation (Feb 2026) — production relevance
+
+Line length-only resize and rotation fix is UI/canvas only: shared helper, useShapeTransformHandler and TransformHandler for Line/Arrow, BoardCanvas persisting width/height from points. No LLM usage or API impact. Production projections and token mix unchanged.

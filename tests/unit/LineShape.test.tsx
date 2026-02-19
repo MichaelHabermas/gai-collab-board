@@ -81,7 +81,7 @@ describe('LineShape', () => {
     expect(onDragEnd).toHaveBeenCalledWith(42, 24);
   });
 
-  it('scales points on transform and resets scale', () => {
+  it('scales points length-only on transform and resets scale', () => {
     const onTransformEnd = vi.fn();
     let scaleXValue = 2;
     let scaleYValue = 3;
@@ -121,12 +121,15 @@ describe('LineShape', () => {
 
     transformEndHandler?.({ target: node });
 
-    expect(onTransformEnd).toHaveBeenCalledWith({
-      x: 7,
-      y: 9,
-      points: [0, 0, 10, 30],
-      rotation: 35,
-    });
+    const attrs = onTransformEnd.mock.calls[0][0];
+    expect(attrs).toMatchObject({ x: 7, y: 9, rotation: 35 });
+    expect(attrs.points).toBeDefined();
+    const pts = attrs.points as number[];
+    expect(pts).toHaveLength(4);
+    expect(pts[0]).toBeCloseTo(-4.57, 1);
+    expect(pts[1]).toBeCloseTo(-9.14, 1);
+    expect(pts[2]).toBeCloseTo(9.57, 1);
+    expect(pts[3]).toBeCloseTo(19.14, 1);
     expect(scaleXValue).toBe(1);
     expect(scaleYValue).toBe(1);
   });

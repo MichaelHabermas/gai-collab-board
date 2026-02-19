@@ -1,8 +1,6 @@
-## Summary
+<!-- Summary
 
-This log records how AI was used during development: tools (Cursor, Context7 MCP), workflows, effective prompts, and a rough split of AI-generated vs hand-written code. It also notes strengths, limitations, learnings, and includes cost and deployment expectations with running totals. It serves as both a submission artifact and a reference for improving future AI-assisted workflow and for explaining the development approach.
-
----
+This log records how AI was used during development: tools (Cursor, Context7 MCP), workflows, effective prompts, and a rough split of AI-generated vs hand-written code. It also notes strengths, limitations, learnings, and includes cost and deployment expectations with running totals. It serves as both a submission artifact and a reference for improving future AI-assisted workflow and for explaining the development approach. -->
 
 # AI Development Log
 
@@ -373,3 +371,26 @@ This log records how AI was used during development: tools (Cursor, Context7 MCP
 - Approximate cumulative tokens across logged sessions: ~412k input / ~145k output (estimate)
 
 **Deployment impact (expected):** Client/sync only; no new AI endpoints or LLM usage. Production cost and token mix unchanged.
+
+## Line resize (length-only) and rotation (Feb 2026)
+
+**Scope:** Lines must be resizable only along their length (not "width") and remain rotatable. Root cause: transform-end applied independent scaleX/scaleY to line points, so the bounding box could scale in both axes.
+
+**Implementation:**
+
+- **lineTransform:** [src/lib/lineTransform.ts](../src/lib/lineTransform.ts) — `scaleLinePointsLengthOnly(points, scaleX, scaleY)` computes old length (first-to-last), raw scaled length, then applies a single length scale from the line center so only length changes; `getWidthHeightFromPoints(points)` for bounds.
+- **useShapeTransformHandler:** [src/hooks/useShapeTransformHandler.ts](../src/hooks/useShapeTransformHandler.ts) — line branch uses `scaleLinePointsLengthOnly` instead of per-axis scaling.
+- **TransformHandler:** [src/components/canvas/TransformHandler.tsx](../src/components/canvas/TransformHandler.tsx) — Line/Arrow branch uses same helper for length-only points.
+- **BoardCanvas:** [src/components/canvas/BoardCanvas.tsx](../src/components/canvas/BoardCanvas.tsx) — when transform attrs include `points`, compute and persist `width`/`height` from points so drag bounds and selection stay correct.
+- **PRD:** [docs/PRD.md](PRD.md) — "Line resize and rotation" subsection under Story 3.3 with verification checkboxes (unchecked until browser/E2E).
+- **Tests:** [tests/unit/lineTransform.test.ts](../tests/unit/lineTransform.test.ts) (helper); [tests/unit/LineShape.test.tsx](../tests/unit/LineShape.test.tsx), [tests/unit/TransformHandler.test.tsx](../tests/unit/TransformHandler.test.tsx), [tests/unit/Connector.test.tsx](../tests/unit/Connector.test.tsx) updated for length-only expectations; [tests/e2e/lineResizeRotate.spec.ts](../tests/e2e/lineResizeRotate.spec.ts) for line create/select flow.
+
+**Cost & usage (this session):** Development via Cursor; no external LLM API. Approximate token use: ~30k input / ~12k output (estimate).
+
+**Running totals (development):**
+
+- Cursor subscription: $20/month
+- External API spend during development: $0
+- Approximate cumulative tokens across logged sessions: ~442k input / ~157k output (estimate)
+
+**Deployment impact (expected):** Canvas-only behaviour; no LLM or API change. Production cost unchanged.

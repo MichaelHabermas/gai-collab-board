@@ -207,7 +207,7 @@ describe('TransformHandler', () => {
     });
   });
 
-  it('emits line-like transform attrs for line nodes', () => {
+  it('emits line-like transform attrs with length-only scaling for line nodes', () => {
     const lineNode = createLineNode();
     const layerRef = {
       current: {
@@ -225,7 +225,7 @@ describe('TransformHandler', () => {
     expect(onTransformEnd).toHaveBeenCalledWith('line-1', {
       x: 8,
       y: 12,
-      points: [0, 0, 200, 100],
+      points: [-50, -25, 150, 75],
       rotation: 30,
     });
   });
