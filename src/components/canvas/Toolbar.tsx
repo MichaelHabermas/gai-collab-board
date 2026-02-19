@@ -10,6 +10,8 @@ import {
   ArrowRight,
   MousePointer2,
   Hand,
+  Undo2,
+  Redo2,
 } from 'lucide-react';
 import { STICKY_COLORS } from './shapes/StickyNote';
 import { cn } from '@/lib/utils';
@@ -23,6 +25,10 @@ interface IToolbarProps {
   canEdit: boolean;
   /** When true, toolbar is rendered inline (e.g. inside mobile sheet) without absolute positioning */
   embedded?: boolean;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
 }
 
 interface IToolButtonProps {
@@ -103,6 +109,10 @@ export const Toolbar = memo(
     onColorChange,
     canEdit,
     embedded = false,
+    onUndo,
+    onRedo,
+    canUndo = false,
+    canRedo = false,
   }: IToolbarProps): ReactElement => {
     const [showColors, setShowColors] = useState(false);
 
@@ -170,6 +180,33 @@ export const Toolbar = memo(
               testId={`tool-${tool.mode}`}
             />
           ))}
+
+          {/* Undo/Redo */}
+          {(onUndo || onRedo) && (
+            <>
+              <div className='h-px bg-border my-1' />
+              {onUndo && (
+                <ToolButton
+                  icon={<Undo2 className='h-5 w-5' />}
+                  label='Undo (Ctrl+Z)'
+                  isActive={false}
+                  onClick={onUndo}
+                  disabled={!canUndo}
+                  testId='tool-undo'
+                />
+              )}
+              {onRedo && (
+                <ToolButton
+                  icon={<Redo2 className='h-5 w-5' />}
+                  label='Redo (Ctrl+Shift+Z)'
+                  isActive={false}
+                  onClick={onRedo}
+                  disabled={!canRedo}
+                  testId='tool-redo'
+                />
+              )}
+            </>
+          )}
 
           {/* Divider */}
           <div className='h-px bg-border my-1' />

@@ -55,6 +55,7 @@ import { useBoardSettings } from '@/hooks/useBoardSettings';
 import { useMiddleMousePanListeners } from '@/hooks/useMiddleMousePanListeners';
 import { useCanvasKeyboardShortcuts } from '@/hooks/useCanvasKeyboardShortcuts';
 import { useAlignmentGuideCache } from '@/hooks/useAlignmentGuideCache';
+import { useHistoryStore } from '@/stores/historyStore';
 
 interface IBoardCanvasProps {
   boardId: string;
@@ -68,6 +69,8 @@ interface IBoardCanvasProps {
   onObjectDelete?: (objectId: string) => Promise<void>;
   onObjectsDeleteBatch?: (objectIds: string[]) => void | Promise<void>;
   onViewportActionsReady?: (actions: IViewportActionsValue | null) => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
 }
 
 // Zoom preset scales (1 = 100%)
@@ -124,6 +127,8 @@ export const BoardCanvas = memo(
     onObjectDelete,
     onObjectsDeleteBatch,
     onViewportActionsReady,
+    onUndo,
+    onRedo,
   }: IBoardCanvasProps): ReactElement => {
     const stageRef = useRef<Konva.Stage>(null);
     const objectsLayerRef = useRef<Konva.Layer>(null);
@@ -132,6 +137,8 @@ export const BoardCanvas = memo(
     const activeToolRef = useRef<ToolMode>('select');
     const [activeColor, setActiveColor] = useState<string>(STICKY_COLORS.yellow);
     const selectedIds = useSelectionStore((state) => state.selectedIds);
+    const canUndoHistory = useHistoryStore((s) => s.canUndo);
+    const canRedoHistory = useHistoryStore((s) => s.canRedo);
     const setSelectedIds = useSelectionStore((state) => state.setSelectedIds);
     const clearSelectionFromStore = useSelectionStore((state) => state.clearSelection);
     const [drawingState, setDrawingState] = useState<IDrawingState>({
@@ -296,6 +303,8 @@ export const BoardCanvas = memo(
       setActiveTool,
       canEdit,
       activeToolRef,
+      onUndo,
+      onRedo,
     });
 
     // Clear selection helper
@@ -1442,6 +1451,10 @@ export const BoardCanvas = memo(
             activeColor={activeColor}
             onColorChange={setActiveColor}
             canEdit={canEdit}
+            onUndo={onUndo}
+            onRedo={onRedo}
+            canUndo={canUndoHistory}
+            canRedo={canRedoHistory}
           />
         </div>
 

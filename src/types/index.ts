@@ -66,3 +66,4 @@ export type {
   IKonvaEvent,
 } from './konva';
 export type { IComment, ICreateCommentParams } from './comment';
+export type { IHistoryCommand, IHistoryEntry } from './history';

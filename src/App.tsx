@@ -44,6 +44,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useTheme } from '@/hooks/useTheme';
 import { useBoardSettings } from '@/hooks/useBoardSettings';
+import { useHistory } from '@/hooks/useHistory';
 import { ViewportActionsContext } from '@/contexts/ViewportActionsContext';
 import { PropertyInspector } from '@/components/canvas/PropertyInspector';
 import type { IBoard, IUserPreferences, IViewportActionsValue } from '@/types';
@@ -85,6 +86,14 @@ const BoardView = ({
     deleteObject,
     deleteObjects,
   } = useObjects({ boardId, user });
+
+  const history = useHistory({
+    objects,
+    createObject,
+    updateObject,
+    deleteObject,
+    boardId,
+  });
 
   const { onlineUsers } = usePresence({ boardId, user });
   const ai = useAI({ boardId, user, objects });
@@ -280,12 +289,14 @@ const BoardView = ({
             user={user}
             objects={objects}
             canEdit={canEdit}
-            onObjectUpdate={updateObject}
+            onObjectUpdate={history.updateObject}
             onObjectsUpdate={updateObjects}
-            onObjectCreate={createObject}
-            onObjectDelete={deleteObject}
+            onObjectCreate={history.createObject}
+            onObjectDelete={history.deleteObject}
             onObjectsDeleteBatch={deleteObjects}
             onViewportActionsReady={onViewportActionsReady}
+            onUndo={history.undo}
+            onRedo={history.redo}
           />
         </div>
         <RightSidebar

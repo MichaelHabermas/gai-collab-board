@@ -5,6 +5,8 @@ interface IUseCanvasKeyboardShortcutsParams {
   setActiveTool: (tool: ToolMode) => void;
   canEdit: boolean;
   activeToolRef: RefObject<ToolMode>;
+  onUndo?: () => void;
+  onRedo?: () => void;
 }
 
 /**
@@ -16,6 +18,8 @@ export const useCanvasKeyboardShortcuts = ({
   setActiveTool,
   canEdit,
   activeToolRef,
+  onUndo,
+  onRedo,
 }: IUseCanvasKeyboardShortcutsParams): void => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -25,6 +29,21 @@ export const useCanvasKeyboardShortcuts = ({
 
       const isCtrlOrCmd = e.ctrlKey || e.metaKey;
       const key = e.key.toLowerCase();
+
+      // Undo: Ctrl/Cmd+Z (without Shift)
+      if (isCtrlOrCmd && key === 'z' && !e.shiftKey && onUndo) {
+        e.preventDefault();
+        onUndo();
+        return;
+      }
+
+      // Redo: Ctrl/Cmd+Shift+Z
+      if (isCtrlOrCmd && key === 'z' && e.shiftKey && onRedo) {
+        e.preventDefault();
+        onRedo();
+        return;
+      }
+
       if (isCtrlOrCmd && (key === 'c' || key === 'v' || key === 'd')) {
         return;
       }
@@ -69,5 +88,5 @@ export const useCanvasKeyboardShortcuts = ({
 
     return () => window.removeEventListener('keydown', handleKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- activeToolRef is stable; omit to avoid unnecessary effect re-runs
-  }, [setActiveTool, canEdit]);
+  }, [setActiveTool, canEdit, onUndo, onRedo]);
 };
