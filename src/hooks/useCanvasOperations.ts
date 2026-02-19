@@ -6,7 +6,7 @@ interface IUseCanvasOperationsProps {
   selectedIds: string[];
   onObjectCreate: (params: Partial<IBoardObject>) => void;
   onObjectDelete: (objectId: string) => void;
-  onObjectsDeleteBatch?: (objectIds: string[]) => void;
+  onObjectsDeleteBatch?: (objectIds: string[]) => void | Promise<void>;
   clearSelection: () => void;
 }
 
@@ -42,13 +42,13 @@ export const useCanvasOperations = ({
   }, [objects, selectedIds]);
 
   // Delete selected objects (batch when multiple and batch callback provided)
-  const handleDelete = useCallback(() => {
+  const handleDelete = useCallback(async () => {
     if (selectedIds.length === 0) {
       return;
     }
 
     if (selectedIds.length > 1 && onObjectsDeleteBatch) {
-      onObjectsDeleteBatch(selectedIds);
+      await Promise.resolve(onObjectsDeleteBatch(selectedIds));
     } else {
       selectedIds.forEach((id) => {
         onObjectDelete(id);

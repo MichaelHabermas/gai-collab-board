@@ -321,7 +321,7 @@ describe('useObjects', () => {
     expect(mockDeleteObject).not.toHaveBeenCalled();
   });
 
-  it('rolls back optimistic delete when deleteObjectsBatch fails', async () => {
+  it('on deleteObjectsBatch failure objects remain unchanged and error is set', async () => {
     const objA = createBoardObject({ id: 'a' });
     const objB = createBoardObject({ id: 'b' });
     mockDeleteObjectsBatch.mockRejectedValueOnce(new Error('batch failed'));
@@ -589,6 +589,45 @@ describe('useObjects – updateObjects for group drag', () => {
     expect(mockDeleteObjectsBatch).toHaveBeenCalledTimes(1);
     expect(mockDeleteObjectsBatch).toHaveBeenCalledWith('board-1', ids);
     expect(mockDeleteObject).not.toHaveBeenCalled();
+    expect(result.current.objects).toHaveLength(0);
+  });
+
+  it('batch delete updates state only after deleteObjectsBatch resolves', async () => {
+    const objA = createBoardObject({ id: 'a' });
+    const objB = createBoardObject({ id: 'b' });
+    let resolveBatch: () => void = () => undefined;
+    mockDeleteObjectsBatch.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveBatch = resolve;
+        })
+    );
+
+    const { result } = renderHook(() =>
+      useObjects({ boardId: 'board-1', user: createUser() })
+    );
+
+    act(() => {
+      subscriptionCallback?.({
+        objects: [objA, objB],
+        changes: [
+          { type: 'added', object: objA },
+          { type: 'added', object: objB },
+        ],
+        isInitialSnapshot: true,
+      });
+    });
+
+    act(() => {
+      void result.current.deleteObjects(['a', 'b']);
+    });
+
+    expect(result.current.objects).toHaveLength(2);
+
+    await act(async () => {
+      resolveBatch();
+    });
+
     expect(result.current.objects).toHaveLength(0);
   });
 });

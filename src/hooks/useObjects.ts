@@ -323,7 +323,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
     [boardId, objects]
   );
 
-  // Delete multiple objects in one batch (optimistic update + rollback)
+  // Delete multiple objects in one batch (defer state update until batch resolves)
   const handleDeleteObjects = useCallback(
     async (objectIds: string[]): Promise<void> => {
       if (!boardId) {
@@ -340,18 +340,16 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         pendingUpdatesRef.current.set(obj.id, obj);
       }
 
-      setObjects((prev) => prev.filter((obj) => !objectIds.includes(obj.id)));
-
       try {
         setError('');
         await deleteObjectsBatch(boardId, objectIds);
+        setObjects((prev) => prev.filter((obj) => !objectIds.includes(obj.id)));
         for (const id of objectIds) {
           pendingUpdatesRef.current.delete(id);
         }
       } catch (err) {
-        for (const original of toRemove) {
-          setObjects((prev) => [...prev, original]);
-          pendingUpdatesRef.current.delete(original.id);
+        for (const id of objectIds) {
+          pendingUpdatesRef.current.delete(id);
         }
         const errorMessage = err instanceof Error ? err.message : 'Failed to delete objects';
         setError(errorMessage);

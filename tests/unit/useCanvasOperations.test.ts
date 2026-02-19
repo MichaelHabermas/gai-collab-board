@@ -54,15 +54,16 @@ describe('useCanvasOperations', () => {
       expect(clearSelection).toHaveBeenCalled();
     });
 
-    it('handleDelete with 2+ selected and onObjectsDeleteBatch calls batch once and not onObjectDelete', () => {
+    it('handleDelete with 2+ selected and onObjectsDeleteBatch calls batch once and not onObjectDelete', async () => {
+      onObjectsDeleteBatch.mockResolvedValue(undefined);
       const props = {
         ...getDefaultProps(),
         selectedIds: ['id1', 'id2'],
         onObjectsDeleteBatch,
       };
       const { result } = renderHook(() => useCanvasOperations(props));
-      act(() => {
-        result.current.handleDelete();
+      await act(async () => {
+        await result.current.handleDelete();
       });
       expect(onObjectsDeleteBatch).toHaveBeenCalledTimes(1);
       expect(onObjectsDeleteBatch).toHaveBeenCalledWith(['id1', 'id2']);
@@ -70,7 +71,8 @@ describe('useCanvasOperations', () => {
       expect(clearSelection).toHaveBeenCalled();
     });
 
-    it('deleting 50+ selected objects uses a single batch write (not N individual deletes)', () => {
+    it('deleting 50+ selected objects uses a single batch write (not N individual deletes)', async () => {
+      onObjectsDeleteBatch.mockResolvedValue(undefined);
       const ids = Array.from({ length: 55 }, (_, i) => `obj-${i}`);
       const objects: IBoardObject[] = ids.map((id) => ({
         ...mockObject,
@@ -85,8 +87,8 @@ describe('useCanvasOperations', () => {
         clearSelection,
       };
       const { result } = renderHook(() => useCanvasOperations(props));
-      act(() => {
-        result.current.handleDelete();
+      await act(async () => {
+        await result.current.handleDelete();
       });
       // Single batch write, not 55 individual calls
       expect(onObjectsDeleteBatch).toHaveBeenCalledTimes(1);

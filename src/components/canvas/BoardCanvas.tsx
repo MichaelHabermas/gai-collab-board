@@ -65,7 +65,7 @@ interface IBoardCanvasProps {
   onObjectsUpdate?: (updates: Array<{ objectId: string; updates: Partial<IBoardObject> }>) => void;
   onObjectCreate?: (params: Omit<ICreateObjectParams, 'createdBy'>) => Promise<IBoardObject | null>;
   onObjectDelete?: (objectId: string) => Promise<void>;
-  onObjectsDeleteBatch?: (objectIds: string[]) => Promise<void>;
+  onObjectsDeleteBatch?: (objectIds: string[]) => void | Promise<void>;
   onViewportActionsReady?: (actions: IViewportActionsValue | null) => void;
 }
 
@@ -331,9 +331,7 @@ export const BoardCanvas = memo(
       onObjectCreate: (onObjectCreate as (params: Partial<IBoardObject>) => void) || (() => {}),
       onObjectDelete: (onObjectDelete as (objectId: string) => void) || (() => {}),
       onObjectsDeleteBatch: onObjectsDeleteBatch
-        ? (ids) => {
-            void onObjectsDeleteBatch(ids);
-          }
+        ? (ids) => Promise.resolve(onObjectsDeleteBatch(ids))
         : undefined,
       clearSelection,
     });

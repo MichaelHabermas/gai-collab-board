@@ -48,7 +48,7 @@
 
 | File | Summary | Key Topics | Last Modified |
 |------|---------|------------|---------------|
-| `performance/PERFORMANCE_LOG.md` | Task-level performance reviews, metrics-over-time graph, and optimization history; run `bun run perf:check` to record and refresh | `performance`, `cleanup`, `optimization`, `perf:check`, `metrics over time` | 2026-02-19 |
+| `performance/PERFORMANCE_LOG.md` | Task-level performance reviews, metrics-over-time graph, optimization history (A.1, A.2); run `bun run perf:check` to record and refresh | `performance`, `cleanup`, `optimization`, `perf:check`, `metrics over time`, `bulk delete` | 2026-02-19 |
 
 ### Phases (version-2)
 
