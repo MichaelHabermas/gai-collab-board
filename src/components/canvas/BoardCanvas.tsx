@@ -126,7 +126,8 @@ export const BoardCanvas = memo(
     onRedo,
   }: IBoardCanvasProps): ReactElement => {
     const stageRef = useRef<Konva.Stage>(null);
-    const objectsLayerRef = useRef<Konva.Layer>(null);
+    const staticLayerRef = useRef<Konva.Layer>(null);
+    const activeLayerRef = useRef<Konva.Layer>(null);
     const { requestBatchDraw } = useBatchDraw();
     const [activeTool, setActiveTool] = useState<ToolMode>('select');
     const activeToolRef = useRef<ToolMode>('select');
@@ -176,6 +177,9 @@ export const BoardCanvas = memo(
     // useMemo no longer depends on it, so the O(n) JSX is never recreated during drag.
     const groupDragOffset = useDragOffsetStore((s) => s.groupDragOffset);
     const clearDragState = useDragOffsetStore((s) => s.clearDragState);
+    // Phase 2: track WHICH frame is being dragged (stable during drag — only changes on start/end)
+    // so we can move its children to the active layer without 60Hz invalidation.
+    const draggingFrameId = useDragOffsetStore((s) => s.frameDragOffset?.frameId ?? null);
     const [isHoveringSelectionHandle, setIsHoveringSelectionHandle] = useState(false);
     const [connectorFrom, setConnectorFrom] = useState<{
       shapeId: string;
@@ -1445,32 +1449,55 @@ export const BoardCanvas = memo(
       };
     }, [showGrid, viewport, gridColor]);
 
+    // Phase 2: partition visible shapes into static (idle) and active (selected/dragged) layers.
+    // Static layer doesn't redraw during drag — only the active layer redraws at 60Hz.
+    const [staticIds, activeIds] = useMemo(() => {
+      const activeSet = new Set<string>(selectedIds);
+
+      // During single-frame drag, include frame children in active layer
+      // so they move visually with the frame without forcing static layer redraws.
+      if (draggingFrameId) {
+        const childIds = useObjectsStore.getState().frameChildrenIndex.get(draggingFrameId);
+        if (childIds) {
+          for (const cid of childIds) activeSet.add(cid);
+        }
+      }
+
+      const static_: string[] = [];
+      const active_: string[] = [];
+
+      for (const id of visibleShapeIds) {
+        if (activeSet.has(id)) {
+          active_.push(id);
+        } else {
+          static_.push(id);
+        }
+      }
+
+      return [static_, active_] as const;
+    }, [visibleShapeIds, selectedIds, draggingFrameId]);
+
+    // Phase 4: disable hit-testing when shapes aren't interactive (draw/pan modes).
+    // Eliminates O(visible) hit-test traversal on every mouse event during creation tools.
+    const shapesListening = activeTool === 'select' || activeTool === 'connector';
+
     // Per-shape subscription render loop (A.5): each StoreShapeRenderer subscribes
     // to its own object in the Zustand store, so a single remote object change only
     // re-renders that one shape instead of the entire tree.
-    // frameDragOffset and dropTargetFrameId are now in dragOffsetStore —
-    // individual StoreShapeRenderers subscribe only when relevant, so we don't
-    // re-create all JSX nodes on every mousemove.
-    const visibleObjectNodes = useMemo(
-      () =>
-        visibleShapeIds.map((id) => (
-          <StoreShapeRenderer
-            key={id}
-            id={id}
-            canEdit={canEdit}
-            selectionColor={selectionColor}
-            onEnterFrame={handleEnterFrame}
-            getSelectHandler={getSelectHandler}
-            getDragEndHandler={getDragEndHandler}
-            getTextChangeHandler={getTextChangeHandler}
-            getDragBoundFunc={getDragBoundFunc}
-            onDragMove={onDragMoveProp}
-            handleObjectSelect={handleObjectSelect}
-            handleObjectDragEnd={handleObjectDragEnd}
-          />
-        )),
+    const shapeRendererProps = useMemo(
+      () => ({
+        canEdit,
+        selectionColor,
+        onEnterFrame: handleEnterFrame,
+        getSelectHandler,
+        getDragEndHandler,
+        getTextChangeHandler,
+        getDragBoundFunc,
+        onDragMove: onDragMoveProp,
+        handleObjectSelect,
+        handleObjectDragEnd,
+      }),
       [
-        visibleShapeIds,
         canEdit,
         selectionColor,
         handleEnterFrame,
@@ -1482,6 +1509,22 @@ export const BoardCanvas = memo(
         handleObjectSelect,
         handleObjectDragEnd,
       ]
+    );
+
+    const staticObjectNodes = useMemo(
+      () =>
+        staticIds.map((id) => (
+          <StoreShapeRenderer key={id} id={id} {...shapeRendererProps} />
+        )),
+      [staticIds, shapeRendererProps]
+    );
+
+    const activeObjectNodes = useMemo(
+      () =>
+        activeIds.map((id) => (
+          <StoreShapeRenderer key={id} id={id} {...shapeRendererProps} />
+        )),
+      [activeIds, shapeRendererProps]
     );
 
     // Render drawing preview
@@ -1784,8 +1827,8 @@ export const BoardCanvas = memo(
             </Layer>
           )}
 
-          {/* Objects layer - main content (viewport culled) */}
-          <Layer ref={objectsLayerRef} name='objects' listening={activeTool !== 'pan'}>
+          {/* Static shapes layer — only redraws on add/delete/property changes, NOT during drag */}
+          <Layer ref={staticLayerRef} name='objects-static' listening={shapesListening}>
             {/* Background rect to catch clicks on empty areas - covers entire viewport */}
             <Rect
               x={-viewport.position.x / viewport.scale.x - 1000}
@@ -1796,6 +1839,11 @@ export const BoardCanvas = memo(
               name='background'
               listening={true}
             />
+            {staticObjectNodes}
+          </Layer>
+
+          {/* Active shapes layer — selected/dragged shapes, redraws at 60Hz during drag */}
+          <Layer ref={activeLayerRef} name='objects-active' listening={shapesListening}>
             {/* Transparent draggable rect over selection bounds: drag from empty space inside selection moves whole group */}
             {selectionBounds != null && canEdit && onObjectsUpdate && (
               <Rect
@@ -1816,7 +1864,7 @@ export const BoardCanvas = memo(
                 onMouseLeave={() => setIsHoveringSelectionHandle(false)}
               />
             )}
-            {visibleObjectNodes}
+            {activeObjectNodes}
           </Layer>
 
           {/* Connection nodes (when connector tool active) - above objects so node clicks are hit first */}
@@ -1875,7 +1923,7 @@ export const BoardCanvas = memo(
             >
               <TransformHandler
                 selectedIds={selectedIdsArray}
-                layerRef={objectsLayerRef}
+                layerRef={activeLayerRef}
                 requestBatchDraw={requestBatchDraw}
                 excludedFromTransformIds={linkedConnectorIds}
                 onTransformEnd={handleTransformEnd}
