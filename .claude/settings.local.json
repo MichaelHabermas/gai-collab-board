@@ -24,7 +24,8 @@
       "Skill(claude-md-management:revise-claude-md:*)",
       "Bash(Select-Object -ExpandProperty FullName)",
       "Bash(echo:*)",
-      "Bash(bunx tsc:*)"
+      "Bash(bunx tsc:*)",
+      "Bash(git stash:*)"
     ]
   },
   "hooks": {

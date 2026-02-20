@@ -204,6 +204,9 @@ bun run lint            # Run ESLint
 bun run lint:fix        # ESLint with auto-fix
 bun run format          # Format with Prettier
 bun run validate        # typecheck + lint + test:run
+
+# Agent transcript report (Cursor; works in any project — auto-detects transcript path)
+bun run report:agent-transcripts -- --days 5 --output docs/agent-transcript-report.md
 ```
 
 E2E tests run automatically on push/PR to `development` or `main` (see [.github/workflows/e2e.yml](.github/workflows/e2e.yml)). Configure Firebase secrets in the repo for overlay/sign-up tests. If `playwright install` fails (e.g. proxy), run it once with network access or set `HTTP_PROXY`/`HTTPS_PROXY`.

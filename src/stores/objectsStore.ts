@@ -135,11 +135,31 @@ export const useObjectsStore = create<IObjectsStore>()((set) => ({
     }
     set((state) => {
       const next = { ...state.objects };
+      let needsIndexRebuild = false;
       for (const obj of objectsList) {
+        const existing = state.objects[obj.id];
+        if (!existing) {
+          needsIndexRebuild = true;
+        } else {
+          const parentChanged = obj.parentFrameId !== existing.parentFrameId;
+          const endpointsChanged =
+            (obj.type === 'connector' || existing.type === 'connector') &&
+            (obj.fromObjectId !== existing.fromObjectId || obj.toObjectId !== existing.toObjectId);
+          if (parentChanged || endpointsChanged) needsIndexRebuild = true;
+        }
+
         next[obj.id] = obj;
       }
 
-      return { objects: next, ...buildIndexes(next) };
+      if (needsIndexRebuild) {
+        return { objects: next, ...buildIndexes(next) };
+      }
+
+      return {
+        objects: next,
+        frameChildrenIndex: state.frameChildrenIndex,
+        connectorsByEndpoint: state.connectorsByEndpoint,
+      };
     });
   },
 
@@ -202,6 +222,12 @@ export const useObjectsStore = create<IObjectsStore>()((set) => ({
     set({ objects: {}, frameChildrenIndex: EMPTY_INDEX, connectorsByEndpoint: EMPTY_INDEX });
   },
 }));
+
+// ── Dev-only store exposure for E2E benchmarks ──────────────────────────
+
+if (typeof window !== 'undefined' && import.meta.env.DEV) {
+  (window as unknown as Record<string, unknown>).__objectsStore = useObjectsStore;
+}
 
 // ── Selectors ──────────────────────────────────────────────────────────
 

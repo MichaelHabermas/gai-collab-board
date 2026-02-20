@@ -4,14 +4,22 @@
  * These tests prove that optimization tasks 3–7 actually reduce re-renders.
  * Each test renders a component, mutates store state, and counts how many
  * times the component re-rendered via React.Profiler's onRender callback.
+ *
+ * Re-Render Audit tests (added later) verify the subscriber fan-out invariants
+ * for drag/marquee interactions — proving O(selected) not O(visible) during drag.
  */
 import { Profiler, Suspense, type ProfilerOnRenderCallback } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 import { Timestamp } from 'firebase/firestore';
 import { PropertyInspector } from '@/components/canvas/PropertyInspector';
-import { useObjectsStore } from '@/stores/objectsStore';
+import { useObjectsStore, selectObject } from '@/stores/objectsStore';
 import { setSelectionStoreState, useSelectionStore } from '@/stores/selectionStore';
+import {
+  useDragOffsetStore,
+  selectFrameOffset,
+  selectGroupDragOffset,
+} from '@/stores/dragOffsetStore';
 import type { IBoardObject } from '@/types';
 
 // ── Mock selectionStore with real store ──────────────────────────────────
@@ -295,5 +303,255 @@ describe('Wave 4 Performance — Re-render Reduction', () => {
     // Should be dramatically fewer than 50
     // Ideally 0-2 (Zustand batches synchronous updates within act())
     expect(extraRenders).toBeLessThan(5);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// RE-RENDER AUDIT — Drag & Marquee Interaction Subscriber Fan-Out
+//
+// These tests replicate StoreShapeRenderer's conditional selector pattern
+// at the store level (no React rendering needed) to prove:
+//   - Multi-select drag: O(selected) triggers, not O(visible)
+//   - Frame drag: O(1+children) triggers, not O(visible)
+//   - Marquee move: 0 object subscriber triggers
+//   - Selection change: exactly N transitions for N newly-selected
+// ═══════════════════════════════════════════════════════════════════════
+
+/** Stable selector returning null — mirrors _selectNullGroupOffset in StoreShapeRenderer. */
+const _selectNullGroupOffset = (): null => null;
+
+const hrtMs = (): number => performance.now();
+
+describe('Re-Render Audit — Drag Interactions', () => {
+  beforeEach(() => {
+    useObjectsStore.getState().clear();
+    useSelectionStore.getState().clearSelection();
+    useDragOffsetStore.getState().clearDragState();
+  });
+
+  it('multi-select drag: only selected subscribers trigger per frame (10 of 200)', () => {
+    // Setup: 200 objects, 10 selected
+    const objects = Array.from({ length: 200 }, (_, i) =>
+      makeObject(`obj-${i}`)
+    );
+    useObjectsStore.getState().setAll(objects);
+    const selectedIds = new Set(Array.from({ length: 10 }, (_, i) => `obj-${i}`));
+    useSelectionStore.getState().setSelectedIds([...selectedIds]);
+
+    // Create 200 subscriptions replicating StoreShapeRenderer's conditional pattern:
+    //   isSelected ? selectGroupDragOffset : _selectNullGroupOffset
+    const triggerCounts = new Array(200).fill(0);
+    const unsubs: Array<() => void> = [];
+
+    for (let i = 0; i < 200; i++) {
+      const isSelected = selectedIds.has(`obj-${i}`);
+      const selector = isSelected ? selectGroupDragOffset : _selectNullGroupOffset;
+      let prev = selector(useDragOffsetStore.getState());
+
+      const unsub = useDragOffsetStore.subscribe((state) => {
+        const next = selector(state);
+        if (next !== prev) {
+          triggerCounts[i]++;
+          prev = next;
+        }
+      });
+      unsubs.push(unsub);
+    }
+
+    // Simulate 60 frames of group drag
+    const t0 = hrtMs();
+    for (let frame = 1; frame <= 60; frame++) {
+      useDragOffsetStore.getState().setGroupDragOffset({ dx: frame, dy: frame });
+    }
+    const elapsed = hrtMs() - t0;
+
+    // Count triggers
+    let selectedTriggers = 0;
+    let unselectedTriggers = 0;
+    for (let i = 0; i < 200; i++) {
+      if (selectedIds.has(`obj-${i}`)) {
+        selectedTriggers += triggerCounts[i]!;
+      } else {
+        unselectedTriggers += triggerCounts[i]!;
+      }
+    }
+
+    console.log('[AUDIT] Multi-select drag (10 of 200, 60 frames):');
+    console.log(`  Selected subscriber triggers: ${selectedTriggers} (expect 600 = 10×60)`);
+    console.log(`  Unselected subscriber triggers: ${unselectedTriggers} (expect 0)`);
+    console.log(`  Total time: ${elapsed.toFixed(2)} ms (${(elapsed / 60).toFixed(3)} ms/frame)`);
+
+    // Each selected shape sees 60 value changes; each unselected sees 0.
+    expect(selectedTriggers).toBe(10 * 60);
+    expect(unselectedTriggers).toBe(0);
+
+    unsubs.forEach((u) => u());
+  });
+
+  it('frame drag: only frame children trigger per frame (20 children of 200)', () => {
+    // Setup: 1 frame + 20 children + 179 other objects
+    const frameObj = makeObject('frame-0', {
+      type: 'frame',
+      x: 0,
+      y: 0,
+      width: 500,
+      height: 500,
+    });
+    const children = Array.from({ length: 20 }, (_, i) =>
+      makeObject(`child-${i}`, { parentFrameId: 'frame-0' })
+    );
+    const others = Array.from({ length: 179 }, (_, i) =>
+      makeObject(`other-${i}`)
+    );
+    useObjectsStore.getState().setAll([frameObj, ...children, ...others]);
+
+    // Create 200 subscriptions replicating selectFrameOffset(parentFrameId)
+    const allObjects = [frameObj, ...children, ...others];
+    const triggerCounts = new Map<string, number>();
+    const unsubs: Array<() => void> = [];
+
+    for (const obj of allObjects) {
+      triggerCounts.set(obj.id, 0);
+      const selector = selectFrameOffset(obj.parentFrameId);
+      let prev = selector(useDragOffsetStore.getState());
+
+      const unsub = useDragOffsetStore.subscribe((state) => {
+        const next = selector(state);
+        if (next !== prev) {
+          triggerCounts.set(obj.id, (triggerCounts.get(obj.id) ?? 0) + 1);
+          prev = next;
+        }
+      });
+      unsubs.push(unsub);
+    }
+
+    // Simulate 60 frames of frame drag
+    const t0 = hrtMs();
+    for (let frame = 1; frame <= 60; frame++) {
+      useDragOffsetStore.getState().setFrameDragOffset({
+        frameId: 'frame-0',
+        dx: frame,
+        dy: frame,
+      });
+    }
+    const elapsed = hrtMs() - t0;
+
+    // Count
+    let childTriggers = 0;
+    let otherTriggers = 0;
+    for (const child of children) {
+      childTriggers += triggerCounts.get(child.id) ?? 0;
+    }
+    for (const other of others) {
+      otherTriggers += triggerCounts.get(other.id) ?? 0;
+    }
+    // Frame itself has no parentFrameId, so it shouldn't trigger via selectFrameOffset
+    const frameTriggers = triggerCounts.get('frame-0') ?? 0;
+
+    console.log('[AUDIT] Frame drag (20 children of 200, 60 frames):');
+    console.log(`  Child subscriber triggers: ${childTriggers} (expect 1200 = 20×60)`);
+    console.log(`  Other subscriber triggers: ${otherTriggers} (expect 0)`);
+    console.log(`  Frame self triggers: ${frameTriggers} (expect 0 — no parentFrameId)`);
+    console.log(`  Total time: ${elapsed.toFixed(2)} ms (${(elapsed / 60).toFixed(3)} ms/frame)`);
+
+    expect(childTriggers).toBe(20 * 60);
+    expect(otherTriggers).toBe(0);
+    expect(frameTriggers).toBe(0);
+
+    unsubs.forEach((u) => u());
+  });
+
+  it('marquee move: 0 objectsStore subscriber triggers during rect updates', () => {
+    // Setup: 200 objects subscribed via selectObject
+    const objects = Array.from({ length: 200 }, (_, i) =>
+      makeObject(`obj-${i}`)
+    );
+    useObjectsStore.getState().setAll(objects);
+
+    let totalTriggers = 0;
+    const unsubs: Array<() => void> = [];
+
+    for (let i = 0; i < 200; i++) {
+      const selector = selectObject(`obj-${i}`);
+      let prev = selector(useObjectsStore.getState());
+
+      const unsub = useObjectsStore.subscribe((state) => {
+        const next = selector(state);
+        if (next !== prev) {
+          totalTriggers++;
+          prev = next;
+        }
+      });
+      unsubs.push(unsub);
+    }
+
+    // Simulate 60 marquee move frames — this only touches selectionRect state
+    // (which lives in component state or selectionStore, NOT objectsStore)
+    // so zero objectsStore subscribers should fire.
+    // We simulate by updating dragOffsetStore (different store) to prove isolation.
+    for (let frame = 0; frame < 60; frame++) {
+      useDragOffsetStore.getState().setDropTargetFrameId(`frame-${frame % 5}`);
+    }
+
+    console.log('[AUDIT] Marquee move (200 objects, 60 rect updates):');
+    console.log(`  objectsStore subscriber triggers: ${totalTriggers} (expect 0)`);
+
+    expect(totalTriggers).toBe(0);
+
+    unsubs.forEach((u) => u());
+  });
+
+  it('marquee release: selection change triggers exactly N isSelected transitions', () => {
+    // Setup: 500 objects, all unselected
+    const objects = Array.from({ length: 500 }, (_, i) =>
+      makeObject(`obj-${i}`)
+    );
+    useObjectsStore.getState().setAll(objects);
+
+    // Subscribe to isSelected for each object (mirrors StoreShapeRenderer)
+    const triggerCounts = new Array(500).fill(0);
+    const unsubs: Array<() => void> = [];
+
+    for (let i = 0; i < 500; i++) {
+      const id = `obj-${i}`;
+      let prev = useSelectionStore.getState().selectedIds.has(id);
+
+      const unsub = useSelectionStore.subscribe((state) => {
+        const next = state.selectedIds.has(id);
+        if (next !== prev) {
+          triggerCounts[i]++;
+          prev = next;
+        }
+      });
+      unsubs.push(unsub);
+    }
+
+    // Select 20 objects (simulating marquee release)
+    const toSelect = Array.from({ length: 20 }, (_, i) => `obj-${i}`);
+
+    const t0 = hrtMs();
+    useSelectionStore.getState().setSelectedIds(toSelect);
+    const elapsed = hrtMs() - t0;
+
+    let selectedTransitions = 0;
+    let unselectedTransitions = 0;
+    for (let i = 0; i < 500; i++) {
+      if (i < 20) {
+        selectedTransitions += triggerCounts[i]!;
+      } else {
+        unselectedTransitions += triggerCounts[i]!;
+      }
+    }
+
+    console.log('[AUDIT] Marquee release (20 of 500 selected):');
+    console.log(`  Selected transitions (false→true): ${selectedTransitions} (expect 20)`);
+    console.log(`  Unselected transitions: ${unselectedTransitions} (expect 0)`);
+    console.log(`  Selection time: ${elapsed.toFixed(3)} ms`);
+
+    expect(selectedTransitions).toBe(20);
+    expect(unselectedTransitions).toBe(0);
+    expect(elapsed).toBeLessThan(5); // Must be fast enough for single frame
+
+    unsubs.forEach((u) => u());
   });
 });

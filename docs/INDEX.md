@@ -2,8 +2,8 @@
 
 > Quick-reference guide for AI agents and LLMs. Use this to locate relevant documentation without loading everything into context. Always check this index FIRST before searching the codebase.
 
-**Last Updated:** 2026-02-19
-**Total Documents:** 44
+**Last Updated:** 2026-02-20
+**Total Documents:** 45
 
 ## How to Use This Index
 
@@ -84,6 +84,7 @@
 
 | File | Summary | Key Topics | Last Modified |
 |------|---------|------------|---------------|
+| `agent-transcript-report.md` | Generated report: total Cursor agent prompts in a time window and high-value prompts (structured + clear outcome); run `bun run report:agent-transcripts` with AGENT_TRANSCRIPTS_DIR set | `Cursor`, `agent transcripts`, `prompts`, `report:agent-transcripts` | 2026-02-20 |
 | `reports/mvp-audit-matrix.md` | MVP and benchmark criteria vs implementation and test evidence (PASS/PARTIAL/FAIL) | `MVP`, `audit`, `benchmarks`, `evidence matrix` | 2026-02-18 |
 | `reports/mvp-audit-report.md` | MVP compliance audit: commands run, code/test additions, results summary | `MVP`, `audit`, `verification`, `benchmarks` | 2026-02-18 |
 | `reports/refactor-audit/REFACTOR_AUDIT_REPORT.md` | Phase A refactor audit: hook census, event handlers, pattern analysis, useEffect prevention guidelines, implementation backlog | `refactor`, `hooks`, `useEffect`, `audit`, `BoardCanvas` | 2026-02-19 |
@@ -117,10 +118,12 @@
 | Topic/Keyword | Relevant Docs |
 |---------------|---------------|
 | `ADR` | `research/RECORD-ARCHITECTURE-DECISIONS-V2.md`, `research/RECORD-ARCHITECTURE-DECISIONS.md` |
+| `agent transcripts` | `agent-transcript-report.md` |
 | `AI` | `guides/AI-INTEGRATION-GUIDE.md`, `guides/AI-TROUBLESHOOTING.md`, `planning/AI-COST-ANALYSIS.md`, `planning/AI-DEVELOPMENT-LOG.md`, `planning/AI-SESSION-LOG.md`, `product/PRD.md` |
 | `audit` | `reports/mvp-audit-report.md`, `reports/mvp-audit-matrix.md`, `reports/refactor-audit/REFACTOR_AUDIT_REPORT.md` |
 | `benchmarks` | `optimization/OPTIMIZATION-PLAN.md`, `reports/mvp-audit-matrix.md`, `operations/RELEASE-AUTOMATION.md` |
 | `canvas` | `guides/KONVA-REACT-GUIDE.md`, `product/PRD.md` |
+| `Cursor` | `agent-transcript-report.md`, `planning/AI-DEVELOPMENT-LOG.md` |
 | `deployment` | `operations/DEPLOYMENT.md`, `operations/RELEASE-AUTOMATION.md` |
 | `Firebase` | `guides/FIREBASE-GUIDE.md`, `research/RECORD-ARCHITECTURE-DECISIONS-V2.md`, `research/TECH-STACK-OPTIONS-V2.md` |
 | `FPS` | `optimization/OPTIMIZATION-PLAN.md`, `optimization/OPTIMIZATION-PLAN-2.md`, `performance/PERFORMANCE_LOG.md` |

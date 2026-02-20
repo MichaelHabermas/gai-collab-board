@@ -353,7 +353,7 @@ describe('useObjects', () => {
     expect(result.current.error).toBe('batch failed');
   });
 
-  it('merges remote updates against pending local changes while update is in flight', async () => {
+  it('suppresses self-echoes for in-flight writes and skips merge', async () => {
     const originalObject = createBoardObject({
       id: 'obj-merge',
       text: 'original',
@@ -375,13 +375,6 @@ describe('useObjects', () => {
         })
     );
 
-    const mergedObject = createBoardObject({
-      id: 'obj-merge',
-      text: 'merged-value',
-      updatedAt: createTimestamp(4000),
-    });
-    mockMergeObjectUpdates.mockReturnValueOnce(mergedObject);
-
     const { result } = renderHook(() =>
       useObjects({
         boardId: 'board-1',
@@ -401,6 +394,8 @@ describe('useObjects', () => {
       void result.current.updateObject('obj-merge', { text: 'local-edit' });
     });
 
+    // Remote echo for the in-flight object — suppressed by inFlightIdsRef filter.
+    // The optimistic local state ('local-edit') is preserved, not overwritten.
     act(() => {
       subscriptionCallback?.({
         objects: [remoteObject],
@@ -409,8 +404,10 @@ describe('useObjects', () => {
       });
     });
 
-    expect(mockMergeObjectUpdates).toHaveBeenCalledTimes(1);
-    expect(result.current.objects[0]?.text).toBe('merged-value');
+    // mergeObjectUpdates is NOT called — echo was filtered out entirely
+    expect(mockMergeObjectUpdates).not.toHaveBeenCalled();
+    // Local optimistic state is preserved (self-echo was suppressed)
+    expect(result.current.objects[0]?.text).toBe('local-edit');
 
     resolveUpdatePromise();
     await act(async () => {

@@ -11,8 +11,8 @@ import {
   mergeObjectUpdates,
   type IObjectChange,
   type IObjectsSnapshotUpdate,
-  ICreateObjectParams,
-  IUpdateObjectParams,
+  type ICreateObjectParams,
+  type IUpdateObjectParams,
 } from '@/modules/sync/objectService';
 import { useObjectsStore } from '@/stores/objectsStore';
 import { consumePrefetchedObjects } from '@/lib/boardPrefetch';
@@ -80,6 +80,8 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
   const objectsByIdRef = useRef<Map<string, IBoardObject>>(new Map());
   // Track if this is the first callback after subscription to handle reset
   const isFirstCallbackRef = useRef<boolean>(true);
+  // IDs with in-flight Firestore writes — echoes for these are self-echoes and can be skipped.
+  const inFlightIdsRef = useRef<Set<string>>(new Set());
 
   const PENDING_TIMEOUT_MS = 30_000;
 
@@ -106,16 +108,20 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
     }
   }, []);
 
-  const getObjectTimestamp = useCallback((object: IBoardObject): number => {
-    return object.updatedAt?.toMillis?.() ?? 0;
+  /** Returns true when two objects have identical visual fields (position, size, etc.). */
+  const isObjectDataUnchanged = useCallback((a: IBoardObject, b: IBoardObject): boolean => {
+    return (
+      a.x === b.x &&
+      a.y === b.y &&
+      a.width === b.width &&
+      a.height === b.height &&
+      a.rotation === b.rotation &&
+      a.text === b.text &&
+      a.fill === b.fill &&
+      a.opacity === b.opacity &&
+      a.parentFrameId === b.parentFrameId
+    );
   }, []);
-
-  const isObjectVersionUnchanged = useCallback(
-    (previousObject: IBoardObject, nextObject: IBoardObject): boolean => {
-      return getObjectTimestamp(previousObject) === getObjectTimestamp(nextObject);
-    },
-    [getObjectTimestamp]
-  );
 
   const applyIncrementalChanges = useCallback(
     (prevObjects: IBoardObject[], changes: IObjectChange[]): IBoardObject[] => {
@@ -127,23 +133,24 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
       let didMutate = false;
 
       for (const change of changes) {
-        const pendingLocalObject = pendingUpdatesRef.current.get(change.object.id);
-        const mergedObject = pendingLocalObject
-          ? mergeObjectUpdates(pendingLocalObject, change.object)
-          : change.object;
-        const existingObject = workingById.get(mergedObject.id);
+        const remote = change.object;
+        const existing = workingById.get(remote.id);
 
         if (change.type === 'removed') {
-          if (existingObject) {
-            workingById.delete(mergedObject.id);
+          if (existing) {
+            workingById.delete(remote.id);
             didMutate = true;
           }
 
           continue;
         }
 
-        if (!existingObject || !isObjectVersionUnchanged(existingObject, mergedObject)) {
-          workingById.set(mergedObject.id, mergedObject);
+        // Use visual field comparison: only mutate if the remote object differs
+        // from what we already have. This replaces the old timestamp comparison +
+        // mergeObjectUpdates approach which always triggered re-renders because
+        // Firestore echoes have new server timestamps even when data is identical.
+        if (!existing || !isObjectDataUnchanged(existing, remote)) {
+          workingById.set(remote.id, remote);
           didMutate = true;
         }
       }
@@ -163,15 +170,15 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
 
         const alreadyInOrder = nextObjects.some((object) => object.id === change.object.id);
         if (!alreadyInOrder) {
-          const pendingLocalObject = pendingUpdatesRef.current.get(change.object.id);
-          nextObjects.push(pendingLocalObject ?? change.object);
+          nextObjects.push(change.object);
         }
       }
 
       objectsByIdRef.current = new Map(nextObjects.map((object) => [object.id, object]));
+
       return nextObjects;
     },
-    [isObjectVersionUnchanged]
+    [isObjectDataUnchanged]
   );
 
   const applySnapshotUpdate = useCallback(
@@ -243,6 +250,22 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
       if (isFirstCallbackRef.current) {
         isFirstCallbackRef.current = false;
         setError('');
+      }
+
+      // Pre-filter: skip changes for objects with in-flight Firestore writes.
+      // These are self-echoes — the local state already reflects the correct position.
+      if (!update.isInitialSnapshot && inFlightIdsRef.current.size > 0) {
+        const filtered = update.changes.filter(
+          (c) => !inFlightIdsRef.current.has(c.object.id)
+        );
+
+        if (filtered.length === 0) {
+          return;
+        }
+
+        if (filtered.length < update.changes.length) {
+          update = { ...update, changes: filtered };
+        }
       }
 
       if (update.isInitialSnapshot) {
@@ -322,6 +345,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
 
       // Store original for rollback
       setPending(objectId, currentObject);
+      inFlightIdsRef.current.add(objectId);
 
       // Optimistic update
       setObjects((prev) => prev.map((obj) => (obj.id === objectId ? { ...obj, ...updates } : obj)));
@@ -330,7 +354,9 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         setError('');
         await updateObject(boardId, objectId, updates);
         clearPending(objectId);
+        inFlightIdsRef.current.delete(objectId);
       } catch (err) {
+        inFlightIdsRef.current.delete(objectId);
         // Rollback on failure
         const original = pendingUpdatesRef.current.get(objectId);
         if (original) {
@@ -401,31 +427,46 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
       const originals = objectIds
         .map((id) => objects.find((obj) => obj.id === id))
         .filter(Boolean) as IBoardObject[];
+
       for (const obj of originals) {
         setPending(obj.id, obj);
+      }
+
+      // Mark as in-flight to suppress self-echoes from Firestore subscription.
+      for (const id of objectIds) {
+        inFlightIdsRef.current.add(id);
       }
 
       setObjects((prev) => {
         const next = prev.map((obj) => {
           const entry = updates.find((u) => u.objectId === obj.id);
+
           return entry ? { ...obj, ...entry.updates } : obj;
         });
         // Keep ref in sync so subscription callbacks do not reconcile from stale ref and cause one-by-one flicker
         objectsByIdRef.current = new Map(next.map((object) => [object.id, object]));
+
         return next;
       });
 
       try {
         setError('');
         await updateObjectsBatch(boardId, updates);
+
         for (const id of objectIds) {
           clearPending(id);
+          inFlightIdsRef.current.delete(id);
         }
       } catch (err) {
         for (const original of originals) {
           setObjects((prev) => prev.map((o) => (o.id === original.id ? original : o)));
           clearPending(original.id);
         }
+
+        for (const id of objectIds) {
+          inFlightIdsRef.current.delete(id);
+        }
+
         const errorMessage = err instanceof Error ? err.message : 'Failed to update objects';
         setError(errorMessage);
       }

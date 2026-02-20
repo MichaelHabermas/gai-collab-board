@@ -16,7 +16,7 @@ import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { Timestamp } from 'firebase/firestore';
 import { useObjectsStore, selectObject, selectAllObjects, selectFrameChildCount } from '@/stores/objectsStore';
 import { useSelectionStore } from '@/stores/selectionStore';
-import { useDragOffsetStore, selectFrameOffset, selectIsDropTarget } from '@/stores/dragOffsetStore';
+import { useDragOffsetStore, selectFrameOffset, selectIsDropTarget, selectGroupDragOffset } from '@/stores/dragOffsetStore';
 import { findContainingFrame, getFrameChildren, resolveParentFrameId } from '@/hooks/useFrameContainment';
 import { getObjectBounds } from '@/lib/canvasBounds';
 import type { IBoardObject } from '@/types';
@@ -300,6 +300,21 @@ describe('App Performance — Selector Throughput', () => {
       expect(duration).toBeLessThan(20);
     });
   }
+
+  it('selectFrameChildCount: creates a new closure per call (documents current behavior)', () => {
+    // Migrated from uxPerfBaseline.test.ts — documents the selector identity behavior.
+    // Each call to selectFrameChildCount returns a new function reference.
+    const selectorA = selectFrameChildCount('frame-1');
+    const selectorB = selectFrameChildCount('frame-1');
+
+    // Different function references — that's the current behavior
+    expect(selectorA).not.toBe(selectorB);
+
+    // But they return the same value for the same state
+    useObjectsStore.getState().clear();
+    const storeState = useObjectsStore.getState();
+    expect(selectorA(storeState)).toBe(selectorB(storeState));
+  });
 });
 
 describe('App Performance — Viewport Culling', () => {
@@ -597,6 +612,7 @@ describe('App Performance — Connector Endpoint Lookup', () => {
         const fromObj = useObjectsStore.getState().objects[conn.fromObjectId ?? ''];
         const toObj = useObjectsStore.getState().objects[conn.toObjectId ?? ''];
         if (fromObj) getObjectBounds(fromObj);
+
         if (toObj) getObjectBounds(toObj);
       }
       const duration = hrtMs() - start;
@@ -608,6 +624,198 @@ describe('App Performance — Connector Endpoint Lookup', () => {
       expect(perConnector).toBeLessThan(0.5);
     });
   }
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// FRAME BUDGET COMPLIANCE
+//
+// Unlike the tests above (which measure individual operations), these
+// tests measure the total cost of a single interaction "frame" —
+// including all subscriber evaluations — against the 16.67ms budget.
+// ═══════════════════════════════════════════════════════════════════════
+
+/** Stable null selector — mirrors _selectNullGroupOffset in StoreShapeRenderer. */
+const _selectNullGroupOffset = (): null => null;
+
+describe('App Performance — Frame Budget Compliance', () => {
+  beforeEach(() => {
+    useObjectsStore.getState().clear();
+    useSelectionStore.getState().clearSelection();
+    useDragOffsetStore.getState().clearDragState();
+  });
+
+  it('groupDragOffset frame cost: 500 subscribers (10 selected) evaluates in < 2ms', () => {
+    const objects = generateObjects(500);
+    useObjectsStore.getState().setAll(objects);
+    const selectedIds = new Set(Array.from({ length: 10 }, (_, i) => `obj-${i}`));
+
+    // Set up 500 conditional subscriptions (same pattern as StoreShapeRenderer)
+    const unsubs: Array<() => void> = [];
+    for (let i = 0; i < 500; i++) {
+      const isSelected = selectedIds.has(`obj-${i}`);
+      const selector = isSelected ? selectGroupDragOffset : _selectNullGroupOffset;
+      let prev = selector(useDragOffsetStore.getState());
+
+      const unsub = useDragOffsetStore.subscribe((state) => {
+        const next = selector(state);
+        if (next !== prev) prev = next;
+      });
+      unsubs.push(unsub);
+    }
+
+    // Warm up (JIT)
+    useDragOffsetStore.getState().setGroupDragOffset({ dx: -1, dy: -1 });
+
+    // Measure single frame
+    const t0 = hrtMs();
+    useDragOffsetStore.getState().setGroupDragOffset({ dx: 100, dy: 50 });
+    const perFrame = hrtMs() - t0;
+
+    record('budget_groupOffset_500subs', perFrame, 'ms', 500);
+    console.log(`[BUDGET] groupDragOffset (500 subs, 10 selected): ${perFrame.toFixed(3)} ms/frame (budget: 2ms)`);
+    expect(perFrame).toBeLessThan(2);
+
+    unsubs.forEach((u) => u());
+  });
+
+  it('frameDragOffset frame cost: 500 subscribers (50 children) evaluates in < 1ms', () => {
+    // 1 frame + 50 children + 449 other objects
+    const frameObj = makeObject('frame-0', { type: 'frame', x: 0, y: 0, width: 500, height: 500 });
+    const children = Array.from({ length: 50 }, (_, i) =>
+      makeObject(`child-${i}`, { parentFrameId: 'frame-0' })
+    );
+    const others = Array.from({ length: 449 }, (_, i) =>
+      makeObject(`other-${i}`)
+    );
+    useObjectsStore.getState().setAll([frameObj, ...children, ...others]);
+
+    const allObjects = [frameObj, ...children, ...others];
+    const unsubs: Array<() => void> = [];
+    for (const obj of allObjects) {
+      const selector = selectFrameOffset(obj.parentFrameId);
+      let prev = selector(useDragOffsetStore.getState());
+
+      const unsub = useDragOffsetStore.subscribe((state) => {
+        const next = selector(state);
+        if (next !== prev) prev = next;
+      });
+      unsubs.push(unsub);
+    }
+
+    // Warm up
+    useDragOffsetStore.getState().setFrameDragOffset({ frameId: 'frame-0', dx: -1, dy: -1 });
+
+    // Measure
+    const t0 = hrtMs();
+    useDragOffsetStore.getState().setFrameDragOffset({ frameId: 'frame-0', dx: 100, dy: 50 });
+    const perFrame = hrtMs() - t0;
+
+    record('budget_frameOffset_500subs', perFrame, 'ms', 500);
+    console.log(`[BUDGET] frameDragOffset (500 subs, 50 children): ${perFrame.toFixed(3)} ms/frame (budget: 1ms)`);
+    expect(perFrame).toBeLessThan(1);
+
+    unsubs.forEach((u) => u());
+  });
+
+  for (const count of [500, 1000, 2000]) {
+    it(`marquee AABB filter: ${count} objects in < ${count <= 500 ? 1 : count <= 1000 ? 2 : 5}ms`, () => {
+      const objects = Array.from({ length: count }, (_, i) =>
+        makeObject(`obj-${i}`, {
+          x: Math.random() * 5000,
+          y: Math.random() * 5000,
+          width: 100 + Math.random() * 200,
+          height: 80 + Math.random() * 150,
+        })
+      );
+
+      // Marquee rect covering 25% of canvas (0,0 → 2500,2500)
+      const selX1 = 0, selY1 = 0, selX2 = 2500, selY2 = 2500;
+
+      // Warm up
+      objects.filter((obj) => {
+        const r = obj.x + obj.width;
+        const b = obj.y + obj.height;
+
+        return r >= selX1 && obj.x <= selX2 && b >= selY1 && obj.y <= selY2;
+      });
+
+      // Measure (avg of 50 runs)
+      const t0 = hrtMs();
+      let matchCount = 0;
+      for (let i = 0; i < 50; i++) {
+        const matches = objects.filter((obj) => {
+          const r = obj.x + obj.width;
+          const b = obj.y + obj.height;
+
+          return r >= selX1 && obj.x <= selX2 && b >= selY1 && obj.y <= selY2;
+        });
+        matchCount = matches.length;
+      }
+      const avg = (hrtMs() - t0) / 50;
+
+      const budget = count <= 500 ? 1 : count <= 1000 ? 2 : 5;
+      record(`budget_marquee_aabb_${count}`, avg, 'ms', count);
+      console.log(`[BUDGET] marquee AABB (${count} objects): ${avg.toFixed(3)} ms, ${matchCount} matches (budget: ${budget}ms)`);
+      expect(avg).toBeLessThan(budget);
+    });
+  }
+
+  it('layer partition computation: 500 visible, 20 selected, 30 frame children in < 0.5ms', () => {
+    const visibleIds = Array.from({ length: 500 }, (_, i) => `obj-${i}`);
+    const selectedIds = new Set(Array.from({ length: 20 }, (_, i) => `obj-${i}`));
+    const draggingFrameChildIds = new Set(Array.from({ length: 30 }, (_, i) => `obj-${200 + i}`));
+
+    // Warm up
+    const partition = () => {
+      const staticIds: string[] = [];
+      const activeIds: string[] = [];
+
+      for (const id of visibleIds) {
+        if (selectedIds.has(id) || draggingFrameChildIds.has(id)) {
+          activeIds.push(id);
+        } else {
+          staticIds.push(id);
+        }
+      }
+
+      return { staticIds, activeIds };
+    };
+    partition();
+
+    // Measure (avg of 200 runs)
+    const t0 = hrtMs();
+    for (let i = 0; i < 200; i++) {
+      partition();
+    }
+    const avg = (hrtMs() - t0) / 200;
+
+    record('budget_layer_partition_500', avg, 'ms', 500);
+    console.log(`[BUDGET] layer partition (500 visible, 50 active): ${avg.toFixed(4)} ms (budget: 0.5ms)`);
+    expect(avg).toBeLessThan(0.5);
+  });
+
+  it('drag-end batch commit: 1 frame + 50 children (51 updateObject calls) in < 5ms', () => {
+    const frameObj = makeObject('frame-0', { type: 'frame', x: 0, y: 0, width: 500, height: 500 });
+    const children = Array.from({ length: 50 }, (_, i) =>
+      makeObject(`child-${i}`, { parentFrameId: 'frame-0', x: 20 + i * 8, y: 20 + i * 8 })
+    );
+    useObjectsStore.getState().setAll([frameObj, ...children]);
+
+    // Simulate drag-end: update all positions in batch
+    const t0 = hrtMs();
+    useObjectsStore.getState().updateObject('frame-0', { x: 100, y: 100 });
+    for (let i = 0; i < 50; i++) {
+      useObjectsStore.getState().updateObject(`child-${i}`, {
+        x: 120 + i * 8,
+        y: 120 + i * 8,
+      });
+    }
+    const duration = hrtMs() - t0;
+
+    record('budget_dragEnd_51_updates', duration, 'ms', 51);
+    console.log(`[BUDGET] drag-end commit (51 updates): ${duration.toFixed(3)} ms (budget: 5ms)`);
+    expect(duration).toBeLessThan(5);
+  });
 });
 
 // ── Report ────────────────────────────────────────────────────────────────
@@ -624,6 +832,7 @@ afterAll(() => {
   for (const m of metrics) {
     const category = m.name.split('_')[0]!;
     if (!grouped.has(category)) grouped.set(category, []);
+
     grouped.get(category)!.push(m);
   }
 
