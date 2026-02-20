@@ -1,4 +1,5 @@
 import { useState, useRef, useLayoutEffect, useCallback, type ReactElement } from 'react';
+import Markdown from 'react-markdown';
 import { Send, Loader2, Lightbulb, ListChecks, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -167,7 +168,13 @@ export const AIChatPanel = ({
                   : 'bg-slate-600/80 text-slate-100 mr-4'
               )}
             >
-              {msg.content}
+              {msg.role === 'assistant' ? (
+                <div className='[&_p]:my-1 [&_ul]:my-1 [&_ul]:pl-4 [&_ul]:list-disc [&_ol]:my-1 [&_ol]:pl-4 [&_ol]:list-decimal [&_li]:my-0.5 [&_pre]:bg-slate-900/60 [&_pre]:rounded [&_pre]:p-2 [&_pre]:overflow-x-auto [&_pre]:my-1 [&_code]:text-emerald-300 [&_code]:text-xs [&_h1]:text-base [&_h2]:text-sm [&_h3]:text-sm [&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-medium [&_h1]:my-1 [&_h2]:my-1 [&_h3]:my-1 [&_a]:text-blue-400 [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-slate-500 [&_blockquote]:pl-2 [&_blockquote]:text-slate-300 [&_hr]:border-slate-600 [&_hr]:my-2 [&>:first-child]:mt-0 [&>:last-child]:mb-0'>
+                  <Markdown>{msg.content}</Markdown>
+                </div>
+              ) : (
+                msg.content
+              )}
             </div>
           ))}
           {loading && (
