@@ -128,10 +128,7 @@ export const BoardCanvas = memo(
     const [activeColor, setActiveColor] = useState<string>(STICKY_COLORS.yellow);
     const selectedIds = useSelectionStore((state) => state.selectedIds);
     const objectsRecord = useObjectsStore((s) => s.objects);
-    const objects = useMemo(
-      () => Object.values(objectsRecord) as IBoardObject[],
-      [objectsRecord]
-    );
+    const objects = useMemo(() => Object.values(objectsRecord) as IBoardObject[], [objectsRecord]);
     const canUndoHistory = useHistoryStore((s) => s.canUndo);
     const canRedoHistory = useHistoryStore((s) => s.canRedo);
     const setSelectedIds = useSelectionStore((state) => state.setSelectedIds);

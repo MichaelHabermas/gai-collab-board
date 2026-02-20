@@ -91,20 +91,28 @@ export const AIChatPanel = ({
         continuous: boolean;
         interimResults: boolean;
         lang: string;
-        onresult: ((e: { results: ArrayLike<{ 0: { transcript: string }; length: number }> }) => void) | null;
+        onresult:
+          | ((e: { results: ArrayLike<{ 0: { transcript: string }; length: number }> }) => void)
+          | null;
         onerror: (() => void) | null;
         onend: (() => void) | null;
       };
     }
-    const Win = window as unknown as { SpeechRecognition?: ISpeechRecognitionCtor; webkitSpeechRecognition?: ISpeechRecognitionCtor };
+    const Win = window as unknown as {
+      SpeechRecognition?: ISpeechRecognitionCtor;
+      webkitSpeechRecognition?: ISpeechRecognitionCtor;
+    };
     const Ctor = Win.SpeechRecognition ?? Win.webkitSpeechRecognition;
     if (!Ctor) return;
+
     const recognition = new Ctor();
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.lang = 'en-US';
 
-    recognition.onresult = (e: { results: ArrayLike<{ 0: { transcript: string }; length: number }> }) => {
+    recognition.onresult = (e: {
+      results: ArrayLike<{ 0: { transcript: string }; length: number }>;
+    }) => {
       const parts: string[] = [];
       for (let i = 0; i < e.results.length; i++) {
         const r = e.results[i];

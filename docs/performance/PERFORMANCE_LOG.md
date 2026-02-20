@@ -19,24 +19,24 @@
 
 ## Metrics over time
 
-**Latest run (2026-02-19 16:14)**
+**Latest run (2026-02-19 20:58)**
 
 | Metric | Value | Target |
 |--------|-------|--------|
-| Cursor write latency | 25 ms | <50 ms |
-| Object update latency | 25 ms | <100 ms |
-| 500-object batch | 61 ms | <1500 ms |
+| Cursor write latency | 20 ms | <50 ms |
+| Object update latency | 19 ms | <100 ms |
+| 500-object batch | 63 ms | <1500 ms |
 
 **Progress over time**
 
 ```mermaid
 xychart-beta
     title "Integration metrics over time (ms)"
-    x-axis ["2026-02-19", "2026-02-19", "2026-02-19", "2026-02-19", "2026-02-19", "2026-02-19", "02-19 16:14"]
+    x-axis ["02-19 18:43", "02-19 18:43", "02-19 18:45", "02-19 18:55", "02-19 18:56", "02-19 19:10", "02-19 19:20", "02-19 19:30", "02-19 20:27", "02-19 20:28", "02-19 20:36", "02-19 20:39", "02-19 20:50", "02-19 20:55", "02-19 20:58"]
     y-axis "Latency (ms)" 0 --> 88
-    line "Cursor write" [14, 25, 20, 17, 22, 19, 25]
-    line "Object update" [31, 18, 32, 32, 26, 19, 25]
-    line "Batch 500 objects" [62, 63, 60, 62, 60, 61, 61]
+    line "Cursor write" [27, 25, 25, 17, 24, 14, 17, 25, 25, 21, 28, 13, 19, 19, 20]
+    line "Object update" [23, 25, 21, 27, 28, 29, 30, 23, 23, 31, 19, 32, 32, 29, 19]
+    line "Batch 500 objects" [59, 78, 72, 69, 65, 62, 65, 59, 61, 72, 59, 51, 70, 64, 63]
 ```
 
 ## Optimization History

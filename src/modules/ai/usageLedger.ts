@@ -136,7 +136,9 @@ function addEventToTotals(totals: IAIUsageTotals, event: IAIUsageEvent): void {
 export function upsertUsageEvent(events: IAIUsageEvent[], event: IAIUsageEvent): IAIUsageEvent[] {
   const normalizedEvent = normalizeUsageEvent(event);
   const nextEvents = [...events];
-  const existingIndex = nextEvents.findIndex((entry) => entry.event_id === normalizedEvent.event_id);
+  const existingIndex = nextEvents.findIndex(
+    (entry) => entry.event_id === normalizedEvent.event_id
+  );
   if (existingIndex === -1) {
     nextEvents.push(normalizedEvent);
   } else {
@@ -193,8 +195,13 @@ function formatTimeSeriesLabel(timestamp: string): string {
   return `${month}-${day} ${hours}:${minutes}`;
 }
 
-export function buildUsageTimeSeries(events: IAIUsageEvent[], maxPoints: number): IAIUsageTimeSeries {
-  const normalizedEvents = sortUsageEventsByTimestamp(events).slice(-maxPoints).map((event) => normalizeUsageEvent(event));
+export function buildUsageTimeSeries(
+  events: IAIUsageEvent[],
+  maxPoints: number
+): IAIUsageTimeSeries {
+  const normalizedEvents = sortUsageEventsByTimestamp(events)
+    .slice(-maxPoints)
+    .map((event) => normalizeUsageEvent(event));
   const labels: string[] = [];
   const inputTokens: number[] = [];
   const outputTokens: number[] = [];
@@ -218,14 +225,24 @@ export function buildUsageTimeSeries(events: IAIUsageEvent[], maxPoints: number)
     runningCost += event.estimated_cost;
     cumulativeCost.push(Math.round(runningCost * 10000) / 10000);
 
-    costBySource[AI_USAGE_SOURCE_CLAUDE].push(event.source === AI_USAGE_SOURCE_CLAUDE ? event.estimated_cost : 0);
-    costBySource[AI_USAGE_SOURCE_CURSOR].push(event.source === AI_USAGE_SOURCE_CURSOR ? event.estimated_cost : 0);
+    costBySource[AI_USAGE_SOURCE_CLAUDE].push(
+      event.source === AI_USAGE_SOURCE_CLAUDE ? event.estimated_cost : 0
+    );
+    costBySource[AI_USAGE_SOURCE_CURSOR].push(
+      event.source === AI_USAGE_SOURCE_CURSOR ? event.estimated_cost : 0
+    );
     costBySource[AI_USAGE_SOURCE_RUNTIME_PROXY].push(
       event.source === AI_USAGE_SOURCE_RUNTIME_PROXY ? event.estimated_cost : 0
     );
-    costBySource[AI_USAGE_SOURCE_SCRIPT].push(event.source === AI_USAGE_SOURCE_SCRIPT ? event.estimated_cost : 0);
-    costBySource[AI_USAGE_SOURCE_MCP].push(event.source === AI_USAGE_SOURCE_MCP ? event.estimated_cost : 0);
-    costBySource[AI_USAGE_SOURCE_UNKNOWN].push(event.source === AI_USAGE_SOURCE_UNKNOWN ? event.estimated_cost : 0);
+    costBySource[AI_USAGE_SOURCE_SCRIPT].push(
+      event.source === AI_USAGE_SOURCE_SCRIPT ? event.estimated_cost : 0
+    );
+    costBySource[AI_USAGE_SOURCE_MCP].push(
+      event.source === AI_USAGE_SOURCE_MCP ? event.estimated_cost : 0
+    );
+    costBySource[AI_USAGE_SOURCE_UNKNOWN].push(
+      event.source === AI_USAGE_SOURCE_UNKNOWN ? event.estimated_cost : 0
+    );
   }
 
   return {
