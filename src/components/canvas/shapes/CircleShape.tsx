@@ -39,11 +39,14 @@ export const CircleShape = memo(
       },
       ref
     ): ReactElement => {
-      const [cacheRef] = useKonvaCache<Konva.Ellipse>(
-        ref,
-        !isSelected,
-        [fill, stroke, strokeWidth, width, height, opacity]
-      );
+      const [cacheRef] = useKonvaCache<Konva.Ellipse>(ref, !isSelected, [
+        fill,
+        stroke,
+        strokeWidth,
+        width,
+        height,
+        opacity,
+      ]);
       const radiusX = width / 2;
       const radiusY = height / 2;
 

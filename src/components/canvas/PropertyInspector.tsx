@@ -76,10 +76,7 @@ interface IFramePropertiesProps {
   onObjectUpdate: (objectId: string, updates: IUpdateObjectParams) => Promise<void>;
 }
 
-const FrameProperties = ({
-  frame,
-  onObjectUpdate,
-}: IFramePropertiesProps): ReactElement => {
+const FrameProperties = ({ frame, onObjectUpdate }: IFramePropertiesProps): ReactElement => {
   const frameObjects = useObjectsStore((s) => s.objects);
   const allObjects = useMemo(() => Object.values(frameObjects), [frameObjects]);
   const setSelectedIds = useSelectionStore((s) => s.setSelectedIds);
@@ -543,9 +540,7 @@ export const PropertyInspector = memo(function PropertyInspector({
 
   // Single frame → frame-specific panel (placed after all hooks to respect rules-of-hooks)
   if (singleFrame) {
-    return (
-      <FrameProperties frame={singleFrame} onObjectUpdate={onObjectUpdate} />
-    );
+    return <FrameProperties frame={singleFrame} onObjectUpdate={onObjectUpdate} />;
   }
 
   if (!hasSelection) {

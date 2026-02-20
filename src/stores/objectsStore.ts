@@ -155,7 +155,8 @@ export const useObjectsStore = create<IObjectsStore>()((set) => ({
       updateSpatialForObject(merged);
 
       // Skip relationship index rebuild on hot path (drag moves that don't change relationships)
-      const parentChanged = 'parentFrameId' in updates && updates.parentFrameId !== existing.parentFrameId;
+      const parentChanged =
+        'parentFrameId' in updates && updates.parentFrameId !== existing.parentFrameId;
       const endpointsChanged =
         ('fromObjectId' in updates && updates.fromObjectId !== existing.fromObjectId) ||
         ('toObjectId' in updates && updates.toObjectId !== existing.toObjectId);

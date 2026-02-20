@@ -62,7 +62,9 @@ export async function flush(): Promise<void> {
 
     if (import.meta.env.DEV) {
       // eslint-disable-next-line no-console
-      console.debug(`[writeQueue] flushed ${batch.length} objects (${totalFlushes} flushes, ${totalCoalesced} coalesced total)`);
+      console.debug(
+        `[writeQueue] flushed ${batch.length} objects (${totalFlushes} flushes, ${totalCoalesced} coalesced total)`
+      );
     }
   } catch (err) {
     // Re-queue failed writes so they aren't silently lost
@@ -82,13 +84,15 @@ export async function flush(): Promise<void> {
 
 /** Number of pending writes (for testing/debugging). */
 export function pendingCount(): number {
-
   return pendingWrites.size;
 }
 
 /** Dev telemetry: snapshot of queue stats. */
-export function getWriteQueueStats(): { pending: number; totalFlushes: number; totalCoalesced: number } {
-
+export function getWriteQueueStats(): {
+  pending: number;
+  totalFlushes: number;
+  totalCoalesced: number;
+} {
   return { pending: pendingWrites.size, totalFlushes, totalCoalesced };
 }
 

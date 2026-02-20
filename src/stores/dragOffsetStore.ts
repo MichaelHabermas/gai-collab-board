@@ -33,7 +33,8 @@ export const useDragOffsetStore = create<IDragOffsetStore>()((set) => ({
   setFrameDragOffset: (offset) => set({ frameDragOffset: offset }),
   setDropTargetFrameId: (id) => set({ dropTargetFrameId: id }),
   setGroupDragOffset: (offset) => set({ groupDragOffset: offset }),
-  clearDragState: () => set({ frameDragOffset: null, dropTargetFrameId: null, groupDragOffset: null }),
+  clearDragState: () =>
+    set({ frameDragOffset: null, dropTargetFrameId: null, groupDragOffset: null }),
 }));
 
 // ── Selectors ──────────────────────────────────────────────────────────

@@ -28,10 +28,14 @@ export interface IUseShapeDrawingReturn {
     tool: ToolMode,
     color: string,
     onCreate: (params: Omit<ICreateObjectParams, 'createdBy'>) => Promise<IBoardObject | null>,
-    onSuccess: () => void,
+    onSuccess: () => void
   ) => Promise<void>;
   resetDrawing: () => void;
-  renderDrawingPreview: (tool: ToolMode, color: string, selectionColor: string) => ReactElement | null;
+  renderDrawingPreview: (
+    tool: ToolMode,
+    color: string,
+    selectionColor: string
+  ) => ReactElement | null;
 }
 
 /** Returns true if the tool creates a shape via drag. */
@@ -72,7 +76,7 @@ export function useShapeDrawing(): IUseShapeDrawingReturn {
       tool: ToolMode,
       color: string,
       onCreate: (params: Omit<ICreateObjectParams, 'createdBy'>) => Promise<IBoardObject | null>,
-      onSuccess: () => void,
+      onSuccess: () => void
     ) => {
       // Read latest state via functional updater (avoids stale closure).
       let snapshot: IDrawingState | null = null;

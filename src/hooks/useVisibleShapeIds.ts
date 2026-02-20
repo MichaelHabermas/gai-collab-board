@@ -21,9 +21,10 @@ export const useVisibleShapeIds = (viewport: IViewportState): string[] => {
     const viewBottom = (-position.y + height) / scale.y + VIEWPORT_PADDING;
 
     // Use spatial index to narrow candidates (O(cells) instead of O(n))
-    const candidates = spatialIndex.size > 0
-      ? spatialIndex.query({ x1: viewLeft, y1: viewTop, x2: viewRight, y2: viewBottom })
-      : null;
+    const candidates =
+      spatialIndex.size > 0
+        ? spatialIndex.query({ x1: viewLeft, y1: viewTop, x2: viewRight, y2: viewBottom })
+        : null;
 
     const visibleIds: { id: string; isFrame: boolean }[] = [];
 

@@ -65,7 +65,7 @@ export const getAIClient = async (): Promise<InstanceType<typeof import('openai'
     const baseURL = getProxyBaseURL();
 
     _aiClient = new OpenAI({
-      apiKey: 'proxy', /* Proxy injects the real key; client does not send it */
+      apiKey: 'proxy' /* Proxy injects the real key; client does not send it */,
       baseURL,
       dangerouslyAllowBrowser: true,
       maxRetries: 0,

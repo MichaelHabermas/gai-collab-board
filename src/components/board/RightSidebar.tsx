@@ -12,8 +12,12 @@ import {
 import type { IRightSidebarProps } from '@/types';
 
 /** Prefetch heavy panel chunks on hover so they're cached by the time the user clicks. */
-const prefetchProps = (): void => { void import('@/components/canvas/PropertyInspector'); };
-const prefetchAI = (): void => { void import('@/components/ai/AIChatPanel'); };
+const prefetchProps = (): void => {
+  void import('@/components/canvas/PropertyInspector');
+};
+const prefetchAI = (): void => {
+  void import('@/components/ai/AIChatPanel');
+};
 
 /**
  * Collapsible right panel: expanded (tabs + content) or collapsed icon rail.

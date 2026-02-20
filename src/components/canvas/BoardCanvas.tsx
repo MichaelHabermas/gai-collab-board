@@ -1,4 +1,4 @@
-import { Stage, Layer, Rect, Shape } from 'react-konva';
+import { Stage, Layer, Rect, Shape, Group } from 'react-konva';
 import { TransformHandler } from './TransformHandler';
 import { SelectionLayer } from './SelectionLayer';
 import { useRef, useCallback, useState, useEffect, useMemo, memo, type ReactElement } from 'react';
@@ -27,6 +27,7 @@ import type {
   IViewportState,
   ToolMode,
   IKonvaMouseEvent,
+  IKonvaDragEvent,
 } from '@/types';
 import type { ICreateObjectParams } from '@/modules/sync/objectService';
 import { ConnectionNodesLayer } from './ConnectionNodesLayer';
@@ -43,7 +44,7 @@ import { useBoardSettings } from '@/hooks/useBoardSettings';
 import { useMiddleMousePanListeners } from '@/hooks/useMiddleMousePanListeners';
 import { useCanvasKeyboardShortcuts } from '@/hooks/useCanvasKeyboardShortcuts';
 import { useHistoryStore } from '@/stores/historyStore';
-import { useDragOffsetStore } from '@/stores/dragOffsetStore';
+import { useDragOffsetStore, selectGroupDragOffset } from '@/stores/dragOffsetStore';
 
 interface IBoardCanvasProps {
   boardId: string;
@@ -68,6 +69,49 @@ export const GRID_LINE_OPACITY = 0.5;
 
 // Default sizes for new objects
 const DEFAULT_STICKY_SIZE = { width: 200, height: 200 };
+
+/**
+ * Isolated selection drag handle — subscribes to groupDragOffset at 60Hz
+ * so BoardCanvas itself doesn't re-render during group drag.
+ */
+const SelectionDragHandle = memo(
+  ({
+    selectionBounds,
+    onDragStart,
+    onDragMove,
+    onDragEnd,
+    onMouseEnter,
+    onMouseLeave,
+  }: {
+    selectionBounds: { x1: number; y1: number; x2: number; y2: number };
+    onDragStart: () => void;
+    onDragMove: (e: IKonvaDragEvent) => void;
+    onDragEnd: () => void;
+    onMouseEnter: () => void;
+    onMouseLeave: () => void;
+  }) => {
+    const groupDragOffset = useDragOffsetStore(selectGroupDragOffset);
+
+    return (
+      <Rect
+        x={selectionBounds.x1 + (groupDragOffset?.dx ?? 0)}
+        y={selectionBounds.y1 + (groupDragOffset?.dy ?? 0)}
+        width={selectionBounds.x2 - selectionBounds.x1}
+        height={selectionBounds.y2 - selectionBounds.y1}
+        fill='transparent'
+        name='selection-drag-handle'
+        listening={true}
+        draggable={true}
+        onDragStart={onDragStart}
+        onDragMove={onDragMove}
+        onDragEnd={onDragEnd}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+      />
+    );
+  }
+);
+SelectionDragHandle.displayName = 'SelectionDragHandle';
 
 /**
  * Main canvas component with pan/zoom, grid background, and cursor sync.
@@ -105,9 +149,14 @@ export const BoardCanvas = memo(
     const drawing = useShapeDrawing();
     const { drawingState, drawingActiveRef } = drawing;
     const marquee = useMarqueeSelection();
-    const { selectionRect, isSelecting, selectingActiveRef, justDidMarqueeRef: justDidMarqueeSelectionRef } = marquee;
-    // Subscribe to groupDragOffset only for the selection rect and cursor
-    const groupDragOffset = useDragOffsetStore((s) => s.groupDragOffset);
+    const {
+      selectionRect,
+      isSelecting,
+      selectingActiveRef,
+      justDidMarqueeRef: justDidMarqueeSelectionRef,
+    } = marquee;
+    // Boolean-only selector: re-renders only on start/end of group drag, not every frame
+    const isGroupDragging = useDragOffsetStore((s) => s.groupDragOffset != null);
     // Phase 2: track WHICH frame is being dragged (stable during drag — only changes on start/end)
     const draggingFrameId = useDragOffsetStore((s) => s.frameDragOffset?.frameId ?? null);
     const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
@@ -441,7 +490,17 @@ export const BoardCanvas = memo(
 
         pendingPointerRef.current = null;
       },
-      [drawingState.isDrawing, activeTool, activeColor, onObjectCreate, objects, getCanvasCoords, setSelectedIds, drawing, marquee]
+      [
+        drawingState.isDrawing,
+        activeTool,
+        activeColor,
+        onObjectCreate,
+        objects,
+        getCanvasCoords,
+        setSelectedIds,
+        drawing,
+        marquee,
+      ]
     );
 
     useEffect(
@@ -656,18 +715,12 @@ export const BoardCanvas = memo(
     );
 
     const staticObjectNodes = useMemo(
-      () =>
-        staticIds.map((id) => (
-          <StoreShapeRenderer key={id} id={id} {...shapeRendererProps} />
-        )),
+      () => staticIds.map((id) => <StoreShapeRenderer key={id} id={id} {...shapeRendererProps} />),
       [staticIds, shapeRendererProps]
     );
 
     const activeObjectNodes = useMemo(
-      () =>
-        activeIds.map((id) => (
-          <StoreShapeRenderer key={id} id={id} {...shapeRendererProps} />
-        )),
+      () => activeIds.map((id) => <StoreShapeRenderer key={id} id={id} {...shapeRendererProps} />),
       [activeIds, shapeRendererProps]
     );
 
@@ -720,11 +773,7 @@ export const BoardCanvas = memo(
       [shouldHandlePointerMutations, handleStageMouseUp, setIsMiddlePanning]
     );
 
-    const {
-      handleZoomToSelection,
-      handleZoomToFitAll,
-      handleZoomPreset,
-    } = useViewportActions({
+    const { handleZoomToSelection, handleZoomToFitAll, handleZoomPreset } = useViewportActions({
       objects,
       selectedIds,
       zoomToFitBounds,
@@ -784,29 +833,27 @@ export const BoardCanvas = memo(
           style={{
             backgroundColor: getBoardCanvasBackgroundColor(theme),
             forcedColorAdjust: 'none',
-            cursor:
-              groupDragOffset != null
-                ? 'grabbing'
-                : isHoveringSelectionHandleEffective
-                  ? 'grab'
-                  : isMiddlePanning
-                    ? 'grabbing'
-                    : activeTool === 'pan'
-                      ? 'grab'
-                      : activeTool === 'select'
-                        ? 'default'
-                        : 'crosshair',
+            cursor: isGroupDragging
+              ? 'grabbing'
+              : isHoveringSelectionHandleEffective
+                ? 'grab'
+                : isMiddlePanning
+                  ? 'grabbing'
+                  : activeTool === 'pan'
+                    ? 'grab'
+                    : activeTool === 'select'
+                      ? 'default'
+                      : 'crosshair',
           }}
         >
-          {/* Background grid layer - single Shape draws all lines; no interaction */}
-          {gridSceneFunc && (
-            <Layer listening={false} name='grid'>
-              <Shape sceneFunc={gridSceneFunc} listening={false} perfectDrawEnabled={false} />
-            </Layer>
-          )}
-
-          {/* Static shapes layer — only redraws on add/delete/property changes, NOT during drag */}
+          {/* Static shapes layer — grid + objects; only redraws on add/delete/property changes, NOT during drag */}
           <Layer ref={staticLayerRef} name='objects-static' listening={shapesListening}>
+            {/* Background grid - single Shape draws all lines; no interaction */}
+            {gridSceneFunc && (
+              <Group listening={false} name='grid'>
+                <Shape sceneFunc={gridSceneFunc} listening={false} perfectDrawEnabled={false} />
+              </Group>
+            )}
             {/* Background rect to catch clicks on empty areas - covers entire viewport */}
             <Rect
               x={-viewport.position.x / viewport.scale.x - 1000}
@@ -822,20 +869,11 @@ export const BoardCanvas = memo(
 
           {/* Active shapes layer — selected/dragged shapes, redraws at 60Hz during drag */}
           <Layer ref={activeLayerRef} name='objects-active' listening={shapesListening}>
-            {/* Transparent draggable rect over selection bounds: drag from empty space inside selection moves whole group */}
+            {/* Selection drag handle — subscribes to offset independently to avoid 60Hz BoardCanvas re-renders */}
             {selectionBounds != null && canEdit && onObjectsUpdate && (
-              <Rect
-                x={selectionBounds.x1 + (groupDragOffset?.dx ?? 0)}
-                y={selectionBounds.y1 + (groupDragOffset?.dy ?? 0)}
-                width={selectionBounds.x2 - selectionBounds.x1}
-                height={selectionBounds.y2 - selectionBounds.y1}
-                fill='transparent'
-                name='selection-drag-handle'
-                listening={true}
-                draggable={true}
-                onDragStart={() => {
-                  handleSelectionDragStart(selectionBounds);
-                }}
+              <SelectionDragHandle
+                selectionBounds={selectionBounds}
+                onDragStart={() => handleSelectionDragStart(selectionBounds)}
                 onDragMove={handleSelectionDragMove}
                 onDragEnd={handleSelectionDragEnd}
                 onMouseEnter={() => setIsHoveringSelectionHandle(true)}
@@ -845,27 +883,30 @@ export const BoardCanvas = memo(
             {activeObjectNodes}
           </Layer>
 
-          {/* Connection nodes (when connector tool active) - above objects so node clicks are hit first */}
-          {activeTool === 'connector' && (
-            <Layer name='connector-nodes' listening={true}>
-              <ConnectionNodesLayer
-                shapeIds={visibleShapeIds}
-                onNodeClick={handleConnectorNodeClick}
-              />
-            </Layer>
-          )}
+          {/* Overlay layer — drawing preview, connector nodes, cursors, alignment guides */}
+          <Layer name='overlay' listening={activeTool === 'connector'}>
+            {/* Drawing preview + marquee selection */}
+            <Group listening={false} name='drawing'>
+              {drawingPreview}
+              <SelectionLayer selectionRect={selectionRect} />
+            </Group>
 
-          {/* Drawing preview layer */}
-          <Layer name='drawing' listening={false}>
-            {drawingPreview}
-            <SelectionLayer selectionRect={selectionRect} />
+            {/* Connection nodes (when connector tool active) */}
+            {activeTool === 'connector' && (
+              <Group name='connector-nodes' listening={true}>
+                <ConnectionNodesLayer
+                  shapeIds={visibleShapeIds}
+                  onNodeClick={handleConnectorNodeClick}
+                />
+              </Group>
+            )}
+
+            {/* Cursor layer - other users' cursors */}
+            {hasRemoteCursors && <CursorLayer cursors={activeCursors} currentUid={user.uid} />}
+
+            {/* Alignment guides - temporary lines during drag */}
+            {alignmentGuides != null && <AlignmentGuidesLayer guides={alignmentGuides} />}
           </Layer>
-
-          {/* Cursor layer - other users' cursors */}
-          {hasRemoteCursors && <CursorLayer cursors={activeCursors} currentUid={user.uid} />}
-
-          {/* Alignment guides - temporary lines during drag */}
-          {alignmentGuides != null && <AlignmentGuidesLayer guides={alignmentGuides} />}
 
           {/* Selection/Transform layer - listening enabled for Transformer, but clicks on Transformer are handled */}
           {activeTool !== 'pan' && (

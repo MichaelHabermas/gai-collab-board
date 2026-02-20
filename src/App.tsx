@@ -1,4 +1,13 @@
-import { useState, useEffect, useRef, useCallback, lazy, memo, Suspense, type ReactElement } from 'react';
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  lazy,
+  memo,
+  Suspense,
+  type ReactElement,
+} from 'react';
 import { useParams, useNavigate, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/modules/auth';
 import { AuthPage } from '@/components/auth/AuthPage';
@@ -103,7 +112,8 @@ const BoardView = memo(function BoardView({
     deleteComment: deleteCommentFn,
   } = useComments({ boardId });
   const selectedIds = useSelectionStore((s) => s.selectedIds);
-  const selectedObjectId = selectedIds.size === 1 ? (selectedIds.values().next().value ?? null) : null;
+  const selectedObjectId =
+    selectedIds.size === 1 ? (selectedIds.values().next().value ?? null) : null;
   const selectedObjectComments = selectedObjectId
     ? (commentsByObjectId.get(selectedObjectId) ?? [])
     : [];

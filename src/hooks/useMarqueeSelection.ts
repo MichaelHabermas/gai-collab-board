@@ -16,7 +16,7 @@ export interface IUseMarqueeSelectionReturn {
     e: IKonvaMouseEvent,
     objects: IBoardObject[],
     getCanvasCoords: (stage: Konva.Stage, pointer: Konva.Vector2d) => IPosition,
-    setSelectedIds: (ids: string[]) => void,
+    setSelectedIds: (ids: string[]) => void
   ) => void;
   resetMarquee: () => void;
 }
@@ -56,7 +56,7 @@ export function useMarqueeSelection(): IUseMarqueeSelectionReturn {
       e: IKonvaMouseEvent,
       objects: IBoardObject[],
       getCanvasCoords: (stage: Konva.Stage, pointer: Konva.Vector2d) => IPosition,
-      setSelectedIds: (ids: string[]) => void,
+      setSelectedIds: (ids: string[]) => void
     ) => {
       if (isSelectingRef.current && selectionStartRef.current) {
         const start = selectionStartRef.current;

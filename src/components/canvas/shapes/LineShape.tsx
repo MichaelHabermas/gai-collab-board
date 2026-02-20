@@ -36,11 +36,12 @@ export const LineShape = memo(
       },
       ref
     ): ReactElement => {
-      const [cacheRef] = useKonvaCache<Konva.Line>(
-        ref,
-        !isSelected,
-        [stroke, strokeWidth, opacity, points]
-      );
+      const [cacheRef] = useKonvaCache<Konva.Line>(ref, !isSelected, [
+        stroke,
+        strokeWidth,
+        opacity,
+        points,
+      ]);
       const { offset, handleDragEnd, handleTransformEnd } = useLineLikeShape({
         points,
         onDragEnd,

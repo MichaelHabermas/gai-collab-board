@@ -26,10 +26,7 @@ import {
   snapResizeRectToGrid,
 } from '@/lib/snapToGrid';
 import { getWidthHeightFromPoints } from '@/lib/lineTransform';
-import {
-  resolveParentFrameIdFromFrames,
-  findContainingFrame,
-} from '@/hooks/useFrameContainment';
+import { resolveParentFrameIdFromFrames, findContainingFrame } from '@/hooks/useFrameContainment';
 import { useAlignmentGuideCache } from '@/hooks/useAlignmentGuideCache';
 import { perfTime } from '@/lib/perfTimer';
 import { queueWrite } from '@/lib/writeQueue';
@@ -64,7 +61,11 @@ export interface IUseObjectDragHandlersReturn {
   getSelectHandler: (objectId: string) => () => void;
   getDragEndHandler: (objectId: string) => (x: number, y: number) => void;
   getTextChangeHandler: (objectId: string) => (text: string) => void;
-  getDragBoundFunc: (objectId: string, width: number, height: number) => (pos: IPosition) => IPosition;
+  getDragBoundFunc: (
+    objectId: string,
+    width: number,
+    height: number
+  ) => (pos: IPosition) => IPosition;
   selectionBounds: { x1: number; y1: number; x2: number; y2: number } | null;
   alignmentGuides: IAlignmentGuides | null;
   isHoveringSelectionHandleEffective: boolean;
@@ -72,7 +73,9 @@ export interface IUseObjectDragHandlersReturn {
   onDragMoveProp: ((e: IKonvaDragEvent) => void) | undefined;
 }
 
-export function useObjectDragHandlers(config: IUseObjectDragHandlersConfig): IUseObjectDragHandlersReturn {
+export function useObjectDragHandlers(
+  config: IUseObjectDragHandlersConfig
+): IUseObjectDragHandlersReturn {
   const {
     objects,
     objectsById,
@@ -88,7 +91,9 @@ export function useObjectDragHandlers(config: IUseObjectDragHandlersConfig): IUs
   } = config;
 
   // --- Refs ---
-  const selectionDragBoundsRef = useRef<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
+  const selectionDragBoundsRef = useRef<{ x1: number; y1: number; x2: number; y2: number } | null>(
+    null
+  );
   const groupDragOffsetRef = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
   const dragExemptionSetRef = useRef(false);
   const lastDropTargetCheckRef = useRef(0);
@@ -380,19 +385,22 @@ export function useObjectDragHandlers(config: IUseObjectDragHandlersConfig): IUs
     [selectedIds, objectsById]
   );
 
-  const handleSelectionDragMove = useCallback((e: IKonvaDragEvent) => {
-    const b = selectionDragBoundsRef.current;
-    if (!b) {
-      return;
-    }
+  const handleSelectionDragMove = useCallback(
+    (e: IKonvaDragEvent) => {
+      const b = selectionDragBoundsRef.current;
+      if (!b) {
+        return;
+      }
 
-    const offset = {
-      dx: e.target.x() - b.x1,
-      dy: e.target.y() - b.y1,
-    };
-    groupDragOffsetRef.current = offset;
-    setGroupDragOffset(offset);
-  }, [setGroupDragOffset]);
+      const offset = {
+        dx: e.target.x() - b.x1,
+        dy: e.target.y() - b.y1,
+      };
+      groupDragOffsetRef.current = offset;
+      setGroupDragOffset(offset);
+    },
+    [setGroupDragOffset]
+  );
 
   const handleSelectionDragEnd = useCallback(() => {
     const b = selectionDragBoundsRef.current;
@@ -541,13 +549,10 @@ export function useObjectDragHandlers(config: IUseObjectDragHandlersConfig): IUs
 
   // --- Text change (optimistic + queued write) ---
 
-  const handleTextChange = useCallback(
-    (objectId: string, text: string) => {
-      useObjectsStore.getState().updateObject(objectId, { text });
-      queueWrite(objectId, { text });
-    },
-    []
-  );
+  const handleTextChange = useCallback((objectId: string, text: string) => {
+    useObjectsStore.getState().updateObject(objectId, { text });
+    queueWrite(objectId, { text });
+  }, []);
 
   // --- Drag move (grid snap, spatial exemption, drop target detection) ---
 
@@ -685,7 +690,9 @@ export function useObjectDragHandlers(config: IUseObjectDragHandlersConfig): IUs
       const existing = selectHandlerMapRef.current.get(objectId);
       if (existing) return existing;
 
-      const handler = () => { handleObjectSelect(objectId); };
+      const handler = () => {
+        handleObjectSelect(objectId);
+      };
       selectHandlerMapRef.current.set(objectId, handler);
 
       return handler;
@@ -714,7 +721,9 @@ export function useObjectDragHandlers(config: IUseObjectDragHandlersConfig): IUs
       const existing = textChangeHandlerMapRef.current.get(objectId);
       if (existing) return existing;
 
-      const handler = (text: string) => { handleTextChange(objectId, text); };
+      const handler = (text: string) => {
+        handleTextChange(objectId, text);
+      };
       textChangeHandlerMapRef.current.set(objectId, handler);
 
       return handler;
@@ -725,7 +734,7 @@ export function useObjectDragHandlers(config: IUseObjectDragHandlersConfig): IUs
   // Prune stale handler map entries when objects change
   useEffect(() => {
     const liveIds = new Set(objects.map((o) => o.id));
-    const prune = <T,>(map: Map<string, T>) => {
+    const prune = <T>(map: Map<string, T>) => {
       for (const id of map.keys()) {
         if (!liveIds.has(id)) map.delete(id);
       }

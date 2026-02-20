@@ -14,7 +14,11 @@ interface ICanvasControlPanelProps {
   snapToGridEnabled: boolean;
   setSnapToGridEnabled: (v: boolean) => void;
   exportViewport: (format: 'png' | 'jpeg') => void;
-  exportFullBoard: (objects: IBoardObject[], zoomToFitBounds: (b: { x1: number; y1: number; x2: number; y2: number }) => void, format: 'png' | 'jpeg') => void;
+  exportFullBoard: (
+    objects: IBoardObject[],
+    zoomToFitBounds: (b: { x1: number; y1: number; x2: number; y2: number }) => void,
+    format: 'png' | 'jpeg'
+  ) => void;
   objects: IBoardObject[];
   zoomToFitBounds: (b: { x1: number; y1: number; x2: number; y2: number }) => void;
   handleZoomToSelection: () => void;

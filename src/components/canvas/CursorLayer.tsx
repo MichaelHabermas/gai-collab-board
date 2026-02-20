@@ -1,4 +1,4 @@
-import { Layer, Circle, Text, Group } from 'react-konva';
+import { Circle, Text, Group } from 'react-konva';
 import { memo, type ReactElement } from 'react';
 import type { Cursors, ICursorData } from '@/types';
 
@@ -63,11 +63,11 @@ export const CursorLayer = memo(({ cursors, currentUid }: ICursorLayerProps): Re
   );
 
   return (
-    <Layer listening={false}>
+    <Group listening={false} name='cursors'>
       {otherCursors.map((cursor) => (
         <Cursor key={cursor.uid} cursor={cursor} />
       ))}
-    </Layer>
+    </Group>
   );
 });
 

@@ -1,5 +1,5 @@
 import { memo, useMemo, type ReactElement } from 'react';
-import { Layer, Line } from 'react-konva';
+import { Group, Line } from 'react-konva';
 import { useTheme } from '@/hooks/useTheme';
 import type { IAlignmentGuides } from '@/types';
 
@@ -38,7 +38,7 @@ export const AlignmentGuidesLayer = memo(
     }
 
     return (
-      <Layer listening={false} name='alignment-guides'>
+      <Group listening={false} name='alignment-guides'>
         {vertical.map((x) => (
           <Line
             key={`v-${x}`}
@@ -59,7 +59,7 @@ export const AlignmentGuidesLayer = memo(
             listening={false}
           />
         ))}
-      </Layer>
+      </Group>
     );
   }
 );

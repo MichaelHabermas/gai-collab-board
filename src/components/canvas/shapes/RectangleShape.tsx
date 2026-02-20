@@ -38,11 +38,14 @@ export const RectangleShape = memo(
       },
       ref
     ): ReactElement => {
-      const [cacheRef] = useKonvaCache<Konva.Rect>(
-        ref,
-        !isSelected,
-        [fill, stroke, strokeWidth, width, height, opacity]
-      );
+      const [cacheRef] = useKonvaCache<Konva.Rect>(ref, !isSelected, [
+        fill,
+        stroke,
+        strokeWidth,
+        width,
+        height,
+        opacity,
+      ]);
       const handleDragEnd = useShapeDragHandler(onDragEnd);
       const handleTransformEnd = useShapeTransformHandler(
         'rect',
