@@ -3,17 +3,16 @@ import { TransformHandler } from './TransformHandler';
 import { SelectionLayer } from './SelectionLayer';
 import { useRef, useCallback, useState, useEffect, useMemo, memo, type ReactElement } from 'react';
 import Konva from 'konva';
-import { Wrench, Focus, Maximize2, Grid3X3, Magnet, Download } from 'lucide-react';
 import { useCanvasViewport } from '@/hooks/useCanvasViewport';
 import { CursorLayer } from './CursorLayer';
-import { Toolbar } from './Toolbar';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { STICKY_COLORS } from './shapes';
+import { CanvasToolbarWrapper } from './CanvasToolbarWrapper';
+import { CanvasControlPanel } from './CanvasControlPanel';
 import { StoreShapeRenderer } from './StoreShapeRenderer';
 import { useCursors } from '@/hooks/useCursors';
 import { useVisibleShapeIds } from '@/hooks/useVisibleShapeIds';
 import { useCanvasOperations } from '@/hooks/useCanvasOperations';
+import { useConnectorCreation } from '@/hooks/useConnectorCreation';
 
 import { useBatchDraw } from '@/hooks/useBatchDraw';
 import { useSelectionStore } from '@/stores/selectionStore';
@@ -21,7 +20,6 @@ import { useObjectsStore, spatialIndex } from '@/stores/objectsStore';
 import type { User } from 'firebase/auth';
 import type {
   IBoardObject,
-  ConnectorAnchor,
   IPosition,
   ITransformEndAttrs,
   IViewportState,
@@ -31,17 +29,13 @@ import type {
   IKonvaMouseEvent,
   IKonvaDragEvent,
   ISelectionRect,
-  ExportImageFormat,
-  IViewportActionsValue,
 } from '@/types';
 import type { ICreateObjectParams } from '@/modules/sync/objectService';
-import { getAnchorPosition } from '@/lib/connectorAnchors';
-import { getObjectBounds, getSelectionBounds, getBoardBounds } from '@/lib/canvasBounds';
+import { getObjectBounds, getSelectionBounds } from '@/lib/canvasBounds';
 import {
   computeAlignmentGuidesWithCandidates,
   computeSnappedPositionFromGuides,
 } from '@/lib/alignmentGuides';
-import { cn } from '@/lib/utils';
 import { getWidthHeightFromPoints } from '@/lib/lineTransform';
 import {
   applySnapPositionToNode,
@@ -49,9 +43,9 @@ import {
   snapResizeRectToGrid,
 } from '@/lib/snapToGrid';
 import { ConnectionNodesLayer } from './ConnectionNodesLayer';
-import { AlignToolbar } from './AlignToolbar';
 import { AlignmentGuidesLayer } from './AlignmentGuidesLayer';
 import { useExportAsImage } from '@/hooks/useExportAsImage';
+import { useViewportActions } from '@/hooks/useViewportActions';
 import { useTheme } from '@/hooks/useTheme';
 import {
   getBoardCanvasBackgroundColor,
@@ -64,7 +58,6 @@ import { useCanvasKeyboardShortcuts } from '@/hooks/useCanvasKeyboardShortcuts';
 import { useAlignmentGuideCache } from '@/hooks/useAlignmentGuideCache';
 import { useHistoryStore } from '@/stores/historyStore';
 import { useDragOffsetStore } from '@/stores/dragOffsetStore';
-import { useViewportActionsStore } from '@/stores/viewportActionsStore';
 import {
   resolveParentFrameIdFromFrames,
   findContainingFrame,
@@ -87,9 +80,6 @@ interface IBoardCanvasProps {
   onUndo?: () => void;
   onRedo?: () => void;
 }
-
-// Zoom preset scales (1 = 100%)
-const ZOOM_PRESETS = [0.5, 1, 2] as const;
 
 // Grid pattern configuration (display and snap use same size per PRD)
 const GRID_SIZE = 20;
@@ -182,10 +172,6 @@ export const BoardCanvas = memo(
     // so we can move its children to the active layer without 60Hz invalidation.
     const draggingFrameId = useDragOffsetStore((s) => s.frameDragOffset?.frameId ?? null);
     const [isHoveringSelectionHandle, setIsHoveringSelectionHandle] = useState(false);
-    const [connectorFrom, setConnectorFrom] = useState<{
-      shapeId: string;
-      anchor: ConnectorAnchor;
-    } | null>(null);
     const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
     const [alignmentGuides, setAlignmentGuides] = useState<IAlignmentGuides | null>(null);
     const objectsRef = useRef<IBoardObject[]>(objects);
@@ -316,6 +302,14 @@ export const BoardCanvas = memo(
       activeToolRef,
       onUndo,
       onRedo,
+    });
+
+    const { handleConnectorNodeClick, clearConnector } = useConnectorCreation({
+      objects,
+      activeColor,
+      onObjectCreate,
+      setActiveTool,
+      activeToolRef,
     });
 
     // Clear selection helper
@@ -752,7 +746,7 @@ export const BoardCanvas = memo(
             setSelectedIds([]);
           } else if (activeTool === 'connector') {
             // Cancel connector flow on empty area click
-            setConnectorFrom(null);
+            clearConnector();
           }
         }
       },
@@ -764,57 +758,8 @@ export const BoardCanvas = memo(
         getCanvasCoords,
         isEmptyAreaClick,
         setSelectedIds,
+        clearConnector,
       ]
-    );
-
-    // Handle connector node click (two-click flow: first node = from, second = to; same shape cancels)
-    const handleConnectorNodeClick = useCallback(
-      (shapeId: string, anchor: ConnectorAnchor) => {
-        if (!connectorFrom) {
-          setConnectorFrom({ shapeId, anchor });
-          return;
-        }
-
-        if (connectorFrom.shapeId === shapeId) {
-          setConnectorFrom(null);
-          return;
-        }
-
-        const fromObj = objects.find((o) => o.id === connectorFrom.shapeId);
-        const toObj = objects.find((o) => o.id === shapeId);
-        if (!fromObj || !toObj || !onObjectCreate) {
-          setConnectorFrom(null);
-          return;
-        }
-
-        const fromPos = getAnchorPosition(fromObj, connectorFrom.anchor);
-        const toPos = getAnchorPosition(toObj, anchor);
-        onObjectCreate({
-          type: 'connector',
-          x: fromPos.x,
-          y: fromPos.y,
-          width: 0,
-          height: 0,
-          points: [0, 0, toPos.x - fromPos.x, toPos.y - fromPos.y],
-          fill: 'transparent',
-          stroke: activeColor,
-          strokeWidth: 2,
-          rotation: 0,
-          fromObjectId: connectorFrom.shapeId,
-          toObjectId: shapeId,
-          fromAnchor: connectorFrom.anchor,
-          toAnchor: anchor,
-        })
-          .then(() => {
-            setConnectorFrom(null);
-            setActiveTool('select');
-            activeToolRef.current = 'select';
-          })
-          .catch(() => {
-            setConnectorFrom(null);
-          });
-      },
-      [connectorFrom, objects, onObjectCreate, activeColor]
     );
 
     // Handle object selection
@@ -1708,82 +1653,20 @@ export const BoardCanvas = memo(
       [shouldHandlePointerMutations, handleStageMouseUp, setIsMiddlePanning]
     );
 
-    const handleZoomToSelection = useCallback(() => {
-      const bounds = getSelectionBounds(objects, selectedIds);
-      if (bounds) {
-        zoomToFitBounds(bounds);
-      }
-    }, [objects, selectedIds, zoomToFitBounds]);
-
-    const handleZoomToFitAll = useCallback(() => {
-      const bounds = getBoardBounds(objects);
-      if (bounds) {
-        zoomToFitBounds(bounds);
-      } else {
-        resetViewport();
-      }
-    }, [objects, zoomToFitBounds, resetViewport]);
-
-    const handleZoomPreset = useCallback(
-      (scale: number) => {
-        zoomTo(scale);
-      },
-      [zoomTo]
-    );
-    const handleSetZoomLevel = useCallback(
-      (percent: number) => {
-        handleZoomPreset(percent / 100);
-      },
-      [handleZoomPreset]
-    );
-
-    const handleZoomToObjectIds = useCallback(
-      (objectIds: string[]) => {
-        const bounds = getSelectionBounds(objects, objectIds);
-        if (bounds) {
-          zoomToFitBounds(bounds);
-        }
-      },
-      [objects, zoomToFitBounds]
-    );
-    const handleExportViewport = useCallback(
-      (format?: ExportImageFormat) => {
-        exportViewport(format ?? 'png');
-      },
-      [exportViewport]
-    );
-    const handleExportFullBoard = useCallback(
-      (format?: ExportImageFormat) => {
-        exportFullBoard(objectsRef.current, zoomToFitBounds, format ?? 'png');
-      },
-      [exportFullBoard, zoomToFitBounds]
-    );
-    const viewportActions = useMemo<IViewportActionsValue>(
-      () => ({
-        zoomToFitAll: handleZoomToFitAll,
-        zoomToSelection: handleZoomToObjectIds,
-        setZoomLevel: handleSetZoomLevel,
-        exportViewport: handleExportViewport,
-        exportFullBoard: handleExportFullBoard,
-      }),
-      [
-        handleZoomToFitAll,
-        handleZoomToObjectIds,
-        handleSetZoomLevel,
-        handleExportViewport,
-        handleExportFullBoard,
-      ]
-    );
-
-    const setViewportStoreActions = useViewportActionsStore((s) => s.setActions);
-
-    useEffect(() => {
-      setViewportStoreActions(viewportActions);
-
-      return () => {
-        setViewportStoreActions(null);
-      };
-    }, [setViewportStoreActions, viewportActions]);
+    const {
+      handleZoomToSelection,
+      handleZoomToFitAll,
+      handleZoomPreset,
+    } = useViewportActions({
+      objects,
+      selectedIds,
+      zoomToFitBounds,
+      resetViewport,
+      zoomTo,
+      exportViewport,
+      exportFullBoard,
+      objectsRef,
+    });
 
     return (
       <div
@@ -1797,54 +1680,22 @@ export const BoardCanvas = memo(
         data-selected-count={selectedIds.size}
         data-selected-ids={[...selectedIds].join(',')}
       >
-        {/* Desktop toolbar: visible from md up */}
-        <div className='hidden md:block absolute left-4 top-1/2 -translate-y-1/2 z-20'>
-          <Toolbar
-            activeTool={activeTool}
-            onToolChange={(tool) => {
-              setActiveTool(tool);
-              activeToolRef.current = tool;
-            }}
-            activeColor={activeColor}
-            onColorChange={setActiveColor}
-            canEdit={canEdit}
-            onUndo={onUndo}
-            onRedo={onRedo}
-            canUndo={canUndoHistory}
-            canRedo={canRedoHistory}
-          />
-        </div>
-
-        {/* Mobile: floating Tools button + bottom sheet */}
-        <div className='md:hidden fixed bottom-6 left-4 z-30'>
-          <Button
-            size='icon'
-            className='h-12 w-12 rounded-full shadow-lg bg-card border border-border text-card-foreground hover:bg-accent'
-            onClick={() => setMobileToolsOpen(true)}
-            data-testid='toolbar-mobile-toggle'
-            title='Tools'
-          >
-            <Wrench className='h-6 w-6' />
-          </Button>
-        </div>
-        <Dialog open={mobileToolsOpen} onOpenChange={setMobileToolsOpen}>
-          <DialogContent
-            className='fixed left-0 right-0 bottom-0 top-auto translate-x-0 translate-y-0 max-h-[70vh] w-full rounded-t-xl border-t border-border bg-card/95 p-4'
-            data-testid='toolbar-mobile-sheet'
-          >
-            <Toolbar
-              embedded
-              activeTool={activeTool}
-              onToolChange={(tool) => {
-                setActiveTool(tool);
-                activeToolRef.current = tool;
-              }}
-              activeColor={activeColor}
-              onColorChange={setActiveColor}
-              canEdit={canEdit}
-            />
-          </DialogContent>
-        </Dialog>
+        <CanvasToolbarWrapper
+          activeTool={activeTool}
+          onToolChange={(tool) => {
+            setActiveTool(tool);
+            activeToolRef.current = tool;
+          }}
+          activeColor={activeColor}
+          onColorChange={setActiveColor}
+          canEdit={canEdit}
+          mobileToolsOpen={mobileToolsOpen}
+          setMobileToolsOpen={setMobileToolsOpen}
+          onUndo={onUndo}
+          onRedo={onRedo}
+          canUndo={canUndoHistory}
+          canRedo={canRedoHistory}
+        />
 
         <Stage
           ref={stageRef}
@@ -1992,119 +1843,26 @@ export const BoardCanvas = memo(
           )}
         </Stage>
 
-        {/* Status indicators and zoom controls */}
-        <div className='absolute bottom-4 right-4 flex gap-2 items-center'>
-          {/* Grid and snap toggles */}
-          <Button
-            variant={showGrid ? 'default' : 'ghost'}
-            size='icon'
-            className={cn(
-              'h-9 w-9 rounded-md',
-              showGrid
-                ? 'bg-primary text-primary-foreground'
-                : 'text-card-foreground hover:bg-accent bg-card/80'
-            )}
-            onClick={() => setShowGrid(!showGrid)}
-            title={showGrid ? 'Hide grid' : 'Show grid'}
-            data-testid='toggle-show-grid'
-          >
-            <Grid3X3 className='h-4 w-4' />
-          </Button>
-          <Button
-            variant={snapToGridEnabled ? 'default' : 'ghost'}
-            size='icon'
-            className={cn(
-              'h-9 w-9 rounded-md',
-              snapToGridEnabled
-                ? 'bg-primary text-primary-foreground'
-                : 'text-card-foreground hover:bg-accent bg-card/80'
-            )}
-            onClick={() => setSnapToGridEnabled(!snapToGridEnabled)}
-            title={snapToGridEnabled ? 'Disable snap to grid' : 'Enable snap to grid'}
-            data-testid='toggle-snap-to-grid'
-          >
-            <Magnet className='h-4 w-4' />
-          </Button>
-          <Button
-            variant='ghost'
-            size='icon'
-            className='h-9 w-9 text-card-foreground hover:bg-accent bg-card/80 rounded-md'
-            onClick={() => exportViewport('png')}
-            title='Export current view as PNG'
-            data-testid='export-viewport-png'
-          >
-            <Download className='h-4 w-4' />
-          </Button>
-          <Button
-            variant='ghost'
-            size='icon'
-            className='h-9 w-9 text-card-foreground hover:bg-accent bg-card/80 rounded-md'
-            onClick={() => exportFullBoard(objects, zoomToFitBounds, 'png')}
-            title='Export full board as PNG'
-            data-testid='export-full-board-png'
-          >
-            <Download className='h-4 w-4' />
-          </Button>
-          {onObjectUpdate != null && (
-            <AlignToolbar
-              objects={objects}
-              selectedIds={selectedIdsArray}
-              onObjectUpdate={onObjectUpdate}
-              canEdit={canEdit}
-            />
-          )}
-          {/* Object count (visible/total) */}
-          <div
-            className='bg-card/80 text-card-foreground px-3 py-1.5 rounded-md text-sm font-medium backdrop-blur-sm'
-            data-testid='object-count'
-          >
-            {visibleShapeIds.length}/{objects.length}
-          </div>
-          {/* Zoom to selection */}
-          <Button
-            variant='ghost'
-            size='icon'
-            className='h-9 w-9 text-card-foreground hover:bg-accent bg-card/80 rounded-md'
-            onClick={handleZoomToSelection}
-            disabled={selectedIds.size === 0}
-            title='Zoom to selection'
-            data-testid='zoom-to-selection'
-          >
-            <Focus className='h-4 w-4' />
-          </Button>
-          {/* Zoom to fit all */}
-          <Button
-            variant='ghost'
-            size='icon'
-            className='h-9 w-9 text-card-foreground hover:bg-accent bg-card/80 rounded-md'
-            onClick={handleZoomToFitAll}
-            title='Zoom to fit all'
-            data-testid='zoom-to-fit-all'
-          >
-            <Maximize2 className='h-4 w-4' />
-          </Button>
-          {/* Zoom presets */}
-          {ZOOM_PRESETS.map((scale) => (
-            <Button
-              key={scale}
-              variant='ghost'
-              size='sm'
-              className='h-9 px-2 text-card-foreground hover:bg-accent bg-card/80 rounded-md text-xs font-medium'
-              onClick={() => handleZoomPreset(scale)}
-              title={`${scale * 100}%`}
-              data-testid={`zoom-preset-${scale * 100}`}
-            >
-              {scale * 100}%
-            </Button>
-          ))}
-          {/* Zoom indicator */}
-          <div
-            className='bg-card/80 text-card-foreground px-3 py-1.5 rounded-md text-sm font-medium backdrop-blur-sm'
-            data-testid='zoom-indicator'
-          >
-            {Math.round(viewport.scale.x * 100)}%
-          </div>
-        </div>
+        <CanvasControlPanel
+          showGrid={showGrid}
+          setShowGrid={setShowGrid}
+          snapToGridEnabled={snapToGridEnabled}
+          setSnapToGridEnabled={setSnapToGridEnabled}
+          exportViewport={exportViewport}
+          exportFullBoard={exportFullBoard}
+          objects={objects}
+          zoomToFitBounds={zoomToFitBounds}
+          handleZoomToSelection={handleZoomToSelection}
+          handleZoomToFitAll={handleZoomToFitAll}
+          handleZoomPreset={handleZoomPreset}
+          selectedIds={selectedIds}
+          selectedIdsArray={selectedIdsArray}
+          visibleCount={visibleShapeIds.length}
+          totalCount={objects.length}
+          zoomPercent={Math.round(viewport.scale.x * 100)}
+          onObjectUpdate={onObjectUpdate}
+          canEdit={canEdit}
+        />
       </div>
     );
   }
