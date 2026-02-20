@@ -20,6 +20,7 @@ export function getProxyBaseURLFromEnv(env: IAIProxyEnv, origin?: string): strin
     if (origin) {
       return origin + path;
     }
+
     return path;
   }
 
@@ -32,6 +33,7 @@ export function getProxyBaseURLFromEnv(env: IAIProxyEnv, origin?: string): strin
   if (origin) {
     return origin + path;
   }
+
   return path;
 }
 
