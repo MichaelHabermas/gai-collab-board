@@ -1,3 +1,20 @@
+/**
+ * Frame containment: determines parent-child relationships between objects and frames.
+ *
+ * Coordinate system:
+ * - All positions are in world (canvas) space, not screen space.
+ * - `IBounds { x1, y1, x2, y2 }` represents axis-aligned bounding boxes.
+ * - Containment uses **center-point** check: an object belongs to a frame if
+ *   its center `((x1+x2)/2, (y1+y2)/2)` falls inside the frame's bounds.
+ *
+ * Parenting model:
+ * - Each `IBoardObject` has an optional `parentFrameId` field.
+ * - Only one level of nesting: frames cannot be nested inside other frames.
+ * - Connectors are never parented (they float independently).
+ * - When multiple frames overlap, the **smallest by area** wins (most specific container).
+ * - The `objectsStore` maintains a `frameChildrenIndex: Map<string, Set<string>>`
+ *   for O(1) child lookups, updated automatically on every mutation.
+ */
 import type { IBoardObject } from '@/types';
 import type { IBounds } from '@/types/geometry';
 import { getObjectBounds } from '@/lib/canvasBounds';

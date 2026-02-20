@@ -58,11 +58,14 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
 
   // Clear store and pending timeouts when unmounting or switching boards.
   useEffect(() => {
+    const timeouts = pendingTimeoutsRef.current;
+    const pending = pendingUpdatesRef.current;
+
     return () => {
       useObjectsStore.getState().clear();
-      for (const t of pendingTimeoutsRef.current.values()) clearTimeout(t);
-      pendingTimeoutsRef.current.clear();
-      pendingUpdatesRef.current.clear();
+      for (const t of timeouts.values()) clearTimeout(t);
+      timeouts.clear();
+      pending.clear();
     };
   }, [boardId]);
 

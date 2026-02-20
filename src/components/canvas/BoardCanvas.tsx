@@ -1224,7 +1224,7 @@ export const BoardCanvas = memo(
         dragEndHandlerMapRef.current.set(objectId, nextHandler);
         return nextHandler;
       },
-      [handleObjectDragEnd]
+      [handleObjectDragEnd, clearDragState]
     );
 
     // Throttle drop-target detection to ~every 100ms instead of every mousemove (60 Hz).

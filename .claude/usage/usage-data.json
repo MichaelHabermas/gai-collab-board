@@ -232,14 +232,56 @@
       },
       "mcp_tool_calls": 4,
       "mcp_estimated_cost": 0.002
+    },
+    {
+      "session_id": "f62c16c2-2698-4b6a-9b7f-07ab2433158a",
+      "timestamp": "2026-02-20T14:16:21.242Z",
+      "source": "claude",
+      "input_tokens": 7557,
+      "output_tokens": 3730,
+      "cache_read": 63343526,
+      "cache_create": 982257,
+      "total_tokens": 64337070,
+      "estimated_cost": 113.82571275000001,
+      "by_model": {
+        "claude-opus-4-6": {
+          "input_tokens": 7557,
+          "output_tokens": 3730,
+          "cache_read_input_tokens": 63343526,
+          "cache_creation_input_tokens": 982257
+        }
+      },
+      "mcp_tool_calls": 305,
+      "mcp_estimated_cost": 0.1525
+    },
+    {
+      "session_id": "f6940abf-fe5f-45a4-8951-ad3106db4f7c",
+      "timestamp": "2026-02-20T14:16:21.379Z",
+      "source": "claude",
+      "input_tokens": 9,
+      "output_tokens": 30,
+      "cache_read": 136413,
+      "cache_create": 26304,
+      "total_tokens": 162756,
+      "estimated_cost": 0.7002045,
+      "by_model": {
+        "claude-opus-4-6": {
+          "input_tokens": 9,
+          "output_tokens": 30,
+          "cache_read_input_tokens": 136413,
+          "cache_creation_input_tokens": 26304
+        }
+      },
+      "mcp_tool_calls": 0,
+      "mcp_estimated_cost": 0
     }
   ],
   "totals": {
-    "input_tokens": 56191,
-    "output_tokens": 21371,
-    "cache_read_input_tokens": 92346211,
-    "cache_creation_input_tokens": 3068185,
-    "estimated_cost": 198.28717525,
-    "session_count": 11
+    "input_tokens": 63757,
+    "output_tokens": 25131,
+    "cache_read_input_tokens": 155826150,
+    "cache_creation_input_tokens": 4076746,
+    "estimated_cost": 312.8130925,
+    "session_count": 13
   }
 }
