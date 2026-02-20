@@ -3,11 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReactNode } from 'react';
 import type Konva from 'konva';
 import { Frame } from '@/components/canvas/shapes/Frame';
-import {
-  SHADOW_BLUR_DEFAULT,
-  SHADOW_BLUR_SELECTED,
-  SHADOW_COLOR,
-} from '@/lib/canvasShadows';
 
 const mockOverlayRect = {
   top: 14,
@@ -34,6 +29,11 @@ vi.mock('@/lib/canvasTextEditOverlay', () => ({
   attachOverlayRepositionLifecycle: vi.fn(() => () => {}),
 }));
 
+vi.mock('@/stores/objectsStore', () => ({
+  useObjectsStore: () => 0,
+  selectFrameChildCount: () => () => 0,
+}));
+
 vi.mock('react-konva', () => ({
   Group: (props: Record<string, unknown>) => {
     latestGroupProps = props;
@@ -48,10 +48,12 @@ vi.mock('react-konva', () => ({
         ref.current = mockGroupNode as Konva.Group | null;
       }
     }
+
     return <div>{props.children as ReactNode}</div>;
   },
   Rect: (props: Record<string, unknown>) => {
     latestRectProps.push(props);
+
     return (
       <button
         data-testid='frame-rect'
@@ -64,6 +66,7 @@ vi.mock('react-konva', () => ({
   },
   Text: (props: Record<string, unknown>) => {
     latestTextProps = props;
+
     return <div data-testid='frame-text' />;
   },
 }));
@@ -76,6 +79,7 @@ describe('Frame', () => {
     document.body.innerHTML = '';
     vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
       callback(0);
+
       return 1;
     });
 
@@ -103,10 +107,11 @@ describe('Frame', () => {
     expect(latestGroupProps?.name).toBe('shape frame');
     expect(latestRectProps[0]?.strokeWidth).toBe(2);
     expect(latestRectProps[1]?.strokeWidth).toBe(2);
-    expect(latestTextProps?.text).toBe('Design');
+    // Title now includes chevron prefix
+    expect(latestTextProps?.text).toBe('▸ Design');
   });
 
-  it('renders title and body rects with consistent slight shadow', () => {
+  it('renders non-selected frame without selection shadow', () => {
     render(
       <Frame
         id='frame-shadow'
@@ -118,13 +123,11 @@ describe('Frame', () => {
       />
     );
 
-    expect(latestRectProps[0]?.shadowColor).toBe(SHADOW_COLOR);
-    expect(latestRectProps[0]?.shadowBlur).toBe(SHADOW_BLUR_DEFAULT);
-    expect(latestRectProps[1]?.shadowColor).toBe(SHADOW_COLOR);
-    expect(latestRectProps[1]?.shadowBlur).toBe(SHADOW_BLUR_DEFAULT);
+    // Non-selected frames don't have the selection shadow glow
+    expect(latestRectProps[0]?.shadowEnabled).toBeFalsy();
   });
 
-  it('renders selected frame with stronger shadow blur', () => {
+  it('renders selected frame with selection glow shadow', () => {
     render(
       <Frame
         id='frame-shadow-selected'
@@ -137,8 +140,10 @@ describe('Frame', () => {
       />
     );
 
-    expect(latestRectProps[0]?.shadowBlur).toBe(SHADOW_BLUR_SELECTED);
-    expect(latestRectProps[1]?.shadowBlur).toBe(SHADOW_BLUR_SELECTED);
+    // Selected frames get a colored glow shadow on the body rect (index 1)
+    expect(latestRectProps[1]?.shadowEnabled).toBe(true);
+    expect(latestRectProps[1]?.shadowBlur).toBe(8);
+    expect(latestRectProps[1]?.shadowOpacity).toBe(0.3);
   });
 
   it('opens title input on double click and commits on Enter', () => {
@@ -160,13 +165,14 @@ describe('Frame', () => {
     expect(titleRect).toBeDefined();
     fireEvent.doubleClick(titleRect as HTMLElement);
 
-    const input = document.querySelector('input.sticky-note-edit-overlay') as HTMLInputElement;
+    // CSS class changed to frame-title-edit-overlay
+    const input = document.querySelector('input.frame-title-edit-overlay') as HTMLInputElement;
     expect(input).toBeTruthy();
     input.value = 'Updated title';
     fireEvent.keyDown(input, { key: 'Enter' });
 
     expect(onTextChange).toHaveBeenCalledWith('Updated title');
-    expect(document.querySelector('.sticky-note-edit-overlay')).toBeNull();
+    expect(document.querySelector('.frame-title-edit-overlay')).toBeNull();
   });
 
   it('handles missing stage guard and emits drag end coordinates', () => {
@@ -193,7 +199,8 @@ describe('Frame', () => {
     const guardRect = screen.getAllByTestId('frame-rect')[0];
     expect(guardRect).toBeDefined();
     fireEvent.doubleClick(guardRect as HTMLElement);
-    expect(document.querySelector('.sticky-note-edit-overlay')).toBeNull();
+    // No stage available, so overlay should not appear
+    expect(document.querySelector('.frame-title-edit-overlay')).toBeNull();
 
     const dragEndHandler = latestGroupProps?.onDragEnd as ((event: unknown) => void) | undefined;
     dragEndHandler?.({

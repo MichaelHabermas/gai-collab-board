@@ -24,12 +24,14 @@ describe('useCanvasOperations', () => {
   let onObjectDelete: (objectId: string) => void;
   let onObjectsDeleteBatch: (objectIds: string[]) => void;
   let clearSelection: () => void;
+  let setSelectedIds: (ids: string[]) => void;
 
   beforeEach(() => {
     onObjectCreate = vi.fn<(params: Partial<IBoardObject>) => void>();
     onObjectDelete = vi.fn<(objectId: string) => void>();
     onObjectsDeleteBatch = vi.fn<(objectIds: string[]) => void>();
     clearSelection = vi.fn<() => void>();
+    setSelectedIds = vi.fn<(ids: string[]) => void>();
   });
 
   afterEach(() => {
@@ -39,6 +41,7 @@ describe('useCanvasOperations', () => {
   const getDefaultProps = () => ({
     objects: [mockObject],
     selectedIds: ['obj-1'],
+    setSelectedIds,
     onObjectCreate,
     onObjectDelete,
     clearSelection,
@@ -83,6 +86,7 @@ describe('useCanvasOperations', () => {
       const props = {
         objects,
         selectedIds: ids,
+        setSelectedIds,
         onObjectCreate,
         onObjectDelete,
         onObjectsDeleteBatch,

@@ -58,6 +58,36 @@ export const getFrameChildren = (frameId: string, objects: IBoardObject[]): IBoa
   objects.filter((o) => o.parentFrameId === frameId);
 
 /**
+ * Returns the bounding box of all direct children of a frame,
+ * or null if the frame has no children.
+ */
+export const getChildrenBounds = (
+  frameId: string,
+  allObjects: IBoardObject[]
+): { x: number; y: number; width: number; height: number } | null => {
+  const children = getFrameChildren(frameId, allObjects);
+  if (children.length === 0) return null;
+
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
+
+  for (const child of children) {
+    const bounds = getObjectBounds(child);
+    if (bounds.x1 < minX) minX = bounds.x1;
+
+    if (bounds.y1 < minY) minY = bounds.y1;
+
+    if (bounds.x2 > maxX) maxX = bounds.x2;
+
+    if (bounds.y2 > maxY) maxY = bounds.y2;
+  }
+
+  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+};
+
+/**
  * Resolves the `parentFrameId` an object should have after being dropped
  * at `objectBounds`. Returns `undefined` when the object should be top-level,
  * or a frame ID when it should be parented.

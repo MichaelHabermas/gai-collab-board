@@ -13,6 +13,8 @@ interface IStoreShapeRendererProps {
   selectionColor: string;
   groupDragOffset?: IGroupDragOffset | null;
   frameDragOffset?: IFrameDragOffset | null;
+  dropTargetFrameId?: string | null;
+  onEnterFrame?: (frameId: string) => void;
   getSelectHandler: (id: string) => () => void;
   getDragEndHandler: (id: string) => (x: number, y: number) => void;
   getTextChangeHandler: (id: string) => (text: string) => void;
@@ -36,6 +38,8 @@ export const StoreShapeRenderer = memo(
     selectionColor,
     groupDragOffset,
     frameDragOffset,
+    dropTargetFrameId,
+    onEnterFrame,
     getSelectHandler,
     getDragEndHandler,
     getTextChangeHandler,
@@ -58,6 +62,8 @@ export const StoreShapeRenderer = memo(
         selectionColor={selectionColor}
         groupDragOffset={groupDragOffset}
         frameDragOffset={frameDragOffset}
+        dropTargetFrameId={dropTargetFrameId}
+        onEnterFrame={onEnterFrame}
         getSelectHandler={getSelectHandler}
         getDragEndHandler={getDragEndHandler}
         getTextChangeHandler={getTextChangeHandler}
@@ -81,6 +87,8 @@ interface IInnerProps {
   selectionColor: string;
   groupDragOffset?: IGroupDragOffset | null;
   frameDragOffset?: IFrameDragOffset | null;
+  dropTargetFrameId?: string | null;
+  onEnterFrame?: (frameId: string) => void;
   getSelectHandler: (id: string) => () => void;
   getDragEndHandler: (id: string) => (x: number, y: number) => void;
   getTextChangeHandler: (id: string) => (text: string) => void;

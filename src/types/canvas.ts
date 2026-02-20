@@ -67,6 +67,10 @@ export interface ICanvasShapeRendererProps {
   groupDragOffset?: IGroupDragOffset | null;
   /** When set, children of this frame are rendered at (object.x + dx, object.y + dy) during frame drag. */
   frameDragOffset?: IFrameDragOffset | null;
+  /** ID of the frame currently being hovered during a drag operation (for drop zone feedback). */
+  dropTargetFrameId?: string | null;
+  /** Called when the user double-clicks a frame body to "enter" the frame (select children). */
+  onEnterFrame?: (frameId: string) => void;
   getSelectHandler: (id: string) => () => void;
   getDragEndHandler: (id: string) => (x: number, y: number) => void;
   getTextChangeHandler: (id: string) => (text: string) => void;

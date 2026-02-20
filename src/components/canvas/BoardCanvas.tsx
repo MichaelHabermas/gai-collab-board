@@ -62,7 +62,11 @@ import { useMiddleMousePanListeners } from '@/hooks/useMiddleMousePanListeners';
 import { useCanvasKeyboardShortcuts } from '@/hooks/useCanvasKeyboardShortcuts';
 import { useAlignmentGuideCache } from '@/hooks/useAlignmentGuideCache';
 import { useHistoryStore } from '@/stores/historyStore';
-import { getFrameChildren, resolveParentFrameId } from '@/hooks/useFrameContainment';
+import {
+  getFrameChildren,
+  resolveParentFrameId,
+  findContainingFrame,
+} from '@/hooks/useFrameContainment';
 
 interface IBoardCanvasProps {
   boardId: string;
@@ -173,6 +177,7 @@ export const BoardCanvas = memo(
     } | null>(null);
     const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
     const [alignmentGuides, setAlignmentGuides] = useState<IAlignmentGuides | null>(null);
+    const [dropTargetFrameId, setDropTargetFrameId] = useState<string | null>(null);
     const objectsRef = useRef<IBoardObject[]>(objects);
     const drawingActiveRef = useRef(false);
     const selectingActiveRef = useRef(false);
@@ -313,7 +318,10 @@ export const BoardCanvas = memo(
     useCanvasOperations({
       objects,
       selectedIds,
-      onObjectCreate: (onObjectCreate as (params: Partial<IBoardObject>) => void) || (() => {}),
+      setSelectedIds,
+      onObjectCreate:
+        (onObjectCreate as (params: Partial<IBoardObject>) => Promise<IBoardObject | null>) ||
+        (() => Promise.resolve(null)),
       onObjectUpdate,
       onObjectsUpdate,
       onObjectDelete: (onObjectDelete as (objectId: string) => void) || (() => {}),
@@ -824,6 +832,7 @@ export const BoardCanvas = memo(
     const handleObjectDragEnd = useCallback(
       (objectId: string, x: number, y: number) => {
         setAlignmentGuides(null);
+        setDropTargetFrameId(null);
         const draggedObj = objectsById.get(objectId);
         if (!draggedObj) return;
 
@@ -936,6 +945,49 @@ export const BoardCanvas = memo(
           const newParent = resolveParentFrameId(draggedObj, newBounds, objects);
           if (newParent !== draggedObj.parentFrameId) {
             singleUpdates.parentFrameId = newParent ?? '';
+          }
+
+          // Auto-expand frame if child falls outside its bounds
+          const targetFrameId = newParent ?? draggedObj.parentFrameId;
+          if (targetFrameId && onObjectsUpdate) {
+            const frame = objectsById.get(targetFrameId);
+            if (frame) {
+              const PADDING = 20;
+              const TITLE_HEIGHT = 32;
+              const childRight = finalX + draggedObj.width + PADDING;
+              const childBottom = finalY + draggedObj.height + PADDING;
+              const childLeft = finalX - PADDING;
+              const childTop = finalY - PADDING;
+              const frameRight = frame.x + frame.width;
+              const frameBottom = frame.y + frame.height;
+              const frameContentTop = frame.y + TITLE_HEIGHT;
+
+              if (
+                childRight > frameRight ||
+                childBottom > frameBottom ||
+                childLeft < frame.x ||
+                childTop < frameContentTop
+              ) {
+                const newFrameX = Math.min(frame.x, childLeft);
+                const newFrameY = Math.min(frame.y, childTop - TITLE_HEIGHT);
+                const newFrameRight = Math.max(frameRight, childRight);
+                const newFrameBottom = Math.max(frameBottom, childBottom);
+
+                onObjectsUpdate([
+                  { objectId, updates: singleUpdates },
+                  {
+                    objectId: targetFrameId,
+                    updates: {
+                      x: newFrameX,
+                      y: newFrameY,
+                      width: newFrameRight - newFrameX,
+                      height: newFrameBottom - newFrameY,
+                    },
+                  },
+                ]);
+                return;
+              }
+            }
           }
         }
 
@@ -1154,7 +1206,8 @@ export const BoardCanvas = memo(
     );
 
     /** When snap-to-grid is on, force node position to grid on every drag move so it lines up during drag.
-     * When dragging a frame, track offset so frame children can render at (x+dx, y+dy) during drag. */
+     * When dragging a frame, track offset so frame children can render at (x+dx, y+dy) during drag.
+     * When dragging a non-frame object, track which frame it's hovering over for drop zone feedback. */
     const handleDragMove = useCallback(
       (e: IKonvaDragEvent) => {
         if (snapToGridEnabled) {
@@ -1170,14 +1223,31 @@ export const BoardCanvas = memo(
               dx: e.target.x() - obj.x,
               dy: e.target.y() - obj.y,
             });
+            setDropTargetFrameId(null);
+          } else if (obj && obj.type !== 'connector') {
+            // Track which frame this object is hovering over
+            const dragX = e.target.x();
+            const dragY = e.target.y();
+            const dragBounds = {
+              x1: dragX,
+              y1: dragY,
+              x2: dragX + obj.width,
+              y2: dragY + obj.height,
+            };
+            const frames = objects.filter((o) => o.type === 'frame');
+            const targetFrame = findContainingFrame(dragBounds, frames, obj.id);
+            setDropTargetFrameId(targetFrame ?? null);
+            setFrameDragOffset(null);
           } else {
             setFrameDragOffset(null);
+            setDropTargetFrameId(null);
           }
         } else {
           setFrameDragOffset(null);
+          setDropTargetFrameId(null);
         }
       },
-      [objectsById, snapToGridEnabled]
+      [objectsById, objects, snapToGridEnabled]
     );
 
     const onDragMoveProp = canEdit ? handleDragMove : undefined;
@@ -1196,6 +1266,17 @@ export const BoardCanvas = memo(
         return nextHandler;
       },
       [handleTextChange]
+    );
+
+    // Enter frame: double-click frame body → select all children
+    const handleEnterFrame = useCallback(
+      (frameId: string) => {
+        const children = getFrameChildren(frameId, objects);
+        if (children.length > 0) {
+          setSelectedIds(children.map((c) => c.id));
+        }
+      },
+      [objects, setSelectedIds]
     );
 
     useEffect(() => {
@@ -1323,6 +1404,8 @@ export const BoardCanvas = memo(
             selectionColor={selectionColor}
             groupDragOffset={groupDragOffset}
             frameDragOffset={frameDragOffset}
+            dropTargetFrameId={dropTargetFrameId}
+            onEnterFrame={handleEnterFrame}
             getSelectHandler={getSelectHandler}
             getDragEndHandler={getDragEndHandler}
             getTextChangeHandler={getTextChangeHandler}
@@ -1338,6 +1421,8 @@ export const BoardCanvas = memo(
         selectionColor,
         groupDragOffset,
         frameDragOffset,
+        dropTargetFrameId,
+        handleEnterFrame,
         getSelectHandler,
         getDragEndHandler,
         getTextChangeHandler,

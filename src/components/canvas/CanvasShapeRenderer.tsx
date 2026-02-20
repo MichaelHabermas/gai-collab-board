@@ -24,6 +24,8 @@ export const CanvasShapeRenderer = memo(
     selectionColor,
     groupDragOffset,
     frameDragOffset,
+    dropTargetFrameId,
+    onEnterFrame,
     getSelectHandler,
     getDragEndHandler,
     getTextChangeHandler,
@@ -249,12 +251,14 @@ export const CanvasShapeRenderer = memo(
             opacity={obj.opacity ?? 1}
             rotation={obj.rotation}
             isSelected={isSelected}
+            isDropTarget={dropTargetFrameId === obj.id}
             draggable={canEdit}
             onSelect={getSelectHandler(obj.id)}
             onDragEnd={getDragEndHandler(obj.id)}
             onDragMove={canEdit ? onDragMove : undefined}
             dragBoundFunc={getDragBoundFunc(obj.id, obj.width, obj.height)}
             onTextChange={canEdit ? getTextChangeHandler(obj.id) : undefined}
+            onEnterFrame={onEnterFrame ? () => onEnterFrame(obj.id) : undefined}
           />
         );
 

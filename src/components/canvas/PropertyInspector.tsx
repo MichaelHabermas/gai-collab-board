@@ -1,13 +1,16 @@
-import { useMemo, useCallback, type ReactElement } from 'react';
+import { useMemo, useCallback, useState, type ReactElement } from 'react';
 import { useSelectionStore } from '@/stores/selectionStore';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { useDebouncedNumberField } from '@/hooks/useDebouncedNumberField';
+import { getFrameChildren } from '@/hooks/useFrameContainment';
 import type { IBoardObject, ArrowheadMode, StrokeStyle } from '@/types';
 import type { IUpdateObjectParams } from '@/modules/sync/objectService';
 
 const MIXED_PLACEHOLDER = 'Mixed';
 const DEFAULT_STICKY_TEXT_COLOR = '#000000';
+const FRAME_PADDING = 20;
 
 interface IPropertyInspectorProps {
   objects: IBoardObject[];
@@ -59,9 +62,272 @@ const getObjectFontColor = (object: IBoardObject, defaultFontColor: string): str
   return object.fill;
 };
 
+// ── Frame-specific property panel ──────────────────────────────────
+
+interface IFramePropertiesProps {
+  frame: IBoardObject;
+  objects: IBoardObject[];
+  onObjectUpdate: (objectId: string, updates: IUpdateObjectParams) => Promise<void>;
+}
+
+const FrameProperties = ({
+  frame,
+  objects,
+  onObjectUpdate,
+}: IFramePropertiesProps): ReactElement => {
+  const setSelectedIds = useSelectionStore((s) => s.setSelectedIds);
+  const children = useMemo(() => getFrameChildren(frame.id, objects), [frame.id, objects]);
+
+  // Debounced title input — sync from prop during render (no useEffect)
+  const [titleValue, setTitleValue] = useState(frame.text || 'Frame');
+  const [prevText, setPrevText] = useState(frame.text);
+  if (frame.text !== prevText) {
+    setPrevText(frame.text);
+    setTitleValue(frame.text || 'Frame');
+  }
+
+  const handleTitleBlur = useCallback(() => {
+    if (titleValue !== (frame.text || 'Frame')) {
+      onObjectUpdate(frame.id, { text: titleValue });
+    }
+  }, [titleValue, frame.id, frame.text, onObjectUpdate]);
+
+  const handleTitleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        onObjectUpdate(frame.id, { text: titleValue });
+        (e.target as HTMLInputElement).blur();
+      }
+    },
+    [titleValue, frame.id, onObjectUpdate]
+  );
+
+  const handleCornerRadiusCommit = useCallback(
+    (num: number) => {
+      onObjectUpdate(frame.id, { cornerRadius: Math.max(0, num) });
+    },
+    [frame.id, onObjectUpdate]
+  );
+
+  const cornerRadiusField = useDebouncedNumberField(
+    String(frame.cornerRadius ?? 8),
+    handleCornerRadiusCommit,
+    { min: 0, max: 40 }
+  );
+
+  const handleOpacityChange = useCallback(
+    (value: string) => {
+      const num = Number(value);
+      if (Number.isNaN(num) || num < 0 || num > 100) return;
+
+      onObjectUpdate(frame.id, { opacity: num / 100 });
+    },
+    [frame.id, onObjectUpdate]
+  );
+
+  const handleFillChange = useCallback(
+    (value: string) => {
+      if (!value) return;
+
+      onObjectUpdate(frame.id, { fill: value });
+    },
+    [frame.id, onObjectUpdate]
+  );
+
+  const handleStrokeChange = useCallback(
+    (value: string) => {
+      if (!value) return;
+
+      onObjectUpdate(frame.id, { stroke: value });
+    },
+    [frame.id, onObjectUpdate]
+  );
+
+  const handleSelectAllChildren = useCallback(() => {
+    if (children.length > 0) {
+      setSelectedIds(children.map((c) => c.id));
+    }
+  }, [children, setSelectedIds]);
+
+  const handleResizeToFit = useCallback(() => {
+    if (children.length === 0) return;
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    for (const child of children) {
+      minX = Math.min(minX, child.x);
+      minY = Math.min(minY, child.y);
+      maxX = Math.max(maxX, child.x + child.width);
+      maxY = Math.max(maxY, child.y + child.height);
+    }
+
+    onObjectUpdate(frame.id, {
+      x: minX - FRAME_PADDING,
+      y: minY - FRAME_PADDING - 32, // account for title bar height
+      width: maxX - minX + FRAME_PADDING * 2,
+      height: maxY - minY + FRAME_PADDING * 2 + 32,
+    });
+  }, [children, frame.id, onObjectUpdate]);
+
+  const opacityPercent = Math.round((frame.opacity ?? 1) * 100);
+
+  return (
+    <div
+      className='flex h-full min-h-0 flex-1 flex-col gap-4 overflow-auto'
+      data-testid='property-inspector-panel'
+    >
+      <div className='text-xs font-medium text-foreground'>Frame: {frame.text || 'Frame'}</div>
+
+      {/* Title */}
+      <div className='space-y-2'>
+        <Label htmlFor='frame-title' className='text-foreground'>
+          Title
+        </Label>
+        <Input
+          id='frame-title'
+          value={titleValue}
+          onChange={(e) => setTitleValue(e.target.value)}
+          onBlur={handleTitleBlur}
+          onKeyDown={handleTitleKeyDown}
+          className='text-sm'
+          data-testid='property-inspector-frame-title'
+        />
+      </div>
+
+      {/* Appearance section */}
+      <div className='space-y-3'>
+        <div className='text-xs font-medium text-muted-foreground uppercase tracking-wider'>
+          Appearance
+        </div>
+
+        <div className='space-y-2'>
+          <Label htmlFor='frame-fill' className='text-foreground'>
+            Fill
+          </Label>
+          <div className='flex gap-2 items-center'>
+            <input
+              id='frame-fill'
+              type='color'
+              value={frame.fill || '#f1f5f9'}
+              onChange={(e) => handleFillChange(e.target.value)}
+              className='h-9 w-12 rounded border border-border bg-muted cursor-pointer'
+              data-testid='property-inspector-fill-color'
+            />
+            <Input
+              value={frame.fill || ''}
+              onChange={(e) => handleFillChange(e.target.value)}
+              className='flex-1 font-mono text-sm'
+              data-testid='property-inspector-fill-input'
+            />
+          </div>
+        </div>
+
+        <div className='space-y-2'>
+          <Label htmlFor='frame-border' className='text-foreground'>
+            Border
+          </Label>
+          <div className='flex gap-2 items-center'>
+            <input
+              id='frame-border'
+              type='color'
+              value={frame.stroke || '#94a3b8'}
+              onChange={(e) => handleStrokeChange(e.target.value)}
+              className='h-9 w-12 rounded border border-border bg-muted cursor-pointer'
+              data-testid='property-inspector-stroke-color'
+            />
+            <Input
+              value={frame.stroke || ''}
+              onChange={(e) => handleStrokeChange(e.target.value)}
+              className='flex-1 font-mono text-sm'
+              data-testid='property-inspector-stroke-input'
+            />
+          </div>
+        </div>
+
+        <div className='space-y-2'>
+          <Label htmlFor='frame-corner-radius' className='text-foreground'>
+            Corner radius
+          </Label>
+          <Input
+            id='frame-corner-radius'
+            type='number'
+            min={0}
+            max={40}
+            value={cornerRadiusField.value}
+            onChange={cornerRadiusField.onChange}
+            onBlur={cornerRadiusField.onBlur}
+            className='font-mono'
+            data-testid='property-inspector-corner-radius'
+          />
+        </div>
+
+        <div className='space-y-2'>
+          <Label htmlFor='frame-opacity' className='text-foreground'>
+            Opacity
+          </Label>
+          <div className='flex gap-2 items-center'>
+            <input
+              id='frame-opacity'
+              type='range'
+              min={0}
+              max={100}
+              value={opacityPercent}
+              onChange={(e) => handleOpacityChange(e.target.value)}
+              className='opacity-slider flex-1 h-2.5 min-w-[80px] rounded-full border border-border bg-input appearance-none accent-primary'
+              data-testid='property-inspector-opacity-slider'
+            />
+            <span className='text-xs text-muted-foreground w-10'>{opacityPercent}%</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Contents section */}
+      <div className='space-y-3'>
+        <div className='text-xs font-medium text-muted-foreground uppercase tracking-wider'>
+          Contents
+        </div>
+
+        <div className='text-sm text-muted-foreground'>
+          {children.length} {children.length === 1 ? 'child' : 'children'}
+        </div>
+
+        <div className='flex gap-2'>
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={handleSelectAllChildren}
+            disabled={children.length === 0}
+            className='flex-1 text-xs'
+            data-testid='property-inspector-select-children'
+          >
+            Select All
+          </Button>
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={handleResizeToFit}
+            disabled={children.length === 0}
+            className='flex-1 text-xs'
+            data-testid='property-inspector-resize-to-fit'
+          >
+            Resize to Fit
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Generic property inspector ─────────────────────────────────────
+
 /**
  * Property inspector panel: shows when at least one object is selected.
- * Displays controls for fill, stroke, stroke width; reserves space for font size and opacity.
+ * When a single frame is selected, shows frame-specific controls.
+ * Otherwise shows generic fill/stroke/opacity controls.
  */
 export const PropertyInspector = ({
   objects,
@@ -85,6 +351,11 @@ export const PropertyInspector = ({
   }, [objectsById, selectedIds]);
 
   const hasSelection = selectedObjects.length >= 1;
+
+  // Single frame selected → show frame-specific panel
+  const firstSelected = selectedObjects.length === 1 ? selectedObjects[0] : undefined;
+  const singleFrame = firstSelected && firstSelected.type === 'frame' ? firstSelected : null;
+
   const showFill = hasSelection && selectedObjects.some((o) => supportsFill(o.type));
   const showStroke = hasSelection && selectedObjects.some((o) => supportsStroke(o.type));
   const showFontSize = hasSelection && selectedObjects.some((o) => supportsFontSize(o.type));
@@ -270,6 +541,13 @@ export const PropertyInspector = ({
       }
     });
   };
+
+  // Single frame → frame-specific panel (placed after all hooks to respect rules-of-hooks)
+  if (singleFrame) {
+    return (
+      <FrameProperties frame={singleFrame} objects={objects} onObjectUpdate={onObjectUpdate} />
+    );
+  }
 
   if (!hasSelection) {
     return (

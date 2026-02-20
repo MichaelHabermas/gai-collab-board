@@ -73,6 +73,8 @@ export interface IBoardObject {
   strokeStyle?: StrokeStyle;
   // For circles
   radius?: number;
+  /** Corner radius for frames; defaults to 8 when undefined. */
+  cornerRadius?: number;
   /** ID of the containing frame, or undefined if top-level. */
   parentFrameId?: string;
   createdBy: string;

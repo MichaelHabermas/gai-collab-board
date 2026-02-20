@@ -107,6 +107,19 @@ export const selectFrameChildren =
   (state: IObjectsStore): IBoardObject[] =>
     Object.values(state.objects).filter((o) => o.parentFrameId === frameId && frameId !== '');
 
+/** Select the count of children of a frame (stable number — avoids array re-creation). */
+export const selectFrameChildCount =
+  (frameId: string) =>
+  (state: IObjectsStore): number => {
+    if (!frameId) return 0;
+
+    let count = 0;
+    for (const obj of Object.values(state.objects)) {
+      if (obj.parentFrameId === frameId) count++;
+    }
+    return count;
+  };
+
 /** Select all frame objects. */
 export const selectFrames = (state: IObjectsStore): IBoardObject[] =>
   Object.values(state.objects).filter((o) => o.type === 'frame');
