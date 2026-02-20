@@ -37,8 +37,10 @@ function loadEnv(): void {
 loadEnv();
 
 const PROXY_URL = 'http://127.0.0.1:5173/api/ai/v1/chat/completions';
-const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_MODEL = 'llama-3.3-70b-versatile';
+// const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const GROQ_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+// const GROQ_MODEL = 'llama-3.3-70b-versatile';
+const GROQ_MODEL = 'gemini-2.0-flash';
 const SCRIPT_TIMEOUT_MS = 20_000;
 
 function parseArgs(): { direct: boolean } {

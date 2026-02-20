@@ -5,7 +5,8 @@ import path from 'path';
 import { readFileSync, existsSync } from 'fs';
 import { visualizer } from 'rollup-plugin-visualizer';
 
-const GROQ_ORIGIN = 'https://api.groq.com/openai';
+// const GROQ_ORIGIN = 'https://api.groq.com/openai';
+const GROQ_ORIGIN = 'https://generativelanguage.googleapis.com/v1beta/openai';
 
 function parseEnvFile(envDir: string): Record<string, string> {
   const envPath = path.resolve(envDir, '.env');

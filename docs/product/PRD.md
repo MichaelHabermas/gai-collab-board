@@ -1804,6 +1804,16 @@ Lines are resizable **only along their length** (not in the perpendicular "width
 - [x] Keep frame title editor overlay aligned with the title bar while pan/zoom/rotation is active (implementation: overlay repositions on stage/node transform changes; verify in browser/E2E before checking)
 - Note (Feb 2026): Same root cause/fix as sticky notes and text elements. Frame title input overlay uses corrected coordinate mapping plus live transform listeners.
 
+**Frame grouping behavior:**
+
+- **Containment:** An object belongs to a frame when its **center** is inside the frame at drag-end; overlapping frames use the **smallest** containing frame; connectors and frames are not parented.
+- **Frame drag:** Dragging a frame moves all its children by the same delta (one batch update).
+- **Resize:** Resizing a frame does not move or scale children.
+- **Delete:** Deleting a frame leaves its children on the canvas (unparented).
+- **Duplicate/paste:** Duplicated or pasted objects are unparented; containment can resolve again on the next drag-end.
+
+Implementation details: see `PLAN-frame-grouping.md` in the repo root.
+
 **Branch**: `feature/canvas-frames`
 
 ### Canvas object appearance (visual consistency)

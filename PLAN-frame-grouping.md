@@ -233,6 +233,15 @@ These are used by drag logic and containment checks without hitting Firestore.
 - `selectFrames` returns only frame-type objects
 - Store updates propagate correctly when `parentFrameId` changes
 
+**Test implementation status:**
+
+- **useFrameContainment:** Implemented in `tests/unit/useFrameContainment.test.ts`.
+- **Frame delete / duplicate / paste:** Implemented in `tests/unit/frameGrouping.test.ts`.
+- **BoardCanvas frame drag and reparenting:** Implemented in `tests/unit/BoardCanvas.interactions.test.tsx` (frame drag moves children; drag into/out of frame updates `parentFrameId`).
+- **Zustand selectors:** Implemented in `tests/unit/objectsStore.test.ts` for `selectFrameChildren` and `selectFrames`.
+
+Note: "Duplicate frame → new frame + children with new parentFrameId" is not implemented in code; current behavior is "strip parentFrameId on duplicate; spatial reparenting on next drag." Tests reflect current behavior.
+
 ---
 
 ## Execution Order

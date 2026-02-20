@@ -2,7 +2,8 @@ import { existsSync, readFileSync } from 'fs';
 import { resolve } from 'path';
 
 const DEFAULT_TIMEOUT_MS = 20_000;
-const DEFAULT_MODEL = 'llama-3.3-70b-versatile';
+// const DEFAULT_MODEL = 'llama-3.3-70b-versatile';
+const DEFAULT_MODEL = 'gemini-2.0-flash';
 
 const loadEnv = (): void => {
   const envPath = resolve(process.cwd(), '.env');

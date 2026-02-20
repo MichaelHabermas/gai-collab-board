@@ -239,6 +239,7 @@ const createObject = (overrides: Partial<IBoardObject>): IBoardObject => ({
   toObjectId: overrides.toObjectId,
   fromAnchor: overrides.fromAnchor,
   toAnchor: overrides.toAnchor,
+  parentFrameId: overrides.parentFrameId,
 });
 
 const createStageEvent = (pointer: { x: number; y: number }): KonvaEvent => {
@@ -759,5 +760,187 @@ describe('BoardCanvas interactions', () => {
     expect(Array.isArray(batchPayload)).toBe(true);
     expect(batchPayload).toHaveLength(2);
     expect(batchPayload.map((e) => e.objectId).sort()).toEqual(['shape-a', 'shape-b']);
+  });
+
+  describe('frame drag and containment', () => {
+    it('frame drag moves children with frame in one batch', () => {
+      mockSelectedIds = ['frame-1'];
+      const onObjectsUpdate = vi.fn();
+      const frame = createObject({
+        id: 'frame-1',
+        type: 'frame',
+        x: 100,
+        y: 50,
+        width: 300,
+        height: 200,
+      });
+      const child = createObject({
+        id: 'child-1',
+        type: 'sticky',
+        x: 120,
+        y: 70,
+        parentFrameId: 'frame-1',
+      });
+      const objects = [frame, child];
+
+      render(
+        <BoardCanvasWithStore
+          boardId='board-1'
+          boardName='Board'
+          user={createUser()}
+          objects={objects}
+          canEdit={true}
+          onObjectsUpdate={onObjectsUpdate}
+        />
+      );
+
+      const frameProps = shapePropsById.get('frame-1');
+      const onDragEnd = frameProps?.onDragEnd as ((x: number, y: number) => void) | undefined;
+      act(() => {
+        onDragEnd?.(150, 100);
+      });
+
+      expect(onObjectsUpdate).toHaveBeenCalledTimes(1);
+      const batch = onObjectsUpdate.mock.calls[0]?.[0] as Array<{
+        objectId: string;
+        updates: Partial<IBoardObject>;
+      }>;
+      expect(Array.isArray(batch)).toBe(true);
+      expect(batch).toHaveLength(2);
+      const byId = Object.fromEntries(batch.map((e) => [e.objectId, e.updates]));
+      expect(byId['frame-1']?.x).toBe(150);
+      expect(byId['frame-1']?.y).toBe(100);
+      expect(byId['child-1']?.x).toBe(170);
+      expect(byId['child-1']?.y).toBe(120);
+    });
+
+    it('frame drag with no children calls onObjectUpdate', () => {
+      mockSelectedIds = ['frame-1'];
+      const onObjectUpdate = vi.fn();
+      const frame = createObject({
+        id: 'frame-1',
+        type: 'frame',
+        x: 100,
+        y: 50,
+        width: 300,
+        height: 200,
+      });
+
+      render(
+        <BoardCanvasWithStore
+          boardId='board-1'
+          boardName='Board'
+          user={createUser()}
+          objects={[frame]}
+          canEdit={true}
+          onObjectUpdate={onObjectUpdate}
+        />
+      );
+
+      const frameProps = shapePropsById.get('frame-1');
+      const onDragEnd = frameProps?.onDragEnd as ((x: number, y: number) => void) | undefined;
+      act(() => {
+        onDragEnd?.(200, 80);
+      });
+
+      expect(onObjectUpdate).toHaveBeenCalledWith('frame-1', { x: 200, y: 80 });
+    });
+
+    it('drag object into frame sets parentFrameId', () => {
+      mockSelectedIds = ['sticky-1'];
+      const onObjectUpdate = vi.fn();
+      const frame = createObject({
+        id: 'frame-1',
+        type: 'frame',
+        x: 0,
+        y: 0,
+        width: 300,
+        height: 200,
+      });
+      const sticky = createObject({
+        id: 'sticky-1',
+        type: 'sticky',
+        x: 400,
+        y: 400,
+        width: 100,
+        height: 100,
+      });
+      const objects = [frame, sticky];
+
+      render(
+        <BoardCanvasWithStore
+          boardId='board-1'
+          boardName='Board'
+          user={createUser()}
+          objects={objects}
+          canEdit={true}
+          onObjectUpdate={onObjectUpdate}
+        />
+      );
+
+      const stickyProps = shapePropsById.get('sticky-1');
+      const onDragEnd = stickyProps?.onDragEnd as ((x: number, y: number) => void) | undefined;
+      act(() => {
+        onDragEnd?.(100, 100);
+      });
+
+      expect(onObjectUpdate).toHaveBeenCalledWith(
+        'sticky-1',
+        expect.objectContaining({
+          x: 100,
+          y: 100,
+          parentFrameId: 'frame-1',
+        })
+      );
+    });
+
+    it('drag object out of frame clears parentFrameId', () => {
+      mockSelectedIds = ['sticky-1'];
+      const onObjectUpdate = vi.fn();
+      const frame = createObject({
+        id: 'frame-1',
+        type: 'frame',
+        x: 0,
+        y: 0,
+        width: 300,
+        height: 200,
+      });
+      const sticky = createObject({
+        id: 'sticky-1',
+        type: 'sticky',
+        x: 50,
+        y: 50,
+        width: 100,
+        height: 100,
+        parentFrameId: 'frame-1',
+      });
+      const objects = [frame, sticky];
+
+      render(
+        <BoardCanvasWithStore
+          boardId='board-1'
+          boardName='Board'
+          user={createUser()}
+          objects={objects}
+          canEdit={true}
+          onObjectUpdate={onObjectUpdate}
+        />
+      );
+
+      const stickyProps = shapePropsById.get('sticky-1');
+      const onDragEnd = stickyProps?.onDragEnd as ((x: number, y: number) => void) | undefined;
+      act(() => {
+        onDragEnd?.(400, 400);
+      });
+
+      expect(onObjectUpdate).toHaveBeenCalledWith(
+        'sticky-1',
+        expect.objectContaining({
+          x: 400,
+          y: 400,
+          parentFrameId: '',
+        })
+      );
+    });
   });
 });

@@ -3,7 +3,8 @@
  * Used by the Render proxy server.
  */
 
-export const GROQ_BASE = 'https://api.groq.com/openai';
+// export const GROQ_BASE = 'https://api.groq.com/openai';
+export const GROQ_BASE = 'https://generativelanguage.googleapis.com/v1beta/openai';
 
 export interface IProxyConfig {
   apiKey: string;
