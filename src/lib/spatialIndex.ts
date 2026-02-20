@@ -23,6 +23,8 @@ export class SpatialIndex {
   private cells = new Map<string, Set<string>>();
   /** object ID → Set of cell keys it occupies (for fast removal) */
   private objectCells = new Map<string, Set<string>>();
+  /** IDs currently being dragged — always included in query results regardless of position */
+  private draggingIds = new Set<string>();
 
   /** Insert or update an object in the index. */
   insert(id: string, bounds: IBounds): void {
@@ -95,13 +97,33 @@ export class SpatialIndex {
       }
     }
 
+    // Always include dragging objects — their index position is stale mid-drag
+    for (const id of this.draggingIds) {
+      result.add(id);
+    }
+
     return result;
+  }
+
+  /**
+   * Mark a set of object IDs as currently being dragged.
+   * Dragging IDs are always included in query results regardless of their
+   * spatial position, preventing viewport culling while positions are stale.
+   */
+  setDragging(ids: Set<string>): void {
+    this.draggingIds = ids;
+  }
+
+  /** Clear the dragging set (e.g. on drag end). */
+  clearDragging(): void {
+    this.draggingIds = new Set<string>();
   }
 
   /** Clear all entries. */
   clear(): void {
     this.cells.clear();
     this.objectCells.clear();
+    this.draggingIds = new Set<string>();
   }
 
   /** Number of tracked objects. */
