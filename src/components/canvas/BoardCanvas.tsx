@@ -15,34 +15,20 @@ import { useCanvasOperations } from '@/hooks/useCanvasOperations';
 import { useConnectorCreation } from '@/hooks/useConnectorCreation';
 import { useShapeDrawing, isDrawingTool } from '@/hooks/useShapeDrawing';
 import { useMarqueeSelection } from '@/hooks/useMarqueeSelection';
+import { useObjectDragHandlers } from '@/hooks/useObjectDragHandlers';
 
 import { useBatchDraw } from '@/hooks/useBatchDraw';
 import { useSelectionStore } from '@/stores/selectionStore';
-import { useObjectsStore, spatialIndex } from '@/stores/objectsStore';
+import { useObjectsStore } from '@/stores/objectsStore';
 import type { User } from 'firebase/auth';
 import type {
   IBoardObject,
   IPosition,
-  ITransformEndAttrs,
   IViewportState,
-  IAlignmentGuides,
-  IAlignmentCandidate,
   ToolMode,
   IKonvaMouseEvent,
-  IKonvaDragEvent,
 } from '@/types';
 import type { ICreateObjectParams } from '@/modules/sync/objectService';
-import { getSelectionBounds } from '@/lib/canvasBounds';
-import {
-  computeAlignmentGuidesWithCandidates,
-  computeSnappedPositionFromGuides,
-} from '@/lib/alignmentGuides';
-import { getWidthHeightFromPoints } from '@/lib/lineTransform';
-import {
-  applySnapPositionToNode,
-  snapPositionToGrid,
-  snapResizeRectToGrid,
-} from '@/lib/snapToGrid';
 import { ConnectionNodesLayer } from './ConnectionNodesLayer';
 import { AlignmentGuidesLayer } from './AlignmentGuidesLayer';
 import { useExportAsImage } from '@/hooks/useExportAsImage';
@@ -56,15 +42,8 @@ import {
 import { useBoardSettings } from '@/hooks/useBoardSettings';
 import { useMiddleMousePanListeners } from '@/hooks/useMiddleMousePanListeners';
 import { useCanvasKeyboardShortcuts } from '@/hooks/useCanvasKeyboardShortcuts';
-import { useAlignmentGuideCache } from '@/hooks/useAlignmentGuideCache';
 import { useHistoryStore } from '@/stores/historyStore';
 import { useDragOffsetStore } from '@/stores/dragOffsetStore';
-import {
-  resolveParentFrameIdFromFrames,
-  findContainingFrame,
-} from '@/hooks/useFrameContainment';
-import { perfTime } from '@/lib/perfTimer';
-import { queueWrite } from '@/lib/writeQueue';
 
 interface IBoardCanvasProps {
   boardId: string;
@@ -127,36 +106,15 @@ export const BoardCanvas = memo(
     const { drawingState, drawingActiveRef } = drawing;
     const marquee = useMarqueeSelection();
     const { selectionRect, isSelecting, selectingActiveRef, justDidMarqueeRef: justDidMarqueeSelectionRef } = marquee;
-    /** Bounds at start of selection-drag-handle drag (used in onDragMove/onDragEnd). */
-    const selectionDragBoundsRef = useRef<{
-      x1: number;
-      y1: number;
-      x2: number;
-      y2: number;
-    } | null>(null);
-    const groupDragOffsetRef = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
-    // Transient drag state lives in Zustand (dragOffsetStore) to avoid
-    // re-rendering every visible shape on every mousemove.  We read the setters once
-    // (stable refs) and never subscribe to the values in BoardCanvas itself.
-    const setFrameDragOffset = useDragOffsetStore((s) => s.setFrameDragOffset);
-    const setDropTargetFrameId = useDragOffsetStore((s) => s.setDropTargetFrameId);
-    const setGroupDragOffset = useDragOffsetStore((s) => s.setGroupDragOffset);
-    // Subscribe to groupDragOffset only for the selection rect and cursor — visibleObjectNodes
-    // useMemo no longer depends on it, so the O(n) JSX is never recreated during drag.
+    // Subscribe to groupDragOffset only for the selection rect and cursor
     const groupDragOffset = useDragOffsetStore((s) => s.groupDragOffset);
-    const clearDragState = useDragOffsetStore((s) => s.clearDragState);
     // Phase 2: track WHICH frame is being dragged (stable during drag — only changes on start/end)
-    // so we can move its children to the active layer without 60Hz invalidation.
     const draggingFrameId = useDragOffsetStore((s) => s.frameDragOffset?.frameId ?? null);
-    const [isHoveringSelectionHandle, setIsHoveringSelectionHandle] = useState(false);
     const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
-    const [alignmentGuides, setAlignmentGuides] = useState<IAlignmentGuides | null>(null);
     const objectsRef = useRef<IBoardObject[]>(objects);
     const pendingPointerRef = useRef<IPosition | null>(null);
     const pointerFrameRef = useRef<number | null>(null);
     const viewportPersistTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    /** Tracks whether spatial index dragging exemption has been set for the current individual shape drag. */
-    const dragExemptionSetRef = useRef(false);
 
     const {
       viewport: persistedViewport,
@@ -236,6 +194,38 @@ export const BoardCanvas = memo(
       () => new Map(objects.map((object) => [object.id, object])),
       [objects]
     );
+
+    // --- Object drag/selection/transform handlers (extracted hook) ---
+    const {
+      handleObjectSelect,
+      handleObjectDragEnd,
+      handleSelectionDragStart,
+      handleSelectionDragMove,
+      handleSelectionDragEnd,
+      handleEnterFrame,
+      handleTransformEnd,
+      getSelectHandler,
+      getDragEndHandler,
+      getTextChangeHandler,
+      getDragBoundFunc,
+      selectionBounds,
+      alignmentGuides,
+      isHoveringSelectionHandleEffective,
+      setIsHoveringSelectionHandle,
+      onDragMoveProp,
+    } = useObjectDragHandlers({
+      objects,
+      objectsById,
+      selectedIds,
+      setSelectedIds,
+      toggleSelectedId,
+      snapToGridEnabled,
+      canEdit,
+      onObjectUpdate,
+      onObjectsUpdate,
+      visibleShapeIds,
+      visibleObjectIdsKey,
+    });
 
     // Linked connectors are excluded from transform (selectable for deletion only)
     const linkedConnectorIds = useMemo(
@@ -573,669 +563,7 @@ export const BoardCanvas = memo(
       ]
     );
 
-    // Handle object selection
-    const handleObjectSelect = useCallback(
-      (objectId: string, e?: IKonvaMouseEvent) => {
-        const metaPressed = e?.evt.shiftKey || e?.evt.ctrlKey || e?.evt.metaKey;
-
-        if (metaPressed) {
-          // Toggle selection
-          toggleSelectedId(objectId);
-        } else {
-          // Single select
-          setSelectedIds([objectId]);
-        }
-      },
-      [setSelectedIds, toggleSelectedId]
-    );
-
-    // Handle object drag end (optionally snap position to grid); clear alignment guides.
-    // When multiple objects are selected, apply same delta to all (batch update).
-    // When a frame is dragged, its children move with it (same delta).
-    // After any non-frame/non-connector drag, resolve parentFrameId via spatial containment.
-    const handleObjectDragEnd = useCallback(
-      (objectId: string, x: number, y: number) => {
-        setAlignmentGuides(null);
-        const draggedObj = objectsById.get(objectId);
-        if (!draggedObj) return;
-
-        const multiSelected =
-          selectedIds.size > 1 && selectedIds.has(objectId) && onObjectsUpdate;
-
-        if (multiSelected) {
-          const updates = perfTime(
-            'handleObjectDragEnd:multi',
-            { selected: selectedIds.size, objects: objects.length },
-            () => {
-              const dx = x - draggedObj.x;
-              const dy = y - draggedObj.y;
-              const batch: Array<{ objectId: string; updates: Partial<IBoardObject> }> = [];
-
-              // Cache frames once for the entire loop — O(n) filter runs ONCE, not per-selected-object
-              const frames = objects.filter((o) => o.type === 'frame');
-              const childIndex = useObjectsStore.getState().frameChildrenIndex;
-
-              // Collect IDs being moved so we skip reparenting for frame children already in selection
-              const movedIds = new Set<string>(selectedIds);
-
-              for (const id of selectedIds) {
-                const obj = objectsById.get(id);
-                if (!obj) continue;
-
-                let newX = obj.x + dx;
-                let newY = obj.y + dy;
-                if (snapToGridEnabled) {
-                  const snapped = snapPositionToGrid(newX, newY, GRID_SIZE);
-                  newX = snapped.x;
-                  newY = snapped.y;
-                }
-
-                const objUpdates: Partial<IBoardObject> = { x: newX, y: newY };
-
-                // If this is a frame, also move its children that aren't already in the selection
-                if (obj.type === 'frame') {
-                  const childIds = childIndex.get(obj.id);
-                  if (childIds) {
-                    for (const childId of childIds) {
-                      if (movedIds.has(childId)) continue;
-
-                      const child = objectsById.get(childId);
-                      if (!child) continue;
-
-                      let cx = child.x + dx;
-                      let cy = child.y + dy;
-                      if (snapToGridEnabled) {
-                        const snapped = snapPositionToGrid(cx, cy, GRID_SIZE);
-                        cx = snapped.x;
-                        cy = snapped.y;
-                      }
-
-                      batch.push({ objectId: childId, updates: { x: cx, y: cy } });
-                      movedIds.add(childId);
-                    }
-                  }
-                }
-
-                // Resolve reparenting for non-frame, non-connector objects
-                if (obj.type !== 'frame' && obj.type !== 'connector') {
-                  const newBounds = {
-                    x1: newX,
-                    y1: newY,
-                    x2: newX + obj.width,
-                    y2: newY + obj.height,
-                  };
-                  const newParent = resolveParentFrameIdFromFrames(obj, newBounds, frames);
-                  if (newParent !== obj.parentFrameId) {
-                    objUpdates.parentFrameId = newParent ?? '';
-                  }
-                }
-
-                batch.push({ objectId: id, updates: objUpdates });
-              }
-
-              return batch;
-            }
-          );
-
-          if (updates.length > 0) {
-            onObjectsUpdate(updates);
-          }
-
-          spatialIndex.clearDragging();
-          dragExemptionSetRef.current = false;
-
-          return;
-        }
-
-        // Single object drag
-        let finalX = x;
-        let finalY = y;
-        if (snapToGridEnabled) {
-          const snapped = snapPositionToGrid(x, y, GRID_SIZE);
-          finalX = snapped.x;
-          finalY = snapped.y;
-        }
-
-        const singleUpdates: Partial<IBoardObject> = { x: finalX, y: finalY };
-
-        // Frame drag: move children with it (use store index, not O(n) filter)
-        if (draggedObj.type === 'frame' && onObjectsUpdate) {
-          const dx = finalX - draggedObj.x;
-          const dy = finalY - draggedObj.y;
-          const childIds = useObjectsStore.getState().frameChildrenIndex.get(draggedObj.id);
-          if (childIds && childIds.size > 0) {
-            const batchUpdates: Array<{ objectId: string; updates: Partial<IBoardObject> }> = [
-              { objectId, updates: singleUpdates },
-            ];
-            for (const childId of childIds) {
-              const child = objectsById.get(childId);
-              if (!child) continue;
-
-              let cx = child.x + dx;
-              let cy = child.y + dy;
-              if (snapToGridEnabled) {
-                const snapped = snapPositionToGrid(cx, cy, GRID_SIZE);
-                cx = snapped.x;
-                cy = snapped.y;
-              }
-
-              batchUpdates.push({ objectId: childId, updates: { x: cx, y: cy } });
-            }
-            onObjectsUpdate(batchUpdates);
-            spatialIndex.clearDragging();
-            dragExemptionSetRef.current = false;
-
-            return;
-          }
-        }
-
-        // Non-frame single drag: resolve reparenting (single call, O(n) filter is fine)
-        if (draggedObj.type !== 'frame' && draggedObj.type !== 'connector') {
-          const newBounds = {
-            x1: finalX,
-            y1: finalY,
-            x2: finalX + draggedObj.width,
-            y2: finalY + draggedObj.height,
-          };
-          const singleFrames = objects.filter((o) => o.type === 'frame');
-          const newParent = resolveParentFrameIdFromFrames(draggedObj, newBounds, singleFrames);
-          if (newParent !== draggedObj.parentFrameId) {
-            singleUpdates.parentFrameId = newParent ?? '';
-          }
-
-          // Auto-expand frame if child falls outside its bounds
-          const targetFrameId = newParent ?? draggedObj.parentFrameId;
-          if (targetFrameId && onObjectsUpdate) {
-            const frame = objectsById.get(targetFrameId);
-            if (frame) {
-              const PADDING = 20;
-              const TITLE_HEIGHT = 32;
-              const childRight = finalX + draggedObj.width + PADDING;
-              const childBottom = finalY + draggedObj.height + PADDING;
-              const childLeft = finalX - PADDING;
-              const childTop = finalY - PADDING;
-              const frameRight = frame.x + frame.width;
-              const frameBottom = frame.y + frame.height;
-              const frameContentTop = frame.y + TITLE_HEIGHT;
-
-              if (
-                childRight > frameRight ||
-                childBottom > frameBottom ||
-                childLeft < frame.x ||
-                childTop < frameContentTop
-              ) {
-                const newFrameX = Math.min(frame.x, childLeft);
-                const newFrameY = Math.min(frame.y, childTop - TITLE_HEIGHT);
-                const newFrameRight = Math.max(frameRight, childRight);
-                const newFrameBottom = Math.max(frameBottom, childBottom);
-
-                onObjectsUpdate([
-                  { objectId, updates: singleUpdates },
-                  {
-                    objectId: targetFrameId,
-                    updates: {
-                      x: newFrameX,
-                      y: newFrameY,
-                      width: newFrameRight - newFrameX,
-                      height: newFrameBottom - newFrameY,
-                    },
-                  },
-                ]);
-                spatialIndex.clearDragging();
-                dragExemptionSetRef.current = false;
-
-                return;
-              }
-            }
-          }
-        }
-
-        onObjectUpdate?.(objectId, singleUpdates);
-
-        // Phase 3: clear spatial index drag exemption now that positions are committed
-        spatialIndex.clearDragging();
-        dragExemptionSetRef.current = false;
-      },
-      [onObjectUpdate, onObjectsUpdate, snapToGridEnabled, selectedIds, objectsById, objects]
-    );
-
-    // Selection bounds when 2+ selected (for draggable handle over empty space in selection)
-    const selectionBounds = useMemo(() => {
-      if (selectedIds.size < 2) {
-        return null;
-      }
-
-      return getSelectionBounds(objects, selectedIds);
-    }, [objects, selectedIds]);
-
-    /** Only show grab cursor when the selection-drag handle is visible and hovered. */
-    const isHoveringSelectionHandleEffective = selectionBounds != null && isHoveringSelectionHandle;
-
-    const handleSelectionDragStart = useCallback(
-      (bounds: { x1: number; y1: number; x2: number; y2: number }) => {
-        setAlignmentGuides(null);
-        selectionDragBoundsRef.current = bounds;
-
-        // Phase 3: mark all selected (+ frame children) as dragging in spatial index
-        const dragIds = new Set<string>(selectedIds);
-        const childIndex = useObjectsStore.getState().frameChildrenIndex;
-        for (const sid of selectedIds) {
-          const obj = objectsById.get(sid);
-          if (obj?.type === 'frame') {
-            const children = childIndex.get(sid);
-            if (children) for (const cid of children) dragIds.add(cid);
-          }
-        }
-
-        spatialIndex.setDragging(dragIds);
-      },
-      [selectedIds, objectsById]
-    );
-
-    const handleSelectionDragMove = useCallback((e: IKonvaDragEvent) => {
-      const b = selectionDragBoundsRef.current;
-      if (!b) {
-        return;
-      }
-
-      const offset = {
-        dx: e.target.x() - b.x1,
-        dy: e.target.y() - b.y1,
-      };
-      groupDragOffsetRef.current = offset;
-      setGroupDragOffset(offset);
-    }, [setGroupDragOffset]);
-
-    const handleSelectionDragEnd = useCallback(() => {
-      const b = selectionDragBoundsRef.current;
-      if (!b || !onObjectsUpdate) {
-        selectionDragBoundsRef.current = null;
-        setGroupDragOffset(null);
-        spatialIndex.clearDragging();
-
-        return;
-      }
-
-      const updates = perfTime(
-        'handleSelectionDragEnd',
-        { selected: selectedIds.size, objects: objects.length },
-        () => {
-          const { dx, dy } = groupDragOffsetRef.current;
-          const batch: Array<{ objectId: string; updates: Partial<IBoardObject> }> = [];
-          const movedIds = new Set(selectedIds);
-
-          // Cache frames once for the entire loop — O(n) filter runs ONCE, not per-selected-object
-          const frames = objects.filter((o) => o.type === 'frame');
-          const childIndex = useObjectsStore.getState().frameChildrenIndex;
-
-          // Snap group bounding box to grid (one snap for the whole group; preserve relative positions).
-          const groupNewLeft = b.x1 + dx;
-          const groupNewTop = b.y1 + dy;
-          const snappedGroup = snapToGridEnabled
-            ? snapPositionToGrid(groupNewLeft, groupNewTop, GRID_SIZE)
-            : { x: groupNewLeft, y: groupNewTop };
-          const snapOffsetX = snappedGroup.x - groupNewLeft;
-          const snapOffsetY = snappedGroup.y - groupNewTop;
-
-          for (const id of selectedIds) {
-            const obj = objectsById.get(id);
-            if (!obj) continue;
-
-            const newX = obj.x + dx + snapOffsetX;
-            const newY = obj.y + dy + snapOffsetY;
-
-            const objUpdates: Partial<IBoardObject> = { x: newX, y: newY };
-
-            // Frame in selection: also move children not already in selection (O(1) index lookup)
-            if (obj.type === 'frame') {
-              const childIds = childIndex.get(obj.id);
-              if (childIds) {
-                for (const childId of childIds) {
-                  if (movedIds.has(childId)) continue;
-
-                  const child = objectsById.get(childId);
-                  if (!child) continue;
-
-                  const cx = child.x + dx + snapOffsetX;
-                  const cy = child.y + dy + snapOffsetY;
-
-                  batch.push({ objectId: childId, updates: { x: cx, y: cy } });
-                  movedIds.add(childId);
-                }
-              }
-            }
-
-            // Reparent non-frame, non-connector objects (uses pre-cached frames list)
-            if (obj.type !== 'frame' && obj.type !== 'connector') {
-              const newBounds = {
-                x1: newX,
-                y1: newY,
-                x2: newX + obj.width,
-                y2: newY + obj.height,
-              };
-              const newParent = resolveParentFrameIdFromFrames(obj, newBounds, frames);
-              if (newParent !== obj.parentFrameId) {
-                objUpdates.parentFrameId = newParent ?? '';
-              }
-            }
-
-            batch.push({ objectId: id, updates: objUpdates });
-          }
-
-          return batch;
-        }
-      );
-
-      if (updates.length > 0) {
-        onObjectsUpdate(updates);
-      }
-
-      selectionDragBoundsRef.current = null;
-      setGroupDragOffset(null);
-      spatialIndex.clearDragging();
-    }, [onObjectsUpdate, selectedIds, objectsById, snapToGridEnabled, objects, setGroupDragOffset]);
-
-    // Throttle guide updates via RAF; ref used by drag handler so it sees latest setter without effect.
-    const alignmentGuidesRafIdRef = useRef<number>(0);
-    const setGuidesThrottledRef = useRef<(g: IAlignmentGuides) => void>(() => {});
-    const setGuidesThrottled = useCallback((guides: IAlignmentGuides) => {
-      const prev = alignmentGuidesRafIdRef.current;
-      if (prev !== 0) {
-        cancelAnimationFrame(prev);
-      }
-
-      alignmentGuidesRafIdRef.current = requestAnimationFrame(() => {
-        setAlignmentGuides(guides);
-        alignmentGuidesRafIdRef.current = 0;
-      });
-    }, []);
-
-    useEffect(() => {
-      setGuidesThrottledRef.current = setGuidesThrottled;
-    }, [setGuidesThrottled]);
-
-    const { guideCandidateBoundsRef, dragBoundFuncCacheRef } = useAlignmentGuideCache({
-      visibleShapeIds,
-      visibleObjectIdsKey,
-      snapToGridEnabled,
-    });
-
-    const getDragBoundFunc = useCallback(
-      (objectId: string, width: number, height: number) => {
-        const cached = dragBoundFuncCacheRef.current.get(objectId);
-        if (cached && cached.width === width && cached.height === height) {
-          return cached.fn;
-        }
-
-        // Build Map for O(1) candidate lookup (runs once per cache miss, not at 60Hz)
-        const candidateMap = new Map<string, IAlignmentCandidate>();
-        for (const c of guideCandidateBoundsRef.current) {
-          if (c.id !== objectId) candidateMap.set(c.id, c.candidate);
-        }
-
-        const nextDragBoundFunc = (pos: IPosition) => {
-          if (snapToGridEnabled) {
-            setGuidesThrottledRef.current({ horizontal: [], vertical: [] });
-            return snapPositionToGrid(pos.x, pos.y, GRID_SIZE);
-          }
-
-          const dragged = {
-            x1: pos.x,
-            y1: pos.y,
-            x2: pos.x + width,
-            y2: pos.y + height,
-          };
-
-          // Narrow alignment candidates via spatial index (O(cells) vs O(all visible))
-          const SNAP_EXPAND = 4;
-          let nearbyCandidates: IAlignmentCandidate[];
-          if (spatialIndex.size > 0) {
-            const nearbyIds = spatialIndex.query({
-              x1: dragged.x1 - SNAP_EXPAND,
-              y1: dragged.y1 - SNAP_EXPAND,
-              x2: dragged.x2 + SNAP_EXPAND,
-              y2: dragged.y2 + SNAP_EXPAND,
-            });
-            nearbyCandidates = [];
-            for (const id of nearbyIds) {
-              const candidate = candidateMap.get(id);
-              if (candidate) nearbyCandidates.push(candidate);
-            }
-          } else {
-            nearbyCandidates = Array.from(candidateMap.values());
-          }
-
-          const guides = computeAlignmentGuidesWithCandidates(dragged, nearbyCandidates);
-          const snapped = computeSnappedPositionFromGuides(guides, pos, width, height);
-
-          setGuidesThrottledRef.current(guides);
-          return snapped;
-        };
-
-        dragBoundFuncCacheRef.current.set(objectId, {
-          width,
-          height,
-          fn: nextDragBoundFunc,
-        });
-        return nextDragBoundFunc;
-      },
-      [snapToGridEnabled, dragBoundFuncCacheRef, guideCandidateBoundsRef]
-    );
-
-    // Handle text change for sticky notes — optimistic store update + debounced Firestore write
-    const handleTextChange = useCallback(
-      (objectId: string, text: string) => {
-        useObjectsStore.getState().updateObject(objectId, { text });
-        queueWrite(objectId, { text });
-      },
-      []
-    );
-
-    const selectHandlerMapRef = useRef<Map<string, () => void>>(new Map());
-    const dragEndHandlerMapRef = useRef<Map<string, (x: number, y: number) => void>>(new Map());
-    const textChangeHandlerMapRef = useRef<Map<string, (text: string) => void>>(new Map());
-
-    const getSelectHandler = useCallback(
-      (objectId: string) => {
-        const existingHandler = selectHandlerMapRef.current.get(objectId);
-        if (existingHandler) {
-          return existingHandler;
-        }
-
-        const nextHandler = () => {
-          handleObjectSelect(objectId);
-        };
-        selectHandlerMapRef.current.set(objectId, nextHandler);
-        return nextHandler;
-      },
-      [handleObjectSelect]
-    );
-
-    const getDragEndHandler = useCallback(
-      (objectId: string) => {
-        const existingHandler = dragEndHandlerMapRef.current.get(objectId);
-        if (existingHandler) {
-          return existingHandler;
-        }
-
-        const nextHandler = (x: number, y: number) => {
-          handleObjectDragEnd(objectId, x, y);
-          clearDragState();
-        };
-        dragEndHandlerMapRef.current.set(objectId, nextHandler);
-        return nextHandler;
-      },
-      [handleObjectDragEnd, clearDragState]
-    );
-
-    // Throttle drop-target detection to ~every 100ms instead of every mousemove (60 Hz).
-    const lastDropTargetCheckRef = useRef(0);
-    const DROP_TARGET_THROTTLE_MS = 100;
-
-    // Cache frames list so we don't re-filter on every mousemove.
-    const framesRef = useRef<IBoardObject[]>([]);
-    useEffect(() => {
-      framesRef.current = objects.filter((o) => o.type === 'frame');
-    }, [objects]);
-
-    /** When snap-to-grid is on, force node position to grid on every drag move so it lines up during drag.
-     * When dragging a frame, track offset so frame children can render at (x+dx, y+dy) during drag.
-     * When dragging a non-frame object, track which frame it's hovering over for drop zone feedback. */
-    const handleDragMove = useCallback(
-      (e: IKonvaDragEvent) => {
-        if (snapToGridEnabled) {
-          applySnapPositionToNode(e.target, objectsById, GRID_SIZE);
-        }
-
-        const objectId = e.target.id?.() ?? e.target.name?.();
-        if (objectId && typeof objectId === 'string') {
-          // Phase 3: mark dragging objects in spatial index on first move so
-          // viewport culling never drops them while positions are stale.
-          if (!dragExemptionSetRef.current) {
-            dragExemptionSetRef.current = true;
-            const dragIds = new Set<string>();
-
-            if (selectedIds.size > 1 && selectedIds.has(objectId)) {
-              for (const sid of selectedIds) dragIds.add(sid);
-              // Include frame children that move with the selection
-              const childIndex = useObjectsStore.getState().frameChildrenIndex;
-              for (const sid of selectedIds) {
-                const selObj = objectsById.get(sid);
-                if (selObj?.type === 'frame') {
-                  const children = childIndex.get(sid);
-                  if (children) for (const cid of children) dragIds.add(cid);
-                }
-              }
-            } else {
-              dragIds.add(objectId);
-              const dragObj = objectsById.get(objectId);
-              if (dragObj?.type === 'frame') {
-                const children = useObjectsStore.getState().frameChildrenIndex.get(objectId);
-                if (children) for (const cid of children) dragIds.add(cid);
-              }
-            }
-
-            spatialIndex.setDragging(dragIds);
-          }
-
-          const obj = objectsById.get(objectId);
-          if (obj?.type === 'frame') {
-            setFrameDragOffset({
-              frameId: objectId,
-              dx: e.target.x() - obj.x,
-              dy: e.target.y() - obj.y,
-            });
-          } else if (obj && obj.type !== 'connector') {
-            // Throttled drop target detection — no need to check 60x/sec
-            const now = performance.now();
-            if (now - lastDropTargetCheckRef.current > DROP_TARGET_THROTTLE_MS) {
-              lastDropTargetCheckRef.current = now;
-              const dragX = e.target.x();
-              const dragY = e.target.y();
-              const dragBounds = {
-                x1: dragX,
-                y1: dragY,
-                x2: dragX + obj.width,
-                y2: dragY + obj.height,
-              };
-              const targetFrame = findContainingFrame(dragBounds, framesRef.current, obj.id);
-              setDropTargetFrameId(targetFrame ?? null);
-            }
-          }
-        }
-      },
-      [objectsById, snapToGridEnabled, setFrameDragOffset, setDropTargetFrameId, selectedIds]
-    );
-
-    const onDragMoveProp = canEdit ? handleDragMove : undefined;
-
-    const getTextChangeHandler = useCallback(
-      (objectId: string) => {
-        const existingHandler = textChangeHandlerMapRef.current.get(objectId);
-        if (existingHandler) {
-          return existingHandler;
-        }
-
-        const nextHandler = (text: string) => {
-          handleTextChange(objectId, text);
-        };
-        textChangeHandlerMapRef.current.set(objectId, nextHandler);
-        return nextHandler;
-      },
-      [handleTextChange]
-    );
-
-    // Enter frame: double-click frame body → select all children
-    const handleEnterFrame = useCallback(
-      (frameId: string) => {
-        const childIds = useObjectsStore.getState().frameChildrenIndex.get(frameId);
-        if (childIds && childIds.size > 0) {
-          setSelectedIds([...childIds]);
-        }
-      },
-      [setSelectedIds]
-    );
-
-    useEffect(() => {
-      const liveIds = new Set(objects.map((object) => object.id));
-      const pruneStaleHandlers = <THandler,>(handlerMap: Map<string, THandler>) => {
-        const staleIds = Array.from(handlerMap.keys()).filter((id) => !liveIds.has(id));
-        for (const staleId of staleIds) {
-          handlerMap.delete(staleId);
-        }
-      };
-
-      pruneStaleHandlers(selectHandlerMapRef.current);
-      pruneStaleHandlers(dragEndHandlerMapRef.current);
-      pruneStaleHandlers(textChangeHandlerMapRef.current);
-      pruneStaleHandlers(dragBoundFuncCacheRef.current);
-    }, [objects, dragBoundFuncCacheRef]);
-
-    // Handle transform end from TransformHandler (shape-aware attrs: rect-like or points for line/connector)
-    const handleTransformEnd = useCallback(
-      (objectId: string, attrs: ITransformEndAttrs) => {
-        let finalAttrs = attrs;
-        if (snapToGridEnabled) {
-          if ('width' in attrs && 'height' in attrs) {
-            const object = objectsById.get(objectId);
-            if (object) {
-              const snappedRect = snapResizeRectToGrid(
-                { x: object.x, y: object.y, width: object.width, height: object.height },
-                { x: attrs.x, y: attrs.y, width: attrs.width, height: attrs.height },
-                GRID_SIZE
-              );
-              finalAttrs = {
-                ...attrs,
-                x: snappedRect.x,
-                y: snappedRect.y,
-                width: snappedRect.width,
-                height: snappedRect.height,
-              };
-            } else {
-              finalAttrs = {
-                ...attrs,
-                ...snapPositionToGrid(attrs.x, attrs.y, GRID_SIZE),
-              };
-            }
-          } else if ('points' in attrs) {
-            const snappedPos = snapPositionToGrid(attrs.x, attrs.y, GRID_SIZE);
-            finalAttrs = {
-              ...attrs,
-              x: snappedPos.x,
-              y: snappedPos.y,
-            };
-          }
-        }
-
-        if ('points' in finalAttrs && finalAttrs.points.length >= 4) {
-          const { width, height } = getWidthHeightFromPoints(finalAttrs.points);
-          finalAttrs = { ...finalAttrs, width, height };
-        }
-
-        onObjectUpdate?.(objectId, finalAttrs as Partial<IBoardObject>);
-      },
-      [onObjectUpdate, snapToGridEnabled, objectsById]
-    );
+    // (handleObjectSelect, handleObjectDragEnd, etc. extracted to useObjectDragHandlers)
 
     /** Single Konva Shape that draws all grid lines via sceneFunc — replaces ~200 Rect nodes. */
     const gridSceneFunc = useMemo(() => {
