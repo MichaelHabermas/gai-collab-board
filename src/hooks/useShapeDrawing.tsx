@@ -46,28 +46,36 @@ export function isDrawingTool(tool: ToolMode): boolean {
 export function useShapeDrawing(): IUseShapeDrawingReturn {
   const [drawingState, setDrawingState] = useState<IDrawingState>(INITIAL_DRAWING_STATE);
   const drawingActiveRef = useRef(false);
+  // Mirror state in a ref so onDrawEnd can read latest coords without stale closures.
+  // React 18 batching can defer functional updater execution, making the old
+  // "snapshot via setState side-effect" pattern unreliable.
+  const drawingStateRef = useRef<IDrawingState>(INITIAL_DRAWING_STATE);
 
   const onDrawStart = useCallback((coords: IPosition) => {
-    setDrawingState({
+    const next: IDrawingState = {
       isDrawing: true,
       startX: coords.x,
       startY: coords.y,
       currentX: coords.x,
       currentY: coords.y,
-    });
+    };
+    setDrawingState(next);
+    drawingStateRef.current = next;
     drawingActiveRef.current = true;
   }, []);
 
   const onDrawMove = (coords: IPosition) => {
-    setDrawingState((prev) => ({
-      ...prev,
-      currentX: coords.x,
-      currentY: coords.y,
-    }));
+    setDrawingState((prev) => {
+      const next = { ...prev, currentX: coords.x, currentY: coords.y };
+      drawingStateRef.current = next;
+
+      return next;
+    });
   };
 
   const resetDrawing = useCallback(() => {
     setDrawingState(INITIAL_DRAWING_STATE);
+    drawingStateRef.current = INITIAL_DRAWING_STATE;
     drawingActiveRef.current = false;
   }, []);
 
@@ -78,17 +86,7 @@ export function useShapeDrawing(): IUseShapeDrawingReturn {
       onCreate: (params: Omit<ICreateObjectParams, 'createdBy'>) => Promise<IBoardObject | null>,
       onSuccess: () => void
     ) => {
-      // Read latest state via functional updater (avoids stale closure).
-      let snapshot: IDrawingState | null = null;
-      setDrawingState((prev) => {
-        snapshot = prev;
-
-        return prev;
-      });
-
-      if (!snapshot) return;
-
-      const { isDrawing, startX, startY, currentX, currentY } = snapshot as IDrawingState;
+      const { isDrawing, startX, startY, currentX, currentY } = drawingStateRef.current;
       if (!isDrawing) return;
 
       const x = Math.min(startX, currentX);
@@ -96,7 +94,7 @@ export function useShapeDrawing(): IUseShapeDrawingReturn {
       const width = Math.abs(currentX - startX);
       const height = Math.abs(currentY - startY);
 
-      if (width > 5 || height > 5) {
+      if (width > 5 && height > 5) {
         let result: IBoardObject | null = null;
 
         if (tool === 'rectangle') {
@@ -157,6 +155,7 @@ export function useShapeDrawing(): IUseShapeDrawingReturn {
       }
 
       setDrawingState(INITIAL_DRAWING_STATE);
+      drawingStateRef.current = INITIAL_DRAWING_STATE;
       drawingActiveRef.current = false;
     },
     []

@@ -25,7 +25,11 @@
       "mcp__Desktop_Commander__get_more_search_results",
       "Skill(claude-md-management:revise-claude-md)",
       "Skill(claude-md-management:revise-claude-md:*)",
-      "WebFetch(domain:langfuse.com)"
+      "WebFetch(domain:langfuse.com)",
+      "WebFetch(domain:api.reference.langfuse.com)",
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(git status:*)",
+      "Bash(bunx eslint:*)"
     ]
   },
   "hooks": {

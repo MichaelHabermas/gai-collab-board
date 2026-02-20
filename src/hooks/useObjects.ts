@@ -108,7 +108,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
     }
   }, []);
 
-  /** Returns true when two objects have identical visual fields (position, size, etc.). */
+  /** Returns true when two objects have identical visual fields. */
   const isObjectDataUnchanged = useCallback((a: IBoardObject, b: IBoardObject): boolean => {
     return (
       a.x === b.x &&
@@ -118,8 +118,13 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
       a.rotation === b.rotation &&
       a.text === b.text &&
       a.fill === b.fill &&
+      a.stroke === b.stroke &&
+      a.strokeWidth === b.strokeWidth &&
       a.opacity === b.opacity &&
-      a.parentFrameId === b.parentFrameId
+      a.fontSize === b.fontSize &&
+      a.parentFrameId === b.parentFrameId &&
+      // points is an array — compare by value, not reference
+      JSON.stringify(a.points) === JSON.stringify(b.points)
     );
   }, []);
 

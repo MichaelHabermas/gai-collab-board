@@ -452,6 +452,75 @@ describe('useObjects', () => {
     expect(result.current.objects[0]).toBe(firstReference);
   });
 
+  it('detects stroke/strokeWidth/fontSize/points changes as modified (not unchanged)', () => {
+    const objectWithVisuals = createBoardObject({
+      id: 'obj-vis',
+      stroke: '#000000',
+      strokeWidth: 2,
+      fontSize: 16,
+      points: [0, 0, 100, 100],
+      updatedAt: createTimestamp(1000),
+    });
+
+    const { result } = renderHook(() =>
+      useObjects({
+        boardId: 'board-1',
+        user: createUser(),
+      })
+    );
+
+    act(() => {
+      subscriptionCallback?.({
+        objects: [objectWithVisuals],
+        changes: [{ type: 'added', object: objectWithVisuals }],
+        isInitialSnapshot: true,
+      });
+    });
+
+    const firstRef = result.current.objects[0];
+
+    // Change only stroke — should be detected as modified
+    const changedStroke = createBoardObject({
+      id: 'obj-vis',
+      stroke: '#ff0000',
+      strokeWidth: 2,
+      fontSize: 16,
+      points: [0, 0, 100, 100],
+      updatedAt: createTimestamp(2000),
+    });
+    act(() => {
+      subscriptionCallback?.({
+        objects: [changedStroke],
+        changes: [{ type: 'modified', object: changedStroke }],
+        isInitialSnapshot: false,
+      });
+    });
+
+    expect(result.current.objects[0]).not.toBe(firstRef);
+    expect(result.current.objects[0]?.stroke).toBe('#ff0000');
+
+    // Now change only points — should also be detected
+    const secondRef = result.current.objects[0];
+    const changedPoints = createBoardObject({
+      id: 'obj-vis',
+      stroke: '#ff0000',
+      strokeWidth: 2,
+      fontSize: 16,
+      points: [10, 10, 200, 200],
+      updatedAt: createTimestamp(3000),
+    });
+    act(() => {
+      subscriptionCallback?.({
+        objects: [changedPoints],
+        changes: [{ type: 'modified', object: changedPoints }],
+        isInitialSnapshot: false,
+      });
+    });
+
+    expect(result.current.objects[0]).not.toBe(secondRef);
+    expect(result.current.objects[0]?.points).toEqual([10, 10, 200, 200]);
+  });
+
   it('updates only changed objects for incremental snapshot changes', () => {
     const objectA = createBoardObject({ id: 'obj-a', text: 'A', updatedAt: createTimestamp(1000) });
     const objectB = createBoardObject({ id: 'obj-b', text: 'B', updatedAt: createTimestamp(1000) });
