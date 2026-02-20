@@ -42,6 +42,7 @@ export function normalizeAIErrorMessage(error: unknown): string {
   if (status === 429 || /quota|rate limit|too many requests/i.test(rawMessage)) {
     return `Rate limit or quota exceeded. ${QUOTA_GUIDANCE}`;
   }
+
   if (
     status === 401 ||
     status === 403 ||
@@ -49,20 +50,25 @@ export function normalizeAIErrorMessage(error: unknown): string {
   ) {
     return `API key invalid or not configured. ${AUTH_GUIDANCE}`;
   }
+
   if (status != null && status >= 500 && status < 600) {
     return `AI service temporarily unavailable. ${UNAVAILABLE_GUIDANCE}`;
   }
+
   if (
     /timeout|timed out|network|fetch failed|connection refused/i.test(rawMessage) ||
     (error instanceof Error && error.name === 'AbortError')
   ) {
     return `Request timed out or connection failed. ${NETWORK_GUIDANCE}`;
   }
+
   if (/unexpected response|proxy.*configured|no.*choices/i.test(rawMessage)) {
     return `Unexpected response from AI. Ensure the proxy and model are configured correctly.`;
   }
+
   if (rawMessage) {
     return rawMessage;
   }
+
   return 'AI request failed. Check the AI proxy and API key configuration.';
 }

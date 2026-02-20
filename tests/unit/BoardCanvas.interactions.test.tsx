@@ -204,7 +204,7 @@ vi.mock('@/components/canvas/TransformHandler', () => ({
 /** Wrapper that syncs objects to the store so StoreShapeRenderer / useVisibleShapeIds see them. */
 const BoardCanvasWithStore = (props: ComponentProps<typeof BoardCanvas>) => {
   useEffect(() => {
-    useObjectsStore.getState().setAll(props.objects);
+    useObjectsStore.getState().setAll(props.objects ?? []);
   }, [props.objects]);
   return <BoardCanvas {...props} />;
 };

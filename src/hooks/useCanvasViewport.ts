@@ -206,7 +206,7 @@ export const useCanvasViewport = (
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Wheel zoom handler - zooms centered on cursor position. Updates ref + Stage only; state via throttle.
+  // Wheel: ctrl+wheel = zoom (macOS trackpad convention); wheel only = pan.
   const handleWheel = useCallback(
     (e: IKonvaWheelEvent) => {
       e.evt.preventDefault();
@@ -216,34 +216,47 @@ export const useCanvasViewport = (
         return;
       }
 
-      const oldScale = stage.scaleX();
-      const pointer = stage.getPointerPosition();
-      if (!pointer) {
-        return;
+      if (e.evt.ctrlKey) {
+        const oldScale = stage.scaleX();
+        const pointer = stage.getPointerPosition();
+        if (!pointer) {
+          return;
+        }
+
+        const mousePointTo = {
+          x: (pointer.x - stage.x()) / oldScale,
+          y: (pointer.y - stage.y()) / oldScale,
+        };
+
+        const direction = e.evt.deltaY > 0 ? -1 : 1;
+        const newScale = Math.min(
+          MAX_SCALE,
+          Math.max(MIN_SCALE, direction > 0 ? oldScale * SCALE_BY : oldScale / SCALE_BY)
+        );
+
+        const next: IViewportState = {
+          ...viewportRef.current,
+          scale: { x: newScale, y: newScale },
+          position: {
+            x: pointer.x - mousePointTo.x * newScale,
+            y: pointer.y - mousePointTo.y * newScale,
+          },
+        };
+        viewportRef.current = next;
+        applyViewportToStage(stageRef, next);
+        scheduleThrottledFlush();
+      } else {
+        const next: IViewportState = {
+          ...viewportRef.current,
+          position: {
+            x: viewportRef.current.position.x - e.evt.deltaX,
+            y: viewportRef.current.position.y - e.evt.deltaY,
+          },
+        };
+        viewportRef.current = next;
+        applyViewportToStage(stageRef, next);
+        scheduleThrottledFlush();
       }
-
-      const mousePointTo = {
-        x: (pointer.x - stage.x()) / oldScale,
-        y: (pointer.y - stage.y()) / oldScale,
-      };
-
-      const direction = e.evt.deltaY > 0 ? -1 : 1;
-      const newScale = Math.min(
-        MAX_SCALE,
-        Math.max(MIN_SCALE, direction > 0 ? oldScale * SCALE_BY : oldScale / SCALE_BY)
-      );
-
-      const next: IViewportState = {
-        ...viewportRef.current,
-        scale: { x: newScale, y: newScale },
-        position: {
-          x: pointer.x - mousePointTo.x * newScale,
-          y: pointer.y - mousePointTo.y * newScale,
-        },
-      };
-      viewportRef.current = next;
-      applyViewportToStage(stageRef, next);
-      scheduleThrottledFlush();
     },
     [stageRef, scheduleThrottledFlush]
   );

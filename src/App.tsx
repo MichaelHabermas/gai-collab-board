@@ -185,7 +185,10 @@ const BoardView = ({
                 </Button>
               </div>
             ) : (
-              <span className='text-sm text-muted-foreground'>
+              <span
+                className='text-sm text-muted-foreground'
+                title='Only the board owner can rename this board.'
+              >
                 {board?.name || 'Untitled Board'}
               </span>
             )}
@@ -293,7 +296,6 @@ const BoardView = ({
             boardId={boardId}
             boardName={board?.name ?? 'Board'}
             user={user}
-            objects={objects}
             canEdit={canEdit}
             onObjectUpdate={history.updateObject}
             onObjectsUpdate={updateObjects}
@@ -325,7 +327,7 @@ const BoardView = ({
                 </TabsContent>
                 <TabsContent
                   value='props'
-                  className='flex flex-1 min-h-0 flex-col mt-2 overflow-auto'
+                  className='flex flex-1 min-h-0 min-h-[360px] flex-col mt-2 overflow-auto'
                   data-testid='props-tab-content'
                 >
                   <PropertyInspector objects={objects} onObjectUpdate={updateObject} />

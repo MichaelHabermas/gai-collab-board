@@ -95,9 +95,11 @@ export function sanitizeUsageNumber(value: number): number {
   if (!Number.isFinite(value)) {
     return 0;
   }
+
   if (value < 0) {
     return 0;
   }
+
   return value;
 }
 
@@ -140,6 +142,7 @@ export function upsertUsageEvent(events: IAIUsageEvent[], event: IAIUsageEvent):
   } else {
     nextEvents[existingIndex] = normalizedEvent;
   }
+
   return nextEvents;
 }
 
@@ -182,6 +185,7 @@ function formatTimeSeriesLabel(timestamp: string): string {
   if (Number.isNaN(date.getTime())) {
     return timestamp;
   }
+
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   const hours = String(date.getHours()).padStart(2, '0');

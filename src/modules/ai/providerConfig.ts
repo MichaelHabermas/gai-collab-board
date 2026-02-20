@@ -33,9 +33,11 @@ export function getProviderFromEnv(env: Record<string, string | undefined>): AIP
   if (raw === AI_PROVIDER_GROQ) {
     return AI_PROVIDER_GROQ;
   }
+
   if (raw === AI_PROVIDER_GEMINI) {
     return AI_PROVIDER_GEMINI;
   }
+
   return DEFAULT_PROVIDER;
 }
 

@@ -17,6 +17,7 @@ import { useCanvasOperations } from '@/hooks/useCanvasOperations';
 import { useVisibleShapes } from '@/hooks/useVisibleShapes';
 import { useBatchDraw } from '@/hooks/useBatchDraw';
 import { useSelectionStore } from '@/stores/selectionStore';
+import { useObjectsStore } from '@/stores/objectsStore';
 import type { User } from 'firebase/auth';
 import type {
   IBoardObject,
@@ -67,7 +68,8 @@ interface IBoardCanvasProps {
   boardId: string;
   boardName?: string;
   user: User;
-  objects: IBoardObject[];
+  /** @deprecated BoardCanvas reads from objectsStore; kept for backward compatibility during migration. */
+  objects?: IBoardObject[];
   canEdit?: boolean;
   onObjectUpdate?: (objectId: string, updates: Partial<IBoardObject>) => void;
   onObjectsUpdate?: (updates: Array<{ objectId: string; updates: Partial<IBoardObject> }>) => void;
@@ -108,7 +110,6 @@ export const BoardCanvas = memo(
     boardId,
     boardName = 'Board',
     user,
-    objects,
     canEdit = true,
     onObjectUpdate,
     onObjectsUpdate,
@@ -126,6 +127,11 @@ export const BoardCanvas = memo(
     const activeToolRef = useRef<ToolMode>('select');
     const [activeColor, setActiveColor] = useState<string>(STICKY_COLORS.yellow);
     const selectedIds = useSelectionStore((state) => state.selectedIds);
+    const objectsRecord = useObjectsStore((s) => s.objects);
+    const objects = useMemo(
+      () => Object.values(objectsRecord) as IBoardObject[],
+      [objectsRecord]
+    );
     const canUndoHistory = useHistoryStore((s) => s.canUndo);
     const canRedoHistory = useHistoryStore((s) => s.canRedo);
     const setSelectedIds = useSelectionStore((state) => state.setSelectedIds);
@@ -987,17 +993,21 @@ export const BoardCanvas = memo(
       const updates: Array<{ objectId: string; updates: Partial<IBoardObject> }> = [];
       const movedIds = new Set(selectedIds);
 
+      // Snap group bounding box to grid (one snap for the whole group; preserve relative positions).
+      const groupNewLeft = b.x1 + dx;
+      const groupNewTop = b.y1 + dy;
+      const snappedGroup = snapToGridEnabled
+        ? snapPositionToGrid(groupNewLeft, groupNewTop, GRID_SIZE)
+        : { x: groupNewLeft, y: groupNewTop };
+      const snapOffsetX = snappedGroup.x - groupNewLeft;
+      const snapOffsetY = snappedGroup.y - groupNewTop;
+
       for (const id of selectedIds) {
         const obj = objectsById.get(id);
         if (!obj) continue;
 
-        let newX = obj.x + dx;
-        let newY = obj.y + dy;
-        if (snapToGridEnabled) {
-          const snapped = snapPositionToGrid(newX, newY, GRID_SIZE);
-          newX = snapped.x;
-          newY = snapped.y;
-        }
+        const newX = obj.x + dx + snapOffsetX;
+        const newY = obj.y + dy + snapOffsetY;
 
         const objUpdates: Partial<IBoardObject> = { x: newX, y: newY };
 
@@ -1007,13 +1017,8 @@ export const BoardCanvas = memo(
           for (const child of children) {
             if (movedIds.has(child.id)) continue;
 
-            let cx = child.x + dx;
-            let cy = child.y + dy;
-            if (snapToGridEnabled) {
-              const snapped = snapPositionToGrid(cx, cy, GRID_SIZE);
-              cx = snapped.x;
-              cy = snapped.y;
-            }
+            const cx = child.x + dx + snapOffsetX;
+            const cy = child.y + dy + snapOffsetY;
 
             updates.push({ objectId: child.id, updates: { x: cx, y: cy } });
             movedIds.add(child.id);

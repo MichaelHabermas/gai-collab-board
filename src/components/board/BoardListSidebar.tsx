@@ -265,6 +265,7 @@ export const BoardListSidebar = memo(
               onClick={() => onSelectBoard(item.id)}
               className='flex items-center gap-2 flex-1 min-w-0 text-left'
               data-testid={`board-list-item-${item.id}`}
+              title={!isOwner && isMember ? 'Only the board owner can rename this board.' : undefined}
             >
               <LayoutDashboard className='h-4 w-4 shrink-0' />
               <span className='truncate'>{item.name}</span>

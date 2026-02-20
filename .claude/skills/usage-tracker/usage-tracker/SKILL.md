@@ -94,6 +94,7 @@ committing it as a spend log, others don't.
 ### Step 6: Confirm to the user
 
 Let them know:
+
 - Tracking starts on their next Claude Code session in this project
 - `USAGE.md` appears at project root after the first session
 - Raw data is in `.claude/usage/usage-data.json` and `.claude/usage/unified-usage-data.json`

@@ -345,5 +345,16 @@ describe('objectService', () => {
       expect(mockBatchDelete).toHaveBeenCalledTimes(0);
       expect(mockBatchCommit).toHaveBeenCalledTimes(1);
     });
+
+    it('deleteObjectsBatch for 20+ objects uses single batch and completes within 300ms', async () => {
+      const ids = Array.from({ length: 25 }, (_, i) => `obj-${i}`);
+      const start = Date.now();
+      await deleteObjectsBatch('board-1', ids);
+      const elapsed = Date.now() - start;
+      expect(mockWriteBatch).toHaveBeenCalledTimes(1);
+      expect(mockBatchDelete).toHaveBeenCalledTimes(25);
+      expect(mockBatchCommit).toHaveBeenCalledTimes(1);
+      expect(elapsed).toBeLessThan(300);
+    });
   });
 });

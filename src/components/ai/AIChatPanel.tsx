@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, type ReactElement } from 'react';
-import { Send, Loader2, Lightbulb, ListChecks } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback, type ReactElement } from 'react';
+import { Send, Loader2, Lightbulb, ListChecks, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -31,8 +31,13 @@ export const AIChatPanel = ({
   objects = [],
 }: IAIChatPanelProps): ReactElement => {
   const [inputValue, setInputValue] = useState<string>('');
+  const [voiceError, setVoiceError] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const selectedIds = useSelectionStore((s) => s.selectedIds);
+
+  const supportsSpeechRecognition =
+    typeof window !== 'undefined' &&
+    ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
   const hasBoardObjects = objects.length > 0;
   const hasSelection = selectedIds.length > 0;
@@ -72,6 +77,55 @@ export const AIChatPanel = ({
     setInputValue('');
     await onSend(trimmed);
   };
+
+  const handleVoiceInput = useCallback(() => {
+    if (!supportsSpeechRecognition) {
+      setVoiceError('Voice input is not supported in this browser.');
+      return;
+    }
+
+    setVoiceError('');
+    interface ISpeechRecognitionCtor {
+      new (): {
+        start: () => void;
+        continuous: boolean;
+        interimResults: boolean;
+        lang: string;
+        onresult: ((e: { results: ArrayLike<{ 0: { transcript: string }; length: number }> }) => void) | null;
+        onerror: (() => void) | null;
+        onend: (() => void) | null;
+      };
+    }
+    const Win = window as unknown as { SpeechRecognition?: ISpeechRecognitionCtor; webkitSpeechRecognition?: ISpeechRecognitionCtor };
+    const Ctor = Win.SpeechRecognition ?? Win.webkitSpeechRecognition;
+    if (!Ctor) return;
+    const recognition = new Ctor();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (e: { results: ArrayLike<{ 0: { transcript: string }; length: number }> }) => {
+      const parts: string[] = [];
+      for (let i = 0; i < e.results.length; i++) {
+        const r = e.results[i];
+        if (r?.[0]?.transcript) {
+          parts.push(r[0].transcript);
+        }
+      }
+      const transcript = parts.join(' ').trim();
+      if (transcript) {
+        setInputValue((prev) => (prev ? `${prev} ${transcript}` : transcript));
+      }
+    };
+
+    recognition.onerror = () => {
+      setVoiceError('Voice input failed. Try again or type your message.');
+    };
+
+    recognition.onend = null;
+
+    recognition.start();
+  }, [supportsSpeechRecognition]);
 
   return (
     <Card
@@ -166,14 +220,36 @@ export const AIChatPanel = ({
           </Button>
         </div>
 
+        {voiceError && (
+          <p className='text-xs text-amber-400 mt-1' role='alert'>
+            {voiceError}
+          </p>
+        )}
         <form onSubmit={handleSubmit} className='flex gap-2 mt-2'>
           <Input
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            onChange={(e) => {
+              setInputValue(e.target.value);
+              setVoiceError('');
+            }}
             placeholder='Ask to create or edit board items...'
             disabled={loading}
             className='flex-1 border-slate-600 bg-slate-700/50 text-slate-100 placeholder:text-slate-500'
           />
+          {supportsSpeechRecognition && (
+            <Button
+              type='button'
+              variant='outline'
+              size='icon'
+              className='shrink-0 border-slate-600 text-slate-300 hover:bg-slate-700'
+              onClick={handleVoiceInput}
+              disabled={loading}
+              title='Voice input (speak to type)'
+              data-testid='ai-voice-input'
+            >
+              <Mic className='h-4 w-4' />
+            </Button>
+          )}
           <Button
             type='submit'
             disabled={loading || !inputValue.trim()}

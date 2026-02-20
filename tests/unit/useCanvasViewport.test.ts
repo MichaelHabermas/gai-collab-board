@@ -86,11 +86,11 @@ describe('useCanvasViewport', () => {
   });
 
   describe('event handlers', () => {
-    it('handleWheel zooms around pointer position after throttle flush', () => {
+    it('handleWheel zooms around pointer position after throttle flush when ctrlKey', () => {
       const stage = createStageMock();
       const preventDefault = vi.fn();
       const wheelEvent = {
-        evt: { preventDefault, deltaY: -120 },
+        evt: { preventDefault, deltaY: -120, ctrlKey: true },
         target: { getStage: () => stage },
       } as unknown as Konva.KonvaEventObject<WheelEvent>;
 
@@ -114,7 +114,7 @@ describe('useCanvasViewport', () => {
     it('onViewportChange receives throttled viewport after flush', () => {
       const stage = createStageMock();
       const wheelEvent = {
-        evt: { preventDefault: vi.fn(), deltaY: -120 },
+        evt: { preventDefault: vi.fn(), deltaY: -120, ctrlKey: true },
         target: { getStage: () => stage },
       } as unknown as Konva.KonvaEventObject<WheelEvent>;
       const onViewportChange = vi.fn();
