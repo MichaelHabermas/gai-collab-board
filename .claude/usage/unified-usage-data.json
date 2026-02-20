@@ -1,0 +1,46 @@
+{
+  "project": "C:\\Users\\haber\\repos\\Gauntlet\\gai-collab-board\\.claude\\worktrees\\ecstatic-newton",
+  "created": "2026-02-20T01:16:54.888Z",
+  "events": [
+    {
+      "event_id": "dev:claude:b9f6e508-28ba-4702-8cf6-b03a7344bf22",
+      "source": "claude",
+      "timestamp": "2026-02-20T01:16:54.750Z",
+      "session_id": "b9f6e508-28ba-4702-8cf6-b03a7344bf22",
+      "provider": "anthropic",
+      "model": "claude-opus-4-6",
+      "input_tokens": 12,
+      "output_tokens": 34,
+      "cache_read_tokens": 481721,
+      "cache_create_tokens": 36035,
+      "total_tokens": 517802,
+      "estimated_cost": 1.40096775,
+      "request_count": 1,
+      "estimation_method": "best_effort",
+      "metadata": {
+        "hook_source": "claude",
+        "by_model_count": 1
+      }
+    },
+    {
+      "event_id": "mcp:claude:b9f6e508-28ba-4702-8cf6-b03a7344bf22",
+      "source": "mcp",
+      "timestamp": "2026-02-20T01:16:55.037Z",
+      "session_id": "b9f6e508-28ba-4702-8cf6-b03a7344bf22",
+      "provider": "claude",
+      "model": "mcp-tooling",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_create_tokens": 0,
+      "total_tokens": 0,
+      "estimated_cost": 0.0025,
+      "request_count": 5,
+      "estimation_method": "best_effort",
+      "metadata": {
+        "origin_source": "claude",
+        "tool_call_count": 5
+      }
+    }
+  ]
+}

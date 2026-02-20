@@ -1,52 +1,78 @@
-# Usage Tracker
+# Unified AI Usage Tracker
 
-> Auto-updated by Claude Code / Cursor stop hook
+> Auto-updated cumulative usage from Claude, Cursor, runtime proxy, scripts, and MCP signals.
 
-## Totals
+## Grand Total
 
 | Metric | Value |
 |--------|-------|
-| Sessions | 2 |
-| Total tokens | 151.2k |
-| Input tokens | 35.1k |
-| Output tokens | 15.0k |
-| Cache read | 97.9k |
-| Cache create | 3.2k |
-| Estimated cost | $1.6498 |
+| Events | 2 |
+| Requests | 6 |
+| Total tokens | 517.8k |
+| Input tokens | 12 |
+| Output tokens | 34 |
+| Cache read | 481.7k |
+| Cache create | 36.0k |
+| Estimated cost | $1.4035 |
+
+## Segmented Totals by Source
+
+| Source | Events | Requests | Total tokens | Input | Output | Cost |
+|--------|--------|----------|--------------|-------|--------|------|
+| Claude | 1 | 1 | 517.8k | 12 | 34 | $1.4010 |
+| MCP tools | 1 | 5 | 0 | 0 | 0 | $0.0025 |
+
+## Estimation Quality
+
+| Source | Exact | Best effort | Unavailable |
+|--------|-------|-------------|-------------|
+| Claude | 0 | 1 | 0 |
+| MCP tools | 0 | 1 | 0 |
 
 ## Daily Summary
 
-| Date | Sessions | Tokens | Cost |
-|------|----------|--------|------|
-| 2026-02-20 | 1 | 140.7k | $1.6012 |
-| 2026-02-19 | 1 | 10.5k | $0.0485 |
+| Date | Events | Tokens | Cost |
+|------|--------|--------|------|
+| 2026-02-20 | 2 | 517.8k | $1.4035 |
 
 ## Usage over time
 
 ```mermaid
 xychart-beta
-    title "Token usage over time"
-    x-axis ["02-19 18:23", "02-19 19:44"]
-    y-axis "Tokens" 0 --> 33000
-    line "Input" [5150, 30000]
-    line "Output" [2260, 12700]
+    title "Token usage over time (all sources)"
+    x-axis ["02-19 20:16", "02-19 20:16"]
+    y-axis "Tokens" 0 --> 38
+    line "Input" [12, 0]
+    line "Output" [34, 0]
 ```
 
 ```mermaid
 xychart-beta
-    title "Cost over time (USD)"
-    x-axis ["02-19 18:23", "02-19 19:44"]
-    y-axis "Cost (USD)" 0 --> 1.98
-    line "Cost" [0.048549999999999996, 1.6012499999999998]
-    line "Cumulative" [0.05, 1.65]
+    title "Cost over time (all sources, USD)"
+    x-axis ["02-19 20:16", "02-19 20:16"]
+    y-axis "USD" 0 --> 2
+    line "Cost" [1.40096775, 0.0025]
+    line "Cumulative" [1.401, 1.4035]
 ```
 
-## Recent Sessions
+```mermaid
+xychart-beta
+    title "Cost by source over time (USD)"
+    x-axis ["02-19 20:16", "02-19 20:16"]
+    y-axis "USD" 0 --> 2
+    line "Claude" [1.40096775, 0]
+    line "Cursor" [0, 0]
+    line "Runtime proxy" [0, 0]
+    line "Scripts" [0, 0]
+    line "MCP" [0, 0.0025]
+```
 
-| Time | Model(s) | In | Out | Cache | Cost |
-|------|----------|----|-----|-------|------|
-| 2026-02-20 00:44 | claude-opus | 30.0k | 12.7k | 98.0k | $1.6012 |
-| 2026-02-19 23:23 | claude-sonnet, claude-haiku | 5.2k | 2.3k | 3.1k | $0.0485 |
+## Recent Events
+
+| Time | Source | Provider | Model | In | Out | Cost | Method |
+|------|--------|----------|-------|----|-----|------|--------|
+| 2026-02-20 01:16 | MCP tools | claude | mcp-tooling | 0 | 0 | $0.0025 | best_effort |
+| 2026-02-20 01:16 | Claude | anthropic | claude-opus-4-6 | 12 | 34 | $1.4010 | best_effort |
 
 ---
-*Last updated: 2026-02-20 00:44:07 UTC*
+*Last updated: 2026-02-20 01:16:55 UTC*
