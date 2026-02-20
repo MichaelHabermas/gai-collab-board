@@ -4,7 +4,9 @@
       "Bash(python3:*)",
       "Bash(bun:*)",
       "Bash(bunx vitest:*)",
-      "Bash(bunx playwright test:*)"
+      "Bash(bunx playwright test:*)",
+      "Bash(git worktree remove:*)",
+      "Bash(git worktree:*)"
     ]
   },
   "hooks": {
