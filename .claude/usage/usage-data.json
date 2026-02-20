@@ -28,7 +28,7 @@
     },
     {
       "session_id": "sess-002",
-      "timestamp": "2026-02-19T23:23:30.694Z",
+      "timestamp": "2026-02-20T00:44:07.947Z",
       "input_tokens": 30000,
       "output_tokens": 12700,
       "cache_read": 95000,
