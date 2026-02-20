@@ -3,7 +3,6 @@ import {
   doc,
   getDoc,
   setDoc,
-  deleteDoc,
   onSnapshot,
   query,
   where,
@@ -112,48 +111,34 @@ export const updateBoardName = async (
   });
 };
 
-export const updateBoardMembers = async (
-  boardId: string,
-  members: Record<string, UserRole>
-): Promise<void> => {
-  const boardRef = doc(firestore, BOARDS_COLLECTION, boardId);
-  await updateDoc(boardRef, {
-    members,
-    updatedAt: Timestamp.now(),
-  });
-};
-
 export const addBoardMember = async (
   boardId: string,
   userId: string,
   role: UserRole
 ): Promise<void> => {
-  const board = await getBoard(boardId);
-  if (!board) {
-    throw new Error('Board not found');
-  }
-
-  const updatedMembers = {
-    ...board.members,
-    [userId]: role,
-  };
-
-  await updateBoardMembers(boardId, updatedMembers);
+  const boardRef = doc(firestore, BOARDS_COLLECTION, boardId);
+  await runTransaction(firestore, async (tx) => {
+    const snap = await tx.get(boardRef);
+    if (!snap.exists()) throw new Error('Board not found');
+    const board = snap.data() as IBoard;
+    const updatedMembers = { ...board.members, [userId]: role };
+    tx.update(boardRef, { members: updatedMembers, updatedAt: Timestamp.now() });
+  });
 };
 
 export const removeBoardMember = async (boardId: string, userId: string): Promise<void> => {
-  const board = await getBoard(boardId);
-  if (!board) {
-    throw new Error('Board not found');
-  }
-
-  if (board.ownerId === userId) {
-    throw new Error('Cannot remove the owner from the board');
-  }
-
-  const remainingMembers = { ...board.members };
-  delete remainingMembers[userId];
-  await updateBoardMembers(boardId, remainingMembers);
+  const boardRef = doc(firestore, BOARDS_COLLECTION, boardId);
+  await runTransaction(firestore, async (tx) => {
+    const snap = await tx.get(boardRef);
+    if (!snap.exists()) throw new Error('Board not found');
+    const board = snap.data() as IBoard;
+    if (board.ownerId === userId) {
+      throw new Error('Cannot remove the owner from the board');
+    }
+    const remainingMembers = { ...board.members };
+    delete remainingMembers[userId];
+    tx.update(boardRef, { members: remainingMembers, updatedAt: Timestamp.now() });
+  });
 };
 
 export const updateMemberRole = async (
@@ -161,35 +146,30 @@ export const updateMemberRole = async (
   userId: string,
   role: UserRole
 ): Promise<void> => {
-  const board = await getBoard(boardId);
-  if (!board) {
-    throw new Error('Board not found');
-  }
-
-  if (board.ownerId === userId && role !== 'owner') {
-    throw new Error("Cannot change the owner's role");
-  }
-
-  const updatedMembers = {
-    ...board.members,
-    [userId]: role,
-  };
-
-  await updateBoardMembers(boardId, updatedMembers);
+  const boardRef = doc(firestore, BOARDS_COLLECTION, boardId);
+  await runTransaction(firestore, async (tx) => {
+    const snap = await tx.get(boardRef);
+    if (!snap.exists()) throw new Error('Board not found');
+    const board = snap.data() as IBoard;
+    if (board.ownerId === userId && role !== 'owner') {
+      throw new Error("Cannot change the owner's role");
+    }
+    const updatedMembers = { ...board.members, [userId]: role };
+    tx.update(boardRef, { members: updatedMembers, updatedAt: Timestamp.now() });
+  });
 };
 
 export const deleteBoard = async (boardId: string, userId: string): Promise<void> => {
-  const board = await getBoard(boardId);
-  if (!board) {
-    throw new Error('Board not found');
-  }
-
-  if (!canUserManage(board, userId)) {
-    throw new Error('Only the board owner can delete the board');
-  }
-
   const boardRef = doc(firestore, BOARDS_COLLECTION, boardId);
-  await deleteDoc(boardRef);
+  await runTransaction(firestore, async (tx) => {
+    const snap = await tx.get(boardRef);
+    if (!snap.exists()) throw new Error('Board not found');
+    const board = snap.data() as IBoard;
+    if (!canUserManage(board, userId)) {
+      throw new Error('Only the board owner can delete the board');
+    }
+    tx.delete(boardRef);
+  });
 };
 
 export const getUserRole = (board: IBoard, userId: string): UserRole | null => {

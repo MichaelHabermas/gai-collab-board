@@ -4,7 +4,6 @@ export {
   getBoard,
   subscribeToBoard,
   updateBoardName,
-  updateBoardMembers,
   addBoardMember,
   removeBoardMember,
   updateMemberRole,

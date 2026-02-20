@@ -56,18 +56,46 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
     []
   );
 
-  // Clear store when unmounting or switching boards.
+  // Clear store and pending timeouts when unmounting or switching boards.
   useEffect(() => {
     return () => {
       useObjectsStore.getState().clear();
+      for (const t of pendingTimeoutsRef.current.values()) clearTimeout(t);
+      pendingTimeoutsRef.current.clear();
+      pendingUpdatesRef.current.clear();
     };
   }, [boardId]);
 
   // Keep track of pending updates for rollback
   const pendingUpdatesRef = useRef<Map<string, IBoardObject>>(new Map());
+  const pendingTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const objectsByIdRef = useRef<Map<string, IBoardObject>>(new Map());
   // Track if this is the first callback after subscription to handle reset
   const isFirstCallbackRef = useRef<boolean>(true);
+
+  const PENDING_TIMEOUT_MS = 30_000;
+
+  const setPending = useCallback((id: string, obj: IBoardObject) => {
+    pendingUpdatesRef.current.set(id, obj);
+    const prev = pendingTimeoutsRef.current.get(id);
+    if (prev !== undefined) clearTimeout(prev);
+    pendingTimeoutsRef.current.set(
+      id,
+      setTimeout(() => {
+        pendingUpdatesRef.current.delete(id);
+        pendingTimeoutsRef.current.delete(id);
+      }, PENDING_TIMEOUT_MS)
+    );
+  }, []);
+
+  const clearPending = useCallback((id: string) => {
+    pendingUpdatesRef.current.delete(id);
+    const t = pendingTimeoutsRef.current.get(id);
+    if (t !== undefined) {
+      clearTimeout(t);
+      pendingTimeoutsRef.current.delete(id);
+    }
+  }, []);
 
   const getObjectTimestamp = useCallback((object: IBoardObject): number => {
     return object.updatedAt?.toMillis?.() ?? 0;
@@ -233,7 +261,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
       }
 
       // Store original for rollback
-      pendingUpdatesRef.current.set(objectId, currentObject);
+      setPending(objectId, currentObject);
 
       // Optimistic update
       setObjects((prev) => prev.map((obj) => (obj.id === objectId ? { ...obj, ...updates } : obj)));
@@ -241,21 +269,20 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
       try {
         setError('');
         await updateObject(boardId, objectId, updates);
-        // Clear pending update on success
-        pendingUpdatesRef.current.delete(objectId);
+        clearPending(objectId);
       } catch (err) {
         // Rollback on failure
         const original = pendingUpdatesRef.current.get(objectId);
         if (original) {
           setObjects((prev) => prev.map((obj) => (obj.id === objectId ? original : obj)));
-          pendingUpdatesRef.current.delete(objectId);
+          clearPending(objectId);
         }
 
         const errorMessage = err instanceof Error ? err.message : 'Failed to update object';
         setError(errorMessage);
       }
     },
-    [boardId, objects, setObjects]
+    [boardId, objects, setObjects, setPending, clearPending]
   );
 
   // Delete object with optimistic update and rollback
@@ -274,7 +301,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
       }
 
       // Store original for rollback
-      pendingUpdatesRef.current.set(objectId, currentObject);
+      setPending(objectId, currentObject);
 
       // Optimistic delete
       setObjects((prev) => prev.filter((obj) => obj.id !== objectId));
@@ -282,21 +309,20 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
       try {
         setError('');
         await deleteObject(boardId, objectId);
-        // Clear pending update on success
-        pendingUpdatesRef.current.delete(objectId);
+        clearPending(objectId);
       } catch (err) {
         // Rollback on failure - restore the object
         const original = pendingUpdatesRef.current.get(objectId);
         if (original) {
           setObjects((prev) => [...prev, original]);
-          pendingUpdatesRef.current.delete(objectId);
+          clearPending(objectId);
         }
 
         const errorMessage = err instanceof Error ? err.message : 'Failed to delete object';
         setError(errorMessage);
       }
     },
-    [boardId, objects, setObjects]
+    [boardId, objects, setObjects, setPending, clearPending]
   );
 
   // Update multiple objects in one batch (optimistic update + rollback)
@@ -316,7 +342,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         .map((id) => objects.find((obj) => obj.id === id))
         .filter(Boolean) as IBoardObject[];
       for (const obj of originals) {
-        pendingUpdatesRef.current.set(obj.id, obj);
+        setPending(obj.id, obj);
       }
 
       setObjects((prev) => {
@@ -333,18 +359,18 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         setError('');
         await updateObjectsBatch(boardId, updates);
         for (const id of objectIds) {
-          pendingUpdatesRef.current.delete(id);
+          clearPending(id);
         }
       } catch (err) {
         for (const original of originals) {
           setObjects((prev) => prev.map((o) => (o.id === original.id ? original : o)));
-          pendingUpdatesRef.current.delete(original.id);
+          clearPending(original.id);
         }
         const errorMessage = err instanceof Error ? err.message : 'Failed to update objects';
         setError(errorMessage);
       }
     },
-    [boardId, objects, setObjects]
+    [boardId, objects, setObjects, setPending, clearPending]
   );
 
   // Delete multiple objects in one batch (defer state update until batch resolves)
@@ -361,7 +387,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
 
       const toRemove = objects.filter((obj) => objectIds.includes(obj.id));
       for (const obj of toRemove) {
-        pendingUpdatesRef.current.set(obj.id, obj);
+        setPending(obj.id, obj);
       }
 
       try {
@@ -369,17 +395,17 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         await deleteObjectsBatch(boardId, objectIds);
         setObjects((prev) => prev.filter((obj) => !objectIds.includes(obj.id)));
         for (const id of objectIds) {
-          pendingUpdatesRef.current.delete(id);
+          clearPending(id);
         }
       } catch (err) {
         for (const id of objectIds) {
-          pendingUpdatesRef.current.delete(id);
+          clearPending(id);
         }
         const errorMessage = err instanceof Error ? err.message : 'Failed to delete objects';
         setError(errorMessage);
       }
     },
-    [boardId, objects, setObjects]
+    [boardId, objects, setObjects, setPending, clearPending]
   );
 
   return {
