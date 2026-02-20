@@ -16,6 +16,7 @@ import {
 } from '@/modules/sync/objectService';
 import { useObjectsStore } from '@/stores/objectsStore';
 import { consumePrefetchedObjects } from '@/lib/boardPrefetch';
+import { setWriteQueueBoard, queueWrite, flush as flushWriteQueue } from '@/lib/writeQueue';
 
 interface IUseObjectsParams {
   boardId: string | null;
@@ -33,6 +34,8 @@ interface IUseObjectsReturn {
   updateObjects: (updates: IObjectUpdateEntry[]) => Promise<void>;
   deleteObject: (objectId: string) => Promise<void>;
   deleteObjects: (objectIds: string[]) => Promise<void>;
+  queueObjectUpdate: (objectId: string, updates: IUpdateObjectParams) => void;
+  flushWrites: () => Promise<void>;
 }
 
 /**
@@ -225,9 +228,13 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
   // Subscribe to objects for real-time updates from Firestore.
   useEffect(() => {
     if (!boardId) {
+      setWriteQueueBoard(null);
       objectsByIdRef.current.clear();
+
       return;
     }
+
+    setWriteQueueBoard(boardId);
 
     // Mark that we're waiting for first callback to reset state
     isFirstCallbackRef.current = true;
@@ -270,6 +277,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
     });
 
     return () => {
+      flushWriteQueue();
       unsubscribe();
     };
   }, [applySnapshotUpdate, boardId, setObjects]);
@@ -461,6 +469,21 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
     [boardId, objects, setObjects, setPending, clearPending]
   );
 
+  // Queue a debounced Firestore write with immediate optimistic update.
+  // Use for high-frequency property changes (color picker, text edits).
+  const queueObjectUpdate = useCallback(
+    (objectId: string, updates: IUpdateObjectParams): void => {
+      if (!boardId) return;
+
+      // Optimistic update (immediate UI feedback)
+      setObjects((prev) => prev.map((obj) => (obj.id === objectId ? { ...obj, ...updates } : obj)));
+
+      // Queue the Firestore write (debounced)
+      queueWrite(objectId, updates);
+    },
+    [boardId, setObjects]
+  );
+
   return {
     objects,
     loading,
@@ -470,5 +493,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
     updateObjects: handleUpdateObjects,
     deleteObject: handleDeleteObject,
     deleteObjects: handleDeleteObjects,
+    queueObjectUpdate,
+    flushWrites: flushWriteQueue,
   };
 };
