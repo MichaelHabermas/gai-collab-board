@@ -1,4 +1,4 @@
-import { Stage, Layer, Rect, Line, Shape } from 'react-konva';
+import { Stage, Layer, Rect, Shape } from 'react-konva';
 import { TransformHandler } from './TransformHandler';
 import { SelectionLayer } from './SelectionLayer';
 import { useRef, useCallback, useState, useEffect, useMemo, memo, type ReactElement } from 'react';
@@ -13,6 +13,8 @@ import { useCursors } from '@/hooks/useCursors';
 import { useVisibleShapeIds } from '@/hooks/useVisibleShapeIds';
 import { useCanvasOperations } from '@/hooks/useCanvasOperations';
 import { useConnectorCreation } from '@/hooks/useConnectorCreation';
+import { useShapeDrawing, isDrawingTool } from '@/hooks/useShapeDrawing';
+import { useMarqueeSelection } from '@/hooks/useMarqueeSelection';
 
 import { useBatchDraw } from '@/hooks/useBatchDraw';
 import { useSelectionStore } from '@/stores/selectionStore';
@@ -28,10 +30,9 @@ import type {
   ToolMode,
   IKonvaMouseEvent,
   IKonvaDragEvent,
-  ISelectionRect,
 } from '@/types';
 import type { ICreateObjectParams } from '@/modules/sync/objectService';
-import { getObjectBounds, getSelectionBounds } from '@/lib/canvasBounds';
+import { getSelectionBounds } from '@/lib/canvasBounds';
 import {
   computeAlignmentGuidesWithCandidates,
   computeSnappedPositionFromGuides,
@@ -89,15 +90,6 @@ export const GRID_LINE_OPACITY = 0.5;
 // Default sizes for new objects
 const DEFAULT_STICKY_SIZE = { width: 200, height: 200 };
 
-// Drawing state for shapes
-interface IDrawingState {
-  isDrawing: boolean;
-  startX: number;
-  startY: number;
-  currentX: number;
-  currentY: number;
-}
-
 /**
  * Main canvas component with pan/zoom, grid background, and cursor sync.
  * Provides infinite canvas functionality with wheel zoom and drag pan.
@@ -131,25 +123,10 @@ export const BoardCanvas = memo(
     const setSelectedIds = useSelectionStore((state) => state.setSelectedIds);
     const toggleSelectedId = useSelectionStore((state) => state.toggleSelectedId);
     const clearSelectionFromStore = useSelectionStore((state) => state.clearSelection);
-    const [drawingState, setDrawingState] = useState<IDrawingState>({
-      isDrawing: false,
-      startX: 0,
-      startY: 0,
-      currentX: 0,
-      currentY: 0,
-    });
-    const [selectionRect, setSelectionRect] = useState<ISelectionRect>({
-      visible: false,
-      x1: 0,
-      y1: 0,
-      x2: 0,
-      y2: 0,
-    });
-    const [isSelecting, setIsSelecting] = useState(false);
-    const isSelectingRef = useRef(false);
-    const selectionStartRef = useRef<{ x1: number; y1: number } | null>(null);
-    // When true, the next click is the release of a marquee; skip empty-area deselect so selection is not cleared
-    const justDidMarqueeSelectionRef = useRef(false);
+    const drawing = useShapeDrawing();
+    const { drawingState, drawingActiveRef } = drawing;
+    const marquee = useMarqueeSelection();
+    const { selectionRect, isSelecting, selectingActiveRef, justDidMarqueeRef: justDidMarqueeSelectionRef } = marquee;
     /** Bounds at start of selection-drag-handle drag (used in onDragMove/onDragEnd). */
     const selectionDragBoundsRef = useRef<{
       x1: number;
@@ -175,8 +152,6 @@ export const BoardCanvas = memo(
     const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
     const [alignmentGuides, setAlignmentGuides] = useState<IAlignmentGuides | null>(null);
     const objectsRef = useRef<IBoardObject[]>(objects);
-    const drawingActiveRef = useRef(false);
-    const selectingActiveRef = useRef(false);
     const pendingPointerRef = useRef<IPosition | null>(null);
     const pointerFrameRef = useRef<number | null>(null);
     const viewportPersistTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -292,9 +267,7 @@ export const BoardCanvas = memo(
     // Keep event-driven refs synced with render state (effect required; ref assignment during render is disallowed).
     useEffect(() => {
       activeToolRef.current = activeTool;
-      drawingActiveRef.current = drawingState.isDrawing;
-      selectingActiveRef.current = isSelecting;
-    }, [activeTool, drawingState.isDrawing, isSelecting]);
+    }, [activeTool]);
 
     useCanvasKeyboardShortcuts({
       setActiveTool,
@@ -344,12 +317,7 @@ export const BoardCanvas = memo(
       };
     }, []);
 
-    // Check if tool is a drawing tool
-    const isDrawingTool = useCallback((tool: ToolMode) => {
-      return ['rectangle', 'circle', 'line', 'connector', 'frame'].includes(tool);
-    }, []);
-
-    // Handle mouse move for cursor sync and drawing
+    // Handle mouse move — dispatches to drawing/marquee hooks via RAF throttle
     const handleStageMouseMove = useCallback(
       (e: IKonvaMouseEvent) => {
         const stage = e.target.getStage();
@@ -384,24 +352,16 @@ export const BoardCanvas = memo(
             if (!pendingPointer) return;
 
             if (drawingActiveRef.current) {
-              setDrawingState((prev) => ({
-                ...prev,
-                currentX: pendingPointer.x,
-                currentY: pendingPointer.y,
-              }));
+              drawing.onDrawMove(pendingPointer);
             }
 
             if (selectingActiveRef.current) {
-              setSelectionRect((prev) => ({
-                ...prev,
-                x2: pendingPointer.x,
-                y2: pendingPointer.y,
-              }));
+              marquee.onMarqueeMove(pendingPointer);
             }
           });
         }
       },
-      [handleMouseMove, getCanvasCoords]
+      [handleMouseMove, getCanvasCoords, drawing, marquee, drawingActiveRef, selectingActiveRef]
     );
 
     // Check if click is on empty area (not on a shape)
@@ -457,174 +417,32 @@ export const BoardCanvas = memo(
         const pointer = stage.getPointerPosition();
         if (!pointer) return;
 
-        const { x: canvasX, y: canvasY } = getCanvasCoords(stage, pointer);
+        const coords = getCanvasCoords(stage, pointer);
 
-        // Start drawing if using a drawing tool (connector uses node clicks, not drag)
         if (isDrawingTool(activeTool) && activeTool !== 'connector' && canEdit) {
-          setDrawingState({
-            isDrawing: true,
-            startX: canvasX,
-            startY: canvasY,
-            currentX: canvasX,
-            currentY: canvasY,
-          });
+          drawing.onDrawStart(coords);
+
           return;
         }
 
-        // Start drag-to-select if using select tool
         if (activeTool === 'select') {
-          selectionStartRef.current = { x1: canvasX, y1: canvasY };
-          isSelectingRef.current = true;
-          setIsSelecting(true);
-          setSelectionRect({
-            visible: true,
-            x1: canvasX,
-            y1: canvasY,
-            x2: canvasX,
-            y2: canvasY,
-          });
+          marquee.onMarqueeStart(coords);
         }
       },
-      [activeTool, canEdit, isDrawingTool, getCanvasCoords, isEmptyAreaClick]
+      [activeTool, canEdit, getCanvasCoords, isEmptyAreaClick, drawing, marquee]
     );
 
-    // Handle mouse up for drawing end and selection completion
+    // Handle mouse up — dispatches to drawing/marquee hooks
     const handleStageMouseUp = useCallback(
       async (e: IKonvaMouseEvent) => {
-        // Handle drawing completion if we were drawing
         if (drawingState.isDrawing && onObjectCreate) {
-          const { startX, startY, currentX, currentY } = drawingState;
-
-          // Calculate dimensions
-          const x = Math.min(startX, currentX);
-          const y = Math.min(startY, currentY);
-          const width = Math.abs(currentX - startX);
-          const height = Math.abs(currentY - startY);
-
-          // Only create if size is significant
-          if (width > 5 || height > 5) {
-            let result: IBoardObject | null = null;
-
-            if (activeTool === 'rectangle') {
-              result = await onObjectCreate({
-                type: 'rectangle',
-                x,
-                y,
-                width: Math.max(width, 20),
-                height: Math.max(height, 20),
-                fill: activeColor,
-                stroke: '#1e293b',
-                strokeWidth: 2,
-                rotation: 0,
-              });
-            } else if (activeTool === 'circle') {
-              result = await onObjectCreate({
-                type: 'circle',
-                x,
-                y,
-                width: Math.max(width, 20),
-                height: Math.max(height, 20),
-                fill: activeColor,
-                stroke: '#1e293b',
-                strokeWidth: 2,
-                rotation: 0,
-              });
-            } else if (activeTool === 'line') {
-              result = await onObjectCreate({
-                type: 'line',
-                x: 0,
-                y: 0,
-                width: 0,
-                height: 0,
-                points: [startX, startY, currentX, currentY],
-                fill: 'transparent',
-                stroke: activeColor,
-                strokeWidth: 3,
-                rotation: 0,
-              });
-            } else if (activeTool === 'frame') {
-              result = await onObjectCreate({
-                type: 'frame',
-                x,
-                y,
-                width: Math.max(width, 150),
-                height: Math.max(height, 100),
-                fill: 'rgba(241, 245, 249, 0.5)',
-                stroke: '#94a3b8',
-                strokeWidth: 2,
-                text: 'Frame',
-                rotation: 0,
-              });
-            }
-
-            // Only switch back to select tool if object was successfully created
-            if (result) {
-              setActiveTool('select');
-              activeToolRef.current = 'select';
-            }
-          }
-
-          // Reset drawing state
-          setDrawingState({
-            isDrawing: false,
-            startX: 0,
-            startY: 0,
-            currentX: 0,
-            currentY: 0,
+          await drawing.onDrawEnd(activeTool, activeColor, onObjectCreate, () => {
+            setActiveTool('select');
+            activeToolRef.current = 'select';
           });
         }
 
-        // Handle selection rectangle completion using refs + event (avoids stale state)
-        // Use isSelectingRef so we don't rely on isSelecting state which may not have flushed yet
-        if (isSelectingRef.current && selectionStartRef.current) {
-          const start = selectionStartRef.current;
-          const stage = e.target.getStage();
-          if (stage) {
-            // getPointerPosition() can be null on mouseup; fallback to native event
-            let pointer = stage.getPointerPosition();
-            if (!pointer) {
-              const container = stage.container();
-              const rect = container.getBoundingClientRect();
-              pointer = {
-                x: e.evt.clientX - rect.left,
-                y: e.evt.clientY - rect.top,
-              };
-            }
-
-            const end = getCanvasCoords(stage, pointer);
-            const selX1 = Math.min(start.x1, end.x);
-            const selY1 = Math.min(start.y1, end.y);
-            const selX2 = Math.max(start.x1, end.x);
-            const selY2 = Math.max(start.y1, end.y);
-
-            // Only select if the rectangle has meaningful size
-            if (Math.abs(selX2 - selX1) > 5 && Math.abs(selY2 - selY1) > 5) {
-              const selectedObjectIds = objects
-                .filter((obj) => {
-                  const { x1: objX1, y1: objY1, x2: objX2, y2: objY2 } = getObjectBounds(obj);
-                  return objX1 < selX2 && objX2 > selX1 && objY1 < selY2 && objY2 > selY1;
-                })
-                .map((obj) => obj.id);
-
-              setSelectedIds(selectedObjectIds);
-              justDidMarqueeSelectionRef.current = true;
-            }
-          }
-        }
-
-        // Always reset selection state on mouse up (use ref so we clear when we were selecting)
-        if (isSelectingRef.current) {
-          isSelectingRef.current = false;
-          selectionStartRef.current = null;
-          setIsSelecting(false);
-          setSelectionRect({
-            visible: false,
-            x1: 0,
-            y1: 0,
-            x2: 0,
-            y2: 0,
-          });
-        }
+        marquee.onMarqueeEnd(e, objects, getCanvasCoords, setSelectedIds);
 
         if (pointerFrameRef.current != null) {
           cancelAnimationFrame(pointerFrameRef.current);
@@ -633,15 +451,7 @@ export const BoardCanvas = memo(
 
         pendingPointerRef.current = null;
       },
-      [
-        drawingState,
-        activeTool,
-        activeColor,
-        onObjectCreate,
-        objects,
-        getCanvasCoords,
-        setSelectedIds,
-      ]
+      [drawingState.isDrawing, activeTool, activeColor, onObjectCreate, objects, getCanvasCoords, setSelectedIds, drawing, marquee]
     );
 
     useEffect(
@@ -759,6 +569,7 @@ export const BoardCanvas = memo(
         isEmptyAreaClick,
         setSelectedIds,
         clearConnector,
+        justDidMarqueeSelectionRef,
       ]
     );
 
@@ -1532,80 +1343,8 @@ export const BoardCanvas = memo(
       [activeIds, shapeRendererProps]
     );
 
-    // Render drawing preview
-    const renderDrawingPreview = useCallback(() => {
-      if (!drawingState.isDrawing) return null;
-
-      const { startX, startY, currentX, currentY } = drawingState;
-      const x = Math.min(startX, currentX);
-      const y = Math.min(startY, currentY);
-      const width = Math.abs(currentX - startX);
-      const height = Math.abs(currentY - startY);
-
-      if (activeTool === 'rectangle') {
-        return (
-          <Rect
-            x={x}
-            y={y}
-            width={width}
-            height={height}
-            fill={activeColor}
-            stroke={selectionColor}
-            strokeWidth={2}
-            dash={[5, 5]}
-            listening={false}
-          />
-        );
-      }
-
-      if (activeTool === 'circle') {
-        return (
-          <Rect
-            x={x}
-            y={y}
-            width={width}
-            height={height}
-            fill={activeColor}
-            stroke={selectionColor}
-            strokeWidth={2}
-            dash={[5, 5]}
-            cornerRadius={Math.min(width, height) / 2}
-            listening={false}
-          />
-        );
-      }
-
-      if (activeTool === 'line') {
-        return (
-          <Line
-            points={[startX, startY, currentX, currentY]}
-            stroke={activeColor}
-            strokeWidth={3}
-            dash={[5, 5]}
-            listening={false}
-          />
-        );
-      }
-
-      if (activeTool === 'frame') {
-        return (
-          <Rect
-            x={x}
-            y={y}
-            width={width}
-            height={height}
-            fill='rgba(241, 245, 249, 0.3)'
-            stroke={selectionColor}
-            strokeWidth={2}
-            dash={[5, 5]}
-            cornerRadius={6}
-            listening={false}
-          />
-        );
-      }
-
-      return null;
-    }, [drawingState, activeTool, activeColor, selectionColor]);
+    // Drawing preview delegates to hook
+    const drawingPreview = drawing.renderDrawingPreview(activeTool, activeColor, selectionColor);
 
     // Stage is draggable only in pan mode so marquee selection is not stolen by pan
     const isDraggable = activeTool === 'pan';
@@ -1790,7 +1529,7 @@ export const BoardCanvas = memo(
 
           {/* Drawing preview layer */}
           <Layer name='drawing' listening={false}>
-            {renderDrawingPreview()}
+            {drawingPreview}
             <SelectionLayer selectionRect={selectionRect} />
           </Layer>
 
