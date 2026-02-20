@@ -531,3 +531,82 @@ After Phase 4: Record 60Hz drag performance on a 1000-object board. Target: <8ms
 | WebAssembly canvas engine | Would replace Konva entirely — too invasive for the current stage. |
 | Service worker caching | The app is behind Firebase auth — caching is complex. Revisit for offline mode. |
 | HTTP/2 push | Requires server-side control (currently static hosting). Preload hints achieve similar effect. |
+
+---
+
+## Implementation Results (2026-02-20)
+
+Phases 1-3 implemented. 775 tests passing, 0 lint errors, 0 type errors.
+
+### Build Metrics
+
+| Chunk | Baseline | After | Change |
+| ----- | -------- | ----- | ------ |
+| index.js | 542.46 KB | 544.30 KB | +1.84 KB (new prefetch/skeleton code) |
+| openai.js | 102.89 KB | 102.89 KB (lazy) | Deferred from initial parse |
+| konva.js | 323.36 KB | 323.36 KB | — |
+| firebase.js | 433.38 KB | 433.38 KB | — |
+| AIChatPanel.js | — | 5.46 KB (lazy) | New lazy chunk |
+| PropertyInspector.js | — | 13.84 KB (lazy) | New lazy chunk |
+
+**Net effect:** 102.89 KB (27.92 KB gzip) deferred from initial JS parse. AIChatPanel and PropertyInspector now lazy-loaded with hover + idle prefetch.
+
+### Runtime Metrics (from `uxPerfBaseline.test.ts`)
+
+| Metric | Value | Impact |
+| ------ | ----- | ------ |
+| Incremental sync speedup | 5.9× | `updateObject()` vs `setAll()` for single-object changes |
+| Drag offset per-frame cost | 0.006 ms | 500 subscribers at 60fps = negligible overhead |
+| Spatial query (1000 obj) | 0.020 ms | Grid-based spatial index |
+
+### Phase 1 Results (Quick Wins)
+
+1. **Frame selector memoize (1.1)** — `useMemo` wrapper prevents new closure on every render. Eliminates false re-render evaluation of all Frame components.
+2. **Dynamic OpenAI import (1.2)** — `getAIClient()` now async with `await import('openai')`. 102 KB deferred from initial parse.
+3. **Delete useVisibleShapes (1.3)** — Removed redundant O(n) brute-force viewport filter. Single code path through spatial index.
+4. **groupDragOffset to dragOffsetStore (1.4)** — Multi-select drag re-renders: O(visible) → O(selected) per frame. 500 visible × 60fps = 30K → ~5 selected × 60fps = 300 re-renders/sec.
+
+### Phase 2 Results (Perceived Speed)
+
+1. **Hover prefetch chunks (2.1)** — `onMouseEnter` on sidebar tabs triggers `import()` for AIChatPanel and PropertyInspector. Eliminates 100-300ms chunk-load delay.
+2. **Skeleton shell (2.2)** — Board loading shows full chrome layout (header, toolbar, sidebar, canvas shimmer) instead of spinner. Zero CLS.
+3. **Board data prefetch (2.3)** — `prefetchBoard()` fires Firestore subscription on sidebar hover. Consumes cached snapshot on navigation for instant board render.
+4. **Lazy route boundaries (2.4)** — Deferred. Vite already code-splits heavy deps (firebase, konva, openai) via `manualChunks`. Additional route splitting yields marginal gain for the architectural cost.
+
+### Phase 3 Results (Data Path)
+
+1. **Incremental Firestore sync (3.1)** — Initial snapshot uses `setAll()` (O(n) once). Incremental changes use per-object `setObject()`/`deleteObject()` — O(1) spatial index update per change. 5.9× speedup measured.
+2. **Eliminate visibleObjects prop cascade (3.2)** — `useAlignmentGuideCache` and `ConnectionNodesLayer` now read from Zustand store via IDs. Re-compute only when visible set changes, not on any object mutation. Removed dead `visibleObjects` derivation from BoardCanvas.
+3. **Modulepreload hints (3.3)** — Already handled by Vite default behavior. Build output confirms `<link rel="modulepreload">` for firebase, konva, vendor, firebase-rtdb.
+4. **Optimistic creation audit (3.4)** — **Finding: creation is blocking.** `objectService.createObject()` awaits Firestore `setDoc()` before returning. Draw handlers in BoardCanvas `await` this. The sticky/text click handlers use `.then()` (non-blocking) but shapes still don't render until remote write completes. **Recommendation:** Implement true optimistic creation in a follow-up PR — generate object locally, update state synchronously, fire write in background, rollback on failure.
+5. **Idle prefetch (3.5)** — `requestIdleCallback` prefetches AIChatPanel and PropertyInspector chunks after board mount. Falls back to `setTimeout(2000)` for browsers without `requestIdleCallback`.
+
+### Remaining Opportunities (Phase 4 — Deferred)
+
+| Item | Expected Impact | Difficulty |
+| ---- | --------------- | ---------- |
+| Optimistic object creation | Zero-frame-delay creation under all network conditions | Medium |
+| Full route code splitting | Auth TTI: ~500KB parsed (currently ~1.1MB) | High |
+| Imperative multi-select drag | O(0) React cost during drag (Konva-native) | High |
+
+### Files Changed
+
+- `src/lib/ai.ts` — Dynamic OpenAI import
+- `src/modules/ai/aiService.ts` — Async `getAIClient()` calls
+- `src/components/canvas/shapes/Frame.tsx` — Memoized selector
+- `src/stores/dragOffsetStore.ts` — Added `groupDragOffset` state
+- `src/components/canvas/BoardCanvas.tsx` — Removed useVisibleShapes, groupDragOffset to store, prop cascade cleanup
+- `src/components/canvas/StoreShapeRenderer.tsx` — Conditional group drag subscription
+- `src/components/board/RightSidebar.tsx` — Hover prefetch for sidebar tabs
+- `src/App.tsx` — Skeleton shell, idle prefetch
+- `src/lib/boardPrefetch.ts` — NEW: Board data prefetch on hover
+- `src/components/board/BoardListSidebar.tsx` — Hover prefetch integration
+- `src/hooks/useObjects.ts` — Prefetch consumption, incremental sync
+- `src/hooks/useAlignmentGuideCache.ts` — Store-based ID lookup
+- `src/components/canvas/ConnectionNodesLayer.tsx` — Store-based ID lookup
+- `src/hooks/useVisibleShapes.ts` — DELETED (redundant)
+- `tests/unit/useVisibleShapes.test.ts` — DELETED
+- `tests/unit/uxPerfBaseline.test.ts` — Performance benchmarks
+- `tests/unit/aiService.test.ts` — Updated mocks for async getAIClient
+- `tests/unit/ConnectionNodesLayer.test.tsx` — Updated for new store-based API
+- `tests/unit/BoardCanvas.interactions.test.tsx` — Updated mock for shapeIds prop
