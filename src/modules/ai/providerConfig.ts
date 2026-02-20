@@ -8,7 +8,7 @@ export const AI_PROVIDER_GEMINI = 'gemini';
 export const AI_PROVIDER_GROQ = 'groq';
 
 /** Default model IDs per provider. Change here to switch models. */
-export const AI_MODEL_GEMINI = 'gemini-2.0-flash';
+export const AI_MODEL_GEMINI = 'gemini-2.5-flash';
 export const AI_MODEL_GROQ = 'llama-3.3-70b-versatile';
 
 export type AIProviderId = typeof AI_PROVIDER_GEMINI | typeof AI_PROVIDER_GROQ;

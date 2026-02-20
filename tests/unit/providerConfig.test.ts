@@ -50,7 +50,7 @@ describe('providerConfig', () => {
   });
 
   describe('getModelForProvider', () => {
-    it('returns gemini-2.0-flash for gemini', () => {
+    it('returns gemini-2.5-flash for gemini', () => {
       expect(getModelForProvider(AI_PROVIDER_GEMINI)).toBe(AI_MODEL_GEMINI);
     });
 
