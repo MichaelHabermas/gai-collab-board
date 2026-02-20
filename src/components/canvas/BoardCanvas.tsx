@@ -193,6 +193,8 @@ export const BoardCanvas = memo(
     const pendingPointerRef = useRef<IPosition | null>(null);
     const pointerFrameRef = useRef<number | null>(null);
     const viewportPersistTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    /** Tracks whether spatial index dragging exemption has been set for the current individual shape drag. */
+    const dragExemptionSetRef = useRef(false);
 
     const {
       viewport: persistedViewport,
@@ -922,6 +924,9 @@ export const BoardCanvas = memo(
             onObjectsUpdate(updates);
           }
 
+          spatialIndex.clearDragging();
+          dragExemptionSetRef.current = false;
+
           return;
         }
 
@@ -960,6 +965,8 @@ export const BoardCanvas = memo(
               batchUpdates.push({ objectId: childId, updates: { x: cx, y: cy } });
             }
             onObjectsUpdate(batchUpdates);
+            spatialIndex.clearDragging();
+            dragExemptionSetRef.current = false;
 
             return;
           }
@@ -1017,6 +1024,9 @@ export const BoardCanvas = memo(
                     },
                   },
                 ]);
+                spatialIndex.clearDragging();
+                dragExemptionSetRef.current = false;
+
                 return;
               }
             }
@@ -1024,6 +1034,10 @@ export const BoardCanvas = memo(
         }
 
         onObjectUpdate?.(objectId, singleUpdates);
+
+        // Phase 3: clear spatial index drag exemption now that positions are committed
+        spatialIndex.clearDragging();
+        dragExemptionSetRef.current = false;
       },
       [onObjectUpdate, onObjectsUpdate, snapToGridEnabled, selectedIds, objectsById, objects]
     );
@@ -1044,8 +1058,21 @@ export const BoardCanvas = memo(
       (bounds: { x1: number; y1: number; x2: number; y2: number }) => {
         setAlignmentGuides(null);
         selectionDragBoundsRef.current = bounds;
+
+        // Phase 3: mark all selected (+ frame children) as dragging in spatial index
+        const dragIds = new Set<string>(selectedIds);
+        const childIndex = useObjectsStore.getState().frameChildrenIndex;
+        for (const sid of selectedIds) {
+          const obj = objectsById.get(sid);
+          if (obj?.type === 'frame') {
+            const children = childIndex.get(sid);
+            if (children) for (const cid of children) dragIds.add(cid);
+          }
+        }
+
+        spatialIndex.setDragging(dragIds);
       },
-      []
+      [selectedIds, objectsById]
     );
 
     const handleSelectionDragMove = useCallback((e: IKonvaDragEvent) => {
@@ -1067,6 +1094,7 @@ export const BoardCanvas = memo(
       if (!b || !onObjectsUpdate) {
         selectionDragBoundsRef.current = null;
         setGroupDragOffset(null);
+        spatialIndex.clearDragging();
 
         return;
       }
@@ -1147,6 +1175,7 @@ export const BoardCanvas = memo(
 
       selectionDragBoundsRef.current = null;
       setGroupDragOffset(null);
+      spatialIndex.clearDragging();
     }, [onObjectsUpdate, selectedIds, objectsById, snapToGridEnabled, objects, setGroupDragOffset]);
 
     // Throttle guide updates via RAF; ref used by drag handler so it sees latest setter without effect.
@@ -1302,6 +1331,35 @@ export const BoardCanvas = memo(
 
         const objectId = e.target.id?.() ?? e.target.name?.();
         if (objectId && typeof objectId === 'string') {
+          // Phase 3: mark dragging objects in spatial index on first move so
+          // viewport culling never drops them while positions are stale.
+          if (!dragExemptionSetRef.current) {
+            dragExemptionSetRef.current = true;
+            const dragIds = new Set<string>();
+
+            if (selectedIds.size > 1 && selectedIds.has(objectId)) {
+              for (const sid of selectedIds) dragIds.add(sid);
+              // Include frame children that move with the selection
+              const childIndex = useObjectsStore.getState().frameChildrenIndex;
+              for (const sid of selectedIds) {
+                const selObj = objectsById.get(sid);
+                if (selObj?.type === 'frame') {
+                  const children = childIndex.get(sid);
+                  if (children) for (const cid of children) dragIds.add(cid);
+                }
+              }
+            } else {
+              dragIds.add(objectId);
+              const dragObj = objectsById.get(objectId);
+              if (dragObj?.type === 'frame') {
+                const children = useObjectsStore.getState().frameChildrenIndex.get(objectId);
+                if (children) for (const cid of children) dragIds.add(cid);
+              }
+            }
+
+            spatialIndex.setDragging(dragIds);
+          }
+
           const obj = objectsById.get(objectId);
           if (obj?.type === 'frame') {
             setFrameDragOffset({
@@ -1328,7 +1386,7 @@ export const BoardCanvas = memo(
           }
         }
       },
-      [objectsById, snapToGridEnabled, setFrameDragOffset, setDropTargetFrameId]
+      [objectsById, snapToGridEnabled, setFrameDragOffset, setDropTargetFrameId, selectedIds]
     );
 
     const onDragMoveProp = canEdit ? handleDragMove : undefined;
