@@ -200,6 +200,9 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
       }
 
       const nextObjects = applyIncrementalChanges(prevObjects, update.changes);
+      // Fallback: if incremental changes didn't mutate the array but the server
+      // snapshot has a different count, a change was missed (e.g. a deletion not
+      // captured in the change stream). Do a full refresh from the snapshot.
       if (nextObjects === prevObjects && update.objects.length !== prevObjects.length) {
         const refreshedObjects = update.objects.map((remoteObject) => {
           const pendingLocalObject = pendingUpdatesRef.current.get(remoteObject.id);
