@@ -47,6 +47,7 @@ export const CanvasShapeRenderer = memo(
     const circleDragBoundFunc = useMemo(() => {
       const boundFunc = getDragBoundFunc(obj.id, obj.width, obj.height);
       if (!boundFunc) return undefined;
+
       const halfW = obj.width / 2;
       const halfH = obj.height / 2;
 

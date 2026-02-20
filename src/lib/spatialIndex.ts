@@ -46,6 +46,7 @@ export class SpatialIndex {
           cell = new Set<string>();
           this.cells.set(key, cell);
         }
+
         cell.add(id);
       }
     }

@@ -45,6 +45,7 @@ const addToIndex = (index: Map<string, Set<string>>, key: string, id: string): v
     set = new Set<string>();
     index.set(key, set);
   }
+
   set.add(id);
 };
 
@@ -58,8 +59,10 @@ const buildIndexes = (objects: Record<string, IBoardObject>): IIndexes => {
     if (obj.parentFrameId) {
       addToIndex(frameChildrenIndex, obj.parentFrameId, id);
     }
+
     if (obj.type === 'connector') {
       if (obj.fromObjectId) addToIndex(connectorsByEndpoint, obj.fromObjectId, id);
+
       if (obj.toObjectId) addToIndex(connectorsByEndpoint, obj.toObjectId, id);
     }
   }

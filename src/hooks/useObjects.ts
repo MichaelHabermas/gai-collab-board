@@ -78,7 +78,8 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
   const setPending = useCallback((id: string, obj: IBoardObject) => {
     pendingUpdatesRef.current.set(id, obj);
     const prev = pendingTimeoutsRef.current.get(id);
-    if (prev !== undefined) clearTimeout(prev);
+    if (prev) clearTimeout(prev);
+
     pendingTimeoutsRef.current.set(
       id,
       setTimeout(() => {
@@ -91,7 +92,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
   const clearPending = useCallback((id: string) => {
     pendingUpdatesRef.current.delete(id);
     const t = pendingTimeoutsRef.current.get(id);
-    if (t !== undefined) {
+    if (t) {
       clearTimeout(t);
       pendingTimeoutsRef.current.delete(id);
     }

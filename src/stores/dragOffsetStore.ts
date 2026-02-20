@@ -37,7 +37,9 @@ export const selectFrameOffset =
   (parentFrameId: string | undefined) =>
   (state: IDragOffsetStore): IFrameDragOffset | null => {
     if (!parentFrameId) return null;
+
     if (state.frameDragOffset?.frameId !== parentFrameId) return null;
+
     return state.frameDragOffset;
   };
 

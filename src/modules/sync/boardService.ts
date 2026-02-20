@@ -103,10 +103,12 @@ export const updateBoardName = async (
   await runTransaction(firestore, async (tx) => {
     const snap = await tx.get(boardRef);
     if (!snap.exists()) throw new Error('Board not found');
+
     const board = snap.data() as IBoard;
     if (!canUserManage(board, userId)) {
       throw new Error('Only the board owner can rename the board');
     }
+
     tx.update(boardRef, { name, updatedAt: Timestamp.now() });
   });
 };
@@ -120,6 +122,7 @@ export const addBoardMember = async (
   await runTransaction(firestore, async (tx) => {
     const snap = await tx.get(boardRef);
     if (!snap.exists()) throw new Error('Board not found');
+
     const board = snap.data() as IBoard;
     const updatedMembers = { ...board.members, [userId]: role };
     tx.update(boardRef, { members: updatedMembers, updatedAt: Timestamp.now() });
@@ -131,10 +134,12 @@ export const removeBoardMember = async (boardId: string, userId: string): Promis
   await runTransaction(firestore, async (tx) => {
     const snap = await tx.get(boardRef);
     if (!snap.exists()) throw new Error('Board not found');
+
     const board = snap.data() as IBoard;
     if (board.ownerId === userId) {
       throw new Error('Cannot remove the owner from the board');
     }
+
     const remainingMembers = { ...board.members };
     delete remainingMembers[userId];
     tx.update(boardRef, { members: remainingMembers, updatedAt: Timestamp.now() });
@@ -150,10 +155,12 @@ export const updateMemberRole = async (
   await runTransaction(firestore, async (tx) => {
     const snap = await tx.get(boardRef);
     if (!snap.exists()) throw new Error('Board not found');
+
     const board = snap.data() as IBoard;
     if (board.ownerId === userId && role !== 'owner') {
       throw new Error("Cannot change the owner's role");
     }
+
     const updatedMembers = { ...board.members, [userId]: role };
     tx.update(boardRef, { members: updatedMembers, updatedAt: Timestamp.now() });
   });
@@ -164,10 +171,12 @@ export const deleteBoard = async (boardId: string, userId: string): Promise<void
   await runTransaction(firestore, async (tx) => {
     const snap = await tx.get(boardRef);
     if (!snap.exists()) throw new Error('Board not found');
+
     const board = snap.data() as IBoard;
     if (!canUserManage(board, userId)) {
       throw new Error('Only the board owner can delete the board');
     }
+
     tx.delete(boardRef);
   });
 };
