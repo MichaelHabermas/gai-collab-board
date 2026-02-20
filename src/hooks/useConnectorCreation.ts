@@ -30,9 +30,7 @@ export function useConnectorCreation({
 }: IUseConnectorCreationParams): IUseConnectorCreationReturn {
   const [connectorFrom, setConnectorFrom] = useState<IConnectorFrom | null>(null);
 
-  const clearConnector = useCallback(() => {
-    setConnectorFrom(null);
-  }, []);
+  const clearConnector = () => setConnectorFrom(null);
 
   const handleConnectorNodeClick = useCallback(
     (shapeId: string, anchor: ConnectorAnchor) => {

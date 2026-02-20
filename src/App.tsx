@@ -1,13 +1,4 @@
-import {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  lazy,
-  memo,
-  Suspense,
-  type ReactElement,
-} from 'react';
+import { useState, useRef, useCallback, lazy, memo, Suspense, type ReactElement } from 'react';
 import { useParams, useNavigate, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/modules/auth';
 import { AuthPage } from '@/components/auth/AuthPage';
@@ -20,17 +11,17 @@ import { LogOut, Loader2, Share2, Sun, Moon, Pencil, PanelLeft } from 'lucide-re
 import { BoardCanvas } from '@/components/canvas/BoardCanvas';
 import { useObjects } from '@/hooks/useObjects';
 import { useAI } from '@/hooks/useAI';
+import { useBoardSubscription } from '@/hooks/useBoardSubscription';
+import { useBoardAutoJoin } from '@/hooks/useBoardAutoJoin';
+import { useSidebarPrefetch } from '@/hooks/useSidebarPrefetch';
+import { useResolveActiveBoard } from '@/hooks/useResolveActiveBoard';
+import { useRecentBoardUpdate } from '@/hooks/useRecentBoardUpdate';
 import {
   createBoard,
-  subscribeToBoard,
-  subscribeToUserBoards,
   canUserEdit,
   canUserManage,
-  addBoardMember,
   updateBoardName,
 } from '@/modules/sync/boardService';
-import { updateRecentBoardIds, getUserPreferences } from '@/modules/sync/userPreferencesService';
-import { getActiveBoardId } from '@/lib/activeBoard';
 import { ConnectionStatus } from '@/components/ui/ConnectionStatus';
 import { PresenceAvatars } from '@/components/presence/PresenceAvatars';
 import { usePresence } from '@/hooks/usePresence';
@@ -57,7 +48,7 @@ import { useHistory } from '@/hooks/useHistory';
 const PropertyInspector = lazy(() =>
   import('@/components/canvas/PropertyInspector').then((m) => ({ default: m.PropertyInspector }))
 );
-import type { IBoard, IUserPreferences } from '@/types';
+import type { IBoard } from '@/types';
 
 interface IBoardViewProps {
   boardId: string;
@@ -79,11 +70,19 @@ const BoardView = memo(function BoardView({
   skipAutoJoinBoardIdRef,
 }: IBoardViewProps): ReactElement {
   const { user, signOut } = useAuth();
-  const [board, setBoard] = useState<IBoard | null>(null);
-  const [boardLoading, setBoardLoading] = useState(true);
+  const { board, boardLoading } = useBoardSubscription(boardId);
   const [headerRenameOpen, setHeaderRenameOpen] = useState(false);
   const [headerRenameName, setHeaderRenameName] = useState<string>('');
   const joinedBoardIdsRef = useRef<Set<string>>(new Set());
+
+  useBoardAutoJoin({
+    board,
+    user,
+    boardId,
+    joinedBoardIdsRef,
+    skipAutoJoinBoardIdRef,
+  });
+  useSidebarPrefetch();
 
   const {
     objects,
@@ -119,53 +118,6 @@ const BoardView = memo(function BoardView({
     : [];
   const { sidebarTab, setSidebarTab, sidebarCollapsed, setSidebarCollapsed } =
     useBoardSettings(boardId);
-
-  // Subscribe to board data
-  useEffect(() => {
-    if (!boardId) return;
-
-    const unsubscribe = subscribeToBoard(boardId, (boardData) => {
-      setBoard(boardData);
-      setBoardLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [boardId]);
-
-  // When opening a board the user is not a member of, add them as viewer
-  useEffect(() => {
-    if (skipAutoJoinBoardIdRef?.current === boardId) {
-      skipAutoJoinBoardIdRef.current = null;
-      return;
-    }
-
-    if (!board || !user || user.uid in board.members || joinedBoardIdsRef.current.has(boardId)) {
-      return;
-    }
-
-    joinedBoardIdsRef.current.add(boardId);
-    addBoardMember(boardId, user.uid, 'viewer').catch(() => {
-      joinedBoardIdsRef.current.delete(boardId);
-    });
-  }, [board, user, boardId, skipAutoJoinBoardIdRef]);
-
-  // Prefetch heavy sidebar chunks during idle time after board mount.
-  useEffect(() => {
-    const prefetch = (): void => {
-      void import('@/components/ai/AIChatPanel');
-      void import('@/components/canvas/PropertyInspector');
-    };
-
-    if ('requestIdleCallback' in window) {
-      const id = window.requestIdleCallback(prefetch);
-
-      return () => window.cancelIdleCallback(id);
-    }
-
-    const id = setTimeout(prefetch, 2000);
-
-    return () => clearTimeout(id);
-  }, []);
 
   if (!user) return <div />;
 
@@ -432,51 +384,8 @@ const BoardView = memo(function BoardView({
 });
 
 const ResolveActiveBoardRoute = (): ReactElement => {
-  const navigate = useNavigate();
   const { user } = useAuth();
-  const [preferences, setPreferences] = useState<IUserPreferences | null>(null);
-  const [boards, setBoards] = useState<IBoard[] | null>(null);
-  const navigatedRef = useRef(false);
-
-  useEffect(() => {
-    if (!user) return;
-
-    getUserPreferences(user.uid).then(setPreferences);
-    const unsubscribe = subscribeToUserBoards(user.uid, (boardList) => {
-      setBoards(boardList);
-    });
-    return () => unsubscribe();
-  }, [user]);
-
-  useEffect(() => {
-    if (!preferences || !boards || !user || navigatedRef.current) {
-      return;
-    }
-
-    const activeId = getActiveBoardId(boards, preferences, user.uid);
-    navigatedRef.current = true;
-
-    if (activeId) {
-      navigate(`/board/${activeId}`, { replace: true });
-      return;
-    }
-
-    if (boards.length === 0) {
-      createBoard({ name: 'Untitled Board', ownerId: user.uid })
-        .then((board) => {
-          navigate(`/board/${board.id}`, { replace: true });
-        })
-        .catch(() => {
-          navigatedRef.current = false;
-        });
-      return;
-    }
-
-    const firstBoard = boards[0];
-    if (firstBoard) {
-      navigate(`/board/${firstBoard.id}`, { replace: true });
-    }
-  }, [preferences, boards, user, navigate]);
+  useResolveActiveBoard(user);
 
   return (
     <div className='min-h-screen flex items-center justify-center bg-background'>
@@ -496,16 +405,7 @@ const BoardViewRoute = (): ReactElement => {
   const { theme, toggleTheme } = useTheme();
   const lastLeftBoardIdRef = useRef<string | null>(null);
 
-  // Update recent boards when user opens a board (navigates to it)
-  useEffect(() => {
-    if (!user || !boardId) {
-      return;
-    }
-
-    updateRecentBoardIds(user.uid, boardId).catch(() => {
-      // Non-blocking; preferences update failure should not break the app
-    });
-  }, [user, boardId]);
+  useRecentBoardUpdate(user, boardId);
 
   const handleSelectBoard = useCallback(
     (id: string) => {

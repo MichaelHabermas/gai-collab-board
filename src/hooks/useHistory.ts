@@ -3,6 +3,7 @@ import type { IBoardObject } from '@/types';
 import type { IUpdateObjectParams } from '@/modules/sync/objectService';
 import { useHistoryStore } from '@/stores/historyStore';
 import { executeUndo, executeRedo } from '@/modules/history/historyService';
+import { useHistoryRefSync } from '@/hooks/useHistoryRefSync';
 
 interface IUseHistoryParams {
   objects: IBoardObject[];
@@ -49,14 +50,22 @@ export const useHistory = ({
   const canUndo = useHistoryStore((s) => s.canUndo);
   const canRedo = useHistoryStore((s) => s.canRedo);
 
-  // Keep a ref to the latest objects for snapshot lookups during callbacks.
   const objectsRef = useRef<IBoardObject[]>(objects);
+  const rawCreateRef = useRef(createObject);
+  const rawUpdateRef = useRef(updateObject);
+  const rawDeleteRef = useRef(deleteObject);
 
-  useEffect(() => {
-    objectsRef.current = objects;
-  }, [objects]);
+  useHistoryRefSync(
+    objects,
+    createObject,
+    updateObject,
+    deleteObject,
+    objectsRef,
+    rawCreateRef,
+    rawUpdateRef,
+    rawDeleteRef
+  );
 
-  // Clear history on board switch.
   useEffect(() => {
     clearHistory();
   }, [boardId, clearHistory]);
@@ -97,17 +106,6 @@ export const useHistory = ({
     },
     [deleteObject, push]
   );
-
-  // Refs for the underlying raw functions (non-history-wrapped) used by undo/redo execution.
-  const rawCreateRef = useRef(createObject);
-  const rawUpdateRef = useRef(updateObject);
-  const rawDeleteRef = useRef(deleteObject);
-
-  useEffect(() => {
-    rawCreateRef.current = createObject;
-    rawUpdateRef.current = updateObject;
-    rawDeleteRef.current = deleteObject;
-  }, [createObject, updateObject, deleteObject]);
 
   const undo = useCallback(() => {
     const entry = undoFromStore();

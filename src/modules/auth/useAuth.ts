@@ -74,9 +74,7 @@ export const useAuth = (): IUseAuthReturn => {
     await logOut();
   }, []);
 
-  const clearError = useCallback(() => {
-    setError('');
-  }, []);
+  const clearError = () => setError('');
 
   return {
     user,

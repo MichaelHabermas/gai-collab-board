@@ -44,8 +44,11 @@ export const useComments = ({ boardId }: UseCommentsParams): UseCommentsResult =
     return () => unsubscribe();
   }, [boardId]);
 
-  const effectiveComments =
-    subscriptionData && subscriptionData.boardId === boardId ? subscriptionData.comments : [];
+  const effectiveComments = useMemo(
+    () =>
+      subscriptionData && subscriptionData.boardId === boardId ? subscriptionData.comments : [],
+    [boardId, subscriptionData]
+  );
   const effectiveLoading = Boolean(
     boardId && (!subscriptionData || subscriptionData.boardId !== boardId)
   );

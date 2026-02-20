@@ -40,6 +40,8 @@ vi.mock('react-konva', () => ({
     return <div>{props.children as ReactNode}</div>;
   },
   Line: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
+  Group: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
+  Shape: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
 }));
 
 vi.mock('@/components/canvas/shapes', () => {

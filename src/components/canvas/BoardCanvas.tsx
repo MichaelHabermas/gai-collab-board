@@ -18,6 +18,7 @@ import { useMarqueeSelection } from '@/hooks/useMarqueeSelection';
 import { useObjectDragHandlers } from '@/hooks/useObjectDragHandlers';
 
 import { useBatchDraw } from '@/hooks/useBatchDraw';
+import { useBoardCanvasRefSync } from '@/hooks/useBoardCanvasRefSync';
 import { useSelectionStore } from '@/stores/selectionStore';
 import { useObjectsStore } from '@/stores/objectsStore';
 import type { User } from 'firebase/auth';
@@ -186,9 +187,7 @@ export const BoardCanvas = memo(
       [theme]
     );
 
-    useEffect(() => {
-      objectsRef.current = objects;
-    }, [objects]);
+    useBoardCanvasRefSync(objects, activeTool, objectsRef, activeToolRef);
 
     const handleViewportPersist = useCallback(
       (nextViewport: IViewportState) => {
@@ -302,11 +301,6 @@ export const BoardCanvas = memo(
       () => Object.keys(activeCursors).some((cursorId) => cursorId !== user.uid),
       [activeCursors, user.uid]
     );
-
-    // Keep event-driven refs synced with render state (effect required; ref assignment during render is disallowed).
-    useEffect(() => {
-      activeToolRef.current = activeTool;
-    }, [activeTool]);
 
     useCanvasKeyboardShortcuts({
       setActiveTool,

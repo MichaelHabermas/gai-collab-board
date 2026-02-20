@@ -132,9 +132,7 @@ export const Frame = memo(
       const resolvedStrokeWidth = isSelected || isDropTarget ? 2 : strokeWidth;
 
       // ── Hover handlers ──────────────────────────────────────────
-      const handleMouseEnter = useCallback(() => {
-        setIsHovered(true);
-      }, []);
+      const handleMouseEnter = () => setIsHovered(true);
 
       const handleMouseLeave = useCallback(() => {
         setIsHovered(false);

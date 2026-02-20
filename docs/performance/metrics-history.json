@@ -691,6 +691,38 @@
       "cursor_latency_ms": 22,
       "object_update_latency_ms": 22,
       "batch_500_objects_ms": 63
+    },
+    {
+      "date": "2026-02-20",
+      "timestamp": "2026-02-20T18:49:23.051Z",
+      "timestamp_ms": 1771613363051,
+      "cursor_latency_ms": 14,
+      "object_update_latency_ms": 27,
+      "batch_500_objects_ms": 61
+    },
+    {
+      "date": "2026-02-20",
+      "timestamp": "2026-02-20T19:03:26.481Z",
+      "timestamp_ms": 1771614206481,
+      "cursor_latency_ms": 14,
+      "object_update_latency_ms": 22,
+      "batch_500_objects_ms": 60
+    },
+    {
+      "date": "2026-02-20",
+      "timestamp": "2026-02-20T19:08:22.032Z",
+      "timestamp_ms": 1771614502032,
+      "cursor_latency_ms": 19,
+      "object_update_latency_ms": 18,
+      "batch_500_objects_ms": 59
+    },
+    {
+      "date": "2026-02-20",
+      "timestamp": "2026-02-20T19:10:41.836Z",
+      "timestamp_ms": 1771614641836,
+      "cursor_latency_ms": 18,
+      "object_update_latency_ms": 24,
+      "batch_500_objects_ms": 50
     }
   ]
 }

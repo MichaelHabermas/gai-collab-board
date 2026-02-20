@@ -452,6 +452,7 @@ export const PropertyInspector = memo(function PropertyInspector({
     selectedObjects.forEach((obj) => {
       if (supportsFill(obj.type)) {
         queueUpdate(obj.id, { fill: value });
+        void onObjectUpdate(obj.id, { fill: value });
       }
     });
   };
@@ -507,6 +508,7 @@ export const PropertyInspector = memo(function PropertyInspector({
       const updates: IUpdateObjectParams =
         obj.type === 'sticky' ? { textFill: value } : { fill: value };
       queueUpdate(obj.id, updates);
+      void onObjectUpdate(obj.id, updates);
     });
   };
 
@@ -519,6 +521,7 @@ export const PropertyInspector = memo(function PropertyInspector({
     const opacity = num / 100;
     selectedObjects.forEach((obj) => {
       queueUpdate(obj.id, { opacity });
+      void onObjectUpdate(obj.id, { opacity });
     });
   };
 

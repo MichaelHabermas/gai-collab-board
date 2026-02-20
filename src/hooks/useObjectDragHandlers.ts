@@ -28,6 +28,7 @@ import {
 import { getWidthHeightFromPoints } from '@/lib/lineTransform';
 import { resolveParentFrameIdFromFrames, findContainingFrame } from '@/hooks/useFrameContainment';
 import { useAlignmentGuideCache } from '@/hooks/useAlignmentGuideCache';
+import { useObjectDragHandlersRefSync } from '@/hooks/useObjectDragHandlersRefSync';
 import { perfTime } from '@/lib/perfTimer';
 import { queueWrite } from '@/lib/writeQueue';
 
@@ -109,12 +110,6 @@ export function useObjectDragHandlers(
   const setGroupDragOffset = useDragOffsetStore((s) => s.setGroupDragOffset);
   const clearDragState = useDragOffsetStore((s) => s.clearDragState);
 
-  // --- Cache frames list so we don't re-filter on every mousemove ---
-  useEffect(() => {
-    framesRef.current = objects.filter((o) => o.type === 'frame');
-  }, [objects]);
-
-  // --- Alignment guides throttling ---
   const alignmentGuidesRafIdRef = useRef<number>(0);
   const setGuidesThrottledRef = useRef<(g: IAlignmentGuides) => void>(() => {});
   const setGuidesThrottled = useCallback((guides: IAlignmentGuides) => {
@@ -129,9 +124,7 @@ export function useObjectDragHandlers(
     });
   }, []);
 
-  useEffect(() => {
-    setGuidesThrottledRef.current = setGuidesThrottled;
-  }, [setGuidesThrottled]);
+  useObjectDragHandlersRefSync(objects, framesRef, setGuidesThrottled, setGuidesThrottledRef);
 
   // --- Alignment guide cache ---
   const { guideCandidateBoundsRef, dragBoundFuncCacheRef } = useAlignmentGuideCache({

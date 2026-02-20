@@ -50,6 +50,8 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
   // Wrapper: updates React state and defers Zustand store sync to the next microtask.
   // Zustand mutations inside a setState updater trigger subscriber re-renders during
   // React's render phase → "Cannot update BoardCanvas while rendering BoardView2".
+  // useCallback required for stable identity (used in useEffect/useCallback deps elsewhere).
+  // eslint-disable-next-line local/no-unnecessary-use-callback -- stable identity required by react-hooks/exhaustive-deps
   const setObjects = useCallback((updater: SetStateAction<IBoardObject[]>) => {
     setObjectsRaw((prev) => {
       const next = typeof updater === 'function' ? updater(prev) : updater;

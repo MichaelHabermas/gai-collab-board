@@ -115,8 +115,8 @@ export const useAI = ({ boardId, user, objects }: IUseAIParams): IUseAIReturn =>
     }
   }, []);
 
-  const clearError = useCallback(() => setError(''), []);
-  const clearMessages = useCallback(() => setMessages([]), []);
+  const clearError = () => setError('');
+  const clearMessages = () => setMessages([]);
 
   return {
     processCommand,

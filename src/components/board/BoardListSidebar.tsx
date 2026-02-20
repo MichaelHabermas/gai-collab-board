@@ -93,10 +93,10 @@ export const BoardListSidebar = memo(
       });
     };
 
-    const handleOpenCreateDialog = useCallback(() => {
+    const handleOpenCreateDialog = () => {
       setCreateBoardName('Untitled Board');
       setCreateDialogOpen(true);
-    }, []);
+    };
 
     const handleCreateNew = useCallback(async () => {
       setCreating(true);

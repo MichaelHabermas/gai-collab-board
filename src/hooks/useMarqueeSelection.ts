@@ -43,13 +43,13 @@ export function useMarqueeSelection(): IUseMarqueeSelectionReturn {
     });
   }, []);
 
-  const onMarqueeMove = useCallback((coords: IPosition) => {
+  const onMarqueeMove = (coords: IPosition) => {
     setSelectionRect((prev) => ({
       ...prev,
       x2: coords.x,
       y2: coords.y,
     }));
-  }, []);
+  };
 
   const onMarqueeEnd = useCallback(
     (

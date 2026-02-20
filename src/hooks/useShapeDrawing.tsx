@@ -58,13 +58,13 @@ export function useShapeDrawing(): IUseShapeDrawingReturn {
     drawingActiveRef.current = true;
   }, []);
 
-  const onDrawMove = useCallback((coords: IPosition) => {
+  const onDrawMove = (coords: IPosition) => {
     setDrawingState((prev) => ({
       ...prev,
       currentX: coords.x,
       currentY: coords.y,
     }));
-  }, []);
+  };
 
   const resetDrawing = useCallback(() => {
     setDrawingState(INITIAL_DRAWING_STATE);

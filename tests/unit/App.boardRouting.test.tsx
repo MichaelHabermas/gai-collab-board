@@ -5,7 +5,7 @@
  * - No hardcoded default board IDs in the codebase
  */
 import { describe, it, expect } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import type { ReactElement } from 'react';
 import { Timestamp } from 'firebase/firestore';
@@ -99,7 +99,9 @@ describe('Leave board navigation', () => {
 
     expect(screen.getByTestId('leave-btn')).toBeInTheDocument();
 
-    screen.getByTestId('leave-btn').click();
+    await act(async () => {
+      screen.getByTestId('leave-btn').click();
+    });
 
     await waitFor(() => {
       expect(screen.getByTestId('root')).toBeInTheDocument();

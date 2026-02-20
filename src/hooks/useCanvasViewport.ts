@@ -1,5 +1,8 @@
 import { useState, useCallback, useEffect, useRef, type RefObject } from 'react';
 import { computeViewportToFitBounds } from '@/lib/canvasBounds';
+import { useCanvasViewportResize } from '@/hooks/useCanvasViewportResize';
+import { useCanvasViewportThrottleCleanup } from '@/hooks/useCanvasViewportThrottleCleanup';
+import { useCanvasViewportPersistence } from '@/hooks/useCanvasViewportPersistence';
 import type {
   IPersistedViewport,
   IViewportPosition,
@@ -109,6 +112,16 @@ export const useCanvasViewport = (
   const throttleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastFlushRef = useRef<number>(0);
 
+  useCanvasViewportThrottleCleanup(throttleTimeoutRef);
+  useCanvasViewportPersistence(
+    viewport,
+    initialViewport,
+    onViewportChange,
+    viewportRef,
+    setViewport
+  );
+  useCanvasViewportResize(viewportRef, setViewport);
+
   const flushThrottledState = useCallback(() => {
     if (throttleTimeoutRef.current) {
       clearTimeout(throttleTimeoutRef.current);
@@ -136,75 +149,6 @@ export const useCanvasViewport = (
       flushThrottledState();
     }, VIEWPORT_THROTTLE_MS - elapsed);
   }, [flushThrottledState]);
-
-  useEffect(() => {
-    return () => {
-      if (throttleTimeoutRef.current) {
-        clearTimeout(throttleTimeoutRef.current);
-        throttleTimeoutRef.current = null;
-      }
-    };
-  }, []);
-
-  // Notify parent when viewport changes (for persistence). Skip initial mount and right after applying initialViewport.
-  const skipNextNotifyRef = useRef(true);
-  useEffect(() => {
-    if (skipNextNotifyRef.current) {
-      skipNextNotifyRef.current = false;
-      return;
-    }
-
-    onViewportChange?.(viewport);
-  }, [viewport, onViewportChange]);
-
-  // When initialViewport changes (e.g. board switch), reset viewport to the new initial and skip one notify
-  useEffect(() => {
-    if (!initialViewport) {
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setViewport((prev) => {
-        const isSameViewport =
-          prev.position.x === initialViewport.position.x &&
-          prev.position.y === initialViewport.position.y &&
-          prev.scale.x === initialViewport.scale.x &&
-          prev.scale.y === initialViewport.scale.y;
-
-        if (isSameViewport) {
-          return prev;
-        }
-
-        skipNextNotifyRef.current = true;
-        const next = {
-          ...prev,
-          position: initialViewport.position,
-          scale: initialViewport.scale,
-        };
-        viewportRef.current = next;
-        return next;
-      });
-    }, 0);
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [initialViewport]);
-
-  // Handle window resize; keep ref in sync with state.
-  useEffect(() => {
-    const handleResize = () => {
-      const next = {
-        ...viewportRef.current,
-        width: window.innerWidth,
-        height: window.innerHeight,
-      };
-      viewportRef.current = next;
-      setViewport(next);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   // Wheel: ctrl+wheel = zoom (macOS trackpad convention); wheel only = pan.
   const handleWheel = useCallback(
