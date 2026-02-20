@@ -49,3 +49,13 @@ vite.config.ts.timestamp-*
 .cursor/commands
 .cursor/plans
 .lbi
+
+# Windows reserved names (redirects like >nul can create these as files)
+nul
+con
+prn
+aux
+com1
+com2
+lpt1
+lpt2
