@@ -1,4 +1,3 @@
-import OpenAI from 'openai';
 import { getProviderFromEnv, getModelForProvider } from '@/modules/ai/providerConfig';
 
 /** Proxy base paths to avoid CORS and keep API key server-side. */
@@ -56,21 +55,22 @@ function getAIModel(): string {
   return getModelForProvider(provider);
 }
 
-export const createAIClient = (): OpenAI => {
-  const baseURL = getProxyBaseURL();
-  const apiKey = 'proxy'; /* Proxy injects the real key; client does not send it */
+/** Lazily-loaded OpenAI client singleton. The `openai` module (102KB) is
+ *  dynamically imported on first call so it never blocks the initial bundle. */
+let _aiClient: InstanceType<typeof import('openai').default> | null = null;
 
-  return new OpenAI({
-    apiKey,
-    baseURL,
-    dangerouslyAllowBrowser: true,
-    maxRetries: 0,
-  });
-};
+export const getAIClient = async (): Promise<InstanceType<typeof import('openai').default>> => {
+  if (!_aiClient) {
+    const { default: OpenAI } = await import('openai');
+    const baseURL = getProxyBaseURL();
 
-let _aiClient: OpenAI | null = null;
-export const getAIClient = (): OpenAI => {
-  if (!_aiClient) _aiClient = createAIClient();
+    _aiClient = new OpenAI({
+      apiKey: 'proxy', /* Proxy injects the real key; client does not send it */
+      baseURL,
+      dangerouslyAllowBrowser: true,
+      maxRetries: 0,
+    });
+  }
 
   return _aiClient;
 };

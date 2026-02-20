@@ -14,7 +14,7 @@ import { StoreShapeRenderer } from './StoreShapeRenderer';
 import { useCursors } from '@/hooks/useCursors';
 import { useVisibleShapeIds } from '@/hooks/useVisibleShapeIds';
 import { useCanvasOperations } from '@/hooks/useCanvasOperations';
-import { useVisibleShapes } from '@/hooks/useVisibleShapes';
+
 import { useBatchDraw } from '@/hooks/useBatchDraw';
 import { useSelectionStore } from '@/stores/selectionStore';
 import { useObjectsStore, spatialIndex } from '@/stores/objectsStore';
@@ -165,13 +165,16 @@ export const BoardCanvas = memo(
       x2: number;
       y2: number;
     } | null>(null);
-    const [groupDragOffset, setGroupDragOffset] = useState<{ dx: number; dy: number } | null>(null);
     const groupDragOffsetRef = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
-    // Frame drag offset and drop target live in Zustand (dragOffsetStore) to avoid
+    // Transient drag state lives in Zustand (dragOffsetStore) to avoid
     // re-rendering every visible shape on every mousemove.  We read the setters once
     // (stable refs) and never subscribe to the values in BoardCanvas itself.
     const setFrameDragOffset = useDragOffsetStore((s) => s.setFrameDragOffset);
     const setDropTargetFrameId = useDragOffsetStore((s) => s.setDropTargetFrameId);
+    const setGroupDragOffset = useDragOffsetStore((s) => s.setGroupDragOffset);
+    // Subscribe to groupDragOffset only for the selection rect and cursor — visibleObjectNodes
+    // useMemo no longer depends on it, so the O(n) JSX is never recreated during drag.
+    const groupDragOffset = useDragOffsetStore((s) => s.groupDragOffset);
     const clearDragState = useDragOffsetStore((s) => s.clearDragState);
     const [isHoveringSelectionHandle, setIsHoveringSelectionHandle] = useState(false);
     const [connectorFrom, setConnectorFrom] = useState<{
@@ -257,8 +260,6 @@ export const BoardCanvas = memo(
       boardName,
     });
 
-    // Filter objects to only visible ones (viewport culling)
-    const visibleObjects = useVisibleShapes({ objects, viewport });
     // Store-driven visible IDs for per-shape subscription render loop (A.5 optimization).
     // Already sorted with frames first (render order).
     const visibleShapeIds = useVisibleShapeIds(viewport);
@@ -266,6 +267,14 @@ export const BoardCanvas = memo(
     const objectsById = useMemo(
       () => new Map(objects.map((object) => [object.id, object])),
       [objects]
+    );
+
+    // Derive visible objects from spatial-indexed IDs + object lookup (single code path)
+    const visibleObjects = useMemo(
+      () => visibleShapeIds
+        .map((id) => objectsById.get(id))
+        .filter((o): o is IBoardObject => o != null),
+      [visibleShapeIds, objectsById]
     );
 
     // Linked connectors are excluded from transform (selectable for deletion only)
@@ -1408,7 +1417,6 @@ export const BoardCanvas = memo(
             id={id}
             canEdit={canEdit}
             selectionColor={selectionColor}
-            groupDragOffset={groupDragOffset}
             onEnterFrame={handleEnterFrame}
             getSelectHandler={getSelectHandler}
             getDragEndHandler={getDragEndHandler}
@@ -1423,7 +1431,6 @@ export const BoardCanvas = memo(
         visibleShapeIds,
         canEdit,
         selectionColor,
-        groupDragOffset,
         handleEnterFrame,
         getSelectHandler,
         getDragEndHandler,

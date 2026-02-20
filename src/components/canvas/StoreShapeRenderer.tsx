@@ -1,7 +1,12 @@
 import { memo, useMemo, type ReactElement } from 'react';
 import { useObjectsStore, selectObject } from '@/stores/objectsStore';
 import { useSelectionStore } from '@/stores/selectionStore';
-import { useDragOffsetStore, selectFrameOffset, selectIsDropTarget } from '@/stores/dragOffsetStore';
+import {
+  useDragOffsetStore,
+  selectFrameOffset,
+  selectIsDropTarget,
+  selectGroupDragOffset,
+} from '@/stores/dragOffsetStore';
 import { CanvasShapeRenderer } from './CanvasShapeRenderer';
 import type { IBoardObject, IKonvaDragEvent } from '@/types';
 import type { IGroupDragOffset } from '@/types/canvas';
@@ -12,7 +17,6 @@ interface IStoreShapeRendererProps {
   id: string;
   canEdit: boolean;
   selectionColor: string;
-  groupDragOffset?: IGroupDragOffset | null;
   onEnterFrame?: (frameId: string) => void;
   getSelectHandler: (id: string) => () => void;
   getDragEndHandler: (id: string) => (x: number, y: number) => void;
@@ -36,7 +40,6 @@ export const StoreShapeRenderer = memo(
     id,
     canEdit,
     selectionColor,
-    groupDragOffset,
     onEnterFrame,
     getSelectHandler,
     getDragEndHandler,
@@ -49,6 +52,12 @@ export const StoreShapeRenderer = memo(
     // Per-shape subscription: only re-renders when THIS object changes.
     const object = useObjectsStore(selectObject(id));
     const isSelected = useSelectionStore((s) => s.selectedIds.has(id));
+
+    // Only selected shapes subscribe to group drag offset — unselected shapes
+    // never re-render during multi-select drag. O(selected) instead of O(visible).
+    const groupDragOffset = useDragOffsetStore(
+      isSelected ? selectGroupDragOffset : _selectNullGroupOffset
+    );
 
     if (!object) return null;
 
@@ -134,3 +143,6 @@ CanvasShapeRendererWithConnectorLookup.displayName = 'CanvasShapeRendererWithCon
 
 /** Stable selector that always returns undefined (avoids creating a new function per render). */
 const _selectUndefined = (): undefined => undefined;
+
+/** Stable selector returning null for unselected shapes (avoids group drag offset subscription). */
+const _selectNullGroupOffset = (): null => null;

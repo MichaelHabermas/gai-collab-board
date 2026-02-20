@@ -99,8 +99,8 @@ export class AIService {
     ];
 
     const response = await this.throttledRequest(() =>
-      this.withRetry(() =>
-        getAIClient().chat.completions.create(
+      this.withRetry(async () =>
+        (await getAIClient()).chat.completions.create(
           {
             model: AI_CONFIG.model,
             messages,
@@ -179,8 +179,8 @@ export class AIService {
     ];
 
     const followUpResponse = await this.throttledRequest(() =>
-      this.withRetry(() =>
-        getAIClient().chat.completions.create(
+      this.withRetry(async () =>
+        (await getAIClient()).chat.completions.create(
           {
             model: AI_CONFIG.model,
             messages: followUpMessages,

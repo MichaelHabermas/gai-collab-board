@@ -83,8 +83,10 @@ export const Frame = memo(
       const textRef = useRef<Konva.Text>(null);
       const { theme } = useTheme();
 
-      // Subscribe to child count from store — only re-renders when count changes
-      const childCount = useObjectsStore(selectFrameChildCount(id));
+      // Subscribe to child count from store — only re-renders when count changes.
+      // Memoize the selector so Zustand sees a stable reference (prevents false re-renders).
+      const childCountSelector = useMemo(() => selectFrameChildCount(id), [id]);
+      const childCount = useObjectsStore(childCountSelector);
 
       const selectionColor = useMemo(
         () =>

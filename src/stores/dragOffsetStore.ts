@@ -1,21 +1,25 @@
 import { create } from 'zustand';
-import type { IFrameDragOffset } from '@/types/canvas';
+import type { IFrameDragOffset, IGroupDragOffset } from '@/types/canvas';
 
 /**
  * Transient drag state extracted from BoardCanvas to avoid re-rendering
  * ALL visible shapes on every mousemove (60 Hz).
  *
- * Only shapes that subscribe (frame children, drop-target frames) re-render.
+ * Only shapes that subscribe (frame children, drop-target frames,
+ * selected shapes during group drag) re-render.
  */
 interface IDragOffsetState {
   frameDragOffset: IFrameDragOffset | null;
   dropTargetFrameId: string | null;
+  /** Offset for multi-select group drag (selection bounding rect). */
+  groupDragOffset: IGroupDragOffset | null;
 }
 
 interface IDragOffsetActions {
   setFrameDragOffset: (offset: IFrameDragOffset | null) => void;
   setDropTargetFrameId: (id: string | null) => void;
-  /** Clear both drag offset and drop target in a single store update. */
+  setGroupDragOffset: (offset: IGroupDragOffset | null) => void;
+  /** Clear all transient drag state in a single store update. */
   clearDragState: () => void;
 }
 
@@ -24,10 +28,12 @@ type IDragOffsetStore = IDragOffsetState & IDragOffsetActions;
 export const useDragOffsetStore = create<IDragOffsetStore>()((set) => ({
   frameDragOffset: null,
   dropTargetFrameId: null,
+  groupDragOffset: null,
 
   setFrameDragOffset: (offset) => set({ frameDragOffset: offset }),
   setDropTargetFrameId: (id) => set({ dropTargetFrameId: id }),
-  clearDragState: () => set({ frameDragOffset: null, dropTargetFrameId: null }),
+  setGroupDragOffset: (offset) => set({ groupDragOffset: offset }),
+  clearDragState: () => set({ frameDragOffset: null, dropTargetFrameId: null, groupDragOffset: null }),
 }));
 
 // ── Selectors ──────────────────────────────────────────────────────────
@@ -48,3 +54,7 @@ export const selectIsDropTarget =
   (frameId: string) =>
   (state: IDragOffsetStore): boolean =>
     state.dropTargetFrameId === frameId;
+
+/** Returns group drag offset (multi-select drag). */
+export const selectGroupDragOffset = (state: IDragOffsetStore): IGroupDragOffset | null =>
+  state.groupDragOffset;

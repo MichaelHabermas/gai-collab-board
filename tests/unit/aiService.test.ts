@@ -2,22 +2,23 @@ import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { AIService } from '@/modules/ai/aiService';
 import type { IToolCall } from '@/modules/ai/tools';
 import { AIError } from '@/modules/ai/errors';
-import { getAIClient } from '@/lib/ai';
 
-const mockClient = {
-  chat: {
-    completions: {
-      create: vi.fn(),
+const { mockClient } = vi.hoisted(() => ({
+  mockClient: {
+    chat: {
+      completions: {
+        create: vi.fn(),
+      },
     },
   },
-};
+}));
 
 vi.mock('@/lib/ai', () => ({
-  getAIClient: () => mockClient,
+  getAIClient: vi.fn().mockResolvedValue(mockClient),
   AI_CONFIG: { model: 'test-model', maxTokens: 100, temperature: 0.7, topP: 0.9 },
 }));
 
-const mockCreate = vi.mocked(getAIClient().chat.completions.create);
+const mockCreate = vi.mocked(mockClient.chat.completions.create);
 
 describe('AIService', () => {
   let onToolExecute: Mock<(tool: IToolCall) => Promise<unknown>>;
