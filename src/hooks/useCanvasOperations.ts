@@ -21,7 +21,6 @@ interface IUseCanvasOperationsReturn {
   handleDuplicate: () => void;
   handleCopy: () => void;
   handlePaste: (offsetX?: number, offsetY?: number) => void;
-  handleSelectAll: () => void;
 }
 
 const DUPLICATE_OFFSET = 20;
@@ -43,11 +42,6 @@ export const useCanvasOperations = ({
   clearSelection,
 }: IUseCanvasOperationsProps): IUseCanvasOperationsReturn => {
   const [clipboard, setClipboard] = useState<IBoardObject[]>([]);
-
-  // Get selected objects
-  const getSelectedObjects = useCallback(() => {
-    return objects.filter((obj) => selectedIds.includes(obj.id));
-  }, [objects, selectedIds]);
 
   // Delete selected objects (batch when multiple and batch callback provided).
   // When deleting a frame, unparent its children that are NOT also being deleted.
@@ -101,7 +95,7 @@ export const useCanvasOperations = ({
   // Duplicate selected objects with offset.
   // Frame-aware: when duplicating a frame, also duplicate its children and reparent them.
   const handleDuplicate = useCallback(async () => {
-    const selectedObjects = getSelectedObjects();
+    const selectedObjects = objects.filter((obj) => selectedIds.includes(obj.id));
     const selectedIdSet = new Set(selectedIds);
 
     // Separate frames from non-frames to handle frame children
@@ -175,11 +169,11 @@ export const useCanvasOperations = ({
         }
       }
     }
-  }, [getSelectedObjects, selectedIds, objects, onObjectCreate]);
+  }, [selectedIds, objects, onObjectCreate]);
 
   // Copy selected objects to clipboard (includes frame children automatically)
   const handleCopy = useCallback(() => {
-    const selectedObjects = getSelectedObjects();
+    const selectedObjects = objects.filter((obj) => selectedIds.includes(obj.id));
     const selectedIdSet = new Set(selectedIds);
 
     // Include children of selected frames that aren't independently selected
@@ -196,7 +190,7 @@ export const useCanvasOperations = ({
     }
 
     setClipboard([...selectedObjects, ...extras]);
-  }, [getSelectedObjects, selectedIds, objects]);
+  }, [selectedIds, objects]);
 
   // Paste objects from clipboard.
   // Frame-aware: when pasting a frame, also paste its children with correct parentFrameId.
@@ -283,12 +277,6 @@ export const useCanvasOperations = ({
     [clipboard, onObjectCreate]
   );
 
-  // Select all objects
-  const handleSelectAll = useCallback(() => {
-    // This would need to be implemented with setSelectedIds
-    // For now, it's a no-op since we don't have direct access to setSelectedIds
-  }, []);
-
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -303,6 +291,7 @@ export const useCanvasOperations = ({
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIds.length > 0) {
         e.preventDefault();
         handleDelete();
+
         return;
       }
 
@@ -310,6 +299,7 @@ export const useCanvasOperations = ({
       if (isCtrlOrCmd && e.key === 'd' && selectedIds.length > 0) {
         e.preventDefault();
         handleDuplicate();
+
         return;
       }
 
@@ -317,6 +307,7 @@ export const useCanvasOperations = ({
       if (isCtrlOrCmd && e.key === 'c' && selectedIds.length > 0) {
         e.preventDefault();
         handleCopy();
+
         return;
       }
 
@@ -324,6 +315,7 @@ export const useCanvasOperations = ({
       if (isCtrlOrCmd && e.key === 'v' && clipboard.length > 0) {
         e.preventDefault();
         handlePaste();
+
         return;
       }
 
@@ -350,6 +342,7 @@ export const useCanvasOperations = ({
             const children = getFrameChildren(obj.id, objects);
             if (children.length > 0) {
               setSelectedIds(children.map((c) => c.id));
+
               return;
             }
           }
@@ -357,6 +350,7 @@ export const useCanvasOperations = ({
 
         // Default: select all objects
         setSelectedIds(objects.map((o) => o.id));
+
         return;
       }
 
@@ -378,6 +372,7 @@ export const useCanvasOperations = ({
         }
 
         clearSelection();
+
         return;
       }
 
@@ -425,13 +420,12 @@ export const useCanvasOperations = ({
           strokeWidth: 1,
         });
 
-        // Note: reparenting happens on next drag-end via spatial containment.
-        // Children will be detected as inside the frame on the next interaction.
         return;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
+
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [
     selectedIds,
@@ -452,6 +446,5 @@ export const useCanvasOperations = ({
     handleDuplicate,
     handleCopy,
     handlePaste,
-    handleSelectAll,
   };
 };

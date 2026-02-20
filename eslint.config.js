@@ -39,6 +39,7 @@ export default tseslint.config(
       ],
       "local/prefer-falsy-over-explicit-nullish": "warn",
       "local/max-use-effect-count": ["warn", { max: 2 }],
+      "local/no-unnecessary-use-callback": "warn",
       "prefer-destructuring": [
         "warn",
         {

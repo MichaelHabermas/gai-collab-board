@@ -81,7 +81,7 @@ export const useCanvasKeyboardShortcuts = ({
       }
 
       setActiveTool(next);
-      (activeToolRef as { current: ToolMode }).current = next;
+      activeToolRef.current = next;
     };
 
     window.addEventListener('keydown', handleKeyDown);

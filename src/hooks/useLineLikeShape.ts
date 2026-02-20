@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { getPointsCenter } from '@/lib/lineTransform';
 import { useShapeDragHandler } from '@/hooks/useShapeDragHandler';
 import { useShapeTransformHandler } from '@/hooks/useShapeTransformHandler';
@@ -16,6 +16,10 @@ export interface IUseLineLikeShapeResult {
   handleTransformEnd: ReturnType<typeof useShapeTransformHandler>;
 }
 
+function isLineAttrs(attrs: ITransformEndAttrsUnion): attrs is ITransformEndLineAttrs {
+  return 'points' in attrs;
+}
+
 /**
  * Shared hook for line-like shapes (Line, Connector): offset for rotation pivot
  * and drag-end origin correction, plus transform handler. Use in LineShape and Connector.
@@ -30,15 +34,19 @@ export function useLineLikeShape({
     offsetX: offset.x,
     offsetY: offset.y,
   });
+
+  const wrappedTransformEnd = useCallback(
+    (attrs: ITransformEndAttrsUnion) => {
+      if (isLineAttrs(attrs)) {
+        onTransformEnd?.(attrs);
+      }
+    },
+    [onTransformEnd]
+  );
+
   const handleTransformEnd = useShapeTransformHandler(
     'line',
-    onTransformEnd
-      ? (attrs: ITransformEndAttrsUnion) => {
-          if ('points' in attrs) {
-            onTransformEnd(attrs as ITransformEndLineAttrs);
-          }
-        }
-      : undefined
+    onTransformEnd ? wrappedTransformEnd : undefined
   );
 
   return { offset, handleDragEnd, handleTransformEnd };

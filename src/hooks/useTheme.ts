@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 
 const THEME_STORAGE_KEY = 'collabboard-theme';
 
@@ -51,18 +51,19 @@ export const useTheme = (): IUseThemeReturn => {
     }
   }, [theme]);
 
-  const setTheme = useCallback((next: Theme) => {
+  const setTheme = (next: Theme) => {
     setThemeState(next);
     applyTheme(next);
-  }, []);
+  };
 
-  const toggleTheme = useCallback(() => {
+  const toggleTheme = () => {
     setThemeState((prev) => {
       const next = prev === 'dark' ? 'light' : 'dark';
       applyTheme(next);
+
       return next;
     });
-  }, []);
+  };
 
   return { theme, setTheme, toggleTheme };
 };

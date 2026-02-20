@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { subscribeToConnectionStatus } from '@/modules/sync/realtimeService';
 
 interface IUseConnectionStatusReturn {
@@ -30,9 +30,7 @@ export const useConnectionStatus = (): IUseConnectionStatusReturn => {
     };
   }, []);
 
-  const clearOfflineFlag = useCallback(() => {
-    setWasOffline(false);
-  }, []);
+  const clearOfflineFlag = () => setWasOffline(false);
 
   return {
     isOnline,
