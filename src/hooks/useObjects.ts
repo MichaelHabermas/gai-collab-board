@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, type SetStateAction } from 'react';
 import { User } from 'firebase/auth';
 import type { IBoardObject } from '@/types';
 import {
@@ -39,23 +39,29 @@ interface IUseObjectsReturn {
  * Provides real-time synchronization with Firestore.
  */
 export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsReturn => {
-  const [objects, setObjects] = useState<IBoardObject[]>([]);
+  const [objects, setObjectsRaw] = useState<IBoardObject[]>([]);
   const [loading, setLoading] = useState<boolean>(!boardId ? false : true);
   const [error, setError] = useState<string>('');
 
-  // Sync local objects state → Zustand objectsStore so per-shape subscribers get updates.
-  const storeSetAll = useObjectsStore((s) => s.setAll);
-  useEffect(() => {
-    storeSetAll(objects);
-  }, [objects, storeSetAll]);
+  // Wrapper: updates React state and Zustand store in one call (no extra render cycle).
+  const setObjects = useCallback(
+    (updater: SetStateAction<IBoardObject[]>) => {
+      setObjectsRaw((prev) => {
+        const next = typeof updater === 'function' ? updater(prev) : updater;
+        useObjectsStore.getState().setAll(next);
+
+        return next;
+      });
+    },
+    []
+  );
 
   // Clear store when unmounting or switching boards.
-  const storeClear = useObjectsStore((s) => s.clear);
   useEffect(() => {
     return () => {
-      storeClear();
+      useObjectsStore.getState().clear();
     };
-  }, [boardId, storeClear]);
+  }, [boardId]);
 
   // Keep track of pending updates for rollback
   const pendingUpdatesRef = useRef<Map<string, IBoardObject>>(new Map());
@@ -185,7 +191,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
     return () => {
       unsubscribe();
     };
-  }, [applySnapshotUpdate, boardId]);
+  }, [applySnapshotUpdate, boardId, setObjects]);
 
   // Create object with optimistic update
   const handleCreateObject = useCallback(
@@ -249,7 +255,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         setError(errorMessage);
       }
     },
-    [boardId, objects]
+    [boardId, objects, setObjects]
   );
 
   // Delete object with optimistic update and rollback
@@ -290,7 +296,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         setError(errorMessage);
       }
     },
-    [boardId, objects]
+    [boardId, objects, setObjects]
   );
 
   // Update multiple objects in one batch (optimistic update + rollback)
@@ -338,7 +344,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         setError(errorMessage);
       }
     },
-    [boardId, objects]
+    [boardId, objects, setObjects]
   );
 
   // Delete multiple objects in one batch (defer state update until batch resolves)
@@ -373,7 +379,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         setError(errorMessage);
       }
     },
-    [boardId, objects]
+    [boardId, objects, setObjects]
   );
 
   return {

@@ -45,9 +45,8 @@ import { Label } from '@/components/ui/label';
 import { useTheme } from '@/hooks/useTheme';
 import { useBoardSettings } from '@/hooks/useBoardSettings';
 import { useHistory } from '@/hooks/useHistory';
-import { ViewportActionsContext } from '@/contexts/ViewportActionsContext';
 import { PropertyInspector } from '@/components/canvas/PropertyInspector';
-import type { IBoard, IUserPreferences, IViewportActionsValue } from '@/types';
+import type { IBoard, IUserPreferences } from '@/types';
 
 interface IBoardViewProps {
   boardId: string;
@@ -56,7 +55,6 @@ interface IBoardViewProps {
   onLeaveBoard: (leftBoardId?: string) => void;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
-  onViewportActionsReady: (actions: IViewportActionsValue | null) => void;
   skipAutoJoinBoardIdRef?: React.MutableRefObject<string | null>;
 }
 
@@ -67,7 +65,6 @@ const BoardView = ({
   onLeaveBoard,
   theme,
   onToggleTheme,
-  onViewportActionsReady,
   skipAutoJoinBoardIdRef,
 }: IBoardViewProps): ReactElement => {
   const { user, signOut } = useAuth();
@@ -302,7 +299,6 @@ const BoardView = ({
             onObjectCreate={history.createObject}
             onObjectDelete={history.deleteObject}
             onObjectsDeleteBatch={deleteObjects}
-            onViewportActionsReady={onViewportActionsReady}
             onUndo={history.undo}
             onRedo={history.redo}
           />
@@ -445,7 +441,6 @@ const BoardViewRoute = (): ReactElement => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const [viewportActions, setViewportActions] = useState<IViewportActionsValue | null>(null);
   const lastLeftBoardIdRef = useRef<string | null>(null);
 
   // Update recent boards when user opens a board (navigates to it)
@@ -509,18 +504,15 @@ const BoardViewRoute = (): ReactElement => {
   }
 
   return (
-    <ViewportActionsContext.Provider value={viewportActions}>
-      <BoardView
-        boardId={boardId}
-        onSelectBoard={handleSelectBoard}
-        onCreateNewBoard={handleCreateNewBoard}
-        onLeaveBoard={handleLeaveBoard}
-        theme={theme}
-        onToggleTheme={toggleTheme}
-        onViewportActionsReady={setViewportActions}
-        skipAutoJoinBoardIdRef={lastLeftBoardIdRef}
-      />
-    </ViewportActionsContext.Provider>
+    <BoardView
+      boardId={boardId}
+      onSelectBoard={handleSelectBoard}
+      onCreateNewBoard={handleCreateNewBoard}
+      onLeaveBoard={handleLeaveBoard}
+      theme={theme}
+      onToggleTheme={toggleTheme}
+      skipAutoJoinBoardIdRef={lastLeftBoardIdRef}
+    />
   );
 };
 

@@ -63,6 +63,7 @@ import { useCanvasKeyboardShortcuts } from '@/hooks/useCanvasKeyboardShortcuts';
 import { useAlignmentGuideCache } from '@/hooks/useAlignmentGuideCache';
 import { useHistoryStore } from '@/stores/historyStore';
 import { useDragOffsetStore } from '@/stores/dragOffsetStore';
+import { useViewportActionsStore } from '@/stores/viewportActionsStore';
 import {
   getFrameChildren,
   resolveParentFrameId,
@@ -81,7 +82,6 @@ interface IBoardCanvasProps {
   onObjectCreate?: (params: Omit<ICreateObjectParams, 'createdBy'>) => Promise<IBoardObject | null>;
   onObjectDelete?: (objectId: string) => Promise<void>;
   onObjectsDeleteBatch?: (objectIds: string[]) => void | Promise<void>;
-  onViewportActionsReady?: (actions: IViewportActionsValue | null) => void;
   onUndo?: () => void;
   onRedo?: () => void;
 }
@@ -121,7 +121,6 @@ export const BoardCanvas = memo(
     onObjectCreate,
     onObjectDelete,
     onObjectsDeleteBatch,
-    onViewportActionsReady,
     onUndo,
     onRedo,
   }: IBoardCanvasProps): ReactElement => {
@@ -1625,16 +1624,15 @@ export const BoardCanvas = memo(
       ]
     );
 
-    useEffect(() => {
-      if (!onViewportActionsReady) {
-        return;
-      }
+    const setViewportStoreActions = useViewportActionsStore((s) => s.setActions);
 
-      onViewportActionsReady(viewportActions);
+    useEffect(() => {
+      setViewportStoreActions(viewportActions);
+
       return () => {
-        onViewportActionsReady(null);
+        setViewportStoreActions(null);
       };
-    }, [onViewportActionsReady, viewportActions]);
+    }, [setViewportStoreActions, viewportActions]);
 
     return (
       <div

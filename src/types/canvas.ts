@@ -1,7 +1,7 @@
 /**
  * Canvas UI types: selection rect, overlay rect, shape renderer props, viewport actions.
  * Moved from components so no type exports from .tsx files.
- * Replace in: SelectionLayer, CanvasShapeRenderer, ViewportActionsContext,
+ * Replace in: SelectionLayer, CanvasShapeRenderer, viewportActionsStore,
  * RightSidebar, canvasOverlayPosition (IOverlayRect already there; re-export here).
  */
 
@@ -31,10 +31,10 @@ export interface IOverlayRect {
   avgScale: number;
 }
 
-/** Export image format. Used by ViewportActionsContext and useExportAsImage. */
+/** Export image format. Used by viewportActionsStore and useExportAsImage. */
 export type ExportImageFormat = 'png' | 'jpeg';
 
-/** Viewport actions exposed via context (zoom, export). */
+/** Viewport actions exposed via store (zoom, export). */
 export interface IViewportActionsValue {
   zoomToFitAll: () => void;
   zoomToSelection: (objectIds: string[]) => void;

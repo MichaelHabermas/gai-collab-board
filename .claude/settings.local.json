@@ -6,7 +6,11 @@
       "Bash(bunx vitest:*)",
       "Bash(bunx playwright test:*)",
       "Bash(git worktree remove:*)",
-      "Bash(git worktree:*)"
+      "Bash(git worktree:*)",
+      "mcp__Desktop_Commander__read_file",
+      "mcp__Desktop_Commander__get_file_info",
+      "mcp__Desktop_Commander__start_search",
+      "mcp__Desktop_Commander__get_more_search_results"
     ]
   },
   "hooks": {

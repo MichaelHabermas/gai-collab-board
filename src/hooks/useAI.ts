@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, useMemo, useContext } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import type { User } from 'firebase/auth';
 import type { IBoardObject } from '@/types';
 import { AIService, createToolExecutor } from '@/modules/ai';
@@ -9,7 +9,7 @@ import {
   deleteObjectsBatch,
 } from '@/modules/sync/objectService';
 import { normalizeAIErrorMessage } from '@/modules/ai/errors';
-import { ViewportActionsContext } from '@/contexts/ViewportActionsContext';
+import { useViewportActionsStore } from '@/stores/viewportActionsStore';
 
 export interface IChatMessage {
   role: 'user' | 'assistant';
@@ -40,12 +40,11 @@ export const useAI = ({ boardId, user, objects }: IUseAIParams): IUseAIReturn =>
   const objectsRef = useRef<IBoardObject[]>(objects);
   objectsRef.current = objects;
 
-  const viewportActions = useContext(ViewportActionsContext);
-  const zoomToFitAll = viewportActions?.zoomToFitAll;
-  const zoomToSelection = viewportActions?.zoomToSelection;
-  const setZoomLevel = viewportActions?.setZoomLevel;
-  const exportViewport = viewportActions?.exportViewport;
-  const exportFullBoard = viewportActions?.exportFullBoard;
+  const zoomToFitAll = useViewportActionsStore((s) => s.zoomToFitAll);
+  const zoomToSelection = useViewportActionsStore((s) => s.zoomToSelection);
+  const setZoomLevel = useViewportActionsStore((s) => s.setZoomLevel);
+  const exportViewport = useViewportActionsStore((s) => s.exportViewport);
+  const exportFullBoard = useViewportActionsStore((s) => s.exportFullBoard);
 
   const executorContext = useMemo(() => {
     if (!boardId || !user) return null;

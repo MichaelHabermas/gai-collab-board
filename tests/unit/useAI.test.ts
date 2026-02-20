@@ -1,11 +1,10 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { createElement, type ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { User } from 'firebase/auth';
 import type { IBoardObject } from '@/types';
 import { useAI } from '@/hooks/useAI';
 import { AIError } from '@/modules/ai/errors';
-import { ViewportActionsContext } from '@/contexts/ViewportActionsContext';
+import { useViewportActionsStore } from '@/stores/viewportActionsStore';
 import type { IViewportActionsValue } from '@/types';
 
 const {
@@ -83,9 +82,15 @@ const buildViewportActions = (): IViewportActionsValue => ({
   exportFullBoard: vi.fn(),
 });
 
+/** Push viewport actions into the Zustand store (replaces Context wrapper). */
+const setStoreViewportActions = (actions: IViewportActionsValue | null): void => {
+  useViewportActionsStore.getState().setActions(actions);
+};
+
 describe('useAI', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setStoreViewportActions(null);
 
     mockCreateToolExecutor.mockReturnValue({
       execute: mockExecute,
@@ -101,20 +106,16 @@ describe('useAI', () => {
     );
   });
 
-  it('builds tool executor with viewport callbacks when context is present', () => {
+  it('builds tool executor with viewport callbacks when store has actions', () => {
     const viewportActions = buildViewportActions();
+    setStoreViewportActions(viewportActions);
 
-    const wrapper = ({ children }: { children: ReactNode }) =>
-      createElement(ViewportActionsContext.Provider, { value: viewportActions }, children);
-
-    renderHook(
-      () =>
-        useAI({
-          boardId: 'board-1',
-          user: buildUser(),
-          objects: [buildObject()],
-        }),
-      { wrapper }
+    renderHook(() =>
+      useAI({
+        boardId: 'board-1',
+        user: buildUser(),
+        objects: [buildObject()],
+      })
     );
 
     expect(mockCreateToolExecutor).toHaveBeenCalledWith(
@@ -256,42 +257,39 @@ describe('useAI', () => {
     expect(result.current.messages).toEqual([]);
   });
 
-  it('does not recreate AI service when viewport context value identity changes only', () => {
+  it('does not recreate AI service when viewport store actions keep same references', () => {
     const zoomToFitAll = vi.fn();
     const zoomToSelection = vi.fn();
     const setZoomLevel = vi.fn();
     const exportViewport = vi.fn();
     const exportFullBoard = vi.fn();
 
-    let viewportContextValue: IViewportActionsValue = {
+    setStoreViewportActions({
       zoomToFitAll,
       zoomToSelection,
       setZoomLevel,
       exportViewport,
       exportFullBoard,
-    };
-    const wrapper = ({ children }: { children: ReactNode }) =>
-      createElement(ViewportActionsContext.Provider, { value: viewportContextValue }, children);
+    });
 
-    const { rerender } = renderHook(
-      () =>
-        useAI({
-          boardId: 'board-1',
-          user: buildUser(),
-          objects: [buildObject()],
-        }),
-      { wrapper }
+    const { rerender } = renderHook(() =>
+      useAI({
+        boardId: 'board-1',
+        user: buildUser(),
+        objects: [buildObject()],
+      })
     );
 
     expect(mockAIServiceConstructor).toHaveBeenCalledTimes(1);
 
-    viewportContextValue = {
+    // Re-set with same function references — should not trigger recreation
+    setStoreViewportActions({
       zoomToFitAll,
       zoomToSelection,
       setZoomLevel,
       exportViewport,
       exportFullBoard,
-    };
+    });
     rerender();
 
     expect(mockAIServiceConstructor).toHaveBeenCalledTimes(1);
