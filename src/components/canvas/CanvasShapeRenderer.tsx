@@ -1,5 +1,5 @@
 import { Rect } from 'react-konva';
-import { memo, type ReactElement } from 'react';
+import { memo, useMemo, type ReactElement } from 'react';
 import type { ICanvasShapeRendererProps } from '@/types';
 import { getAnchorPosition } from '@/lib/connectorAnchors';
 import {
@@ -42,6 +42,20 @@ export const CanvasShapeRenderer = memo(
           : null;
     const displayX = obj.x + (offset?.dx ?? 0);
     const displayY = obj.y + (offset?.dy ?? 0);
+
+    // Stable wrapper for circle's center-based drag bound (avoids new fn ref every render)
+    const circleDragBoundFunc = useMemo(() => {
+      const boundFunc = getDragBoundFunc(obj.id, obj.width, obj.height);
+      if (!boundFunc) return undefined;
+      const halfW = obj.width / 2;
+      const halfH = obj.height / 2;
+
+      return (pos: { x: number; y: number }) => {
+        const topLeft = boundFunc({ x: pos.x - halfW, y: pos.y - halfH });
+
+        return { x: topLeft.x + halfW, y: topLeft.y + halfH };
+      };
+    }, [getDragBoundFunc, obj.id, obj.width, obj.height]);
 
     switch (obj.type) {
       case 'sticky':
@@ -92,8 +106,7 @@ export const CanvasShapeRenderer = memo(
           />
         );
 
-      case 'circle': {
-        const boundFunc = getDragBoundFunc(obj.id, obj.width, obj.height);
+      case 'circle':
         return (
           <CircleShape
             key={obj.id}
@@ -112,23 +125,9 @@ export const CanvasShapeRenderer = memo(
             onSelect={getSelectHandler(obj.id)}
             onDragEnd={getDragEndHandler(obj.id)}
             onDragMove={canEdit ? onDragMove : undefined}
-            dragBoundFunc={
-              boundFunc
-                ? (pos) => {
-                    const topLeft = boundFunc({
-                      x: pos.x - obj.width / 2,
-                      y: pos.y - obj.height / 2,
-                    });
-                    return {
-                      x: topLeft.x + obj.width / 2,
-                      y: topLeft.y + obj.height / 2,
-                    };
-                  }
-                : undefined
-            }
+            dragBoundFunc={circleDragBoundFunc}
           />
         );
-      }
 
       case 'line':
         return (

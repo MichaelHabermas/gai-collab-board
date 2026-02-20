@@ -337,11 +337,11 @@ export const PropertyInspector = memo(function PropertyInspector({
   const defaultFontColor = DEFAULT_STICKY_TEXT_COLOR;
 
   const selectedObjects = useMemo(() => {
-    if (selectedIds.length === 0) {
+    if (selectedIds.size === 0) {
       return [];
     }
 
-    return selectedIds
+    return [...selectedIds]
       .map((id) => storeObjects[id])
       .filter((obj): obj is IBoardObject => obj !== undefined);
   }, [storeObjects, selectedIds]);

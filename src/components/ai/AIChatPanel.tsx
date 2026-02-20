@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, type ReactElement } from 'react';
+import { useState, useRef, useLayoutEffect, useCallback, type ReactElement } from 'react';
 import { Send, Loader2, Lightbulb, ListChecks, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,7 +36,7 @@ export const AIChatPanel = ({
   const supportsSpeechRecognition =
     typeof window !== 'undefined' &&
     ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
-  const hasSelection = selectedIds.length > 0;
+  const hasSelection = selectedIds.size > 0;
 
   const handleExplainBoard = () => {
     if (loading || !hasBoardObjects) return;
@@ -50,7 +50,7 @@ export const AIChatPanel = ({
     if (loading || !hasSelection) return;
 
     void onSend(
-      `Summarize these ${selectedIds.length} selected object(s): provide a concise overview of the selected items, their content, and any relationships between them.`
+      `Summarize these ${selectedIds.size} selected object(s): provide a concise overview of the selected items, their content, and any relationships between them.`
     );
   };
 
@@ -61,7 +61,7 @@ export const AIChatPanel = ({
     }
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     scrollToBottom();
   }, [messages]);
 

@@ -370,7 +370,7 @@ describe('App Performance — Viewport Culling', () => {
 describe('App Performance — Frame Containment', () => {
   for (const count of [100, 500, 1000]) {
     it(`findContainingFrame: spatial query with ${count} objects (20 frames)`, () => {
-      const { objects, frames } = generateWithFrames(count, 20);
+      const { frames } = generateWithFrames(count, 20);
 
       // Test object dropped at center of first frame
       const testBounds = { x1: frames[0]!.x + 100, y1: frames[0]!.y + 100, x2: frames[0]!.x + 200, y2: frames[0]!.y + 200 };

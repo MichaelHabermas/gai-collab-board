@@ -12,7 +12,7 @@ const SelectionConsumer = memo((): ReactElement => {
 
   return (
     <div>
-      <span data-testid='selected-count'>{selectedIds.length}</span>
+      <span data-testid='selected-count'>{selectedIds.size}</span>
       <button
         type='button'
         data-testid='select-item'

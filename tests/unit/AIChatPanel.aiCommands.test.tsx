@@ -6,9 +6,9 @@ import type { IBoardObject } from '@/types';
 import { Timestamp } from 'firebase/firestore';
 
 // Mock selectionStore
-const mockSelectedIds: string[] = [];
+let mockSelectedIds = new Set<string>();
 vi.mock('@/stores/selectionStore', () => ({
-  useSelectionStore: (selector: (state: { selectedIds: string[] }) => unknown) =>
+  useSelectionStore: (selector: (state: { selectedIds: Set<string> }) => unknown) =>
     selector({ selectedIds: mockSelectedIds }),
 }));
 
@@ -42,7 +42,7 @@ describe('AIChatPanel AI Commands', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSelectedIds.length = 0;
+    mockSelectedIds = new Set<string>();
     useObjectsStore.getState().clear();
   });
 
@@ -88,21 +88,21 @@ describe('AIChatPanel AI Commands', () => {
   });
 
   it('disables "Summarize Selection" when no selection', () => {
-    mockSelectedIds.length = 0;
+    mockSelectedIds = new Set<string>();
     setStoreObjects([makeObject('obj-1')]);
     render(<AIChatPanel {...defaultProps} />);
     expect(screen.getByTestId('ai-summarize-selection')).toBeDisabled();
   });
 
   it('enables "Summarize Selection" when objects are selected', () => {
-    mockSelectedIds.push('obj-1', 'obj-2');
+    mockSelectedIds = new Set(['obj-1', 'obj-2']);
     setStoreObjects([makeObject('obj-1'), makeObject('obj-2')]);
     render(<AIChatPanel {...defaultProps} />);
     expect(screen.getByTestId('ai-summarize-selection')).not.toBeDisabled();
   });
 
   it('calls onSend with summarize prompt including selection count', () => {
-    mockSelectedIds.push('obj-1', 'obj-2');
+    mockSelectedIds = new Set(['obj-1', 'obj-2']);
     setStoreObjects([makeObject('obj-1'), makeObject('obj-2')]);
     const onSend = vi.fn().mockResolvedValue(undefined);
     render(<AIChatPanel {...defaultProps} onSend={onSend} />);
@@ -115,7 +115,7 @@ describe('AIChatPanel AI Commands', () => {
   });
 
   it('disables "Summarize Selection" when loading', () => {
-    mockSelectedIds.push('obj-1');
+    mockSelectedIds = new Set(['obj-1']);
     setStoreObjects([makeObject('obj-1')]);
     render(<AIChatPanel {...defaultProps} loading={true} />);
     expect(screen.getByTestId('ai-summarize-selection')).toBeDisabled();

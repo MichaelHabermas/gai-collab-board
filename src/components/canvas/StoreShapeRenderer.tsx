@@ -48,7 +48,7 @@ export const StoreShapeRenderer = memo(
   }: IStoreShapeRendererProps): ReactElement | null => {
     // Per-shape subscription: only re-renders when THIS object changes.
     const object = useObjectsStore(selectObject(id));
-    const isSelected = useSelectionStore((s) => s.selectedIds.includes(id));
+    const isSelected = useSelectionStore((s) => s.selectedIds.has(id));
 
     if (!object) return null;
 

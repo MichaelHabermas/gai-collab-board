@@ -103,7 +103,7 @@ const BoardView = memo(function BoardView({
     deleteComment: deleteCommentFn,
   } = useComments({ boardId });
   const selectedIds = useSelectionStore((s) => s.selectedIds);
-  const selectedObjectId = selectedIds.length === 1 ? (selectedIds[0] ?? null) : null;
+  const selectedObjectId = selectedIds.size === 1 ? (selectedIds.values().next().value ?? null) : null;
   const selectedObjectComments = selectedObjectId
     ? (commentsByObjectId.get(selectedObjectId) ?? [])
     : [];

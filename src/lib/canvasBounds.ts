@@ -53,12 +53,16 @@ export function getObjectBounds(obj: IBoardObject): IBounds {
 /**
  * Returns the axis-aligned bounding box of the selected objects, or null if none selected.
  */
-export function getSelectionBounds(objects: IBoardObject[], selectedIds: string[]): IBounds | null {
-  if (selectedIds.length === 0) {
+export function getSelectionBounds(
+  objects: IBoardObject[],
+  selectedIds: ReadonlySet<string> | string[]
+): IBounds | null {
+  const idSet = selectedIds instanceof Set ? selectedIds : new Set(selectedIds);
+  if (idSet.size === 0) {
     return null;
   }
 
-  const selected = objects.filter((obj) => selectedIds.includes(obj.id));
+  const selected = objects.filter((obj) => idSet.has(obj.id));
   if (selected.length === 0) {
     return null;
   }

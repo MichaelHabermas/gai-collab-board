@@ -1,30 +1,38 @@
 import { create } from 'zustand';
 
-type ISelectedIdsUpdater = string[] | ((prevSelectedIds: string[]) => string[]);
-
 interface ISelectionStoreState {
-  selectedIds: string[];
+  selectedIds: Set<string>;
 }
 
 interface ISelectionStoreActions {
-  setSelectedIds: (nextSelectedIds: ISelectedIdsUpdater) => void;
+  setSelectedIds: (nextSelectedIds: string[]) => void;
+  toggleSelectedId: (id: string) => void;
   clearSelection: () => void;
 }
 
 type ISelectionStore = ISelectionStoreState & ISelectionStoreActions;
 
+const EMPTY_SET = new Set<string>();
+
 export const useSelectionStore = create<ISelectionStore>()((set) => ({
-  selectedIds: [],
+  selectedIds: EMPTY_SET,
   setSelectedIds: (nextSelectedIds) => {
-    set((state) => ({
-      selectedIds:
-        typeof nextSelectedIds === 'function'
-          ? nextSelectedIds(state.selectedIds)
-          : nextSelectedIds,
-    }));
+    set({ selectedIds: new Set(nextSelectedIds) });
+  },
+  toggleSelectedId: (id) => {
+    set((state) => {
+      const next = new Set(state.selectedIds);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+
+      return { selectedIds: next };
+    });
   },
   clearSelection: () => {
-    set({ selectedIds: [] });
+    set({ selectedIds: EMPTY_SET });
   },
 }));
 

@@ -136,6 +136,7 @@ export const BoardCanvas = memo(
     const canUndoHistory = useHistoryStore((s) => s.canUndo);
     const canRedoHistory = useHistoryStore((s) => s.canRedo);
     const setSelectedIds = useSelectionStore((state) => state.setSelectedIds);
+    const toggleSelectedId = useSelectionStore((state) => state.toggleSelectedId);
     const clearSelectionFromStore = useSelectionStore((state) => state.clearSelection);
     const [drawingState, setDrawingState] = useState<IDrawingState>({
       isDrawing: false,
@@ -314,9 +315,10 @@ export const BoardCanvas = memo(
 
     // Canvas operations (delete, duplicate, copy, paste)
     // Type assertion needed because useCanvasOperations uses a more permissive type
+    const selectedIdsArray = useMemo(() => [...selectedIds], [selectedIds]);
     useCanvasOperations({
       objects,
-      selectedIds,
+      selectedIds: selectedIdsArray,
       setSelectedIds,
       onObjectCreate:
         (onObjectCreate as (params: Partial<IBoardObject>) => Promise<IBoardObject | null>) ||
@@ -813,15 +815,13 @@ export const BoardCanvas = memo(
 
         if (metaPressed) {
           // Toggle selection
-          setSelectedIds((prev) =>
-            prev.includes(objectId) ? prev.filter((id) => id !== objectId) : [...prev, objectId]
-          );
+          toggleSelectedId(objectId);
         } else {
           // Single select
           setSelectedIds([objectId]);
         }
       },
-      [setSelectedIds]
+      [setSelectedIds, toggleSelectedId]
     );
 
     // Handle object drag end (optionally snap position to grid); clear alignment guides.
@@ -836,7 +836,7 @@ export const BoardCanvas = memo(
         if (!draggedObj) return;
 
         const multiSelected =
-          selectedIds.length > 1 && selectedIds.includes(objectId) && onObjectsUpdate;
+          selectedIds.size > 1 && selectedIds.has(objectId) && onObjectsUpdate;
 
         if (multiSelected) {
           const dx = x - draggedObj.x;
@@ -844,7 +844,7 @@ export const BoardCanvas = memo(
           const updates: Array<{ objectId: string; updates: Partial<IBoardObject> }> = [];
 
           // Collect IDs being moved so we skip reparenting for frame children already in selection
-          const movedIds = new Set(selectedIds);
+          const movedIds = new Set<string>(selectedIds);
 
           for (const id of selectedIds) {
             const obj = objectsById.get(id);
@@ -997,7 +997,7 @@ export const BoardCanvas = memo(
 
     // Selection bounds when 2+ selected (for draggable handle over empty space in selection)
     const selectionBounds = useMemo(() => {
-      if (selectedIds.length < 2) {
+      if (selectedIds.size < 2) {
         return null;
       }
 
@@ -1110,7 +1110,7 @@ export const BoardCanvas = memo(
 
     useEffect(() => {
       setGuidesThrottledRef.current = setGuidesThrottled;
-    });
+    }, [setGuidesThrottled]);
 
     const { guideCandidateBoundsRef, dragBoundFuncCacheRef } = useAlignmentGuideCache({
       objects,
@@ -1643,8 +1643,8 @@ export const BoardCanvas = memo(
           colorScheme: theme,
         }}
         data-testid='board-canvas'
-        data-selected-count={selectedIds.length}
-        data-selected-ids={selectedIds.join(',')}
+        data-selected-count={selectedIds.size}
+        data-selected-ids={[...selectedIds].join(',')}
       >
         {/* Desktop toolbar: visible from md up */}
         <div className='hidden md:block absolute left-4 top-1/2 -translate-y-1/2 z-20'>
@@ -1797,7 +1797,7 @@ export const BoardCanvas = memo(
           {activeTool !== 'pan' && (
             <Layer
               name='selection'
-              listening={selectedIds.length > 0}
+              listening={selectedIds.size > 0}
               onClick={(e) => {
                 // Prevent clicks on Transformer (anchors, borders, or Transformer itself) from propagating to stage
                 const { target } = e;
@@ -1826,7 +1826,7 @@ export const BoardCanvas = memo(
               }}
             >
               <TransformHandler
-                selectedIds={selectedIds}
+                selectedIds={selectedIdsArray}
                 layerRef={objectsLayerRef}
                 requestBatchDraw={requestBatchDraw}
                 excludedFromTransformIds={linkedConnectorIds}
@@ -1892,7 +1892,7 @@ export const BoardCanvas = memo(
           {onObjectUpdate != null && (
             <AlignToolbar
               objects={objects}
-              selectedIds={selectedIds}
+              selectedIds={selectedIdsArray}
               onObjectUpdate={onObjectUpdate}
               canEdit={canEdit}
             />
@@ -1910,7 +1910,7 @@ export const BoardCanvas = memo(
             size='icon'
             className='h-9 w-9 text-card-foreground hover:bg-accent bg-card/80 rounded-md'
             onClick={handleZoomToSelection}
-            disabled={selectedIds.length === 0}
+            disabled={selectedIds.size === 0}
             title='Zoom to selection'
             data-testid='zoom-to-selection'
           >

@@ -21,8 +21,9 @@ interface IStageProps {
 let latestStageProps: IStageProps = {};
 const shapePropsById = new Map<string, Record<string, unknown>>();
 let latestRectProps: Array<Record<string, unknown>> = [];
-let mockSelectedIds: string[] = [];
+let mockSelectedIds = new Set<string>();
 const mockSetSelectedIds = vi.fn();
+const mockToggleSelectedId = vi.fn();
 const mockClearSelection = vi.fn();
 
 /** Toggled by tests to assert snap-to-grid behavior in dragBoundFunc. */
@@ -149,13 +150,15 @@ vi.mock('@/hooks/useBoardSettings', () => ({
 
 vi.mock('@/stores/selectionStore', () => ({
   useSelectionStore: <T,>(selector: (state: {
-    selectedIds: string[];
+    selectedIds: Set<string>;
     setSelectedIds: typeof mockSetSelectedIds;
+    toggleSelectedId: typeof mockToggleSelectedId;
     clearSelection: typeof mockClearSelection;
   }) => T) =>
     selector({
       selectedIds: mockSelectedIds,
       setSelectedIds: mockSetSelectedIds,
+      toggleSelectedId: mockToggleSelectedId,
       clearSelection: mockClearSelection,
     }),
 }));
@@ -283,8 +286,9 @@ describe('BoardCanvas interactions', () => {
     shapePropsById.clear();
     latestRectProps = [];
     mockSnapToGridEnabled = false;
-    mockSelectedIds = [];
+    mockSelectedIds = new Set<string>();
     mockSetSelectedIds.mockReset();
+    mockToggleSelectedId.mockReset();
     mockClearSelection.mockReset();
     mockHandleMouseMove.mockClear();
     useObjectsStore.getState().clear();
@@ -681,7 +685,7 @@ describe('BoardCanvas interactions', () => {
   });
 
   it('uses grab/grabbing cursor while hovering and dragging selection handle', async () => {
-    mockSelectedIds = ['shape-a', 'shape-b'];
+    mockSelectedIds = new Set(['shape-a', 'shape-b']);
     const onObjectsUpdate = vi.fn();
     const objects = [
       createObject({
@@ -764,7 +768,7 @@ describe('BoardCanvas interactions', () => {
 
   describe('frame drag and containment', () => {
     it('frame drag moves children with frame in one batch', () => {
-      mockSelectedIds = ['frame-1'];
+      mockSelectedIds = new Set(['frame-1']);
       const onObjectsUpdate = vi.fn();
       const frame = createObject({
         id: 'frame-1',
@@ -815,7 +819,7 @@ describe('BoardCanvas interactions', () => {
     });
 
     it('frame drag move applies visual offset to children during drag', () => {
-      mockSelectedIds = ['frame-1'];
+      mockSelectedIds = new Set(['frame-1']);
       const onObjectsUpdate = vi.fn();
       const frame = createObject({
         id: 'frame-1',
@@ -869,7 +873,7 @@ describe('BoardCanvas interactions', () => {
     });
 
     it('frame drag with no children calls onObjectUpdate', () => {
-      mockSelectedIds = ['frame-1'];
+      mockSelectedIds = new Set(['frame-1']);
       const onObjectUpdate = vi.fn();
       const frame = createObject({
         id: 'frame-1',
@@ -901,7 +905,7 @@ describe('BoardCanvas interactions', () => {
     });
 
     it('drag object into frame sets parentFrameId', () => {
-      mockSelectedIds = ['sticky-1'];
+      mockSelectedIds = new Set(['sticky-1']);
       const onObjectUpdate = vi.fn();
       const frame = createObject({
         id: 'frame-1',
@@ -949,7 +953,7 @@ describe('BoardCanvas interactions', () => {
     });
 
     it('drag object out of frame clears parentFrameId', () => {
-      mockSelectedIds = ['sticky-1'];
+      mockSelectedIds = new Set(['sticky-1']);
       const onObjectUpdate = vi.fn();
       const frame = createObject({
         id: 'frame-1',
