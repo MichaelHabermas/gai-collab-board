@@ -43,9 +43,8 @@ describe('useConnectorCreation', () => {
   const objB = makeObject('b', 300, 300, 100, 100);
   const objects = [objA, objB];
 
-  const mockOnCreate = vi.fn<
-    [Parameters<NonNullable<Parameters<typeof useConnectorCreation>[0]['onObjectCreate']>>[0]]
-  >();
+  type OnCreateFn = NonNullable<Parameters<typeof useConnectorCreation>[0]['onObjectCreate']>;
+  const mockOnCreate = vi.fn<OnCreateFn>();
   const mockSetActiveTool = vi.fn();
   const activeToolRef = { current: 'connector' as ToolMode };
 
