@@ -15,6 +15,8 @@ interface IDragOffsetState {
 interface IDragOffsetActions {
   setFrameDragOffset: (offset: IFrameDragOffset | null) => void;
   setDropTargetFrameId: (id: string | null) => void;
+  /** Clear both drag offset and drop target in a single store update. */
+  clearDragState: () => void;
 }
 
 type IDragOffsetStore = IDragOffsetState & IDragOffsetActions;
@@ -25,6 +27,7 @@ export const useDragOffsetStore = create<IDragOffsetStore>()((set) => ({
 
   setFrameDragOffset: (offset) => set({ frameDragOffset: offset }),
   setDropTargetFrameId: (id) => set({ dropTargetFrameId: id }),
+  clearDragState: () => set({ frameDragOffset: null, dropTargetFrameId: null }),
 }));
 
 // ── Selectors ──────────────────────────────────────────────────────────

@@ -225,6 +225,26 @@ export const StickyNote = memo(
         }
       }, [ref]);
 
+      // Cache as bitmap when idle (not selected, not editing) for faster redraws.
+      // Invalidates when any visual prop changes.
+      useEffect(() => {
+        const group = groupRef.current;
+        if (!group || typeof group.cache !== 'function') return;
+
+        if (isSelected || isEditing) {
+          group.clearCache();
+        } else {
+          const frame = requestAnimationFrame(() => {
+            const g = groupRef.current;
+            if (g && typeof g.cache === 'function') {
+              g.cache({ pixelRatio: 2 });
+            }
+          });
+
+          return () => cancelAnimationFrame(frame);
+        }
+      }, [isSelected, isEditing, fill, text, width, height, fontSize, textFillColor, opacity]);
+
       return (
         <Group
           ref={groupRef}

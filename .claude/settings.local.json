@@ -13,7 +13,8 @@
       "mcp__Desktop_Commander__get_more_search_results",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(du:*)"
+      "Bash(du:*)",
+      "Bash(start \"\" \"C:\\\\Users\\\\haber\\\\.claude\\\\usage-data\\\\report.html\")"
     ]
   },
   "hooks": {

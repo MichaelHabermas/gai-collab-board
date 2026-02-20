@@ -1,4 +1,4 @@
-import { Stage, Layer, Rect, Line } from 'react-konva';
+import { Stage, Layer, Rect, Line, Shape } from 'react-konva';
 import { TransformHandler } from './TransformHandler';
 import { SelectionLayer } from './SelectionLayer';
 import { useRef, useCallback, useState, useEffect, useMemo, memo, type ReactElement } from 'react';
@@ -171,6 +171,7 @@ export const BoardCanvas = memo(
     // (stable refs) and never subscribe to the values in BoardCanvas itself.
     const setFrameDragOffset = useDragOffsetStore((s) => s.setFrameDragOffset);
     const setDropTargetFrameId = useDragOffsetStore((s) => s.setDropTargetFrameId);
+    const clearDragState = useDragOffsetStore((s) => s.clearDragState);
     const [isHoveringSelectionHandle, setIsHoveringSelectionHandle] = useState(false);
     const [connectorFrom, setConnectorFrom] = useState<{
       shapeId: string;
@@ -831,7 +832,6 @@ export const BoardCanvas = memo(
     const handleObjectDragEnd = useCallback(
       (objectId: string, x: number, y: number) => {
         setAlignmentGuides(null);
-        setDropTargetFrameId(null);
         const draggedObj = objectsById.get(objectId);
         if (!draggedObj) return;
 
@@ -1196,7 +1196,7 @@ export const BoardCanvas = memo(
 
         const nextHandler = (x: number, y: number) => {
           handleObjectDragEnd(objectId, x, y);
-          setFrameDragOffset(null);
+          clearDragState();
         };
         dragEndHandlerMapRef.current.set(objectId, nextHandler);
         return nextHandler;
@@ -1344,55 +1344,32 @@ export const BoardCanvas = memo(
       [onObjectUpdate, snapToGridEnabled, objectsById]
     );
 
-    const gridNodes = useMemo(() => {
-      if (!showGrid) {
-        return [];
-      }
+    /** Single Konva Shape that draws all grid lines via sceneFunc — replaces ~200 Rect nodes. */
+    const gridSceneFunc = useMemo(() => {
+      if (!showGrid) return undefined;
 
       const { position, scale, width, height } = viewport;
-      const gridLines: ReactElement[] = [];
-
-      // Calculate visible bounds in canvas coordinates
       const startX = Math.floor(-position.x / scale.x / GRID_SIZE) * GRID_SIZE - GRID_SIZE;
       const endX = Math.ceil((-position.x + width) / scale.x / GRID_SIZE) * GRID_SIZE + GRID_SIZE;
       const startY = Math.floor(-position.y / scale.y / GRID_SIZE) * GRID_SIZE - GRID_SIZE;
       const endY = Math.ceil((-position.y + height) / scale.y / GRID_SIZE) * GRID_SIZE + GRID_SIZE;
+      const lineWidthX = GRID_STROKE_WIDTH / scale.x;
+      const lineWidthY = GRID_STROKE_WIDTH / scale.y;
+      const color = gridColor;
 
-      // Vertical lines
-      for (let x = startX; x <= endX; x += GRID_SIZE) {
-        gridLines.push(
-          <Rect
-            key={`v-${x}`}
-            x={x}
-            y={startY}
-            width={GRID_STROKE_WIDTH / scale.x}
-            height={endY - startY}
-            fill={gridColor}
-            opacity={GRID_LINE_OPACITY}
-            listening={false}
-            perfectDrawEnabled={false}
-          />
-        );
-      }
+      return (ctx: Konva.Context) => {
+        ctx.setAttr('globalAlpha', GRID_LINE_OPACITY);
+        ctx.setAttr('fillStyle', color);
 
-      // Horizontal lines
-      for (let y = startY; y <= endY; y += GRID_SIZE) {
-        gridLines.push(
-          <Rect
-            key={`h-${y}`}
-            x={startX}
-            y={y}
-            width={endX - startX}
-            height={GRID_STROKE_WIDTH / scale.y}
-            fill={gridColor}
-            opacity={GRID_LINE_OPACITY}
-            listening={false}
-            perfectDrawEnabled={false}
-          />
-        );
-      }
-
-      return gridLines;
+        // Vertical lines
+        for (let x = startX; x <= endX; x += GRID_SIZE) {
+          ctx.fillRect(x, startY, lineWidthX, endY - startY);
+        }
+        // Horizontal lines
+        for (let y = startY; y <= endY; y += GRID_SIZE) {
+          ctx.fillRect(startX, y, endX - startX, lineWidthY);
+        }
+      };
     }, [showGrid, viewport, gridColor]);
 
     // Per-shape subscription render loop (A.5): each StoreShapeRenderer subscribes
@@ -1729,10 +1706,10 @@ export const BoardCanvas = memo(
                         : 'crosshair',
           }}
         >
-          {/* Background grid layer - static, no interaction; only when show grid is on */}
-          {showGrid && (
+          {/* Background grid layer - single Shape draws all lines; no interaction */}
+          {gridSceneFunc && (
             <Layer listening={false} name='grid'>
-              {gridNodes}
+              <Shape sceneFunc={gridSceneFunc} listening={false} perfectDrawEnabled={false} />
             </Layer>
           )}
 
