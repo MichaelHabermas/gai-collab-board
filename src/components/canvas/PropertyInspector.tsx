@@ -6,8 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useDebouncedNumberField } from '@/hooks/useDebouncedNumberField';
 import { getFrameChildren } from '@/hooks/useFrameContainment';
+import { queueWrite } from '@/lib/writeQueue';
 import type { IBoardObject, ArrowheadMode, StrokeStyle } from '@/types';
 import type { IUpdateObjectParams } from '@/modules/sync/objectService';
+
+/** Optimistic store update + debounced Firestore write for high-frequency property changes. */
+const queueUpdate = (objectId: string, updates: IUpdateObjectParams): void => {
+  useObjectsStore.getState().updateObject(objectId, updates);
+  queueWrite(objectId, updates);
+};
 
 const MIXED_PLACEHOLDER = 'Mixed';
 const DEFAULT_STICKY_TEXT_COLOR = '#000000';
@@ -121,27 +128,27 @@ const FrameProperties = ({
       const num = Number(value);
       if (Number.isNaN(num) || num < 0 || num > 100) return;
 
-      onObjectUpdate(frame.id, { opacity: num / 100 });
+      queueUpdate(frame.id, { opacity: num / 100 });
     },
-    [frame.id, onObjectUpdate]
+    [frame.id]
   );
 
   const handleFillChange = useCallback(
     (value: string) => {
       if (!value) return;
 
-      onObjectUpdate(frame.id, { fill: value });
+      queueUpdate(frame.id, { fill: value });
     },
-    [frame.id, onObjectUpdate]
+    [frame.id]
   );
 
   const handleStrokeChange = useCallback(
     (value: string) => {
       if (!value) return;
 
-      onObjectUpdate(frame.id, { stroke: value });
+      queueUpdate(frame.id, { stroke: value });
     },
-    [frame.id, onObjectUpdate]
+    [frame.id]
   );
 
   const handleSelectAllChildren = useCallback(() => {
@@ -447,7 +454,7 @@ export const PropertyInspector = memo(function PropertyInspector({
 
     selectedObjects.forEach((obj) => {
       if (supportsFill(obj.type)) {
-        onObjectUpdate(obj.id, { fill: value });
+        queueUpdate(obj.id, { fill: value });
       }
     });
   };
@@ -457,7 +464,7 @@ export const PropertyInspector = memo(function PropertyInspector({
 
     selectedObjects.forEach((obj) => {
       if (supportsStroke(obj.type)) {
-        onObjectUpdate(obj.id, { stroke: value });
+        queueUpdate(obj.id, { stroke: value });
       }
     });
   };
@@ -502,7 +509,7 @@ export const PropertyInspector = memo(function PropertyInspector({
 
       const updates: IUpdateObjectParams =
         obj.type === 'sticky' ? { textFill: value } : { fill: value };
-      onObjectUpdate(obj.id, updates);
+      queueUpdate(obj.id, updates);
     });
   };
 
@@ -514,7 +521,7 @@ export const PropertyInspector = memo(function PropertyInspector({
 
     const opacity = num / 100;
     selectedObjects.forEach((obj) => {
-      onObjectUpdate(obj.id, { opacity });
+      queueUpdate(obj.id, { opacity });
     });
   };
 

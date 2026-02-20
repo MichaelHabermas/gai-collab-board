@@ -17,6 +17,9 @@ const pendingWrites = new Map<string, IPendingWrite>();
 let timer: ReturnType<typeof setTimeout> | null = null;
 let activeBoardId: string | null = null;
 
+let totalFlushes = 0;
+let totalCoalesced = 0;
+
 /** Set the active board for queued writes. Call when board changes. */
 export function setWriteQueueBoard(boardId: string | null): void {
   // Flush any pending writes for the previous board before switching
@@ -50,10 +53,17 @@ export async function flush(): Promise<void> {
   if (pendingWrites.size === 0 || !activeBoardId) return;
 
   const batch = Array.from(pendingWrites.values());
+  totalCoalesced += batch.length - 1;
+  totalFlushes++;
   pendingWrites.clear();
 
   try {
     await updateObjectsBatch(activeBoardId, batch);
+
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.debug(`[writeQueue] flushed ${batch.length} objects (${totalFlushes} flushes, ${totalCoalesced} coalesced total)`);
+    }
   } catch (err) {
     // Re-queue failed writes so they aren't silently lost
     for (const entry of batch) {
@@ -74,6 +84,12 @@ export async function flush(): Promise<void> {
 export function pendingCount(): number {
 
   return pendingWrites.size;
+}
+
+/** Dev telemetry: snapshot of queue stats. */
+export function getWriteQueueStats(): { pending: number; totalFlushes: number; totalCoalesced: number } {
+
+  return { pending: pendingWrites.size, totalFlushes, totalCoalesced };
 }
 
 // Flush on page unload to prevent data loss

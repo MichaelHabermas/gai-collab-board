@@ -70,6 +70,7 @@ import {
   findContainingFrame,
 } from '@/hooks/useFrameContainment';
 import { perfTime } from '@/lib/perfTimer';
+import { queueWrite } from '@/lib/writeQueue';
 
 interface IBoardCanvasProps {
   boardId: string;
@@ -1265,12 +1266,13 @@ export const BoardCanvas = memo(
       [snapToGridEnabled, dragBoundFuncCacheRef, guideCandidateBoundsRef]
     );
 
-    // Handle text change for sticky notes
+    // Handle text change for sticky notes — optimistic store update + debounced Firestore write
     const handleTextChange = useCallback(
       (objectId: string, text: string) => {
-        onObjectUpdate?.(objectId, { text });
+        useObjectsStore.getState().updateObject(objectId, { text });
+        queueWrite(objectId, { text });
       },
-      [onObjectUpdate]
+      []
     );
 
     const selectHandlerMapRef = useRef<Map<string, () => void>>(new Map());
