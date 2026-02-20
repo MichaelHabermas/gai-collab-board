@@ -29,7 +29,9 @@
       "WebFetch(domain:api.reference.langfuse.com)",
       "WebFetch(domain:www.npmjs.com)",
       "Bash(git status:*)",
-      "Bash(bunx eslint:*)"
+      "Bash(bunx eslint:*)",
+      "mcp__Context7__resolve-library-id",
+      "mcp__Context7__get-library-docs"
     ]
   },
   "hooks": {

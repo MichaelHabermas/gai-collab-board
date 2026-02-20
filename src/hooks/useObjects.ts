@@ -260,9 +260,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
       // Pre-filter: skip changes for objects with in-flight Firestore writes.
       // These are self-echoes — the local state already reflects the correct position.
       if (!update.isInitialSnapshot && inFlightIdsRef.current.size > 0) {
-        const filtered = update.changes.filter(
-          (c) => !inFlightIdsRef.current.has(c.object.id)
-        );
+        const filtered = update.changes.filter((c) => !inFlightIdsRef.current.has(c.object.id));
 
         if (filtered.length === 0) {
           return;
