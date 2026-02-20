@@ -41,6 +41,15 @@ describe('getProxyBaseURLFromEnv', () => {
     ).toBe('http://localhost:5173/api/ai/v1');
   });
 
+  it('ignores VITE_AI_PROXY_URL in dev to avoid CORS (always same-origin)', () => {
+    expect(
+      getProxyBaseURLFromEnv(
+        { DEV: true, VITE_AI_PROXY_URL: 'https://gai-collab-board.onrender.com/api/ai/v1' },
+        'http://localhost:5173'
+      )
+    ).toBe('http://localhost:5173/api/ai/v1');
+  });
+
   it('returns path only when no origin (e.g. SSR)', () => {
     expect(getProxyBaseURLFromEnv({ DEV: false })).toBe('/api/ai/v1');
     expect(getProxyBaseURLFromEnv({ DEV: true })).toBe('/api/ai/v1');

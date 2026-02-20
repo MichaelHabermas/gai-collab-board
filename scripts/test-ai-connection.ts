@@ -72,7 +72,7 @@ async function run(): Promise<void> {
     const config = getDirectConfig();
     if (!config) {
       process.stderr.write(
-        'Error: --direct requires an AI API key (GEMINI_API_KEY, VITE_GEMINI_API_KEY, GROQ_API_KEY, or VITE_GROQ_API_KEY).\n'
+        'Error: --direct requires an AI API key (AI_API_KEY, VITE_AI_API_KEY, or provider-specific key).\n'
       );
       process.exit(1);
     }

@@ -14,6 +14,13 @@ describe('normalizeAIErrorMessage', () => {
     expect(msg).toMatch(/quota|rate limit/);
   });
 
+  it('returns proxy 404 guidance for 404 status', () => {
+    const err = new AIError('Not Found', undefined, 404);
+    const msg = normalizeAIErrorMessage(err);
+    expect(msg).toMatch(/404|not found/);
+    expect(msg).toMatch(/VITE_AI_API_KEY|restart|dev server/);
+  });
+
   it('returns auth guidance for 401 status', () => {
     const err = new AIError('Unauthorized', undefined, 401);
     const msg = normalizeAIErrorMessage(err);

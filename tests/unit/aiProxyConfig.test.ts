@@ -6,6 +6,14 @@ describe('server ai-proxy-config getProviderAndKey', () => {
 
   beforeEach(() => {
     process.env = { ...originalEnv };
+    delete process.env.AI_API_KEY;
+    delete process.env.VITE_AI_API_KEY;
+    delete process.env.GEMINI_API_KEY;
+    delete process.env.VITE_GEMINI_API_KEY;
+    delete process.env.GROQ_API_KEY;
+    delete process.env.VITE_GROQ_API_KEY;
+    delete process.env.VITE_AI_PROVIDER;
+    delete process.env.AI_PROVIDER;
   });
 
   afterEach(() => {
@@ -13,11 +21,22 @@ describe('server ai-proxy-config getProviderAndKey', () => {
   });
 
   it('returns null when no AI API key is set', () => {
+    delete process.env.AI_API_KEY;
+    delete process.env.VITE_AI_API_KEY;
     delete process.env.GEMINI_API_KEY;
     delete process.env.VITE_GEMINI_API_KEY;
     delete process.env.GROQ_API_KEY;
     delete process.env.VITE_GROQ_API_KEY;
     expect(getProviderAndKey()).toBeNull();
+  });
+
+  it('returns config when VITE_AI_API_KEY is set (agnostic key)', () => {
+    process.env.VITE_AI_PROVIDER = 'gemini';
+    process.env.VITE_AI_API_KEY = 'agnostic-key';
+    const config = getProviderAndKey();
+    expect(config).not.toBeNull();
+    expect(config?.apiKey).toBe('agnostic-key');
+    expect(config?.baseURL).toContain('generativelanguage.googleapis.com');
   });
 
   it('returns config with Gemini base URL when VITE_GEMINI_API_KEY is set', () => {
@@ -38,10 +57,12 @@ describe('server ai-proxy-config getProviderAndKey', () => {
     expect(config?.baseURL).toContain('api.groq.com');
   });
 
-  it('returns config when VITE_GROQ_API_KEY is set (default provider uses Gemini keys first)', () => {
-    process.env.VITE_GROQ_API_KEY = 'fallback-key';
+  it('returns config when VITE_AI_API_KEY is set and provider is groq', () => {
+    process.env.VITE_AI_PROVIDER = 'groq';
+    process.env.VITE_AI_API_KEY = 'agnostic-key';
     const config = getProviderAndKey();
     expect(config).not.toBeNull();
-    expect(config?.apiKey).toBe('fallback-key');
+    expect(config?.apiKey).toBe('agnostic-key');
+    expect(config?.baseURL).toContain('api.groq.com');
   });
 });

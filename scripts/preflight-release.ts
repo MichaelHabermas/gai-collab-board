@@ -15,6 +15,8 @@ const OPTIONAL_PROXY_PATH_KEY = 'VITE_AI_PROXY_PATH';
 const OPTIONAL_PROXY_URL_KEY = 'VITE_AI_PROXY_URL';
 const FIREBASE_DEPLOY_PROJECT_KEYS = ['FIREBASE_PROJECT_ID', 'VITE_FIREBASE_PROJECT_ID'] as const;
 const AI_KEY_KEYS = [
+  'AI_API_KEY',
+  'VITE_AI_API_KEY',
   'GEMINI_API_KEY',
   'VITE_GEMINI_API_KEY',
   'GROQ_API_KEY',
@@ -76,7 +78,9 @@ const run = (): void => {
   }
 
   if (!hasAnyValue(AI_KEY_KEYS)) {
-    missing.push('One of: GEMINI_API_KEY, VITE_GEMINI_API_KEY, GROQ_API_KEY, VITE_GROQ_API_KEY');
+    missing.push(
+      'One of: AI_API_KEY, VITE_AI_API_KEY, GEMINI_API_KEY, VITE_GEMINI_API_KEY, GROQ_API_KEY, VITE_GROQ_API_KEY'
+    );
   }
 
   if (missing.length > 0) {

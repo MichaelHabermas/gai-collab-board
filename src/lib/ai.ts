@@ -13,21 +13,25 @@ export interface IAIProxyEnv {
   VITE_AI_PROVIDER?: string;
 }
 
-/** Resolves AI proxy base URL from env (testable). */
+/** Resolves AI proxy base URL from env (testable). In dev, always use same-origin proxy to avoid CORS. */
 export function getProxyBaseURLFromEnv(env: IAIProxyEnv, origin?: string): string {
+  if (env.DEV) {
+    const path = DEV_PROXY_PATH;
+    if (origin) {
+      return origin + path;
+    }
+    return path;
+  }
+
   const proxyUrl = (env.VITE_AI_PROXY_URL ?? '').trim();
   if (proxyUrl) {
     return proxyUrl;
   }
 
-  const path = env.DEV
-    ? DEV_PROXY_PATH
-    : (env.VITE_AI_PROXY_PATH ?? '').trim() || DEFAULT_PROD_PROXY_PATH;
-
+  const path = (env.VITE_AI_PROXY_PATH ?? '').trim() || DEFAULT_PROD_PROXY_PATH;
   if (origin) {
     return origin + path;
   }
-
   return path;
 }
 
@@ -54,7 +58,12 @@ export const createAIClient = (): OpenAI => {
   const baseURL = getProxyBaseURL();
   const apiKey = 'proxy'; /* Proxy injects the real key; client does not send it */
 
-  return new OpenAI({ apiKey, baseURL, dangerouslyAllowBrowser: true });
+  return new OpenAI({
+    apiKey,
+    baseURL,
+    dangerouslyAllowBrowser: true,
+    maxRetries: 0,
+  });
 };
 
 export const aiClient = createAIClient();

@@ -7,6 +7,7 @@ import {
   getActiveAIProviderConfig,
   AI_PROVIDER_GEMINI,
   AI_PROVIDER_GROQ,
+  AI_MODEL_GEMINI,
 } from '@/modules/ai/providerConfig';
 
 describe('providerConfig', () => {
@@ -18,6 +19,17 @@ describe('providerConfig', () => {
 
     it('returns groq when VITE_AI_PROVIDER is groq', () => {
       expect(getProviderFromEnv({ VITE_AI_PROVIDER: 'groq' })).toBe(AI_PROVIDER_GROQ);
+    });
+
+    it('returns groq when AI_PROVIDER is groq (server/Render fallback)', () => {
+      expect(getProviderFromEnv({ AI_PROVIDER: 'groq' })).toBe(AI_PROVIDER_GROQ);
+      expect(getProviderFromEnv({ AI_PROVIDER: 'GROQ' })).toBe(AI_PROVIDER_GROQ);
+    });
+
+    it('prefers VITE_AI_PROVIDER over AI_PROVIDER', () => {
+      expect(
+        getProviderFromEnv({ VITE_AI_PROVIDER: 'gemini', AI_PROVIDER: 'groq' })
+      ).toBe(AI_PROVIDER_GEMINI);
     });
 
     it('returns default (gemini) when VITE_AI_PROVIDER is empty or unknown', () => {
@@ -39,7 +51,7 @@ describe('providerConfig', () => {
 
   describe('getModelForProvider', () => {
     it('returns gemini-2.0-flash for gemini', () => {
-      expect(getModelForProvider(AI_PROVIDER_GEMINI)).toBe('gemini-2.0-flash');
+      expect(getModelForProvider(AI_PROVIDER_GEMINI)).toBe(AI_MODEL_GEMINI);
     });
 
     it('returns llama model for groq', () => {
@@ -48,7 +60,25 @@ describe('providerConfig', () => {
   });
 
   describe('getApiKeyForProvider', () => {
-    it('returns Gemini key when set (prefers GEMINI_API_KEY then VITE_*)', () => {
+    it('returns agnostic key first for any provider (VITE_AI_API_KEY or AI_API_KEY)', () => {
+      expect(
+        getApiKeyForProvider({ VITE_AI_API_KEY: 'agnostic' }, AI_PROVIDER_GEMINI)
+      ).toBe('agnostic');
+      expect(
+        getApiKeyForProvider({ VITE_AI_API_KEY: 'agnostic' }, AI_PROVIDER_GROQ)
+      ).toBe('agnostic');
+      expect(getApiKeyForProvider({ AI_API_KEY: 'server-key' }, AI_PROVIDER_GEMINI)).toBe(
+        'server-key'
+      );
+      expect(
+        getApiKeyForProvider(
+          { AI_API_KEY: 'a', VITE_AI_API_KEY: 'b', GEMINI_API_KEY: 'c' },
+          AI_PROVIDER_GEMINI
+        )
+      ).toBe('a');
+    });
+
+    it('falls back to provider-specific keys when agnostic unset', () => {
       expect(getApiKeyForProvider({ GEMINI_API_KEY: 'key1' }, AI_PROVIDER_GEMINI)).toBe('key1');
       expect(getApiKeyForProvider({ VITE_GEMINI_API_KEY: 'key2' }, AI_PROVIDER_GEMINI)).toBe('key2');
       expect(
@@ -57,9 +87,6 @@ describe('providerConfig', () => {
           AI_PROVIDER_GEMINI
         )
       ).toBe('a');
-    });
-
-    it('returns Groq key when set', () => {
       expect(getApiKeyForProvider({ GROQ_API_KEY: 'gkey' }, AI_PROVIDER_GROQ)).toBe('gkey');
     });
 
@@ -78,7 +105,7 @@ describe('providerConfig', () => {
       const config = getActiveAIProviderConfig(env);
       expect(config.provider).toBe(AI_PROVIDER_GEMINI);
       expect(config.baseURL).toContain('generativelanguage.googleapis.com');
-      expect(config.model).toBe('gemini-2.0-flash');
+      expect(config.model).toBe(AI_MODEL_GEMINI);
       expect(config.apiKey).toBe('test-key');
     });
 

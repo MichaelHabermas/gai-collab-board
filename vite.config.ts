@@ -37,10 +37,14 @@ function getAiProxyConfig(env: Record<string, string>) {
   const envWithUndefined = env as Record<string, string | undefined>;
   const { baseURL, apiKey } = getActiveAIProviderConfig(envWithUndefined);
   if (apiKey) {
+    const isGemini = baseURL.includes('generativelanguage.googleapis.com');
     return {
       target: baseURL,
       apiKey,
-      rewrite: (pathSegment: string) => pathSegment.replace(/^\/api\/ai/, ''),
+      rewrite: (pathSegment: string) =>
+        isGemini
+          ? pathSegment.replace(/^\/api\/ai\/v1/, '/')
+          : pathSegment.replace(/^\/api\/ai/, ''),
     };
   }
   return null;
@@ -93,6 +97,20 @@ export default defineConfig(({ mode }) => {
                     const config = getAiProxyConfigFromFile(envDir);
                     if (config?.apiKey) {
                       proxyReq.setHeader('Authorization', `Bearer ${config.apiKey}`);
+                    }
+                  });
+                  proxy.on('proxyRes', (proxyRes) => {
+                    if (proxyRes.statusCode === 429 || (proxyRes.statusCode && proxyRes.statusCode >= 400)) {
+                      const chunks: Buffer[] = [];
+                      proxyRes.on('data', (chunk: Buffer) => {
+                        chunks.push(chunk);
+                      });
+                      proxyRes.on('end', () => {
+                        const body = Buffer.concat(chunks).toString('utf8').slice(0, 500);
+                        process.stderr.write(
+                          `[Vite AI proxy] upstream ${proxyRes.statusCode} ${proxyRes.statusMessage ?? ''}: ${body}${body.length >= 500 ? '...' : ''}\n`
+                        );
+                      });
                     }
                   });
                 },

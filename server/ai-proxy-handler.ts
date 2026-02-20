@@ -15,7 +15,7 @@ export interface IProxyResult {
 const FORWARD_HEADERS = ['content-type'];
 
 const NO_PROVIDER_MESSAGE =
-  'No AI provider configured. Set GEMINI_API_KEY or GROQ_API_KEY (or VITE_* equivalents) on the server.';
+  'No AI provider configured. Set AI_API_KEY or VITE_AI_API_KEY (or provider-specific GEMINI_API_KEY / GROQ_API_KEY) on the server.';
 
 /**
  * Handles a proxy request: resolves provider key and base URL, forwards request, returns response.
@@ -38,7 +38,10 @@ export async function handleProxyRequest(
     };
   }
 
-  const path = pathSuffix.startsWith('/') ? pathSuffix : `/${pathSuffix}`;
+  let path = pathSuffix.startsWith('/') ? pathSuffix : `/${pathSuffix}`;
+  if (config.baseURL.includes('generativelanguage.googleapis.com')) {
+    path = path.replace(/^\/v1/, '') || '/';
+  }
   const url = `${config.baseURL}${path}`;
 
   const headers: Record<string, string> = {
@@ -60,6 +63,11 @@ export async function handleProxyRequest(
       body: body ?? undefined,
     });
     const responseBody = await res.text();
+    if (res.status === 429 || res.status >= 400) {
+      process.stderr.write(
+        `[AI proxy] upstream ${res.status} ${res.statusText}: ${responseBody.slice(0, 500)}${responseBody.length > 500 ? '...' : ''}\n`
+      );
+    }
     const requestModel = parseModelFromRequestBody(body);
     try {
       await recordRuntimeProxyUsage({

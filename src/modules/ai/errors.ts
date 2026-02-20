@@ -10,25 +10,28 @@ export class AIError extends Error {
   }
 }
 
+/** 429 is not retried: rate limit means "slow down"; retrying soon worsens it. Only 5xx are retried. */
 export const isRetryableError = (error: unknown): boolean => {
   if (error instanceof AIError && error.status != null) {
-    return error.status === 429 || (error.status >= 500 && error.status < 600);
+    return error.status >= 500 && error.status < 600;
   }
 
   if (error instanceof Error && 'status' in error) {
     const { status } = error as Error & { status?: number };
-    return status === 429 || (status != null && status >= 500 && status < 600);
+    return status != null && status >= 500 && status < 600;
   }
 
   return false;
 };
 
 const QUOTA_GUIDANCE =
-  'Check your AI provider plan and billing, or try again later. You can switch provider in .env (VITE_AI_PROVIDER).';
+  'Check Google AI Studio (aistudio.google.com) for quotas and usage, or try again later.';
 const AUTH_GUIDANCE =
   'Set the correct API key in .env for local dev, or on the server in production.';
 const NETWORK_GUIDANCE = 'Check your network and that the AI proxy is reachable.';
 const UNAVAILABLE_GUIDANCE = 'Retry in a few moments.';
+const PROXY_404_GUIDANCE =
+  'For local dev, set VITE_AI_API_KEY in .env and restart the dev server (bun run dev).';
 
 /** Classify error and return a user-facing message with optional remediation hint. */
 export function normalizeAIErrorMessage(error: unknown): string {
@@ -38,6 +41,10 @@ export function normalizeAIErrorMessage(error: unknown): string {
       : undefined;
   const rawMessage =
     error instanceof Error ? error.message : typeof error === 'string' ? error : '';
+
+  if (status === 404) {
+    return `AI proxy returned 404 (not found). ${PROXY_404_GUIDANCE}`;
+  }
 
   if (status === 429 || /quota|rate limit|too many requests/i.test(rawMessage)) {
     return `Rate limit or quota exceeded. ${QUOTA_GUIDANCE}`;

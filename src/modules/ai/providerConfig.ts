@@ -7,6 +7,10 @@
 export const AI_PROVIDER_GEMINI = 'gemini';
 export const AI_PROVIDER_GROQ = 'groq';
 
+/** Default model IDs per provider. Change here to switch models. */
+export const AI_MODEL_GEMINI = 'gemini-2.0-flash';
+export const AI_MODEL_GROQ = 'llama-3.3-70b-versatile';
+
 export type AIProviderId = typeof AI_PROVIDER_GEMINI | typeof AI_PROVIDER_GROQ;
 
 export const AI_PROVIDER_DEFAULTS: Record<
@@ -15,21 +19,21 @@ export const AI_PROVIDER_DEFAULTS: Record<
 > = {
   [AI_PROVIDER_GEMINI]: {
     baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai',
-    model: 'gemini-2.0-flash',
-    envKeyNames: ['GEMINI_API_KEY', 'VITE_GEMINI_API_KEY', 'VITE_GROQ_API_KEY'],
+    model: AI_MODEL_GEMINI,
+    envKeyNames: ['GEMINI_API_KEY', 'VITE_GEMINI_API_KEY'],
   },
   [AI_PROVIDER_GROQ]: {
     baseURL: 'https://api.groq.com/openai',
-    model: 'llama-3.3-70b-versatile',
+    model: AI_MODEL_GROQ,
     envKeyNames: ['GROQ_API_KEY', 'VITE_GROQ_API_KEY'],
   },
 };
 
 const DEFAULT_PROVIDER: AIProviderId = AI_PROVIDER_GEMINI;
 
-/** Resolve provider from env. Prefer VITE_AI_PROVIDER; fallback to default. */
+/** Resolve provider from env. Prefer VITE_AI_PROVIDER; then AI_PROVIDER (e.g. Render); else default. */
 export function getProviderFromEnv(env: Record<string, string | undefined>): AIProviderId {
-  const raw = (env.VITE_AI_PROVIDER ?? '').trim().toLowerCase();
+  const raw = (env.VITE_AI_PROVIDER ?? env.AI_PROVIDER ?? '').trim().toLowerCase();
   if (raw === AI_PROVIDER_GROQ) {
     return AI_PROVIDER_GROQ;
   }
@@ -51,11 +55,20 @@ export function getModelForProvider(provider: AIProviderId): string {
   return AI_PROVIDER_DEFAULTS[provider].model;
 }
 
-/** Resolve API key for the given provider from env (order: envKeyNames). */
+/** Agnostic env key names checked first for any provider (one-stop replacement). */
+const AI_AGNOSTIC_KEY_NAMES: readonly string[] = ['AI_API_KEY', 'VITE_AI_API_KEY'];
+
+/** Resolve API key for the given provider from env. Checks agnostic keys first, then provider-specific. */
 export function getApiKeyForProvider(
   env: Record<string, string | undefined>,
   provider: AIProviderId
 ): string {
+  for (const key of AI_AGNOSTIC_KEY_NAMES) {
+    const value = (env[key] ?? '').trim();
+    if (value) {
+      return value;
+    }
+  }
   const keys = AI_PROVIDER_DEFAULTS[provider].envKeyNames;
   for (const key of keys) {
     const value = (env[key] ?? '').trim();

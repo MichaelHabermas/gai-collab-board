@@ -46,14 +46,14 @@ If you see **"AI service returned an unexpected response"** on the deployed site
 1. Create a second Render **Web Service** for the proxy (or use the repo’s [render.yaml](../render.yaml) blueprint).
 2. **Build**: `bun install` (so Bun is available).
 3. **Start**: `bun run proxy` (runs [server/index.ts](../server/index.ts)).
-4. Set env on the proxy service: `GROQ_API_KEY`. Render sets `PORT` automatically.
+4. Set env on the proxy service: one AI key (`AI_API_KEY` or `VITE_AI_API_KEY` for any provider, or provider-specific `GEMINI_API_KEY` / `GROQ_API_KEY`) and provider (`AI_PROVIDER=groq` or `VITE_AI_PROVIDER=gemini`). Render sets `PORT` automatically.
 5. Set env on the **frontend** (Static Site): `VITE_AI_PROXY_URL=https://<your-proxy-service-name>.onrender.com/api/ai/v1` (full base URL including the path). Redeploy the frontend after setting this so the value is inlined at build time.
 
 ### Proxy server (in-repo)
 
-- **Start locally**: `GROQ_API_KEY=your_key bun run proxy` (listens on port 3001 by default).
-- **Path**: `POST /api/ai/v1/*` (e.g. `/api/ai/v1/chat/completions`) is forwarded to Groq.
-- **Env**: `GROQ_API_KEY`.
+- **Start locally**: `VITE_AI_API_KEY=your_key bun run proxy` (or `AI_API_KEY` / provider-specific key). Default provider is Gemini; set `VITE_AI_PROVIDER=groq` to use Groq.
+- **Path**: `POST /api/ai/v1/*` is forwarded to the configured provider.
+- **Env**: One key (`AI_API_KEY` or `VITE_AI_API_KEY`, or `GEMINI_API_KEY` / `GROQ_API_KEY`) and provider (`AI_PROVIDER` or `VITE_AI_PROVIDER` = `gemini` or `groq`).
 
 If the frontend is on the same origin as the proxy, you do not need `VITE_AI_PROXY_URL`; the app defaults to `/api/ai/v1` in production.
 
@@ -67,12 +67,13 @@ If the frontend is on the same origin as the proxy, you do not need `VITE_AI_PRO
   `VITE_FIREBASE_DATABASE_URL`
 - **AI (optional)**:
   - `VITE_AI_PROXY_URL`: full URL of the AI proxy (e.g. `https://your-proxy.onrender.com/api/ai/v1`) when the proxy is on a different host.
-  - `VITE_AI_PROXY_PATH`: override path when proxy is on same origin (default production path is `/api/ai/v1`).
+  - `VITE_AI_PROXY_PATH`: path only when proxy is on same origin (e.g. `/api/ai/v1`). Do not set to a full URL; use `VITE_AI_PROXY_URL` for a different host.
 - **App**: `VITE_APP_NAME` (optional).
 
 ### AI proxy service (Render Web Service running `bun run proxy`)
 
-- `GROQ_API_KEY` (server-side; not prefixed with `VITE_`).
+- **Provider**: `AI_PROVIDER` or `VITE_AI_PROVIDER` = `gemini` or `groq` (render.yaml may set `AI_PROVIDER=groq`).
+- **Key**: `AI_API_KEY` or `VITE_AI_API_KEY` (one key for any provider), or provider-specific `GEMINI_API_KEY` / `GROQ_API_KEY`. Prefer `AI_API_KEY` on the server so the key is not inlined in client builds.
 - `PORT`: set by Render.
 - **CORS:** Set `CORS_ALLOWED_ORIGINS=https://gai-collab-board.onrender.com` (or your static site origin) so the proxy only allows that origin. If unset, the proxy uses `Access-Control-Allow-Origin: *`. Redeploy the proxy after changing this.
 
