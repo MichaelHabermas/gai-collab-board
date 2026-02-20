@@ -35,8 +35,6 @@ describe('frame grouping — useCanvasOperations', () => {
   let onObjectDelete: (objectId: string) => void;
   let onObjectsDeleteBatch: (objectIds: string[]) => void | Promise<void>;
   let clearSelection: () => void;
-  let setSelectedIds: (ids: string[]) => void;
-
   beforeEach(() => {
     onObjectCreate = vi.fn<(params: Partial<IBoardObject>) => void>();
     onObjectUpdate = vi.fn<(objectId: string, updates: Partial<IBoardObject>) => void>();
@@ -44,7 +42,6 @@ describe('frame grouping — useCanvasOperations', () => {
     onObjectDelete = vi.fn<(objectId: string) => void>();
     onObjectsDeleteBatch = vi.fn<(objectIds: string[]) => void>().mockResolvedValue(undefined) as unknown as (objectIds: string[]) => void | Promise<void>;
     clearSelection = vi.fn<() => void>();
-    setSelectedIds = vi.fn<(ids: string[]) => void>();
   });
 
   afterEach(() => {
@@ -64,7 +61,7 @@ describe('frame grouping — useCanvasOperations', () => {
         useCanvasOperations({
           objects: [frame, child1, child2, unrelated],
           selectedIds: ['frame-1'],
-          setSelectedIds,
+
           onObjectCreate,
           onObjectUpdate,
           onObjectsUpdate,
@@ -97,7 +94,7 @@ describe('frame grouping — useCanvasOperations', () => {
         useCanvasOperations({
           objects: [frame, child1, child2],
           selectedIds: ['frame-1', 'child-1'], // child-1 is also being deleted
-          setSelectedIds,
+
           onObjectCreate,
           onObjectUpdate,
           onObjectsUpdate,
@@ -124,7 +121,7 @@ describe('frame grouping — useCanvasOperations', () => {
         useCanvasOperations({
           objects: [frame],
           selectedIds: ['frame-1'],
-          setSelectedIds,
+
           onObjectCreate,
           onObjectUpdate,
           onObjectsUpdate,
@@ -151,7 +148,7 @@ describe('frame grouping — useCanvasOperations', () => {
         useCanvasOperations({
           objects: [frame, child],
           selectedIds: ['frame-1'],
-          setSelectedIds,
+
           onObjectCreate,
           onObjectUpdate,
           // no onObjectsUpdate
@@ -178,7 +175,7 @@ describe('frame grouping — useCanvasOperations', () => {
         useCanvasOperations({
           objects: [child],
           selectedIds: ['child-1'],
-          setSelectedIds,
+
           onObjectCreate,
           onObjectDelete,
           clearSelection,
@@ -207,7 +204,7 @@ describe('frame grouping — useCanvasOperations', () => {
         useCanvasOperations({
           objects: [child],
           selectedIds: ['child-1'],
-          setSelectedIds,
+
           onObjectCreate,
           onObjectDelete,
           clearSelection,

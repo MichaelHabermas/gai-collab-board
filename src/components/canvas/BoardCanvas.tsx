@@ -321,7 +321,6 @@ export const BoardCanvas = memo(
     useCanvasOperations({
       objects,
       selectedIds: selectedIdsArray,
-      setSelectedIds,
       onObjectCreate:
         (onObjectCreate as (params: Partial<IBoardObject>) => Promise<IBoardObject | null>) ||
         (() => Promise.resolve(null)),

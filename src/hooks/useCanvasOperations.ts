@@ -1,12 +1,13 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { IBoardObject } from '@/types';
 import { getFrameChildren } from '@/hooks/useFrameContainment';
 import { getObjectBounds } from '@/lib/canvasBounds';
+import { useSelectionStore } from '@/stores/selectionStore';
+import { useObjectsStore } from '@/stores/objectsStore';
 
 interface IUseCanvasOperationsProps {
   objects: IBoardObject[];
   selectedIds: string[];
-  setSelectedIds: (ids: string[]) => void;
   onObjectCreate: (params: Partial<IBoardObject>) => Promise<IBoardObject | null> | void;
   onObjectUpdate?: (objectId: string, updates: Partial<IBoardObject>) => void;
   onObjectsUpdate?: (updates: Array<{ objectId: string; updates: Partial<IBoardObject> }>) => void;
@@ -33,7 +34,6 @@ const PASTE_OFFSET = 30;
 export const useCanvasOperations = ({
   objects,
   selectedIds,
-  setSelectedIds,
   onObjectCreate,
   onObjectUpdate,
   onObjectsUpdate,
@@ -277,7 +277,28 @@ export const useCanvasOperations = ({
     [clipboard, onObjectCreate]
   );
 
-  // Keyboard shortcuts
+  // ── Keyboard shortcut effect ──────────────────────────────────────────
+  // Reads selection + objects from Zustand stores at event time so the
+  // listener registers once and never re-attaches.  Callbacks that can't
+  // live in a store (local operations, callback props) are synced to refs
+  // via a post-render effect — the React 19-sanctioned pattern.
+
+  const handleDeleteRef = useRef(handleDelete);
+  const handleDuplicateRef = useRef(handleDuplicate);
+  const handleCopyRef = useRef(handleCopy);
+  const handlePasteRef = useRef(handlePaste);
+  const onObjectCreateRef = useRef(onObjectCreate);
+  const clipboardRef = useRef(clipboard);
+
+  useEffect(() => {
+    handleDeleteRef.current = handleDelete;
+    handleDuplicateRef.current = handleDuplicate;
+    handleCopyRef.current = handleCopy;
+    handlePasteRef.current = handlePaste;
+    onObjectCreateRef.current = onObjectCreate;
+    clipboardRef.current = clipboard;
+  });
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ignore if typing in an input
@@ -285,48 +306,55 @@ export const useCanvasOperations = ({
         return;
       }
 
+      // Read latest state from stores at event time — always fresh
+      const sel = useSelectionStore.getState();
+      const selectedArr = [...sel.selectedIds];
+      const objectsRecord = useObjectsStore.getState().objects;
+      const allObjects = Object.values(objectsRecord);
+      const clip = clipboardRef.current;
+
       const isCtrlOrCmd = e.ctrlKey || e.metaKey;
 
       // Delete or Backspace - delete selected
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIds.length > 0) {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedArr.length > 0) {
         e.preventDefault();
-        handleDelete();
+        handleDeleteRef.current();
 
         return;
       }
 
       // Ctrl/Cmd + D - duplicate
-      if (isCtrlOrCmd && e.key === 'd' && selectedIds.length > 0) {
+      if (isCtrlOrCmd && e.key === 'd' && selectedArr.length > 0) {
         e.preventDefault();
-        handleDuplicate();
+        handleDuplicateRef.current();
 
         return;
       }
 
       // Ctrl/Cmd + C - copy
-      if (isCtrlOrCmd && e.key === 'c' && selectedIds.length > 0) {
+      if (isCtrlOrCmd && e.key === 'c' && selectedArr.length > 0) {
         e.preventDefault();
-        handleCopy();
+        handleCopyRef.current();
 
         return;
       }
 
       // Ctrl/Cmd + V - paste
-      if (isCtrlOrCmd && e.key === 'v' && clipboard.length > 0) {
+      if (isCtrlOrCmd && e.key === 'v' && clip.length > 0) {
         e.preventDefault();
-        handlePaste();
+        handlePasteRef.current();
 
         return;
       }
 
       // Enter — when a single frame is selected, select all its children
-      if (e.key === 'Enter' && selectedIds.length === 1) {
-        const obj = objects.find((o) => o.id === selectedIds[0]);
+      if (e.key === 'Enter' && selectedArr.length === 1) {
+        const obj = allObjects.find((o) => o.id === selectedArr[0]);
         if (obj?.type === 'frame') {
           e.preventDefault();
-          const children = getFrameChildren(obj.id, objects);
+          const children = getFrameChildren(obj.id, allObjects);
           if (children.length > 0) {
-            setSelectedIds(children.map((c) => c.id));
+            sel.setSelectedIds(children.map((c) => c.id));
           }
 
           return;
@@ -336,12 +364,12 @@ export const useCanvasOperations = ({
       // Ctrl/Cmd + A — when a single frame is selected, select its children instead of all objects
       if (isCtrlOrCmd && e.key === 'a') {
         e.preventDefault();
-        if (selectedIds.length === 1) {
-          const obj = objects.find((o) => o.id === selectedIds[0]);
+        if (selectedArr.length === 1) {
+          const obj = allObjects.find((o) => o.id === selectedArr[0]);
           if (obj?.type === 'frame') {
-            const children = getFrameChildren(obj.id, objects);
+            const children = getFrameChildren(obj.id, allObjects);
             if (children.length > 0) {
-              setSelectedIds(children.map((c) => c.id));
+              sel.setSelectedIds(children.map((c) => c.id));
 
               return;
             }
@@ -349,7 +377,7 @@ export const useCanvasOperations = ({
         }
 
         // Default: select all objects
-        setSelectedIds(objects.map((o) => o.id));
+        sel.setSelectedIds(allObjects.map((o) => o.id));
 
         return;
       }
@@ -358,28 +386,28 @@ export const useCanvasOperations = ({
       // otherwise clear selection
       if (e.key === 'Escape') {
         e.preventDefault();
-        if (selectedIds.length > 0) {
-          const selectedObjs = objects.filter((o) => selectedIds.includes(o.id));
+        if (selectedArr.length > 0) {
+          const selectedObjs = allObjects.filter((o) => selectedArr.includes(o.id));
           const parentIds = new Set(
             selectedObjs.map((o) => o.parentFrameId).filter((pid) => pid != null && pid !== '')
           );
           if (parentIds.size === 1) {
             const parentId = parentIds.values().next().value;
-            if (parentId) setSelectedIds([parentId]);
+            if (parentId) sel.setSelectedIds([parentId]);
 
             return;
           }
         }
 
-        clearSelection();
+        sel.clearSelection();
 
         return;
       }
 
       // F (no modifier) — frame the selection: create a frame around selected objects
-      if (e.key === 'f' && !isCtrlOrCmd && !e.altKey && selectedIds.length > 0) {
+      if (e.key === 'f' && !isCtrlOrCmd && !e.altKey && selectedArr.length > 0) {
         e.preventDefault();
-        const selectedObjs = objects.filter((o) => selectedIds.includes(o.id));
+        const selectedObjs = allObjects.filter((o) => selectedArr.includes(o.id));
         // Don't frame connectors or other frames
         const frameable = selectedObjs.filter((o) => o.type !== 'frame' && o.type !== 'connector');
         if (frameable.length === 0) return;
@@ -408,7 +436,7 @@ export const useCanvasOperations = ({
         const frameH = maxY - minY + PADDING * 2 + TITLE_HEIGHT;
 
         // Create the frame
-        onObjectCreate({
+        onObjectCreateRef.current({
           type: 'frame',
           x: frameX,
           y: frameY,
@@ -427,18 +455,7 @@ export const useCanvasOperations = ({
     window.addEventListener('keydown', handleKeyDown);
 
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [
-    selectedIds,
-    objects,
-    clipboard,
-    handleDelete,
-    handleDuplicate,
-    handleCopy,
-    handlePaste,
-    clearSelection,
-    setSelectedIds,
-    onObjectCreate,
-  ]);
+  }, []);
 
   return {
     clipboard,

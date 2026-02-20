@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { Timestamp } from 'firebase/firestore';
 import { useCanvasOperations } from '@/hooks/useCanvasOperations';
+import { useSelectionStore } from '@/stores/selectionStore';
+import { useObjectsStore } from '@/stores/objectsStore';
 import type { IBoardObject } from '@/types';
 
 describe('useCanvasOperations', () => {
@@ -24,14 +26,15 @@ describe('useCanvasOperations', () => {
   let onObjectDelete: (objectId: string) => void;
   let onObjectsDeleteBatch: (objectIds: string[]) => void;
   let clearSelection: () => void;
-  let setSelectedIds: (ids: string[]) => void;
 
   beforeEach(() => {
     onObjectCreate = vi.fn<(params: Partial<IBoardObject>) => void>();
     onObjectDelete = vi.fn<(objectId: string) => void>();
     onObjectsDeleteBatch = vi.fn<(objectIds: string[]) => void>();
     clearSelection = vi.fn<() => void>();
-    setSelectedIds = vi.fn<(ids: string[]) => void>();
+    // Reset stores to clean state
+    useSelectionStore.getState().clearSelection();
+    useObjectsStore.getState().clear();
   });
 
   afterEach(() => {
@@ -41,7 +44,6 @@ describe('useCanvasOperations', () => {
   const getDefaultProps = () => ({
     objects: [mockObject],
     selectedIds: ['obj-1'],
-    setSelectedIds,
     onObjectCreate,
     onObjectDelete,
     clearSelection,
@@ -86,7 +88,6 @@ describe('useCanvasOperations', () => {
       const props = {
         objects,
         selectedIds: ids,
-        setSelectedIds,
         onObjectCreate,
         onObjectDelete,
         onObjectsDeleteBatch,
@@ -221,16 +222,25 @@ describe('useCanvasOperations', () => {
 
   describe('keydown listener integration', () => {
     it('window keydown Escape calls clearSelection when document activeElement is body', () => {
+      // Populate stores so the keyboard handler reads live data
+      useSelectionStore.getState().setSelectedIds(['obj-1']);
+      useObjectsStore.getState().setAll([mockObject]);
+
       const props = getDefaultProps();
       renderHook(() => useCanvasOperations(props));
       document.body.focus();
       act(() => {
         window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
       });
-      expect(clearSelection).toHaveBeenCalled();
+      // Keyboard handler reads clearSelection from the store, not the mock prop
+      expect(useSelectionStore.getState().selectedIds.size).toBe(0);
     });
 
     it('window keydown Ctrl+C copies selection to clipboard', () => {
+      // Populate stores so the keyboard handler reads live data
+      useSelectionStore.getState().setSelectedIds(['obj-1']);
+      useObjectsStore.getState().setAll([mockObject]);
+
       const props = getDefaultProps();
       const { result } = renderHook(() => useCanvasOperations(props));
       document.body.focus();
@@ -244,6 +254,9 @@ describe('useCanvasOperations', () => {
     });
 
     it('window keydown Ctrl+V pastes from clipboard and calls onObjectCreate', () => {
+      useSelectionStore.getState().setSelectedIds(['obj-1']);
+      useObjectsStore.getState().setAll([mockObject]);
+
       const props = getDefaultProps();
       const { result } = renderHook(() => useCanvasOperations(props));
       act(() => {
@@ -259,6 +272,7 @@ describe('useCanvasOperations', () => {
     });
 
     it('window keydown Ctrl+C with no selection does not change clipboard', () => {
+      // Store has empty selection — keyboard handler should skip
       const props = { ...getDefaultProps(), selectedIds: [] as string[] };
       const { result } = renderHook(() => useCanvasOperations(props));
       document.body.focus();
