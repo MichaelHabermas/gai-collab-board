@@ -8,6 +8,7 @@ description: Orchestrate a multi-agent implementation workflow with model tierin
 Break down a task and execute it with specialized parallel agents.
 
 ## When to Use
+
 - Feature requires 3+ files of changes
 - Multiple independent sub-tasks can run in parallel
 - Task benefits from E2E-first test writing
@@ -28,6 +29,7 @@ Break down a task and execute it with specialized parallel agents.
 5. Present the breakdown to the user for approval before proceeding
 
 ### Model Tier Matrix
+
 | Signal | Tier |
 |---|---|
 | Lint fix, format, simple rename | haiku |
@@ -39,6 +41,7 @@ Break down a task and execute it with specialized parallel agents.
 ## Phase 2: E2E First
 
 For any task with user-visible behavior:
+
 1. Spawn a **tester** agent (sonnet) to write acceptance tests FIRST
 2. Create worktree: `bun run scripts/worktree-manager.ts create test-<feature>`
 3. Tests should FAIL initially (red phase)
@@ -48,8 +51,10 @@ For any task with user-visible behavior:
 ## Phase 3: Parallel Execute
 
 For each independent task (no unresolved dependencies):
+
 1. Create worktree: `bun run scripts/worktree-manager.ts create <task-branch>`
 2. Spawn agent via Task tool:
+
    ```
    Task(
      subagent_type: "<role from task>",  // maps to .claude/agents/<role>.md
@@ -59,12 +64,14 @@ For each independent task (no unresolved dependencies):
               Your task: <TASK-ID> — <description>"
    )
    ```
+
 3. **Max 3 concurrent agents.** Queue additional tasks.
 4. As agents complete, read their task updates in `.claude/tasks.md`
 
 ## Phase 4: Review Loop
 
 For each task marked `review` in `.claude/tasks.md`:
+
 1. Spawn **reviewer** agent (sonnet) on that branch
 2. Reviewer runs `bun run validate` + reads diff
 3. Outcomes:

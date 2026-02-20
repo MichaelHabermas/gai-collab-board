@@ -12,6 +12,7 @@
 import { createServer } from 'http';
 import { handleProxyRequest } from './ai-proxy-handler.js';
 import { getCorsHeaders } from './cors.js';
+import { shutdownLangfuse } from './langfuse.js';
 
 const PORT = Number(process.env.PORT ?? 3001);
 const PREFIX = '/api/ai/v1';
@@ -73,3 +74,13 @@ const server = createServer(async (req, res) => {
 server.listen(PORT, () => {
   process.stdout.write(`AI proxy listening on port ${PORT} (path ${PREFIX})\n`);
 });
+
+/** Flush Langfuse events before exit so no traces are lost. */
+async function gracefulShutdown(signal: string): Promise<void> {
+  process.stdout.write(`[proxy] ${signal} received — flushing Langfuse...\n`);
+  await shutdownLangfuse();
+  process.exit(0);
+}
+
+process.on('SIGTERM', () => void gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => void gracefulShutdown('SIGINT'));

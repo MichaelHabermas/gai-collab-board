@@ -4,7 +4,8 @@
  */
 
 import { getProviderAndKey } from './ai-proxy-config.js';
-import { recordRuntimeProxyUsage } from './ai-usage-tracker.js';
+import { recordRuntimeProxyUsage, extractUsageFromResponseBody } from './ai-usage-tracker.js';
+import { getLangfuse } from './langfuse.js';
 
 export interface IProxyResult {
   statusCode: number;
@@ -80,6 +81,13 @@ export async function handleProxyRequest(
     } catch {
       // Never fail proxy requests due to tracking failures.
     }
+
+    try {
+      recordLangfuseGeneration(body, responseBody, requestModel, pathSuffix, res.status);
+    } catch {
+      // Langfuse failures must never break the proxy.
+    }
+
     return {
       statusCode: res.status,
       body: responseBody,
@@ -95,6 +103,58 @@ export async function handleProxyRequest(
       headers: { 'Content-Type': 'application/json' },
     };
   }
+}
+
+/** Record a Langfuse generation span for the AI proxy call. Fire-and-forget. */
+function recordLangfuseGeneration(
+  requestBody: string | undefined,
+  responseBody: string,
+  model: string | undefined,
+  pathSuffix: string,
+  statusCode: number
+): void {
+  const langfuse = getLangfuse();
+  if (!langfuse) {
+    return;
+  }
+
+  const usage = extractUsageFromResponseBody(responseBody);
+
+  let parsedInput: unknown;
+  try {
+    parsedInput = requestBody ? JSON.parse(requestBody) : undefined;
+  } catch {
+    parsedInput = requestBody;
+  }
+
+  let parsedOutput: unknown;
+  try {
+    parsedOutput = JSON.parse(responseBody);
+  } catch {
+    parsedOutput = responseBody;
+  }
+
+  const trace = langfuse.trace({
+    name: 'ai-board-command',
+    metadata: { pathSuffix, statusCode },
+    tags: ['collabboard', 'proxy'],
+  });
+
+  trace.generation({
+    name: model ?? 'unknown',
+    model: model ?? undefined,
+    input: parsedInput,
+    output: parsedOutput,
+    usage: usage
+      ? {
+          promptTokens: usage.input_tokens,
+          completionTokens: usage.output_tokens,
+          totalTokens: usage.total_tokens,
+        }
+      : undefined,
+    level: statusCode >= 400 ? 'ERROR' : 'DEFAULT',
+    statusMessage: statusCode >= 400 ? `HTTP ${statusCode}` : undefined,
+  });
 }
 
 function parseModelFromRequestBody(body: string | undefined): string | undefined {
