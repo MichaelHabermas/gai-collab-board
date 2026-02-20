@@ -7,20 +7,20 @@
 | Metric | Value |
 |--------|-------|
 | Events | 4 |
-| Requests | 15 |
-| Total tokens | 1.51M |
+| Requests | 20 |
+| Total tokens | 2.21M |
 | Input tokens | 20.0k |
-| Output tokens | 65 |
-| Cache read | 1.23M |
-| Cache create | 264.6k |
-| Estimated cost | $7.1122 |
+| Output tokens | 146 |
+| Cache read | 1.78M |
+| Cache create | 411.1k |
+| Estimated cost | $10.6958 |
 
 ## Segmented Totals by Source
 
 | Source | Events | Requests | Total tokens | Input | Output | Cost |
 |--------|--------|----------|--------------|-------|--------|------|
-| Claude | 2 | 2 | 1.51M | 20.0k | 65 | $7.1057 |
-| MCP tools | 2 | 13 | 0 | 0 | 0 | $0.0065 |
+| Claude | 2 | 2 | 2.21M | 20.0k | 146 | $10.6868 |
+| MCP tools | 2 | 18 | 0 | 0 | 0 | $0.0090 |
 
 ## Estimation Quality
 
@@ -33,48 +33,48 @@
 
 | Date | Events | Tokens | Cost |
 |------|--------|--------|------|
-| 2026-02-20 | 4 | 1.51M | $7.1122 |
+| 2026-02-20 | 4 | 2.21M | $10.6958 |
 
 ## Usage over time
 
 ```mermaid
 xychart-beta
     title "Token usage over time (all sources)"
-    x-axis ["02-19 20:16", "02-19 20:16", "02-19 20:44", "02-19 20:44"]
-    y-axis "Tokens" 0 --> 21947
-    line "Input" [12, 0, 19951, 0]
-    line "Output" [34, 0, 31, 0]
+    x-axis ["02-19 20:16", "02-19 20:16", "02-19 20:51", "02-19 20:51"]
+    y-axis "Tokens" 0 --> 21960
+    line "Input" [12, 0, 19963, 0]
+    line "Output" [34, 0, 112, 0]
 ```
 
 ```mermaid
 xychart-beta
     title "Cost over time (all sources, USD)"
-    x-axis ["02-19 20:16", "02-19 20:16", "02-19 20:44", "02-19 20:44"]
-    y-axis "USD" 0 --> 8
-    line "Cost" [1.40096775, 0.0025, 5.704762499999999, 0.004]
-    line "Cumulative" [1.401, 1.4035, 7.1082, 7.1122]
+    x-axis ["02-19 20:16", "02-19 20:16", "02-19 20:51", "02-19 20:51"]
+    y-axis "USD" 0 --> 12
+    line "Cost" [1.40096775, 0.0025, 9.285807, 0.006500000000000001]
+    line "Cumulative" [1.401, 1.4035, 10.6893, 10.6958]
 ```
 
 ```mermaid
 xychart-beta
     title "Cost by source over time (USD)"
-    x-axis ["02-19 20:16", "02-19 20:16", "02-19 20:44", "02-19 20:44"]
-    y-axis "USD" 0 --> 7
-    line "Claude" [1.40096775, 0, 5.704762499999999, 0]
+    x-axis ["02-19 20:16", "02-19 20:16", "02-19 20:51", "02-19 20:51"]
+    y-axis "USD" 0 --> 11
+    line "Claude" [1.40096775, 0, 9.285807, 0]
     line "Cursor" [0, 0, 0, 0]
     line "Runtime proxy" [0, 0, 0, 0]
     line "Scripts" [0, 0, 0, 0]
-    line "MCP" [0, 0.0025, 0, 0.004]
+    line "MCP" [0, 0.0025, 0, 0.006500000000000001]
 ```
 
 ## Recent Events
 
 | Time | Source | Provider | Model | In | Out | Cost | Method |
 |------|--------|----------|-------|----|-----|------|--------|
-| 2026-02-20 01:44 | MCP tools | claude | mcp-tooling | 0 | 0 | $0.0040 | best_effort |
-| 2026-02-20 01:44 | Claude | anthropic | claude-opus-4-6 | 20.0k | 31 | $5.7048 | best_effort |
+| 2026-02-20 01:51 | MCP tools | claude | mcp-tooling | 0 | 0 | $0.0065 | best_effort |
+| 2026-02-20 01:51 | Claude | anthropic | claude-opus-4-6 | 20.0k | 112 | $9.2858 | best_effort |
 | 2026-02-20 01:16 | MCP tools | claude | mcp-tooling | 0 | 0 | $0.0025 | best_effort |
 | 2026-02-20 01:16 | Claude | anthropic | claude-opus-4-6 | 12 | 34 | $1.4010 | best_effort |
 
 ---
-*Last updated: 2026-02-20 01:44:07 UTC*
+*Last updated: 2026-02-20 01:51:55 UTC*
