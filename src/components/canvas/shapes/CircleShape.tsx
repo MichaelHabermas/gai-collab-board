@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
 import Konva from 'konva';
 import { useShapeDragHandler } from '@/hooks/useShapeDragHandler';
 import { useShapeTransformHandler } from '@/hooks/useShapeTransformHandler';
+import { useKonvaCache } from '@/hooks/useKonvaCache';
 import { getShapeShadowProps } from '@/lib/shapeShadowProps';
 import type { IRectLikeShapeProps, ITransformEndAttrsUnion } from '@/types';
 
@@ -38,6 +39,11 @@ export const CircleShape = memo(
       },
       ref
     ): ReactElement => {
+      const [cacheRef] = useKonvaCache<Konva.Ellipse>(
+        ref,
+        !isSelected,
+        [fill, stroke, strokeWidth, width, height, opacity]
+      );
       const radiusX = width / 2;
       const radiusY = height / 2;
 
@@ -52,7 +58,7 @@ export const CircleShape = memo(
 
       return (
         <Ellipse
-          ref={ref}
+          ref={cacheRef}
           id={id}
           name='shape circle'
           // Ellipse uses center position, so offset from stored top-left

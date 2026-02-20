@@ -1,5 +1,5 @@
 import { Text } from 'react-konva';
-import { forwardRef, useCallback, useRef, useState, memo } from 'react';
+import { forwardRef, useCallback, useRef, useState, useEffect, memo } from 'react';
 import type { ReactElement } from 'react';
 import Konva from 'konva';
 import { useShapeDragHandler } from '@/hooks/useShapeDragHandler';
@@ -165,6 +165,27 @@ export const TextElement = memo(
         },
         [ref]
       );
+
+      // Cache as bitmap when idle (not selected, not editing) for faster redraws.
+      useEffect(() => {
+        const node = textRef.current;
+        if (!node || typeof node.cache !== 'function') return;
+
+        if (isSelected || isEditing) {
+          node.clearCache();
+
+          return;
+        }
+
+        const frame = requestAnimationFrame(() => {
+          const n = textRef.current;
+          if (n && typeof n.cache === 'function') {
+            n.cache({ pixelRatio: 2 });
+          }
+        });
+
+        return () => cancelAnimationFrame(frame);
+      }, [isSelected, isEditing, text, fontSize, fill, width, opacity]);
 
       return (
         <Text

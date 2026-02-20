@@ -3,6 +3,7 @@ import { forwardRef, memo } from 'react';
 import type { ReactElement } from 'react';
 import Konva from 'konva';
 import { useLineLikeShape } from '@/hooks/useLineLikeShape';
+import { useKonvaCache } from '@/hooks/useKonvaCache';
 import { getShapeShadowProps } from '@/lib/shapeShadowProps';
 import type { ILineLikeShapeProps } from '@/types';
 
@@ -35,6 +36,11 @@ export const LineShape = memo(
       },
       ref
     ): ReactElement => {
+      const [cacheRef] = useKonvaCache<Konva.Line>(
+        ref,
+        !isSelected,
+        [stroke, strokeWidth, opacity, points]
+      );
       const { offset, handleDragEnd, handleTransformEnd } = useLineLikeShape({
         points,
         onDragEnd,
@@ -43,7 +49,7 @@ export const LineShape = memo(
 
       return (
         <Line
-          ref={ref}
+          ref={cacheRef}
           id={id}
           name='shape line'
           x={x + offset.x}

@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
 import Konva from 'konva';
 import { useShapeDragHandler } from '@/hooks/useShapeDragHandler';
 import { useShapeTransformHandler } from '@/hooks/useShapeTransformHandler';
+import { useKonvaCache } from '@/hooks/useKonvaCache';
 import { getShapeShadowProps } from '@/lib/shapeShadowProps';
 import type { IRectLikeShapeProps, ITransformEndAttrsUnion } from '@/types';
 
@@ -37,6 +38,11 @@ export const RectangleShape = memo(
       },
       ref
     ): ReactElement => {
+      const [cacheRef] = useKonvaCache<Konva.Rect>(
+        ref,
+        !isSelected,
+        [fill, stroke, strokeWidth, width, height, opacity]
+      );
       const handleDragEnd = useShapeDragHandler(onDragEnd);
       const handleTransformEnd = useShapeTransformHandler(
         'rect',
@@ -45,7 +51,7 @@ export const RectangleShape = memo(
 
       return (
         <Rect
-          ref={ref}
+          ref={cacheRef}
           id={id}
           name='shape rectangle'
           x={x}
