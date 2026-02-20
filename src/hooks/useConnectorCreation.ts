@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { IBoardObject, ConnectorAnchor, ToolMode, ICreateObjectParams } from '@/types';
 import { getAnchorPosition } from '@/lib/connectorAnchors';
 
@@ -29,6 +29,15 @@ export function useConnectorCreation({
   activeToolRef,
 }: IUseConnectorCreationParams): IUseConnectorCreationReturn {
   const [connectorFrom, setConnectorFrom] = useState<IConnectorFrom | null>(null);
+  const isMountedRef = useRef(false);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const clearConnector = () => setConnectorFrom(null);
 
@@ -70,11 +79,15 @@ export function useConnectorCreation({
         toAnchor: anchor,
       })
         .then(() => {
+          if (!isMountedRef.current) return;
+
           setConnectorFrom(null);
           setActiveTool('select');
           activeToolRef.current = 'select';
         })
         .catch(() => {
+          if (!isMountedRef.current) return;
+
           setConnectorFrom(null);
         });
     },
