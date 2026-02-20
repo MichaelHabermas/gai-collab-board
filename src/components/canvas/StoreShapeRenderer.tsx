@@ -1,9 +1,10 @@
 import { memo, useMemo, type ReactElement } from 'react';
 import { useObjectsStore, selectObject } from '@/stores/objectsStore';
 import { useSelectionStore } from '@/stores/selectionStore';
+import { useDragOffsetStore, selectFrameOffset, selectIsDropTarget } from '@/stores/dragOffsetStore';
 import { CanvasShapeRenderer } from './CanvasShapeRenderer';
 import type { IBoardObject, IKonvaDragEvent } from '@/types';
-import type { IGroupDragOffset, IFrameDragOffset } from '@/types/canvas';
+import type { IGroupDragOffset } from '@/types/canvas';
 
 type IDragBoundFunc = (pos: { x: number; y: number }) => { x: number; y: number };
 
@@ -12,8 +13,6 @@ interface IStoreShapeRendererProps {
   canEdit: boolean;
   selectionColor: string;
   groupDragOffset?: IGroupDragOffset | null;
-  frameDragOffset?: IFrameDragOffset | null;
-  dropTargetFrameId?: string | null;
   onEnterFrame?: (frameId: string) => void;
   getSelectHandler: (id: string) => () => void;
   getDragEndHandler: (id: string) => (x: number, y: number) => void;
@@ -28,8 +27,9 @@ interface IStoreShapeRendererProps {
  * Per-shape Zustand subscriber. Only re-renders when this specific object
  * changes in the store, or when selection/drag state changes.
  *
- * For connectors with linked endpoints, also subscribes to the from/to
- * objects so the connector re-renders when its anchors move.
+ * Frame drag offset and drop target state come from dragOffsetStore —
+ * each shape subscribes independently so only affected shapes re-render
+ * during drag (not all visible shapes).
  */
 export const StoreShapeRenderer = memo(
   ({
@@ -37,8 +37,6 @@ export const StoreShapeRenderer = memo(
     canEdit,
     selectionColor,
     groupDragOffset,
-    frameDragOffset,
-    dropTargetFrameId,
     onEnterFrame,
     getSelectHandler,
     getDragEndHandler,
@@ -61,8 +59,6 @@ export const StoreShapeRenderer = memo(
         canEdit={canEdit}
         selectionColor={selectionColor}
         groupDragOffset={groupDragOffset}
-        frameDragOffset={frameDragOffset}
-        dropTargetFrameId={dropTargetFrameId}
         onEnterFrame={onEnterFrame}
         getSelectHandler={getSelectHandler}
         getDragEndHandler={getDragEndHandler}
@@ -86,8 +82,6 @@ interface IInnerProps {
   canEdit: boolean;
   selectionColor: string;
   groupDragOffset?: IGroupDragOffset | null;
-  frameDragOffset?: IFrameDragOffset | null;
-  dropTargetFrameId?: string | null;
   onEnterFrame?: (frameId: string) => void;
   getSelectHandler: (id: string) => () => void;
   getDragEndHandler: (id: string) => (x: number, y: number) => void;
@@ -100,6 +94,12 @@ interface IInnerProps {
 
 const CanvasShapeRendererWithConnectorLookup = memo((props: IInnerProps): ReactElement => {
   const { object } = props;
+
+  // Per-shape drag offset subscription: only frame children re-render during frame drag.
+  const frameDragOffset = useDragOffsetStore(selectFrameOffset(object.parentFrameId));
+
+  // Per-shape drop target subscription: only frames re-render when drop target changes.
+  const isDropTarget = useDragOffsetStore(selectIsDropTarget(object.id));
 
   // For linked connectors, subscribe to from/to objects so we re-render
   // when the connected shapes move. For non-connectors these are undefined (no extra subscription).
@@ -120,7 +120,14 @@ const CanvasShapeRendererWithConnectorLookup = memo((props: IInnerProps): ReactE
     return map;
   }, [fromObj, toObj]);
 
-  return <CanvasShapeRenderer {...props} objectsById={objectsById} />;
+  return (
+    <CanvasShapeRenderer
+      {...props}
+      objectsById={objectsById}
+      frameDragOffset={frameDragOffset}
+      dropTargetFrameId={isDropTarget ? object.id : null}
+    />
+  );
 });
 
 CanvasShapeRendererWithConnectorLookup.displayName = 'CanvasShapeRendererWithConnectorLookup';

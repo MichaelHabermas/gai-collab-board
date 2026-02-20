@@ -62,6 +62,7 @@ import { useMiddleMousePanListeners } from '@/hooks/useMiddleMousePanListeners';
 import { useCanvasKeyboardShortcuts } from '@/hooks/useCanvasKeyboardShortcuts';
 import { useAlignmentGuideCache } from '@/hooks/useAlignmentGuideCache';
 import { useHistoryStore } from '@/stores/historyStore';
+import { useDragOffsetStore } from '@/stores/dragOffsetStore';
 import {
   getFrameChildren,
   resolveParentFrameId,
@@ -165,11 +166,11 @@ export const BoardCanvas = memo(
     } | null>(null);
     const [groupDragOffset, setGroupDragOffset] = useState<{ dx: number; dy: number } | null>(null);
     const groupDragOffsetRef = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
-    const [frameDragOffset, setFrameDragOffset] = useState<{
-      frameId: string;
-      dx: number;
-      dy: number;
-    } | null>(null);
+    // Frame drag offset and drop target live in Zustand (dragOffsetStore) to avoid
+    // re-rendering every visible shape on every mousemove.  We read the setters once
+    // (stable refs) and never subscribe to the values in BoardCanvas itself.
+    const setFrameDragOffset = useDragOffsetStore((s) => s.setFrameDragOffset);
+    const setDropTargetFrameId = useDragOffsetStore((s) => s.setDropTargetFrameId);
     const [isHoveringSelectionHandle, setIsHoveringSelectionHandle] = useState(false);
     const [connectorFrom, setConnectorFrom] = useState<{
       shapeId: string;
@@ -177,7 +178,6 @@ export const BoardCanvas = memo(
     } | null>(null);
     const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
     const [alignmentGuides, setAlignmentGuides] = useState<IAlignmentGuides | null>(null);
-    const [dropTargetFrameId, setDropTargetFrameId] = useState<string | null>(null);
     const objectsRef = useRef<IBoardObject[]>(objects);
     const drawingActiveRef = useRef(false);
     const selectingActiveRef = useRef(false);
@@ -1205,6 +1205,16 @@ export const BoardCanvas = memo(
       [handleObjectDragEnd]
     );
 
+    // Throttle drop-target detection to ~every 100ms instead of every mousemove (60 Hz).
+    const lastDropTargetCheckRef = useRef(0);
+    const DROP_TARGET_THROTTLE_MS = 100;
+
+    // Cache frames list so we don't re-filter on every mousemove.
+    const framesRef = useRef<IBoardObject[]>([]);
+    useEffect(() => {
+      framesRef.current = objects.filter((o) => o.type === 'frame');
+    }, [objects]);
+
     /** When snap-to-grid is on, force node position to grid on every drag move so it lines up during drag.
      * When dragging a frame, track offset so frame children can render at (x+dx, y+dy) during drag.
      * When dragging a non-frame object, track which frame it's hovering over for drop zone feedback. */
@@ -1223,31 +1233,26 @@ export const BoardCanvas = memo(
               dx: e.target.x() - obj.x,
               dy: e.target.y() - obj.y,
             });
-            setDropTargetFrameId(null);
           } else if (obj && obj.type !== 'connector') {
-            // Track which frame this object is hovering over
-            const dragX = e.target.x();
-            const dragY = e.target.y();
-            const dragBounds = {
-              x1: dragX,
-              y1: dragY,
-              x2: dragX + obj.width,
-              y2: dragY + obj.height,
-            };
-            const frames = objects.filter((o) => o.type === 'frame');
-            const targetFrame = findContainingFrame(dragBounds, frames, obj.id);
-            setDropTargetFrameId(targetFrame ?? null);
-            setFrameDragOffset(null);
-          } else {
-            setFrameDragOffset(null);
-            setDropTargetFrameId(null);
+            // Throttled drop target detection — no need to check 60x/sec
+            const now = performance.now();
+            if (now - lastDropTargetCheckRef.current > DROP_TARGET_THROTTLE_MS) {
+              lastDropTargetCheckRef.current = now;
+              const dragX = e.target.x();
+              const dragY = e.target.y();
+              const dragBounds = {
+                x1: dragX,
+                y1: dragY,
+                x2: dragX + obj.width,
+                y2: dragY + obj.height,
+              };
+              const targetFrame = findContainingFrame(dragBounds, framesRef.current, obj.id);
+              setDropTargetFrameId(targetFrame ?? null);
+            }
           }
-        } else {
-          setFrameDragOffset(null);
-          setDropTargetFrameId(null);
         }
       },
-      [objectsById, objects, snapToGridEnabled]
+      [objectsById, snapToGridEnabled, setFrameDragOffset, setDropTargetFrameId]
     );
 
     const onDragMoveProp = canEdit ? handleDragMove : undefined;
@@ -1394,6 +1399,9 @@ export const BoardCanvas = memo(
     // Per-shape subscription render loop (A.5): each StoreShapeRenderer subscribes
     // to its own object in the Zustand store, so a single remote object change only
     // re-renders that one shape instead of the entire tree.
+    // frameDragOffset and dropTargetFrameId are now in dragOffsetStore —
+    // individual StoreShapeRenderers subscribe only when relevant, so we don't
+    // re-create all JSX nodes on every mousemove.
     const visibleObjectNodes = useMemo(
       () =>
         visibleShapeIds.map((id) => (
@@ -1403,8 +1411,6 @@ export const BoardCanvas = memo(
             canEdit={canEdit}
             selectionColor={selectionColor}
             groupDragOffset={groupDragOffset}
-            frameDragOffset={frameDragOffset}
-            dropTargetFrameId={dropTargetFrameId}
             onEnterFrame={handleEnterFrame}
             getSelectHandler={getSelectHandler}
             getDragEndHandler={getDragEndHandler}
@@ -1420,8 +1426,6 @@ export const BoardCanvas = memo(
         canEdit,
         selectionColor,
         groupDragOffset,
-        frameDragOffset,
-        dropTargetFrameId,
         handleEnterFrame,
         getSelectHandler,
         getDragEndHandler,

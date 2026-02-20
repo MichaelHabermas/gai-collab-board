@@ -1,11 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(curl -s -w \"\\\\nHTTP_STATUS: %{http_code}\\\\n\" -X POST \"https://generativelanguage.googleapis.com/v1beta/openai/chat/completions\" -H \"Authorization: Bearer AIzaSyB6bPL69n7dKbHwXY4F7A9AVYIc69Z0dIM\" -H \"Content-Type: application/json\" -d '{\"\"model\"\":\"\"gemini-2.0-flash\"\",\"\"messages\"\":[{\"\"role\"\":\"\"user\"\",\"\"content\"\":\"\"say hi\"\"}]}')",
-      "Bash(curl -s \"https://generativelanguage.googleapis.com/v1beta/openai/models\" -H \"Authorization: Bearer AIzaSyB6bPL69n7dKbHwXY4F7A9AVYIc69Z0dIM\")",
       "Bash(python3:*)",
-      "Bash(curl -s -w \"\\\\nHTTP_STATUS: %{http_code}\\\\n\" -X POST \"https://generativelanguage.googleapis.com/v1beta/openai/chat/completions\" -H \"Authorization: Bearer AIzaSyB6bPL69n7dKbHwXY4F7A9AVYIc69Z0dIM\" -H \"Content-Type: application/json\" -d '{\"\"model\"\":\"\"gemini-2.5-flash\"\",\"\"messages\"\":[{\"\"role\"\":\"\"user\"\",\"\"content\"\":\"\"say hi\"\"}],\"\"max_tokens\"\":50}')",
-      "Bash(curl -s -w \"\\\\nHTTP_STATUS: %{http_code}\\\\n\" -X POST \"https://generativelanguage.googleapis.com/v1beta/openai/chat/completions\" -H \"Authorization: Bearer AIzaSyB6bPL69n7dKbHwXY4F7A9AVYIc69Z0dIM\" -H \"Content-Type: application/json\" -d '{\"\"model\"\":\"\"gemini-2.5-flash\"\",\"\"messages\"\":[{\"\"role\"\":\"\"user\"\",\"\"content\"\":\"\"create a sticky note that says hello\"\"}],\"\"tools\"\":[{\"\"type\"\":\"\"function\"\",\"\"function\"\":{\"\"name\"\":\"\"createStickyNote\"\",\"\"description\"\":\"\"Create a sticky note\"\",\"\"parameters\"\":{\"\"type\"\":\"\"object\"\",\"\"properties\"\":{\"\"text\"\":{\"\"type\"\":\"\"string\"\"},\"\"x\"\":{\"\"type\"\":\"\"number\"\"},\"\"y\"\":{\"\"type\"\":\"\"number\"\"}},\"\"required\"\":[\"\"text\"\"]}}}],\"\"tool_choice\"\":\"\"auto\"\",\"\"max_tokens\"\":200}')",
       "Bash(bun:*)",
       "Bash(bunx vitest:*)",
       "Bash(bunx playwright test:*)"
