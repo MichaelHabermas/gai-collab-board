@@ -30,7 +30,9 @@ vi.mock('@/modules/sync/userPreferencesService', () => ({
 }));
 
 const mockCreateObject = vi.fn();
+const mockCreateObjectsBatch = vi.fn();
 const mockUpdateObject = vi.fn();
+const mockUpdateObjectsBatch = vi.fn();
 const mockDeleteObject = vi.fn();
 const mockDeleteObjectsBatch = vi.fn();
 
@@ -62,10 +64,18 @@ function createContext(objects: IBoardObject[] = []) {
     userId: USER_ID,
     getObjects: () => objects,
     createObject: mockCreateObject as (boardId: string, params: unknown) => Promise<IBoardObject>,
+    createObjectsBatch: mockCreateObjectsBatch as (
+      boardId: string,
+      objects: unknown[]
+    ) => Promise<IBoardObject[]>,
     updateObject: mockUpdateObject as (
       boardId: string,
       objectId: string,
       updates: unknown
+    ) => Promise<void>,
+    updateObjectsBatch: mockUpdateObjectsBatch as (
+      boardId: string,
+      updates: unknown[]
     ) => Promise<void>,
     deleteObject: mockDeleteObject as (boardId: string, objectId: string) => Promise<void>,
     deleteObjectsBatch: mockDeleteObjectsBatch as (
@@ -81,7 +91,9 @@ describe('AI Board Agent – Command Test Suite', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockCreateObject.mockResolvedValue({ id: 'new-id', type: 'sticky', x: 0, y: 0 });
+    mockCreateObjectsBatch.mockResolvedValue([]);
     mockUpdateObject.mockResolvedValue(undefined);
+    mockUpdateObjectsBatch.mockResolvedValue(undefined);
     mockDeleteObject.mockResolvedValue(undefined);
     mockDeleteObjectsBatch.mockResolvedValue(undefined);
   });

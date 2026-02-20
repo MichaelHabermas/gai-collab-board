@@ -6,8 +6,7 @@ const quadrantProperties = {
     label: { type: 'string' as const },
     color: {
       type: 'string' as const,
-      description:
-        'Color name (green, pink, blue, purple, orange, yellow, red) or hex',
+      description: 'Color name (green, pink, blue, purple, orange, yellow, red) or hex',
     },
     items: { type: 'array' as const, items: { type: 'string' as const } },
   },
@@ -31,14 +30,7 @@ export const compoundBoardTools: ChatCompletionTool[] = [
               properties: {
                 type: {
                   type: 'string',
-                  enum: [
-                    'sticky',
-                    'rectangle',
-                    'circle',
-                    'line',
-                    'text',
-                    'frame',
-                  ],
+                  enum: ['sticky', 'rectangle', 'circle', 'line', 'text', 'frame'],
                 },
                 x: { type: 'number' },
                 y: { type: 'number' },
@@ -51,8 +43,7 @@ export const compoundBoardTools: ChatCompletionTool[] = [
               },
               required: ['type', 'x', 'y'],
             },
-            description:
-              'Array of objects to create. Each needs at least type, x, y.',
+            description: 'Array of objects to create. Each needs at least type, x, y.',
           },
         },
         required: ['objects'],
@@ -138,8 +129,7 @@ export const compoundBoardTools: ChatCompletionTool[] = [
           objectIds: {
             type: 'array',
             items: { type: 'string' },
-            description:
-              'Ordered list of object IDs to connect sequentially',
+            description: 'Ordered list of object IDs to connect sequentially',
           },
           style: {
             type: 'string',
@@ -149,8 +139,7 @@ export const compoundBoardTools: ChatCompletionTool[] = [
           direction: {
             type: 'string',
             enum: ['horizontal', 'vertical'],
-            description:
-              'Flow direction for anchor selection. Default horizontal.',
+            description: 'Flow direction for anchor selection. Default horizontal.',
           },
         },
         required: ['objectIds'],
@@ -183,8 +172,7 @@ export const compoundBoardTools: ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'setStrokeStyle',
-      description:
-        'Sets the stroke style of a shape or connector to solid, dashed, or dotted.',
+      description: 'Sets the stroke style of a shape or connector to solid, dashed, or dotted.',
       parameters: {
         type: 'object',
         properties: {
@@ -245,8 +233,7 @@ export const compoundBoardTools: ChatCompletionTool[] = [
         properties: {
           title: {
             type: 'string',
-            description:
-              'Title for the quadrant diagram (e.g., "SWOT Analysis")',
+            description: 'Title for the quadrant diagram (e.g., "SWOT Analysis")',
           },
           xAxisLabel: {
             type: 'string',
@@ -297,8 +284,7 @@ export const compoundBoardTools: ChatCompletionTool[] = [
                 heading: { type: 'string' },
                 color: {
                   type: 'string',
-                  description:
-                    'Color name or hex for this column\'s stickies',
+                  description: "Color name or hex for this column's stickies",
                 },
                 items: {
                   type: 'array',
@@ -346,8 +332,7 @@ export const compoundBoardTools: ChatCompletionTool[] = [
               properties: {
                 id: {
                   type: 'string',
-                  description:
-                    'Unique node identifier (for referencing in edges)',
+                  description: 'Unique node identifier (for referencing in edges)',
                 },
                 label: {
                   type: 'string',
@@ -418,8 +403,7 @@ export const compoundBoardTools: ChatCompletionTool[] = [
                 },
                 color: {
                   type: 'string',
-                  description:
-                    'Color for this branch\'s sticky notes',
+                  description: "Color for this branch's sticky notes",
                 },
                 children: {
                   type: 'array',

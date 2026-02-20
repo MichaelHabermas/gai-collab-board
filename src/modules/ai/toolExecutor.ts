@@ -9,6 +9,7 @@ import {
 import { getAnchorPosition } from '@/lib/connectorAnchors';
 import { computeAlignUpdates, computeDistributeUpdates } from '@/lib/alignDistribute';
 import { STICKY_COLORS } from '@/components/canvas/shapes';
+import { createCompoundExecutor, COMPOUND_TOOL_NAMES } from './compoundExecutor';
 
 const DEFAULT_STICKY_WIDTH = 200;
 const DEFAULT_STICKY_HEIGHT = 120;
@@ -58,7 +59,12 @@ export interface IToolExecutorContext {
   userId: string;
   getObjects: () => IBoardObject[];
   createObject: (boardId: string, params: ICreateObjectParams) => Promise<IBoardObject>;
+  createObjectsBatch: (boardId: string, objects: ICreateObjectParams[]) => Promise<IBoardObject[]>;
   updateObject: (boardId: string, objectId: string, updates: IUpdateObjectParams) => Promise<void>;
+  updateObjectsBatch: (
+    boardId: string,
+    updates: Array<{ objectId: string; updates: IUpdateObjectParams }>
+  ) => Promise<void>;
   deleteObject: (boardId: string, objectId: string) => Promise<void>;
   deleteObjectsBatch: (boardId: string, objectIds: string[]) => Promise<void>;
   onZoomToFitAll?: () => void | Promise<void>;
@@ -71,7 +77,21 @@ export interface IToolExecutorContext {
 export const createToolExecutor = (ctx: IToolExecutorContext) => {
   const { boardId, createdBy, userId, getObjects } = ctx;
 
+  const compoundExecutor = createCompoundExecutor({
+    boardId,
+    createdBy,
+    getObjects,
+    createObject: ctx.createObject,
+    createObjectsBatch: ctx.createObjectsBatch,
+    updateObject: ctx.updateObject,
+    updateObjectsBatch: ctx.updateObjectsBatch,
+  });
+
   const execute = async (tool: IToolCall): Promise<unknown> => {
+    if (COMPOUND_TOOL_NAMES.has(tool.name)) {
+      return await compoundExecutor.execute(tool);
+    }
+
     switch (tool.name) {
       case 'createStickyNote': {
         const {

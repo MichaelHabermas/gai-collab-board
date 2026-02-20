@@ -15,7 +15,13 @@ import type { IMindMapConfig } from './layouts/mindmapLayout';
 // ---------------------------------------------------------------------------
 
 const SHAPE_TYPE_SET = new Set<string>([
-  'sticky', 'rectangle', 'circle', 'line', 'text', 'frame', 'connector',
+  'sticky',
+  'rectangle',
+  'circle',
+  'line',
+  'text',
+  'frame',
+  'connector',
 ]);
 
 function isShapeType(value: string): value is ShapeType {
@@ -47,13 +53,23 @@ function isConnectorAnchor(value: unknown): value is ConnectorAnchor {
 const BATCH_CAP = 50;
 
 const DEFAULT_WIDTHS: Record<string, number> = {
-  sticky: 200, rectangle: 150, circle: 100, line: 200,
-  text: 200, frame: 300, connector: 0,
+  sticky: 200,
+  rectangle: 150,
+  circle: 100,
+  line: 200,
+  text: 200,
+  frame: 300,
+  connector: 0,
 };
 
 const DEFAULT_HEIGHTS: Record<string, number> = {
-  sticky: 120, rectangle: 100, circle: 100, line: 0,
-  text: 30, frame: 200, connector: 0,
+  sticky: 120,
+  rectangle: 100,
+  circle: 100,
+  line: 0,
+  text: 30,
+  frame: 200,
+  connector: 0,
 };
 
 function resolveShapeType(input: string): ShapeType {
@@ -123,7 +139,7 @@ function toStringArray(val: unknown): string[] {
 }
 
 function buildQuadrantInput(
-  raw: unknown,
+  raw: unknown
 ): { label: string; color?: string; items: string[] } | null {
   if (!isRecord(raw) || typeof raw.label !== 'string' || !Array.isArray(raw.items)) {
     return null;

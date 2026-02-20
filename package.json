@@ -33,12 +33,14 @@
     "test:full": "bun run cleanup && bun run validate && bun run test:e2e && bun run test:e2e:ui && bun run test:coverage && bun run perf:check && bun run test:ai-connection"
   },
   "devDependencies": {
+    "@dagrejs/dagre": "^2.0.4",
     "@eslint/js": "^9.39.2",
     "@playwright/test": "^1.58.1",
     "@stylistic/eslint-plugin": "^4.0.0",
     "@tailwindcss/vite": "^4.1.18",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
+    "@types/dagre": "^0.7.53",
     "@types/react": "^19.2.11",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.3",

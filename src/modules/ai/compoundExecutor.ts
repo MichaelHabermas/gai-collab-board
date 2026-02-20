@@ -1,21 +1,34 @@
 import type {
-  IBoardObject, ICreateObjectParams, IUpdateObjectParams,
-  ConnectorAnchor, ArrowheadMode, StrokeStyle,
+  IBoardObject,
+  ICreateObjectParams,
+  IUpdateObjectParams,
+  ConnectorAnchor,
+  ArrowheadMode,
+  StrokeStyle,
 } from '@/types';
 import { getAnchorPosition } from '@/lib/connectorAnchors';
 import {
-  resolveStickyColor, computeBoundingBox,
-  FRAME_PLACEHOLDER_ID, type ILayoutResult,
+  resolveStickyColor,
+  computeBoundingBox,
+  FRAME_PLACEHOLDER_ID,
+  type ILayoutResult,
 } from './layouts/layoutUtils';
 import { computeQuadrantLayout } from './layouts/quadrantLayout';
 import { computeColumnLayout } from './layouts/columnLayout';
 import { computeFlowchartLayout } from './layouts/flowchartLayout';
 import { computeMindMapLayout } from './layouts/mindmapLayout';
 import {
-  BATCH_CAP, isArrowheadMode, isStrokeStyle,
-  resolveShapeType, defaultWidthForType, defaultHeightForType,
-  toUpdateParams, buildQuadrantConfig, buildColumnConfig,
-  buildFlowchartConfig, buildMindMapConfig,
+  BATCH_CAP,
+  isArrowheadMode,
+  isStrokeStyle,
+  resolveShapeType,
+  defaultWidthForType,
+  defaultHeightForType,
+  toUpdateParams,
+  buildQuadrantConfig,
+  buildColumnConfig,
+  buildFlowchartConfig,
+  buildMindMapConfig,
 } from './compoundHelpers';
 interface ICompoundToolCall {
   name: string;
@@ -31,13 +44,22 @@ export interface ICompoundExecutorContext {
   updateObject: (boardId: string, objectId: string, updates: IUpdateObjectParams) => Promise<void>;
   updateObjectsBatch: (
     boardId: string,
-    updates: Array<{ objectId: string; updates: IUpdateObjectParams }>,
+    updates: Array<{ objectId: string; updates: IUpdateObjectParams }>
   ) => Promise<void>;
 }
 export const COMPOUND_TOOL_NAMES = new Set([
-  'batchCreate', 'batchUpdate', 'groupIntoFrame', 'connectSequence',
-  'setArrowheads', 'setStrokeStyle', 'setRotation', 'getObjectDetails',
-  'createQuadrant', 'createColumnLayout', 'createFlowchart', 'createMindMap',
+  'batchCreate',
+  'batchUpdate',
+  'groupIntoFrame',
+  'connectSequence',
+  'setArrowheads',
+  'setStrokeStyle',
+  'setRotation',
+  'getObjectDetails',
+  'createQuadrant',
+  'createColumnLayout',
+  'createFlowchart',
+  'createMindMap',
 ]);
 export const createCompoundExecutor = (ctx: ICompoundExecutorContext) => {
   async function executeLayout(layout: ILayoutResult): Promise<unknown> {
@@ -51,12 +73,16 @@ export const createCompoundExecutor = (ctx: ICompoundExecutorContext) => {
       ...p,
       ...(p.parentFrameId === FRAME_PLACEHOLDER_ID && { parentFrameId: frame.id }),
     }));
-    const children = childParams.length > 0
-      ? await ctx.createObjectsBatch(ctx.boardId, childParams)
-      : [];
+    const children =
+      childParams.length > 0 ? await ctx.createObjectsBatch(ctx.boardId, childParams) : [];
     const allIds = [frame.id, ...children.map((c) => c.id)];
 
-    return { success: true, frameId: frame.id, objectIds: allIds, message: `Created layout with ${String(allIds.length)} objects` };
+    return {
+      success: true,
+      frameId: frame.id,
+      objectIds: allIds,
+      message: `Created layout with ${String(allIds.length)} objects`,
+    };
   }
 
   async function handleBatchCreate(args: Record<string, unknown>): Promise<unknown> {
@@ -65,21 +91,27 @@ export const createCompoundExecutor = (ctx: ICompoundExecutorContext) => {
       return { success: false, message: 'objects must be a non-empty array' };
     }
 
-    const params: ICreateObjectParams[] = raw.slice(0, BATCH_CAP).map((obj: Record<string, unknown>) => ({
-      type: resolveShapeType(String(obj.type ?? 'sticky')),
-      x: Number(obj.x ?? 0),
-      y: Number(obj.y ?? 0),
-      width: Number(obj.width ?? defaultWidthForType(String(obj.type ?? 'sticky'))),
-      height: Number(obj.height ?? defaultHeightForType(String(obj.type ?? 'sticky'))),
-      fill: resolveStickyColor(obj.color != null ? String(obj.color) : undefined),
-      ...(obj.text !== undefined && { text: String(obj.text) }),
-      ...(obj.fontSize !== undefined && { fontSize: Number(obj.fontSize) }),
-      ...(obj.opacity !== undefined && { opacity: Number(obj.opacity) }),
-      createdBy: ctx.createdBy,
-    }));
+    const params: ICreateObjectParams[] = raw
+      .slice(0, BATCH_CAP)
+      .map((obj: Record<string, unknown>) => ({
+        type: resolveShapeType(String(obj.type ?? 'sticky')),
+        x: Number(obj.x ?? 0),
+        y: Number(obj.y ?? 0),
+        width: Number(obj.width ?? defaultWidthForType(String(obj.type ?? 'sticky'))),
+        height: Number(obj.height ?? defaultHeightForType(String(obj.type ?? 'sticky'))),
+        fill: resolveStickyColor(obj.color != null ? String(obj.color) : undefined),
+        ...(obj.text !== undefined && { text: String(obj.text) }),
+        ...(obj.fontSize !== undefined && { fontSize: Number(obj.fontSize) }),
+        ...(obj.opacity !== undefined && { opacity: Number(obj.opacity) }),
+        createdBy: ctx.createdBy,
+      }));
     const created = await ctx.createObjectsBatch(ctx.boardId, params);
 
-    return { success: true, ids: created.map((o) => o.id), message: `Created ${String(created.length)} objects` };
+    return {
+      success: true,
+      ids: created.map((o) => o.id),
+      message: `Created ${String(created.length)} objects`,
+    };
   }
 
   async function handleBatchUpdate(args: Record<string, unknown>): Promise<unknown> {
@@ -88,9 +120,13 @@ export const createCompoundExecutor = (ctx: ICompoundExecutorContext) => {
       return { success: false, message: 'updates must be a non-empty array' };
     }
 
-    const mapped = raw.slice(0, BATCH_CAP)
+    const mapped = raw
+      .slice(0, BATCH_CAP)
       .filter((u: Record<string, unknown>) => typeof u.objectId === 'string' && u.changes)
-      .map((u: Record<string, unknown>) => ({ objectId: String(u.objectId), updates: toUpdateParams(u.changes) }));
+      .map((u: Record<string, unknown>) => ({
+        objectId: String(u.objectId),
+        updates: toUpdateParams(u.changes),
+      }));
     if (mapped.length === 0) {
       return { success: false, message: 'No valid updates provided' };
     }
@@ -117,34 +153,52 @@ export const createCompoundExecutor = (ctx: ICompoundExecutorContext) => {
     const bbox = computeBoundingBox(objects);
     const frame = await ctx.createObject(ctx.boardId, {
       type: 'frame',
-      x: bbox.x - padding, y: bbox.y - padding,
-      width: bbox.width + padding * 2, height: bbox.height + padding * 2,
-      fill: 'rgba(255,255,255,0.15)', text: title, createdBy: ctx.createdBy,
+      x: bbox.x - padding,
+      y: bbox.y - padding,
+      width: bbox.width + padding * 2,
+      height: bbox.height + padding * 2,
+      fill: 'rgba(255,255,255,0.15)',
+      text: title,
+      createdBy: ctx.createdBy,
     });
     await ctx.updateObjectsBatch(
       ctx.boardId,
-      objects.map((o) => ({ objectId: o.id, updates: { parentFrameId: frame.id } })),
+      objects.map((o) => ({ objectId: o.id, updates: { parentFrameId: frame.id } }))
     );
 
-    return { success: true, frameId: frame.id, message: `Grouped ${String(objects.length)} objects into frame '${title}'` };
+    return {
+      success: true,
+      frameId: frame.id,
+      message: `Grouped ${String(objects.length)} objects into frame '${title}'`,
+    };
   }
 
   function buildConnectorParam(
-    fromObj: IBoardObject, toObj: IBoardObject,
-    fromAnchor: ConnectorAnchor, toAnchor: ConnectorAnchor,
-    arrowheads: ArrowheadMode, strokeStyle: StrokeStyle | undefined,
+    fromObj: IBoardObject,
+    toObj: IBoardObject,
+    fromAnchor: ConnectorAnchor,
+    toAnchor: ConnectorAnchor,
+    arrowheads: ArrowheadMode,
+    strokeStyle: StrokeStyle | undefined
   ): ICreateObjectParams {
     const fromPos = getAnchorPosition(fromObj, fromAnchor);
     const toPos = getAnchorPosition(toObj, toAnchor);
 
     return {
       type: 'connector',
-      x: fromPos.x, y: fromPos.y,
-      width: Math.abs(toPos.x - fromPos.x), height: Math.abs(toPos.y - fromPos.y),
-      fill: '#64748b', stroke: '#64748b', strokeWidth: 2,
+      x: fromPos.x,
+      y: fromPos.y,
+      width: Math.abs(toPos.x - fromPos.x),
+      height: Math.abs(toPos.y - fromPos.y),
+      fill: '#64748b',
+      stroke: '#64748b',
+      strokeWidth: 2,
       points: [0, 0, toPos.x - fromPos.x, toPos.y - fromPos.y],
-      fromObjectId: fromObj.id, toObjectId: toObj.id,
-      fromAnchor, toAnchor, arrowheads,
+      fromObjectId: fromObj.id,
+      toObjectId: toObj.id,
+      fromAnchor,
+      toAnchor,
+      arrowheads,
       ...(strokeStyle && { strokeStyle }),
       createdBy: ctx.createdBy,
     };
@@ -170,7 +224,9 @@ export const createCompoundExecutor = (ctx: ICompoundExecutorContext) => {
       const fromObj = objects.find((o) => o.id === ids[i]);
       const toObj = objects.find((o) => o.id === ids[i + 1]);
       if (fromObj && toObj) {
-        connParams.push(buildConnectorParam(fromObj, toObj, fromAnchor, toAnchor, arrowheads, strokeStyle));
+        connParams.push(
+          buildConnectorParam(fromObj, toObj, fromAnchor, toAnchor, arrowheads, strokeStyle)
+        );
       }
     }
 
@@ -180,7 +236,11 @@ export const createCompoundExecutor = (ctx: ICompoundExecutorContext) => {
 
     const created = await ctx.createObjectsBatch(ctx.boardId, connParams);
 
-    return { success: true, connectorIds: created.map((c) => c.id), message: `Connected ${String(ids.length)} objects in sequence` };
+    return {
+      success: true,
+      connectorIds: created.map((c) => c.id),
+      message: `Connected ${String(ids.length)} objects in sequence`,
+    };
   }
 
   async function handleSetArrowheads(args: Record<string, unknown>): Promise<unknown> {
@@ -235,11 +295,22 @@ export const createCompoundExecutor = (ctx: ICompoundExecutorContext) => {
     return {
       success: true,
       object: {
-        id: obj.id, type: obj.type, x: obj.x, y: obj.y,
-        width: obj.width, height: obj.height, rotation: obj.rotation,
-        fill: obj.fill, stroke: obj.stroke, strokeWidth: obj.strokeWidth,
-        text: obj.text, textFill: obj.textFill, fontSize: obj.fontSize,
-        opacity: obj.opacity, arrowheads: obj.arrowheads, strokeStyle: obj.strokeStyle,
+        id: obj.id,
+        type: obj.type,
+        x: obj.x,
+        y: obj.y,
+        width: obj.width,
+        height: obj.height,
+        rotation: obj.rotation,
+        fill: obj.fill,
+        stroke: obj.stroke,
+        strokeWidth: obj.strokeWidth,
+        text: obj.text,
+        textFill: obj.textFill,
+        fontSize: obj.fontSize,
+        opacity: obj.opacity,
+        arrowheads: obj.arrowheads,
+        strokeStyle: obj.strokeStyle,
         parentFrameId: obj.parentFrameId,
         ...(obj.fromObjectId && { fromObjectId: obj.fromObjectId, toObjectId: obj.toObjectId }),
       },
@@ -264,7 +335,9 @@ export const createCompoundExecutor = (ctx: ICompoundExecutorContext) => {
     const config = buildFlowchartConfig(args);
     if (!config) return { success: false, message: 'Invalid flowchart config' };
 
-    return await executeLayout(await computeFlowchartLayout(config, ctx.getObjects(), ctx.createdBy));
+    return await executeLayout(
+      await computeFlowchartLayout(config, ctx.getObjects(), ctx.createdBy)
+    );
   }
 
   async function handleCreateMindMap(args: Record<string, unknown>): Promise<unknown> {
@@ -280,19 +353,32 @@ export const createCompoundExecutor = (ctx: ICompoundExecutorContext) => {
     }
 
     switch (tool.name) {
-      case 'batchCreate':        return await handleBatchCreate(tool.arguments);
-      case 'batchUpdate':        return await handleBatchUpdate(tool.arguments);
-      case 'groupIntoFrame':     return await handleGroupIntoFrame(tool.arguments);
-      case 'connectSequence':    return await handleConnectSequence(tool.arguments);
-      case 'setArrowheads':      return await handleSetArrowheads(tool.arguments);
-      case 'setStrokeStyle':     return await handleSetStrokeStyle(tool.arguments);
-      case 'setRotation':        return await handleSetRotation(tool.arguments);
-      case 'getObjectDetails':   return handleGetObjectDetails(tool.arguments);
-      case 'createQuadrant':     return await handleCreateQuadrant(tool.arguments);
-      case 'createColumnLayout': return await handleCreateColumnLayout(tool.arguments);
-      case 'createFlowchart':    return await handleCreateFlowchart(tool.arguments);
-      case 'createMindMap':      return await handleCreateMindMap(tool.arguments);
-      default:                   return null;
+      case 'batchCreate':
+        return await handleBatchCreate(tool.arguments);
+      case 'batchUpdate':
+        return await handleBatchUpdate(tool.arguments);
+      case 'groupIntoFrame':
+        return await handleGroupIntoFrame(tool.arguments);
+      case 'connectSequence':
+        return await handleConnectSequence(tool.arguments);
+      case 'setArrowheads':
+        return await handleSetArrowheads(tool.arguments);
+      case 'setStrokeStyle':
+        return await handleSetStrokeStyle(tool.arguments);
+      case 'setRotation':
+        return await handleSetRotation(tool.arguments);
+      case 'getObjectDetails':
+        return handleGetObjectDetails(tool.arguments);
+      case 'createQuadrant':
+        return await handleCreateQuadrant(tool.arguments);
+      case 'createColumnLayout':
+        return await handleCreateColumnLayout(tool.arguments);
+      case 'createFlowchart':
+        return await handleCreateFlowchart(tool.arguments);
+      case 'createMindMap':
+        return await handleCreateMindMap(tool.arguments);
+      default:
+        return null;
     }
   };
 

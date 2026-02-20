@@ -68,7 +68,7 @@ function buildConnector(
   toId: string,
   fromAnchor: ConnectorAnchor,
   toAnchor: ConnectorAnchor,
-  createdBy: string,
+  createdBy: string
 ): ICreateObjectParams {
   return {
     type: 'connector',
@@ -92,7 +92,7 @@ function buildConnector(
 function computeMindMapLayout(
   config: IMindMapConfig,
   existingObjects: BoundedObject[],
-  createdBy: string,
+  createdBy: string
 ): ILayoutResult {
   const branchCount = config.branches.length;
 

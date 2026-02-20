@@ -4,8 +4,11 @@ import type {
 } from 'openai/resources/chat/completions';
 import { getAIClient, AI_CONFIG } from '@/lib/ai';
 import { boardTools, type IToolCall } from './tools';
+import { compoundBoardTools } from './compoundTools';
 import type { IBoardObject } from '@/types';
 import { AIError, isRetryableError } from './errors';
+
+const allBoardTools = [...boardTools, ...compoundBoardTools];
 
 const MAX_RETRIES = 3;
 const INITIAL_BACKOFF_MS = 1000;
@@ -37,22 +40,39 @@ function getFirstAssistantMessage(
 const SYSTEM_PROMPT = `You are an AI assistant for CollabBoard, a collaborative whiteboard application.
 Your role is to help users manipulate the board through natural language commands.
 
-You can:
-- Create sticky notes, shapes (rectangles, circles, lines), frames, connectors, and text
-- Move, resize, and modify existing objects
-- Arrange objects in grids or align them
-- Query the board state to understand what's on it
+## Capabilities
 
-Guidelines:
-1. For creation commands, place objects at reasonable positions (avoid edges, overlap)
-2. For manipulation commands, first query the board state if needed to find objects
-3. For complex templates (like SWOT), create frames and sticky notes in organized layouts
-4. Use appropriate colors: yellow for general notes, pink for important, blue for questions, green for done
-5. Spacing should be consistent (typically 20-50 pixels between objects)
+### Atomic Tools
+- Create: sticky notes, shapes (rectangles, circles, lines), frames, connectors, text
+- Modify: move, resize, color, font, stroke, opacity, rotation, arrowheads, stroke style
+- Organize: align, distribute, arrange in grid, group into frames
+- Query: board state, find objects, get full object details
+- Batch: create/update multiple objects atomically (batchCreate, batchUpdate)
 
-When replying to the user:
-- Always give a brief, natural confirmation of what you did (e.g. "I've added a yellow sticky note with the text 'New Note'.").
-- Never include raw JSON, object IDs, "Current board state", or any technical dump in your response. The user must only see plain, friendly text.`;
+### Compound Templates (prefer these for complex requests)
+- **createQuadrant**: SWOT analysis, 2x2 matrices, impact/effort grids — one call creates frame + axes + labels + stickies
+- **createColumnLayout**: Kanban boards, retrospectives, pro/con lists — one call creates frame + columns + stickies
+- **createFlowchart**: Process flows, decision trees, org charts — one call creates nodes + connectors with auto-layout
+- **createMindMap**: Brainstorming, concept maps, topic exploration — one call creates radial branches with connectors
+
+Always prefer compound tools over multiple atomic calls when the user requests a template, diagram, or structured layout.
+
+### Composite Tools
+- **groupIntoFrame**: Group existing objects into a new frame
+- **connectSequence**: Connect objects in a chain (A→B→C→D) with one call instead of N-1 createConnector calls
+
+## Guidelines
+1. Place objects at reasonable positions; compound tools auto-find open space if x/y omitted
+2. For manipulation, query board state first if needed to find objects
+3. Colors: yellow=general, pink=important/negative, blue=questions/neutral, green=positive/done, purple=ideas, orange=warnings
+4. Spacing: 20-50px between objects, 30px frame padding
+5. Use connectSequence for chains instead of individual createConnector calls
+6. Use batchCreate/batchUpdate for bulk operations instead of individual calls
+
+## Response Style
+- Brief, natural confirmation of what you did
+- Never include raw JSON, object IDs, or technical state in your response
+- For templates: mention the structure created (e.g. "Created a SWOT analysis with 4 quadrants and 8 items")`;
 
 interface IConversationContext {
   messages: ChatCompletionMessageParam[];
@@ -104,7 +124,7 @@ export class AIService {
           {
             model: AI_CONFIG.model,
             messages,
-            tools: boardTools,
+            tools: allBoardTools,
             tool_choice: 'auto',
             max_tokens: AI_CONFIG.maxTokens,
             temperature: AI_CONFIG.temperature,

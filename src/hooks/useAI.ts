@@ -4,7 +4,9 @@ import type { IBoardObject } from '@/types';
 import { AIService, createToolExecutor } from '@/modules/ai';
 import {
   createObject,
+  createObjectsBatch,
   updateObject,
+  updateObjectsBatch,
   deleteObject,
   deleteObjectsBatch,
 } from '@/modules/sync/objectService';
@@ -55,7 +57,9 @@ export const useAI = ({ boardId, user, objects }: IUseAIParams): IUseAIReturn =>
       userId: user.uid,
       getObjects: () => objectsRef.current,
       createObject,
+      createObjectsBatch,
       updateObject,
+      updateObjectsBatch,
       deleteObject,
       deleteObjectsBatch,
       ...(zoomToFitAll &&

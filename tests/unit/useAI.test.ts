@@ -9,7 +9,9 @@ import type { IViewportActionsValue } from '@/types';
 
 const {
   mockCreateObject,
+  mockCreateObjectsBatch,
   mockUpdateObject,
+  mockUpdateObjectsBatch,
   mockDeleteObject,
   mockDeleteObjectsBatch,
   mockCreateToolExecutor,
@@ -19,7 +21,9 @@ const {
   mockAIServiceConstructor,
 } = vi.hoisted(() => ({
   mockCreateObject: vi.fn(),
+  mockCreateObjectsBatch: vi.fn(),
   mockUpdateObject: vi.fn(),
+  mockUpdateObjectsBatch: vi.fn(),
   mockDeleteObject: vi.fn(),
   mockDeleteObjectsBatch: vi.fn(),
   mockCreateToolExecutor: vi.fn(),
@@ -31,7 +35,9 @@ const {
 
 vi.mock('@/modules/sync/objectService', () => ({
   createObject: mockCreateObject,
+  createObjectsBatch: mockCreateObjectsBatch,
   updateObject: mockUpdateObject,
+  updateObjectsBatch: mockUpdateObjectsBatch,
   deleteObject: mockDeleteObject,
   deleteObjectsBatch: mockDeleteObjectsBatch,
 }));

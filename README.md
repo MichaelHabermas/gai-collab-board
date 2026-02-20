@@ -6,8 +6,11 @@ with an AI-first development approach.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
+We are Live! Firebase hosting configured, AI proxy deployed to Render.
+
 - **Deployed site:** [gai-collab-board.onrender.com](https://gai-collab-board.onrender.com/)
-- **Repository:** [github.com/MichaelHabermas/CollabBoard](https://github.com/MichaelHabermas/CollabBoard)
+- **Deployed proxy service:** [gai-collab-board-ai-proxy.onrender.com](https://gai-collab-board-ai-proxy.onrender.com)
+- **Repository:** [github.com/MichaelHabermas/gai-collab-board](https://github.com/MichaelHabermas/gai-collab-board)
 
 ## Features
 

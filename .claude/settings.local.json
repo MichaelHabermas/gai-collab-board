@@ -33,7 +33,9 @@
       "mcp__Context7__resolve-library-id",
       "mcp__Context7__get-library-docs",
       "Bash(gh pr list:*)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(node -e:*)",
+      "Bash(bunx tsx:*)"
     ]
   },
   "hooks": {

@@ -82,7 +82,7 @@ function findOpenSpace(
   objects: BoundedObject[],
   _width: number,
   _height: number,
-  padding = 60,
+  padding = 60
 ): { x: number; y: number } {
   if (objects.length === 0) {
     return { x: 100, y: 100 };

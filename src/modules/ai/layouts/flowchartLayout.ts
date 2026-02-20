@@ -54,9 +54,10 @@ interface IDagreModule {
   layout(graph: IDagreGraph): void;
 }
 
-function directionAnchors(
-  direction: 'top-to-bottom' | 'left-to-right',
-): { from: ConnectorAnchor; to: ConnectorAnchor } {
+function directionAnchors(direction: 'top-to-bottom' | 'left-to-right'): {
+  from: ConnectorAnchor;
+  to: ConnectorAnchor;
+} {
   if (direction === 'left-to-right') {
     return { from: 'right', to: 'left' };
   }
@@ -91,12 +92,9 @@ function isDagreModule(mod: unknown): mod is IDagreModule {
 async function loadDagre(): Promise<IDagreModule> {
   let mod: unknown;
   try {
-    // @ts-expect-error -- @dagrejs/dagre is an optional peer dep; resolved at runtime
     mod = await import('@dagrejs/dagre');
   } catch {
-    throw new Error(
-      'dagre package not installed. Run: bun add @dagrejs/dagre',
-    );
+    throw new Error('dagre package not installed. Run: bun add @dagrejs/dagre');
   }
 
   if (!isDagreModule(mod)) {
@@ -111,7 +109,7 @@ function buildNodeParams(
   dagrePos: { x: number; y: number },
   dims: { width: number; height: number },
   createdBy: string,
-  hasFrame: boolean,
+  hasFrame: boolean
 ): ICreateObjectParams {
   const color = resolveStickyColor(node.color);
   const base: ICreateObjectParams = {
@@ -138,7 +136,7 @@ function buildEdgeConnector(
   edge: IFlowchartEdge,
   anchors: { from: ConnectorAnchor; to: ConnectorAnchor },
   createdBy: string,
-  hasFrame: boolean,
+  hasFrame: boolean
 ): ICreateObjectParams {
   const conn: ICreateObjectParams = {
     type: 'connector',
@@ -167,7 +165,7 @@ function buildEdgeConnector(
 async function computeFlowchartLayout(
   config: IFlowchartConfig,
   existingObjects: BoundedObject[],
-  createdBy: string,
+  createdBy: string
 ): Promise<ILayoutResult> {
   const dagre = await loadDagre();
   const graph = new dagre.graphlib.Graph();
@@ -217,7 +215,7 @@ async function computeFlowchartLayout(
 
   // Build connectors
   const connectors: ICreateObjectParams[] = config.edges.map((edge) =>
-    buildEdgeConnector(edge, anchors, createdBy, hasFrame),
+    buildEdgeConnector(edge, anchors, createdBy, hasFrame)
   );
 
   // Compute shift to place at target position

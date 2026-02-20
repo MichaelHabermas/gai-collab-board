@@ -41,7 +41,7 @@ function buildHeading(
   x: number,
   y: number,
   color: string,
-  createdBy: string,
+  createdBy: string
 ): ICreateObjectParams {
   return {
     type: 'text',
@@ -63,7 +63,7 @@ function buildSticky(
   x: number,
   y: number,
   color: string,
-  createdBy: string,
+  createdBy: string
 ): ICreateObjectParams {
   return {
     type: 'sticky',
@@ -81,7 +81,7 @@ function buildSticky(
 function computeColumnLayout(
   config: IColumnConfig,
   existingObjects: BoundedObject[],
-  createdBy: string,
+  createdBy: string
 ): ILayoutResult {
   const colCount = config.columns.length;
   const maxItems = computeMaxItemCount(config.columns);

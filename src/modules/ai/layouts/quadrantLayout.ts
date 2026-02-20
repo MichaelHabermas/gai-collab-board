@@ -51,7 +51,7 @@ function buildSectionLabel(
   x: number,
   y: number,
   color: string,
-  createdBy: string,
+  createdBy: string
 ): ICreateObjectParams {
   return {
     type: 'text',
@@ -73,7 +73,7 @@ function buildStickyNote(
   x: number,
   y: number,
   color: string,
-  createdBy: string,
+  createdBy: string
 ): ICreateObjectParams {
   return {
     type: 'sticky',
@@ -93,7 +93,7 @@ function layoutQuadrantStickies(
   cellX: number,
   cellY: number,
   color: string,
-  createdBy: string,
+  createdBy: string
 ): ICreateObjectParams[] {
   const cols = items.length > STICKIES_PER_ROW_THRESHOLD ? 2 : 1;
   const stickyStartY = cellY + SECTION_HEADER_HEIGHT;
@@ -113,7 +113,7 @@ function buildAxisLines(
   originY: number,
   totalWidth: number,
   totalHeight: number,
-  createdBy: string,
+  createdBy: string
 ): ICreateObjectParams[] {
   const hLineY = originY + totalHeight / 2;
   const vLineX = originX + totalWidth / 2;
@@ -156,7 +156,7 @@ function buildAxisLabels(
   totalHeight: number,
   xLabel: string | undefined,
   yLabel: string | undefined,
-  createdBy: string,
+  createdBy: string
 ): ICreateObjectParams[] {
   const labels: ICreateObjectParams[] = [];
 
@@ -198,7 +198,7 @@ function buildAxisLabels(
 function computeQuadrantLayout(
   config: IQuadrantConfig,
   existingObjects: BoundedObject[],
-  createdBy: string,
+  createdBy: string
 ): ILayoutResult {
   const { quadrants } = config;
   const entries: [string, IQuadrantInput][] = [
@@ -211,11 +211,11 @@ function computeQuadrantLayout(
   const cellW = computeCellWidth();
   const maxTop = Math.max(
     computeCellHeight(quadrants.topLeft.items.length),
-    computeCellHeight(quadrants.topRight.items.length),
+    computeCellHeight(quadrants.topRight.items.length)
   );
   const maxBottom = Math.max(
     computeCellHeight(quadrants.bottomLeft.items.length),
-    computeCellHeight(quadrants.bottomRight.items.length),
+    computeCellHeight(quadrants.bottomRight.items.length)
   );
   const gridW = cellW * 2 + CELL_GAP;
   const gridH = maxTop + maxBottom + CELL_GAP;
@@ -243,14 +243,9 @@ function computeQuadrantLayout(
 
   const objects: ICreateObjectParams[] = [frame];
 
+  objects.push(...buildAxisLines(gridX, gridY, gridW, gridH, createdBy));
   objects.push(
-    ...buildAxisLines(gridX, gridY, gridW, gridH, createdBy),
-  );
-  objects.push(
-    ...buildAxisLabels(
-      gridX, gridY, gridW, gridH,
-      config.xAxisLabel, config.yAxisLabel, createdBy,
-    ),
+    ...buildAxisLabels(gridX, gridY, gridW, gridH, config.xAxisLabel, config.yAxisLabel, createdBy)
   );
 
   const cellPositions: Record<string, { x: number; y: number }> = {
