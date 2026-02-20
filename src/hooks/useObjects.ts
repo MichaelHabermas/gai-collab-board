@@ -44,12 +44,14 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
   const [loading, setLoading] = useState<boolean>(!boardId ? false : true);
   const [error, setError] = useState<string>('');
 
-  // Wrapper: updates React state and Zustand store in one call (no extra render cycle).
+  // Wrapper: updates React state and defers Zustand store sync to the next microtask.
+  // Zustand mutations inside a setState updater trigger subscriber re-renders during
+  // React's render phase → "Cannot update BoardCanvas while rendering BoardView2".
   const setObjects = useCallback(
     (updater: SetStateAction<IBoardObject[]>) => {
       setObjectsRaw((prev) => {
         const next = typeof updater === 'function' ? updater(prev) : updater;
-        useObjectsStore.getState().setAll(next);
+        queueMicrotask(() => useObjectsStore.getState().setAll(next));
 
         return next;
       });
@@ -241,22 +243,27 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         // O(n) full rebuild — fine for initial load.
         setObjects((prevObjects) => applySnapshotUpdate(prevObjects, update));
       } else {
-        // Incremental: update React state (via raw setter to skip setAll)
-        // and apply per-object Zustand store updates (O(changed) not O(total)).
-        setObjectsRaw((prevObjects) => {
-          const nextObjects = applySnapshotUpdate(prevObjects, update);
-          // Per-object store updates — O(1) spatial index per change.
-          const store = useObjectsStore.getState();
-          for (const change of update.changes) {
-            if (change.type === 'removed') {
-              store.deleteObject(change.object.id);
-            } else {
-              store.setObject(change.object);
-            }
-          }
+        // Incremental: update React state first, then Zustand store OUTSIDE
+        // the setState updater to avoid triggering Zustand subscribers mid-render
+        // ("Cannot update BoardCanvas while rendering BoardView" warning).
+        setObjectsRaw((prevObjects) => applySnapshotUpdate(prevObjects, update));
 
-          return nextObjects;
-        });
+        // Batched Zustand store updates — one index rebuild total, not per-object.
+        const store = useObjectsStore.getState();
+        const toDelete: string[] = [];
+        const toSet: IBoardObject[] = [];
+
+        for (const change of update.changes) {
+          if (change.type === 'removed') {
+            toDelete.push(change.object.id);
+          } else {
+            toSet.push(change.object);
+          }
+        }
+
+        if (toDelete.length > 0) store.deleteObjects(toDelete);
+
+        if (toSet.length > 0) store.setObjects(toSet);
       }
 
       setLoading(false);

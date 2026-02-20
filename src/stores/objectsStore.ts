@@ -107,6 +107,24 @@ export const useObjectsStore = create<IObjectsStore>()((set) => ({
     set((state) => {
       const nextObjects = { ...state.objects, [object.id]: object };
 
+      // Skip relationship index rebuild when parent/endpoints are unchanged (hot-path optimization).
+      const existing = state.objects[object.id];
+      if (existing) {
+        const parentChanged = object.parentFrameId !== existing.parentFrameId;
+        const endpointsChanged =
+          (object.type === 'connector' || existing.type === 'connector') &&
+          (object.fromObjectId !== existing.fromObjectId ||
+            object.toObjectId !== existing.toObjectId);
+
+        if (!parentChanged && !endpointsChanged) {
+          return {
+            objects: nextObjects,
+            frameChildrenIndex: state.frameChildrenIndex,
+            connectorsByEndpoint: state.connectorsByEndpoint,
+          };
+        }
+      }
+
       return { objects: nextObjects, ...buildIndexes(nextObjects) };
     });
   },
