@@ -3,11 +3,11 @@ import {
   doc,
   getDoc,
   setDoc,
-  updateDoc,
   deleteDoc,
   onSnapshot,
   query,
   where,
+  runTransaction,
   Timestamp,
   Unsubscribe,
 } from 'firebase/firestore';
@@ -100,19 +100,15 @@ export const updateBoardName = async (
   name: string,
   userId: string
 ): Promise<void> => {
-  const board = await getBoard(boardId);
-  if (!board) {
-    throw new Error('Board not found');
-  }
-
-  if (!canUserManage(board, userId)) {
-    throw new Error('Only the board owner can rename the board');
-  }
-
   const boardRef = doc(firestore, BOARDS_COLLECTION, boardId);
-  await updateDoc(boardRef, {
-    name,
-    updatedAt: Timestamp.now(),
+  await runTransaction(firestore, async (tx) => {
+    const snap = await tx.get(boardRef);
+    if (!snap.exists()) throw new Error('Board not found');
+    const board = snap.data() as IBoard;
+    if (!canUserManage(board, userId)) {
+      throw new Error('Only the board owner can rename the board');
+    }
+    tx.update(boardRef, { name, updatedAt: Timestamp.now() });
   });
 };
 

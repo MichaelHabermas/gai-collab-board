@@ -2,20 +2,22 @@ import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { AIService } from '@/modules/ai/aiService';
 import type { IToolCall } from '@/modules/ai/tools';
 import { AIError } from '@/modules/ai/errors';
-import { aiClient } from '@/lib/ai';
+import { getAIClient } from '@/lib/ai';
 
-vi.mock('@/lib/ai', () => ({
-  aiClient: {
-    chat: {
-      completions: {
-        create: vi.fn(),
-      },
+const mockClient = {
+  chat: {
+    completions: {
+      create: vi.fn(),
     },
   },
+};
+
+vi.mock('@/lib/ai', () => ({
+  getAIClient: () => mockClient,
   AI_CONFIG: { model: 'test-model', maxTokens: 100, temperature: 0.7, topP: 0.9 },
 }));
 
-const mockCreate = vi.mocked(aiClient.chat.completions.create);
+const mockCreate = vi.mocked(getAIClient().chat.completions.create);
 
 describe('AIService', () => {
   let onToolExecute: Mock<(tool: IToolCall) => Promise<unknown>>;
@@ -172,7 +174,7 @@ describe('AIService', () => {
       created: 1717171717,
       model: 'test-model',
       object: 'chat.completion',
-    } as Awaited<ReturnType<typeof aiClient.chat.completions.create>>);
+    } as Awaited<ReturnType<typeof mockClient.chat.completions.create>>);
 
     const err = await service.processCommand('Add a note').catch((e) => e);
     expect(err).toBeInstanceOf(AIError);

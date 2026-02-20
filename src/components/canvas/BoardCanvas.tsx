@@ -17,7 +17,7 @@ import { useCanvasOperations } from '@/hooks/useCanvasOperations';
 import { useVisibleShapes } from '@/hooks/useVisibleShapes';
 import { useBatchDraw } from '@/hooks/useBatchDraw';
 import { useSelectionStore } from '@/stores/selectionStore';
-import { useObjectsStore } from '@/stores/objectsStore';
+import { useObjectsStore, spatialIndex } from '@/stores/objectsStore';
 import type { User } from 'firebase/auth';
 import type {
   IBoardObject,
@@ -26,6 +26,7 @@ import type {
   ITransformEndAttrs,
   IViewportState,
   IAlignmentGuides,
+  IAlignmentCandidate,
   ToolMode,
   IKonvaMouseEvent,
   IKonvaDragEvent,
@@ -1126,9 +1127,11 @@ export const BoardCanvas = memo(
           return cached.fn;
         }
 
-        const otherCandidates = guideCandidateBoundsRef.current
-          .filter((candidate) => candidate.id !== objectId)
-          .map((candidate) => candidate.candidate);
+        // Build Map for O(1) candidate lookup (runs once per cache miss, not at 60Hz)
+        const candidateMap = new Map<string, IAlignmentCandidate>();
+        for (const c of guideCandidateBoundsRef.current) {
+          if (c.id !== objectId) candidateMap.set(c.id, c.candidate);
+        }
 
         const nextDragBoundFunc = (pos: IPosition) => {
           if (snapToGridEnabled) {
@@ -1142,7 +1145,27 @@ export const BoardCanvas = memo(
             x2: pos.x + width,
             y2: pos.y + height,
           };
-          const guides = computeAlignmentGuidesWithCandidates(dragged, otherCandidates);
+
+          // Narrow alignment candidates via spatial index (O(cells) vs O(all visible))
+          const SNAP_EXPAND = 4;
+          let nearbyCandidates: IAlignmentCandidate[];
+          if (spatialIndex.size > 0) {
+            const nearbyIds = spatialIndex.query({
+              x1: dragged.x1 - SNAP_EXPAND,
+              y1: dragged.y1 - SNAP_EXPAND,
+              x2: dragged.x2 + SNAP_EXPAND,
+              y2: dragged.y2 + SNAP_EXPAND,
+            });
+            nearbyCandidates = [];
+            for (const id of nearbyIds) {
+              const candidate = candidateMap.get(id);
+              if (candidate) nearbyCandidates.push(candidate);
+            }
+          } else {
+            nearbyCandidates = Array.from(candidateMap.values());
+          }
+
+          const guides = computeAlignmentGuidesWithCandidates(dragged, nearbyCandidates);
           const snapped = computeSnappedPositionFromGuides(guides, pos, width, height);
 
           setGuidesThrottledRef.current(guides);

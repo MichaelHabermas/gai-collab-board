@@ -146,7 +146,8 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: {
             vendor: ['react', 'react-dom'],
-            firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/database'],
+            firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+            'firebase-rtdb': ['firebase/database'],
             konva: ['konva', 'react-konva'],
             openai: ['openai'],
           },

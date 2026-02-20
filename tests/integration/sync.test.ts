@@ -51,7 +51,7 @@ vi.mock('firebase/database', () => ({
 
 vi.mock('@/lib/firebase', () => ({
   firestore: {},
-  realtimeDb: {},
+  getRealtimeDb: () => ({}),
 }));
 
 describe('Sync Integration Tests', () => {

@@ -1,5 +1,5 @@
 import { ref, set, onValue, onDisconnect, remove, Unsubscribe } from 'firebase/database';
-import { realtimeDb } from '@/lib/firebase';
+import { getRealtimeDb } from '@/lib/firebase';
 import type { Cursors, ICursorData, IPresenceData } from '@/types';
 
 export type { ICursorData, IPresenceData };
@@ -20,7 +20,7 @@ export const updateCursor = async (
   displayName: string,
   color: string
 ): Promise<void> => {
-  const cursorRef = ref(realtimeDb, `boards/${boardId}/cursors/${uid}`);
+  const cursorRef = ref(getRealtimeDb(), `boards/${boardId}/cursors/${uid}`);
   await set(cursorRef, {
     uid,
     x,
@@ -39,7 +39,7 @@ export const subscribeToCursors = (
   boardId: string,
   callback: (cursors: Cursors) => void
 ): Unsubscribe => {
-  const cursorsRef = ref(realtimeDb, `boards/${boardId}/cursors`);
+  const cursorsRef = ref(getRealtimeDb(), `boards/${boardId}/cursors`);
   return onValue(cursorsRef, (snapshot) => {
     callback(snapshot.val() || {});
   });
@@ -49,7 +49,7 @@ export const subscribeToCursors = (
  * Removes a user's cursor from the board.
  */
 export const removeCursor = async (boardId: string, uid: string): Promise<void> => {
-  const cursorRef = ref(realtimeDb, `boards/${boardId}/cursors/${uid}`);
+  const cursorRef = ref(getRealtimeDb(), `boards/${boardId}/cursors/${uid}`);
   await remove(cursorRef);
 };
 
@@ -58,7 +58,7 @@ export const removeCursor = async (boardId: string, uid: string): Promise<void> 
  * Should be called once when joining a board.
  */
 export const setupCursorDisconnectHandler = (boardId: string, uid: string): void => {
-  const cursorRef = ref(realtimeDb, `boards/${boardId}/cursors/${uid}`);
+  const cursorRef = ref(getRealtimeDb(), `boards/${boardId}/cursors/${uid}`);
   onDisconnect(cursorRef).remove();
 };
 
@@ -76,7 +76,7 @@ export const updatePresence = async (
   photoURL: string | null,
   color: string
 ): Promise<void> => {
-  const presenceRef = ref(realtimeDb, `boards/${boardId}/presence/${uid}`);
+  const presenceRef = ref(getRealtimeDb(), `boards/${boardId}/presence/${uid}`);
   await set(presenceRef, {
     uid,
     displayName,
@@ -95,7 +95,7 @@ export const subscribeToPresence = (
   boardId: string,
   callback: (presence: Record<string, IPresenceData>) => void
 ): Unsubscribe => {
-  const presenceRef = ref(realtimeDb, `boards/${boardId}/presence`);
+  const presenceRef = ref(getRealtimeDb(), `boards/${boardId}/presence`);
   return onValue(presenceRef, (snapshot) => {
     callback(snapshot.val() || {});
   });
@@ -105,7 +105,7 @@ export const subscribeToPresence = (
  * Removes a user's presence from the board.
  */
 export const removePresence = async (boardId: string, uid: string): Promise<void> => {
-  const presenceRef = ref(realtimeDb, `boards/${boardId}/presence/${uid}`);
+  const presenceRef = ref(getRealtimeDb(), `boards/${boardId}/presence/${uid}`);
   await remove(presenceRef);
 };
 
@@ -114,7 +114,7 @@ export const removePresence = async (boardId: string, uid: string): Promise<void
  * Should be called once when joining a board.
  */
 export const setupPresenceDisconnectHandler = (boardId: string, uid: string): void => {
-  const presenceRef = ref(realtimeDb, `boards/${boardId}/presence/${uid}`);
+  const presenceRef = ref(getRealtimeDb(), `boards/${boardId}/presence/${uid}`);
   onDisconnect(presenceRef).remove();
 };
 
@@ -129,7 +129,7 @@ export const setupPresenceDisconnectHandler = (boardId: string, uid: string): vo
 export const subscribeToConnectionStatus = (
   callback: (isConnected: boolean) => void
 ): Unsubscribe => {
-  const connectedRef = ref(realtimeDb, '.info/connected');
+  const connectedRef = ref(getRealtimeDb(), '.info/connected');
   return onValue(connectedRef, (snapshot) => {
     callback(snapshot.val() === true);
   });

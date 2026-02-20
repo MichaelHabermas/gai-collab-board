@@ -1,13 +1,13 @@
 import { useMemo } from 'react';
-import { useObjectsStore } from '@/stores/objectsStore';
+import { useObjectsStore, spatialIndex } from '@/stores/objectsStore';
 import type { IBoardObject, IViewportState } from '@/types';
 
 const VIEWPORT_PADDING = 200;
 
 /**
  * Returns the IDs of objects visible in the current viewport, sorted with
- * frames first (render order). Reads from the Zustand objectsStore so the
- * parent does NOT need an `objects` prop for the render loop.
+ * frames first (render order). Uses the spatial index for fast candidate
+ * narrowing, then does precise AABB checks on candidates only.
  */
 export const useVisibleShapeIds = (viewport: IViewportState): string[] => {
   const objectsRecord = useObjectsStore((s) => s.objects);
@@ -20,10 +20,20 @@ export const useVisibleShapeIds = (viewport: IViewportState): string[] => {
     const viewTop = -position.y / scale.y - VIEWPORT_PADDING;
     const viewBottom = (-position.y + height) / scale.y + VIEWPORT_PADDING;
 
+    // Use spatial index to narrow candidates (O(cells) instead of O(n))
+    const candidates = spatialIndex.size > 0
+      ? spatialIndex.query({ x1: viewLeft, y1: viewTop, x2: viewRight, y2: viewBottom })
+      : null;
+
     const visibleIds: { id: string; isFrame: boolean }[] = [];
 
-    for (const id in objectsRecord) {
-      const obj = objectsRecord[id] as IBoardObject;
+    // Iterate candidates from spatial index, or fall back to full scan if index is empty
+    const idsToCheck = candidates ?? Object.keys(objectsRecord);
+
+    for (const id of idsToCheck) {
+      const obj = objectsRecord[id] as IBoardObject | undefined;
+      if (!obj) continue;
+
       let objLeft: number;
       let objRight: number;
       let objTop: number;

@@ -42,6 +42,11 @@ export const firestore: Firestore = initializeFirestore(app, {
   }),
 });
 
-export const realtimeDb: Database = getDatabase(app);
+let _realtimeDb: Database | null = null;
+export const getRealtimeDb = (): Database => {
+  if (!_realtimeDb) _realtimeDb = getDatabase(app);
+
+  return _realtimeDb;
+};
 
 export { app };

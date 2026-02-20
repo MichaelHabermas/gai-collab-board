@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import type { IBoardObject } from '@/types';
+import { SpatialIndex } from '@/lib/spatialIndex';
+import { getObjectBounds } from '@/lib/canvasBounds';
 
 interface IObjectsStoreState {
   /** All board objects keyed by ID. Single source of truth for shape data. */
@@ -65,6 +67,24 @@ const buildIndexes = (objects: Record<string, IBoardObject>): IIndexes => {
   return { frameChildrenIndex, connectorsByEndpoint };
 };
 
+// ── Module-level spatial index (not Zustand state — avoids subscriber churn) ──
+
+/** Singleton spatial index for viewport culling and containment queries. */
+export const spatialIndex = new SpatialIndex();
+
+/** Rebuild the entire spatial index from an objects record. */
+const rebuildSpatialIndex = (objects: Record<string, IBoardObject>): void => {
+  spatialIndex.clear();
+  for (const id in objects) {
+    spatialIndex.insert(id, getObjectBounds(objects[id]!));
+  }
+};
+
+/** Update spatial index for a single object. */
+const updateSpatialForObject = (obj: IBoardObject): void => {
+  spatialIndex.insert(obj.id, getObjectBounds(obj));
+};
+
 export const useObjectsStore = create<IObjectsStore>()((set) => ({
   objects: {},
   frameChildrenIndex: EMPTY_INDEX,
@@ -75,10 +95,12 @@ export const useObjectsStore = create<IObjectsStore>()((set) => ({
     for (const obj of objectsList) {
       record[obj.id] = obj;
     }
+    rebuildSpatialIndex(record);
     set({ objects: record, ...buildIndexes(record) });
   },
 
   setObject: (object) => {
+    updateSpatialForObject(object);
     set((state) => {
       const nextObjects = { ...state.objects, [object.id]: object };
 
@@ -87,6 +109,9 @@ export const useObjectsStore = create<IObjectsStore>()((set) => ({
   },
 
   setObjects: (objectsList) => {
+    for (const obj of objectsList) {
+      updateSpatialForObject(obj);
+    }
     set((state) => {
       const next = { ...state.objects };
       for (const obj of objectsList) {
@@ -102,9 +127,13 @@ export const useObjectsStore = create<IObjectsStore>()((set) => ({
       const existing = state.objects[id];
       if (!existing) return state;
 
-      const nextObjects = { ...state.objects, [id]: { ...existing, ...updates } };
+      const merged = { ...existing, ...updates };
+      const nextObjects = { ...state.objects, [id]: merged };
 
-      // Skip index rebuild on hot path (drag moves that don't change relationships)
+      // Update spatial index for position/size changes (always cheap — single object)
+      updateSpatialForObject(merged);
+
+      // Skip relationship index rebuild on hot path (drag moves that don't change relationships)
       const parentChanged = 'parentFrameId' in updates && updates.parentFrameId !== existing.parentFrameId;
       const endpointsChanged =
         ('fromObjectId' in updates && updates.fromObjectId !== existing.fromObjectId) ||
@@ -123,6 +152,7 @@ export const useObjectsStore = create<IObjectsStore>()((set) => ({
   },
 
   deleteObject: (id) => {
+    spatialIndex.remove(id);
     set((state) => {
       const rest = { ...state.objects };
       delete rest[id];
@@ -132,6 +162,9 @@ export const useObjectsStore = create<IObjectsStore>()((set) => ({
   },
 
   deleteObjects: (ids) => {
+    for (const id of ids) {
+      spatialIndex.remove(id);
+    }
     set((state) => {
       const next = { ...state.objects };
       for (const id of ids) {
@@ -143,6 +176,7 @@ export const useObjectsStore = create<IObjectsStore>()((set) => ({
   },
 
   clear: () => {
+    spatialIndex.clear();
     set({ objects: {}, frameChildrenIndex: EMPTY_INDEX, connectorsByEndpoint: EMPTY_INDEX });
   },
 }));

@@ -68,7 +68,12 @@ export const createAIClient = (): OpenAI => {
   });
 };
 
-export const aiClient = createAIClient();
+let _aiClient: OpenAI | null = null;
+export const getAIClient = (): OpenAI => {
+  if (!_aiClient) _aiClient = createAIClient();
+
+  return _aiClient;
+};
 
 export const AI_CONFIG = {
   model: getAIModel(),

@@ -2,7 +2,7 @@ import type {
   ChatCompletionMessageParam,
   ChatCompletionMessage,
 } from 'openai/resources/chat/completions';
-import { aiClient, AI_CONFIG } from '@/lib/ai';
+import { getAIClient, AI_CONFIG } from '@/lib/ai';
 import { boardTools, type IToolCall } from './tools';
 import type { IBoardObject } from '@/types';
 import { AIError, isRetryableError } from './errors';
@@ -100,7 +100,7 @@ export class AIService {
 
     const response = await this.throttledRequest(() =>
       this.withRetry(() =>
-        aiClient.chat.completions.create(
+        getAIClient().chat.completions.create(
           {
             model: AI_CONFIG.model,
             messages,
@@ -180,7 +180,7 @@ export class AIService {
 
     const followUpResponse = await this.throttledRequest(() =>
       this.withRetry(() =>
-        aiClient.chat.completions.create(
+        getAIClient().chat.completions.create(
           {
             model: AI_CONFIG.model,
             messages: followUpMessages,

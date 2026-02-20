@@ -26,7 +26,7 @@ vi.mock('@/lib/shareLink', () => ({
   getBoardShareLink: (boardId: string) => `https://app.example.com/board/${boardId}`,
 }));
 
-vi.mock('@/lib/firebase', () => ({ firestore: {}, realtimeDb: {} }));
+vi.mock('@/lib/firebase', () => ({ firestore: {}, getRealtimeDb: () => ({}) }));
 
 const now = Timestamp.now();
 

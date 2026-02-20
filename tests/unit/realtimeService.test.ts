@@ -34,7 +34,7 @@ vi.mock('firebase/database', () => ({
 }));
 
 vi.mock('@/lib/firebase', () => ({
-  realtimeDb: {},
+  getRealtimeDb: () => ({}),
 }));
 
 describe('realtimeService', () => {
