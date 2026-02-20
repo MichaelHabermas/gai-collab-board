@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { IChatMessage } from '@/hooks/useAI';
-import type { IBoardObject } from '@/types';
+import { useObjectsStore } from '@/stores/objectsStore';
 import { useSelectionStore } from '@/stores/selectionStore';
 
 interface IAIChatPanelProps {
@@ -16,8 +16,6 @@ interface IAIChatPanelProps {
   onClearError: () => void;
   onClearMessages: () => void;
   className?: string;
-  /** All board objects — used to check if board is non-empty for Explain Board. */
-  objects?: IBoardObject[];
 }
 
 export const AIChatPanel = ({
@@ -28,18 +26,16 @@ export const AIChatPanel = ({
   onClearError,
   onClearMessages,
   className,
-  objects = [],
 }: IAIChatPanelProps): ReactElement => {
   const [inputValue, setInputValue] = useState<string>('');
   const [voiceError, setVoiceError] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const selectedIds = useSelectionStore((s) => s.selectedIds);
+  const hasBoardObjects = useObjectsStore((s) => Object.keys(s.objects).length > 0);
 
   const supportsSpeechRecognition =
     typeof window !== 'undefined' &&
     ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
-
-  const hasBoardObjects = objects.length > 0;
   const hasSelection = selectedIds.length > 0;
 
   const handleExplainBoard = () => {

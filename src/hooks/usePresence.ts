@@ -28,6 +28,9 @@ export const usePresence = ({ boardId, user }: IUsePresenceParams): IUsePresence
 
   // Generate consistent color for user
   const userId = user?.uid;
+  const userDisplayName = user?.displayName;
+  const userEmail = user?.email;
+  const userPhotoURL = user?.photoURL ?? null;
   const currentUserColor = useMemo(() => {
     return userId ? getUserColor(userId) : '#6b7280';
   }, [userId]);
@@ -57,19 +60,18 @@ export const usePresence = ({ boardId, user }: IUsePresenceParams): IUsePresence
 
   // Update own presence when mutable user profile details change
   useEffect(() => {
-    if (!boardId || !user?.uid) {
+    if (!boardId || !userId) {
       return;
     }
 
-    const displayName = user.displayName || user.email?.split('@')[0] || 'Anonymous';
-    const { photoURL } = user;
+    const displayName = userDisplayName || userEmail?.split('@')[0] || 'Anonymous';
     Promise.resolve(
-      updatePresence(boardId, user.uid, displayName, photoURL, currentUserColor)
+      updatePresence(boardId, userId, displayName, userPhotoURL, currentUserColor)
     ).catch((error) => {
       // Presence updates are best-effort; subscription remains active for retries on next change.
       console.error('Failed to update presence', error);
     });
-  }, [boardId, user, currentUserColor]);
+  }, [boardId, userId, userDisplayName, userEmail, userPhotoURL, currentUserColor]);
 
   // Convert presence map to sorted array of online users
   const onlineUsers = useMemo(() => {

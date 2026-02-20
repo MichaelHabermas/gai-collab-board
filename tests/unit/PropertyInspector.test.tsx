@@ -4,6 +4,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { Timestamp } from 'firebase/firestore';
 import { PropertyInspector } from '@/components/canvas/PropertyInspector';
 import { setSelectionStoreState } from '@/stores/selectionStore';
+import { useObjectsStore } from '@/stores/objectsStore';
 import type { IBoardObject } from '@/types';
 
 const createMockObject = (overrides: Partial<IBoardObject> = {}): IBoardObject => ({
@@ -37,15 +38,21 @@ function TestSelectionWrapper({
 describe('PropertyInspector', () => {
   const mockOnObjectUpdate = vi.fn().mockResolvedValue(undefined);
 
+  /** Push objects into the Zustand store (replaces `objects` prop). */
+  const setStoreObjects = (objects: IBoardObject[]): void => {
+    useObjectsStore.getState().setAll(objects);
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
     setSelectionStoreState([]);
+    useObjectsStore.getState().clear();
   });
 
   it('shows empty state when no selection', () => {
     render(
       <TestSelectionWrapper selectedIds={[]}>
-        <PropertyInspector objects={[]} onObjectUpdate={mockOnObjectUpdate} />
+        <PropertyInspector onObjectUpdate={mockOnObjectUpdate} />
       </TestSelectionWrapper>
     );
     expect(screen.getByTestId('property-inspector-empty')).toBeInTheDocument();
@@ -54,9 +61,10 @@ describe('PropertyInspector', () => {
 
   it('shows panel when one object selected', () => {
     const obj = createMockObject({ id: 'obj-1', type: 'rectangle' });
+    setStoreObjects([obj]);
     render(
       <TestSelectionWrapper selectedIds={['obj-1']}>
-        <PropertyInspector objects={[obj]} onObjectUpdate={mockOnObjectUpdate} />
+        <PropertyInspector onObjectUpdate={mockOnObjectUpdate} />
       </TestSelectionWrapper>
     );
     expect(screen.getByTestId('property-inspector-panel')).toBeInTheDocument();
@@ -65,9 +73,10 @@ describe('PropertyInspector', () => {
 
   it('shows fill and stroke controls for shape object', () => {
     const obj = createMockObject({ id: 'obj-1', type: 'rectangle', fill: '#fef08a' });
+    setStoreObjects([obj]);
     render(
       <TestSelectionWrapper selectedIds={['obj-1']}>
-        <PropertyInspector objects={[obj]} onObjectUpdate={mockOnObjectUpdate} />
+        <PropertyInspector onObjectUpdate={mockOnObjectUpdate} />
       </TestSelectionWrapper>
     );
     expect(screen.getByTestId('property-inspector-fill-color')).toBeInTheDocument();
@@ -85,9 +94,10 @@ describe('PropertyInspector', () => {
       strokeWidth: 3,
       points: [0, 0, 100, 50],
     });
+    setStoreObjects([lineObj]);
     render(
       <TestSelectionWrapper selectedIds={['line-1']}>
-        <PropertyInspector objects={[lineObj]} onObjectUpdate={mockOnObjectUpdate} />
+        <PropertyInspector onObjectUpdate={mockOnObjectUpdate} />
       </TestSelectionWrapper>
     );
     expect(screen.queryByTestId('property-inspector-fill-color')).not.toBeInTheDocument();
@@ -99,7 +109,7 @@ describe('PropertyInspector', () => {
   it('shows empty state when selected id not in objects list', () => {
     render(
       <TestSelectionWrapper selectedIds={['nonexistent']}>
-        <PropertyInspector objects={[]} onObjectUpdate={mockOnObjectUpdate} />
+        <PropertyInspector onObjectUpdate={mockOnObjectUpdate} />
       </TestSelectionWrapper>
     );
     expect(screen.getByTestId('property-inspector-empty')).toBeInTheDocument();
@@ -111,9 +121,10 @@ describe('PropertyInspector', () => {
       type: 'sticky',
       fontSize: 14,
     });
+    setStoreObjects([sticky]);
     render(
       <TestSelectionWrapper selectedIds={['sticky-1']}>
-        <PropertyInspector objects={[sticky]} onObjectUpdate={mockOnObjectUpdate} />
+        <PropertyInspector onObjectUpdate={mockOnObjectUpdate} />
       </TestSelectionWrapper>
     );
     const fontInput = screen.getByTestId('property-inspector-font-size');
@@ -132,9 +143,10 @@ describe('PropertyInspector', () => {
       fill: '#fef08a',
       textFill: '#1e293b',
     });
+    setStoreObjects([sticky]);
     render(
       <TestSelectionWrapper selectedIds={['sticky-1']}>
-        <PropertyInspector objects={[sticky]} onObjectUpdate={mockOnObjectUpdate} />
+        <PropertyInspector onObjectUpdate={mockOnObjectUpdate} />
       </TestSelectionWrapper>
     );
 
@@ -153,9 +165,10 @@ describe('PropertyInspector', () => {
       text: 'Text item',
       fontSize: 16,
     });
+    setStoreObjects([textObject]);
     render(
       <TestSelectionWrapper selectedIds={['text-1']}>
-        <PropertyInspector objects={[textObject]} onObjectUpdate={mockOnObjectUpdate} />
+        <PropertyInspector onObjectUpdate={mockOnObjectUpdate} />
       </TestSelectionWrapper>
     );
 
@@ -168,9 +181,10 @@ describe('PropertyInspector', () => {
 
   it('changing fill calls onObjectUpdate', () => {
     const obj = createMockObject({ id: 'obj-1', type: 'rectangle', fill: '#93c5fd' });
+    setStoreObjects([obj]);
     render(
       <TestSelectionWrapper selectedIds={['obj-1']}>
-        <PropertyInspector objects={[obj]} onObjectUpdate={mockOnObjectUpdate} />
+        <PropertyInspector onObjectUpdate={mockOnObjectUpdate} />
       </TestSelectionWrapper>
     );
     const fillInput = screen.getByTestId('property-inspector-fill-input');
@@ -180,9 +194,10 @@ describe('PropertyInspector', () => {
 
   it('changing stroke width commits on blur and calls onObjectUpdate', () => {
     const obj = createMockObject({ id: 'obj-1', type: 'rectangle', strokeWidth: 2 });
+    setStoreObjects([obj]);
     render(
       <TestSelectionWrapper selectedIds={['obj-1']}>
-        <PropertyInspector objects={[obj]} onObjectUpdate={mockOnObjectUpdate} />
+        <PropertyInspector onObjectUpdate={mockOnObjectUpdate} />
       </TestSelectionWrapper>
     );
     const strokeWidthInput = screen.getByTestId('property-inspector-stroke-width');
@@ -194,9 +209,10 @@ describe('PropertyInspector', () => {
 
   it('rapid stroke width changes result in single commit on blur', () => {
     const obj = createMockObject({ id: 'obj-1', type: 'rectangle', strokeWidth: 2 });
+    setStoreObjects([obj]);
     render(
       <TestSelectionWrapper selectedIds={['obj-1']}>
-        <PropertyInspector objects={[obj]} onObjectUpdate={mockOnObjectUpdate} />
+        <PropertyInspector onObjectUpdate={mockOnObjectUpdate} />
       </TestSelectionWrapper>
     );
     const strokeWidthInput = screen.getByTestId('property-inspector-stroke-width');
@@ -218,9 +234,10 @@ describe('PropertyInspector', () => {
       points: [0, 0, 100, 0],
       fill: 'transparent',
     });
+    setStoreObjects([lineObj]);
     render(
       <TestSelectionWrapper selectedIds={['line-1']}>
-        <PropertyInspector objects={[lineObj]} onObjectUpdate={mockOnObjectUpdate} />
+        <PropertyInspector onObjectUpdate={mockOnObjectUpdate} />
       </TestSelectionWrapper>
     );
     const strokeWidthInput = screen.getByTestId('property-inspector-stroke-width');
@@ -239,9 +256,10 @@ describe('PropertyInspector', () => {
       points: [0, 0, 100, 0],
       fill: 'transparent',
     });
+    setStoreObjects([lineObj]);
     render(
       <TestSelectionWrapper selectedIds={['line-1']}>
-        <PropertyInspector objects={[lineObj]} onObjectUpdate={mockOnObjectUpdate} />
+        <PropertyInspector onObjectUpdate={mockOnObjectUpdate} />
       </TestSelectionWrapper>
     );
     const strokeWidthInput = screen.getByTestId('property-inspector-stroke-width');
@@ -257,9 +275,10 @@ describe('PropertyInspector', () => {
       fill: '#fef08a',
       textFill: '#374151',
     });
+    setStoreObjects([sticky]);
     render(
       <TestSelectionWrapper selectedIds={['sticky-2']}>
-        <PropertyInspector objects={[sticky]} onObjectUpdate={mockOnObjectUpdate} />
+        <PropertyInspector onObjectUpdate={mockOnObjectUpdate} />
       </TestSelectionWrapper>
     );
     const fontColorInput = screen.getByTestId('property-inspector-font-color-input');
@@ -278,9 +297,10 @@ describe('PropertyInspector', () => {
       points: [0, 0, 50, 50],
       fill: 'transparent',
     });
+    setStoreObjects([lineObj]);
     render(
       <TestSelectionWrapper selectedIds={['line-2']}>
-        <PropertyInspector objects={[lineObj]} onObjectUpdate={mockOnObjectUpdate} />
+        <PropertyInspector onObjectUpdate={mockOnObjectUpdate} />
       </TestSelectionWrapper>
     );
     expect(screen.queryByTestId('property-inspector-font-color-color')).not.toBeInTheDocument();
@@ -290,9 +310,10 @@ describe('PropertyInspector', () => {
 
   it('shows opacity slider and calls onObjectUpdate when changed', () => {
     const obj = createMockObject({ id: 'obj-1', type: 'rectangle', opacity: 1 });
+    setStoreObjects([obj]);
     render(
       <TestSelectionWrapper selectedIds={['obj-1']}>
-        <PropertyInspector objects={[obj]} onObjectUpdate={mockOnObjectUpdate} />
+        <PropertyInspector onObjectUpdate={mockOnObjectUpdate} />
       </TestSelectionWrapper>
     );
     const opacitySlider = screen.getByTestId('property-inspector-opacity-slider');

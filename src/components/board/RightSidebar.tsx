@@ -1,4 +1,4 @@
-import { type ReactElement } from 'react';
+import { memo, type ReactElement } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -15,14 +15,14 @@ import type { IRightSidebarProps } from '@/types';
  * Collapsible right panel: expanded (tabs + content) or collapsed icon rail.
  * State is persisted by the caller (e.g. useBoardSettings).
  */
-export const RightSidebar = ({
+export const RightSidebar = memo(function RightSidebar({
   sidebarCollapsed,
   setSidebarCollapsed,
   sidebarTab,
   setSidebarTab,
   expandedContent,
   boardsOnly = false,
-}: IRightSidebarProps): ReactElement => {
+}: IRightSidebarProps): ReactElement {
   return (
     <aside
       className={`shrink-0 border-l border-border bg-card flex flex-col min-h-0 overflow-hidden transition-[width] duration-200 ease-out ${
@@ -178,4 +178,4 @@ export const RightSidebar = ({
       </Tabs>
     </aside>
   );
-};
+});

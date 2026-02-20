@@ -1,5 +1,6 @@
-import { useMemo, useCallback, useState, type ReactElement } from 'react';
+import { useMemo, useCallback, useState, memo, type ReactElement } from 'react';
 import { useSelectionStore } from '@/stores/selectionStore';
+import { useObjectsStore } from '@/stores/objectsStore';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,6 @@ const DEFAULT_STICKY_TEXT_COLOR = '#000000';
 const FRAME_PADDING = 20;
 
 interface IPropertyInspectorProps {
-  objects: IBoardObject[];
   onObjectUpdate: (objectId: string, updates: IUpdateObjectParams) => Promise<void>;
 }
 
@@ -66,17 +66,17 @@ const getObjectFontColor = (object: IBoardObject, defaultFontColor: string): str
 
 interface IFramePropertiesProps {
   frame: IBoardObject;
-  objects: IBoardObject[];
   onObjectUpdate: (objectId: string, updates: IUpdateObjectParams) => Promise<void>;
 }
 
 const FrameProperties = ({
   frame,
-  objects,
   onObjectUpdate,
 }: IFramePropertiesProps): ReactElement => {
+  const frameObjects = useObjectsStore((s) => s.objects);
+  const allObjects = useMemo(() => Object.values(frameObjects), [frameObjects]);
   const setSelectedIds = useSelectionStore((s) => s.setSelectedIds);
-  const children = useMemo(() => getFrameChildren(frame.id, objects), [frame.id, objects]);
+  const children = useMemo(() => getFrameChildren(frame.id, allObjects), [frame.id, allObjects]);
 
   // Debounced title input — sync from prop during render (no useEffect)
   const [titleValue, setTitleValue] = useState(frame.text || 'Frame');
@@ -329,16 +329,12 @@ const FrameProperties = ({
  * When a single frame is selected, shows frame-specific controls.
  * Otherwise shows generic fill/stroke/opacity controls.
  */
-export const PropertyInspector = ({
-  objects,
+export const PropertyInspector = memo(function PropertyInspector({
   onObjectUpdate,
-}: IPropertyInspectorProps): ReactElement | null => {
+}: IPropertyInspectorProps): ReactElement | null {
+  const storeObjects = useObjectsStore((s) => s.objects);
   const selectedIds = useSelectionStore((state) => state.selectedIds);
   const defaultFontColor = DEFAULT_STICKY_TEXT_COLOR;
-  const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
-  const objectsById = useMemo(() => {
-    return new Map(objects.map((obj) => [obj.id, obj]));
-  }, [objects]);
 
   const selectedObjects = useMemo(() => {
     if (selectedIds.length === 0) {
@@ -346,9 +342,9 @@ export const PropertyInspector = ({
     }
 
     return selectedIds
-      .map((id) => objectsById.get(id))
+      .map((id) => storeObjects[id])
       .filter((obj): obj is IBoardObject => obj !== undefined);
-  }, [objectsById, selectedIds]);
+  }, [storeObjects, selectedIds]);
 
   const hasSelection = selectedObjects.length >= 1;
 
@@ -446,10 +442,6 @@ export const PropertyInspector = ({
     return values.length === 1 ? (values[0] ?? 'solid') : MIXED_PLACEHOLDER;
   }, [selectedObjects]);
 
-  const selectedShapeCount = useMemo(() => {
-    return objects.reduce((count, obj) => (selectedIdSet.has(obj.id) ? count + 1 : count), 0);
-  }, [objects, selectedIdSet]);
-
   const handleFillChange = (value: string) => {
     if (value === MIXED_PLACEHOLDER || !value) return;
 
@@ -545,7 +537,7 @@ export const PropertyInspector = ({
   // Single frame → frame-specific panel (placed after all hooks to respect rules-of-hooks)
   if (singleFrame) {
     return (
-      <FrameProperties frame={singleFrame} objects={objects} onObjectUpdate={onObjectUpdate} />
+      <FrameProperties frame={singleFrame} onObjectUpdate={onObjectUpdate} />
     );
   }
 
@@ -566,7 +558,7 @@ export const PropertyInspector = ({
       data-testid='property-inspector-panel'
     >
       <div className='text-xs text-muted-foreground'>
-        {selectedShapeCount} object{selectedShapeCount !== 1 ? 's' : ''} selected
+        {selectedObjects.length} object{selectedObjects.length !== 1 ? 's' : ''} selected
       </div>
 
       {showFill && (
@@ -762,4 +754,4 @@ export const PropertyInspector = ({
       )}
     </div>
   );
-};
+});

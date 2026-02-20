@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, lazy, Suspense, type ReactElement } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, memo, Suspense, type ReactElement } from 'react';
 import { useParams, useNavigate, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/modules/auth';
 import { AuthPage } from '@/components/auth/AuthPage';
@@ -45,7 +45,9 @@ import { Label } from '@/components/ui/label';
 import { useTheme } from '@/hooks/useTheme';
 import { useBoardSettings } from '@/hooks/useBoardSettings';
 import { useHistory } from '@/hooks/useHistory';
-import { PropertyInspector } from '@/components/canvas/PropertyInspector';
+const PropertyInspector = lazy(() =>
+  import('@/components/canvas/PropertyInspector').then((m) => ({ default: m.PropertyInspector }))
+);
 import type { IBoard, IUserPreferences } from '@/types';
 
 interface IBoardViewProps {
@@ -58,7 +60,7 @@ interface IBoardViewProps {
   skipAutoJoinBoardIdRef?: React.MutableRefObject<string | null>;
 }
 
-const BoardView = ({
+const BoardView = memo(function BoardView({
   boardId,
   onSelectBoard,
   onCreateNewBoard,
@@ -66,7 +68,7 @@ const BoardView = ({
   theme,
   onToggleTheme,
   skipAutoJoinBoardIdRef,
-}: IBoardViewProps): ReactElement => {
+}: IBoardViewProps): ReactElement {
   const { user, signOut } = useAuth();
   const [board, setBoard] = useState<IBoard | null>(null);
   const [boardLoading, setBoardLoading] = useState(true);
@@ -326,7 +328,9 @@ const BoardView = ({
                   className='flex flex-1 min-h-0 min-h-[360px] flex-col mt-2 overflow-auto'
                   data-testid='props-tab-content'
                 >
-                  <PropertyInspector objects={objects} onObjectUpdate={updateObject} />
+                  <Suspense fallback={null}>
+                    <PropertyInspector onObjectUpdate={updateObject} />
+                  </Suspense>
                 </TabsContent>
                 <TabsContent
                   value='ai'
@@ -340,7 +344,6 @@ const BoardView = ({
                       onSend={ai.processCommand}
                       onClearError={ai.clearError}
                       onClearMessages={ai.clearMessages}
-                      objects={objects}
                     />
                   </Suspense>
                 </TabsContent>
@@ -376,7 +379,7 @@ const BoardView = ({
       </main>
     </div>
   );
-};
+});
 
 const ResolveActiveBoardRoute = (): ReactElement => {
   const navigate = useNavigate();

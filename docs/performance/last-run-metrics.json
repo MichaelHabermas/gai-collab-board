@@ -1,21 +1,21 @@
 {
-  "capturedAt": "2026-02-20T06:09:38.816Z",
-  "capturedAtMs": 1771567778816,
+  "capturedAt": "2026-02-20T06:37:41.297Z",
+  "capturedAtMs": 1771569461297,
   "source": "sync.latency.test.ts",
   "metrics": [
     {
       "name": "cursor_latency",
-      "value": 19,
+      "value": 16,
       "unit": "ms"
     },
     {
       "name": "object_update_latency",
-      "value": 19,
+      "value": 36,
       "unit": "ms"
     },
     {
       "name": "batch_500_objects",
-      "value": 81,
+      "value": 108,
       "unit": "ms"
     }
   ]

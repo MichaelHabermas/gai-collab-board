@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AIChatPanel } from '@/components/ai/AIChatPanel';
+import { useObjectsStore } from '@/stores/objectsStore';
 import type { IBoardObject } from '@/types';
 import { Timestamp } from 'firebase/firestore';
 
@@ -33,12 +34,16 @@ describe('AIChatPanel AI Commands', () => {
     onSend: vi.fn().mockResolvedValue(undefined),
     onClearError: vi.fn(),
     onClearMessages: vi.fn(),
-    objects: [] as IBoardObject[],
+  };
+
+  const setStoreObjects = (objects: IBoardObject[]): void => {
+    useObjectsStore.getState().setAll(objects);
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockSelectedIds.length = 0;
+    useObjectsStore.getState().clear();
   });
 
   // Feature 18: Explain Board
@@ -49,18 +54,20 @@ describe('AIChatPanel AI Commands', () => {
   });
 
   it('disables "Explain Board" when board has no objects', () => {
-    render(<AIChatPanel {...defaultProps} objects={[]} />);
+    render(<AIChatPanel {...defaultProps} />);
     expect(screen.getByTestId('ai-explain-board')).toBeDisabled();
   });
 
   it('enables "Explain Board" when board has objects', () => {
-    render(<AIChatPanel {...defaultProps} objects={[makeObject('obj-1')]} />);
+    setStoreObjects([makeObject('obj-1')]);
+    render(<AIChatPanel {...defaultProps} />);
     expect(screen.getByTestId('ai-explain-board')).not.toBeDisabled();
   });
 
   it('calls onSend with explain prompt when clicked', () => {
+    setStoreObjects([makeObject('obj-1')]);
     const onSend = vi.fn().mockResolvedValue(undefined);
-    render(<AIChatPanel {...defaultProps} onSend={onSend} objects={[makeObject('obj-1')]} />);
+    render(<AIChatPanel {...defaultProps} onSend={onSend} />);
 
     fireEvent.click(screen.getByTestId('ai-explain-board'));
     expect(onSend).toHaveBeenCalledTimes(1);
@@ -68,7 +75,8 @@ describe('AIChatPanel AI Commands', () => {
   });
 
   it('disables "Explain Board" when loading', () => {
-    render(<AIChatPanel {...defaultProps} loading={true} objects={[makeObject('obj-1')]} />);
+    setStoreObjects([makeObject('obj-1')]);
+    render(<AIChatPanel {...defaultProps} loading={true} />);
     expect(screen.getByTestId('ai-explain-board')).toBeDisabled();
   });
 
@@ -81,20 +89,23 @@ describe('AIChatPanel AI Commands', () => {
 
   it('disables "Summarize Selection" when no selection', () => {
     mockSelectedIds.length = 0;
-    render(<AIChatPanel {...defaultProps} objects={[makeObject('obj-1')]} />);
+    setStoreObjects([makeObject('obj-1')]);
+    render(<AIChatPanel {...defaultProps} />);
     expect(screen.getByTestId('ai-summarize-selection')).toBeDisabled();
   });
 
   it('enables "Summarize Selection" when objects are selected', () => {
     mockSelectedIds.push('obj-1', 'obj-2');
-    render(<AIChatPanel {...defaultProps} objects={[makeObject('obj-1'), makeObject('obj-2')]} />);
+    setStoreObjects([makeObject('obj-1'), makeObject('obj-2')]);
+    render(<AIChatPanel {...defaultProps} />);
     expect(screen.getByTestId('ai-summarize-selection')).not.toBeDisabled();
   });
 
   it('calls onSend with summarize prompt including selection count', () => {
     mockSelectedIds.push('obj-1', 'obj-2');
+    setStoreObjects([makeObject('obj-1'), makeObject('obj-2')]);
     const onSend = vi.fn().mockResolvedValue(undefined);
-    render(<AIChatPanel {...defaultProps} onSend={onSend} objects={[makeObject('obj-1'), makeObject('obj-2')]} />);
+    render(<AIChatPanel {...defaultProps} onSend={onSend} />);
 
     fireEvent.click(screen.getByTestId('ai-summarize-selection'));
     expect(onSend).toHaveBeenCalledTimes(1);
@@ -105,7 +116,8 @@ describe('AIChatPanel AI Commands', () => {
 
   it('disables "Summarize Selection" when loading', () => {
     mockSelectedIds.push('obj-1');
-    render(<AIChatPanel {...defaultProps} loading={true} objects={[makeObject('obj-1')]} />);
+    setStoreObjects([makeObject('obj-1')]);
+    render(<AIChatPanel {...defaultProps} loading={true} />);
     expect(screen.getByTestId('ai-summarize-selection')).toBeDisabled();
   });
 });
