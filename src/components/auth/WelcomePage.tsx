@@ -59,7 +59,7 @@ const HOW_IT_WORKS_STEPS: IHowItWorksStep[] = [
 export const WelcomePage = memo((): ReactElement => {
   return (
     <div
-      className='min-h-screen flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white'
+      className='h-full overflow-y-auto flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white'
       data-testid='welcome-page'
     >
       {/* Nav */}
