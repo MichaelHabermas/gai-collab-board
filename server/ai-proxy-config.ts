@@ -1,20 +1,21 @@
 /**
  * Shared AI proxy config: provider/key resolution and base URL.
- * Used by the Render proxy server.
+ * Used by the Render proxy server. Single source of truth: @/modules/ai/providerConfig.
  */
 
-// export const GROQ_BASE = 'https://api.groq.com/openai';
-export const GROQ_BASE = 'https://generativelanguage.googleapis.com/v1beta/openai';
+import { getActiveAIProviderConfig } from '../src/modules/ai/providerConfig';
 
 export interface IProxyConfig {
   apiKey: string;
+  baseURL: string;
 }
 
-/** Resolves Groq API key from env. */
+/** Resolves AI provider, base URL, and API key from env. */
 export function getProviderAndKey(env: NodeJS.ProcessEnv = process.env): IProxyConfig | null {
-  const groqKey = (env.GROQ_API_KEY ?? env.VITE_GROQ_API_KEY ?? '').trim();
-  if (groqKey) {
-    return { apiKey: groqKey };
+  const envRecord: Record<string, string | undefined> = env;
+  const { baseURL, apiKey } = getActiveAIProviderConfig(envRecord);
+  if (apiKey) {
+    return { apiKey, baseURL };
   }
   return null;
 }

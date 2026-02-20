@@ -1,9 +1,8 @@
 import { existsSync, readFileSync } from 'fs';
 import { resolve } from 'path';
+import { getActiveAIProviderConfig } from '../src/modules/ai/providerConfig';
 
 const DEFAULT_TIMEOUT_MS = 20_000;
-// const DEFAULT_MODEL = 'llama-3.3-70b-versatile';
-const DEFAULT_MODEL = 'gemini-2.0-flash';
 
 const loadEnv = (): void => {
   const envPath = resolve(process.cwd(), '.env');
@@ -66,8 +65,10 @@ const getTimeoutMs = (): number => {
 const run = async (): Promise<void> => {
   loadEnv();
 
+  const env = process.env as Record<string, string | undefined>;
+  const defaultModel = getActiveAIProviderConfig(env).model;
   const url = resolveProxyChatUrl();
-  const model = (process.env.AI_PROXY_SMOKE_MODEL ?? DEFAULT_MODEL).trim();
+  const model = (process.env.AI_PROXY_SMOKE_MODEL ?? defaultModel).trim();
   const timeoutMs = getTimeoutMs();
 
   const controller = new AbortController();

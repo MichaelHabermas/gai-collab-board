@@ -3,7 +3,7 @@
 > Quick-reference guide for AI agents and LLMs. Use this to locate relevant documentation without loading everything into context. Always check this index FIRST before searching the codebase.
 
 **Last Updated:** 2026-02-19
-**Total Documents:** 43
+**Total Documents:** 44
 
 ## How to Use This Index
 
@@ -21,6 +21,7 @@
 | File | Summary | Key Topics | Last Modified |
 |------|---------|------------|---------------|
 | `guides/AI-INTEGRATION-GUIDE.md` | AI provider (Groq), function-calling tools, proxy pattern, API keys server-side | `AI`, `Groq`, `function-calling`, `proxy` | 2026-02-17 |
+| `guides/AI-TROUBLESHOOTING.md` | Gemini 429 quota root cause, user-facing error guidance, diagnostics | `AI`, `troubleshooting`, `429`, `quota`, `errors` | 2026-02-19 |
 | `guides/DEVELOPMENT-ENVIRONMENT-GUIDE.md` | Bun, Vite, TypeScript setup; directory layout, env vars, ESLint/Prettier, Git | `Bun`, `Vite`, `TypeScript`, `onboarding` | 2026-02-17 |
 | `guides/FIREBASE-GUIDE.md` | Firebase Auth, Firestore, Realtime DB, presence, security rules, offline behavior | `Firebase`, `Auth`, `Firestore`, `sync`, `security rules` | 2026-02-17 |
 | `guides/KONVA-REACT-GUIDE.md` | Konva.js and react-konva: Stage, Layer, shapes, events, transforms, pan/zoom, performance | `Konva`, `canvas`, `shapes`, `pan/zoom`, `performance` | 2026-02-17 |
@@ -116,7 +117,7 @@
 | Topic/Keyword | Relevant Docs |
 |---------------|---------------|
 | `ADR` | `research/RECORD-ARCHITECTURE-DECISIONS-V2.md`, `research/RECORD-ARCHITECTURE-DECISIONS.md` |
-| `AI` | `guides/AI-INTEGRATION-GUIDE.md`, `planning/AI-COST-ANALYSIS.md`, `planning/AI-DEVELOPMENT-LOG.md`, `planning/AI-SESSION-LOG.md`, `product/PRD.md` |
+| `AI` | `guides/AI-INTEGRATION-GUIDE.md`, `guides/AI-TROUBLESHOOTING.md`, `planning/AI-COST-ANALYSIS.md`, `planning/AI-DEVELOPMENT-LOG.md`, `planning/AI-SESSION-LOG.md`, `product/PRD.md` |
 | `audit` | `reports/mvp-audit-report.md`, `reports/mvp-audit-matrix.md`, `reports/refactor-audit/REFACTOR_AUDIT_REPORT.md` |
 | `benchmarks` | `optimization/OPTIMIZATION-PLAN.md`, `reports/mvp-audit-matrix.md`, `operations/RELEASE-AUTOMATION.md` |
 | `canvas` | `guides/KONVA-REACT-GUIDE.md`, `product/PRD.md` |
@@ -128,6 +129,7 @@
 | `performance` | `performance/PERFORMANCE_LOG.md`, `optimization/OPTIMIZATION-PLAN.md` |
 | `PRD` | `product/PRD.md`, `product/PRD-UNCHECKED-TRACKER.md`, `phases/version-2/PRD.md`, `research/PRD-V1.md`, `research/PRD-V2.md` |
 | `theme` | `theme/THEME-VISUAL-GUIDE.md`, `theme/theme-screenshots/README.md`, `planning/UI-UX-IMPROVEMENT-PLAN.md`, `guides/TAILWIND-SHADCN-GUIDE.md` |
+| `troubleshooting` | `guides/AI-TROUBLESHOOTING.md` |
 | `tradeoffs` | `research/IDENTIFY-TRADEOFFS-V2.md`, `research/IDENTIFY-TRADEOFFS.md` |
 | `useEffect` | `Optimization/USE-EFFECT-CENSUS.md`, `optimization/OPTIMIZATION-PLAN.md`, `reports/refactor-audit/REFACTOR_AUDIT_REPORT.md` |
 | `v2` | `phases/version-2/PRD.md`, `phases/version-2/FEATURES.md`, `phases/version-2/INITIAL-RESEARCH.md`, `phases/version-2/DESIGN-DOCUMENT.md` |

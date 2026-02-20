@@ -1,12 +1,13 @@
 /**
- * Quick connection test for the AI proxy (Groq).
+ * Quick connection test for the AI proxy.
  * Usage:
  *   bun run test:ai-connection           — POST to dev proxy (dev server must be running at 5173)
- *   bun run test:ai-connection -- --direct — POST to Groq directly (uses env key)
+ *   bun run test:ai-connection -- --direct — POST to provider directly (uses env key)
  */
 
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
+import { getActiveAIProviderConfig } from '../src/modules/ai/providerConfig';
 
 function loadEnv(): void {
   const envPath = resolve(process.cwd(), '.env');
@@ -37,10 +38,6 @@ function loadEnv(): void {
 loadEnv();
 
 const PROXY_URL = 'http://127.0.0.1:5173/api/ai/v1/chat/completions';
-// const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
-// const GROQ_MODEL = 'llama-3.3-70b-versatile';
-const GROQ_MODEL = 'gemini-2.0-flash';
 const SCRIPT_TIMEOUT_MS = 20_000;
 
 function parseArgs(): { direct: boolean } {
@@ -53,15 +50,18 @@ function getDirectConfig(): {
   model: string;
   apiKey: string;
 } | null {
-  const groqKey = (process.env.GROQ_API_KEY ?? process.env.VITE_GROQ_API_KEY ?? '').trim();
-  if (groqKey) {
-    return {
-      url: GROQ_URL,
-      model: GROQ_MODEL,
-      apiKey: groqKey,
-    };
+  const env = process.env as Record<string, string | undefined>;
+  const { baseURL, model, apiKey } = getActiveAIProviderConfig(env);
+  if (apiKey) {
+    const url = baseURL.endsWith('/') ? `${baseURL}chat/completions` : `${baseURL}/chat/completions`;
+    return { url, model, apiKey };
   }
   return null;
+}
+
+function getModelFromEnv(): string {
+  const env = process.env as Record<string, string | undefined>;
+  return getActiveAIProviderConfig(env).model;
 }
 
 async function run(): Promise<void> {
@@ -71,7 +71,7 @@ async function run(): Promise<void> {
     const config = getDirectConfig();
     if (!config) {
       process.stderr.write(
-        'Error: --direct requires GROQ_API_KEY or VITE_GROQ_API_KEY in env.\n'
+        'Error: --direct requires an AI API key (GEMINI_API_KEY, VITE_GEMINI_API_KEY, GROQ_API_KEY, or VITE_GROQ_API_KEY).\n'
       );
       process.exit(1);
     }
@@ -117,7 +117,7 @@ async function run(): Promise<void> {
   }
 
   const body = {
-    model: GROQ_MODEL,
+    model: getModelFromEnv(),
     messages: [{ role: 'user' as const, content: 'Say OK' }],
     max_tokens: 10,
   };

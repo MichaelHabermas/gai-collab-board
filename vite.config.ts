@@ -4,9 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 import { readFileSync, existsSync } from 'fs';
 import { visualizer } from 'rollup-plugin-visualizer';
-
-// const GROQ_ORIGIN = 'https://api.groq.com/openai';
-const GROQ_ORIGIN = 'https://generativelanguage.googleapis.com/v1beta/openai';
+import { getActiveAIProviderConfig } from './src/modules/ai/providerConfig';
 
 function parseEnvFile(envDir: string): Record<string, string> {
   const envPath = path.resolve(envDir, '.env');
@@ -36,11 +34,12 @@ function parseEnvFile(envDir: string): Record<string, string> {
 }
 
 function getAiProxyConfig(env: Record<string, string>) {
-  const groqKey = (env.VITE_GROQ_API_KEY ?? '').trim();
-  if (groqKey) {
+  const envWithUndefined = env as Record<string, string | undefined>;
+  const { baseURL, apiKey } = getActiveAIProviderConfig(envWithUndefined);
+  if (apiKey) {
     return {
-      target: GROQ_ORIGIN,
-      apiKey: groqKey,
+      target: baseURL,
+      apiKey,
       rewrite: (pathSegment: string) => pathSegment.replace(/^\/api\/ai/, ''),
     };
   }

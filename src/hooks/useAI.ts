@@ -8,7 +8,7 @@ import {
   deleteObject,
   deleteObjectsBatch,
 } from '@/modules/sync/objectService';
-import { AIError } from '@/modules/ai/errors';
+import { normalizeAIErrorMessage } from '@/modules/ai/errors';
 import { ViewportActionsContext } from '@/contexts/ViewportActionsContext';
 
 export interface IChatMessage {
@@ -110,13 +110,7 @@ export const useAI = ({ boardId, user, objects }: IUseAIParams): IUseAIReturn =>
       const response = await service.processCommand(userMessage.trim());
       setMessages((prev) => [...prev, { role: 'assistant', content: response }]);
     } catch (err) {
-      const message =
-        err instanceof AIError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : 'AI request failed';
-      setError(message);
+      setError(normalizeAIErrorMessage(err));
     } finally {
       setLoading(false);
     }

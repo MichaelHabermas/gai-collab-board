@@ -1,9 +1,9 @@
 /**
- * Shared AI proxy request handler: forwards requests to Groq.
+ * Shared AI proxy request handler: forwards requests to the configured AI provider.
  * Used by the Render proxy server.
  */
 
-import { getProviderAndKey, GROQ_BASE } from './ai-proxy-config.js';
+import { getProviderAndKey } from './ai-proxy-config.js';
 
 export interface IProxyResult {
   statusCode: number;
@@ -13,8 +13,11 @@ export interface IProxyResult {
 
 const FORWARD_HEADERS = ['content-type'];
 
+const NO_PROVIDER_MESSAGE =
+  'No AI provider configured. Set GEMINI_API_KEY or GROQ_API_KEY (or VITE_* equivalents) on the server.';
+
 /**
- * Handles a proxy request: resolves Groq key, builds upstream URL, forwards request, returns response.
+ * Handles a proxy request: resolves provider key and base URL, forwards request, returns response.
  */
 export async function handleProxyRequest(
   method: string,
@@ -28,16 +31,14 @@ export async function handleProxyRequest(
     return {
       statusCode: 503,
       body: JSON.stringify({
-        error: {
-          message: 'No AI provider configured. Set GROQ_API_KEY on the server.',
-        },
+        error: { message: NO_PROVIDER_MESSAGE },
       }),
       headers: { 'Content-Type': 'application/json' },
     };
   }
 
   const path = pathSuffix.startsWith('/') ? pathSuffix : `/${pathSuffix}`;
-  const url = `${GROQ_BASE}${path}`;
+  const url = `${config.baseURL}${path}`;
 
   const headers: Record<string, string> = {
     Authorization: `Bearer ${config.apiKey}`,

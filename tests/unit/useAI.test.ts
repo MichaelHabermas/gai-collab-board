@@ -158,7 +158,7 @@ describe('useAI', () => {
     ]);
   });
 
-  it('sets AIError message on command failure', async () => {
+  it('sets normalized error message on command failure (e.g. 503)', async () => {
     mockProcessCommand.mockRejectedValue(new AIError('Provider unavailable', 'provider_error', 503));
 
     const { result } = renderHook(() =>
@@ -174,11 +174,11 @@ describe('useAI', () => {
     });
 
     expect(result.current.loading).toBe(false);
-    expect(result.current.error).toBe('Provider unavailable');
+    expect(result.current.error).toMatch(/temporarily unavailable|Retry/);
     expect(result.current.messages).toEqual([{ role: 'user', content: 'create board' }]);
   });
 
-  it('uses fallback error message for non-Error failures', async () => {
+  it('uses normalized message for non-Error failures', async () => {
     mockProcessCommand.mockRejectedValue('untyped-failure');
 
     const { result } = renderHook(() =>
@@ -193,7 +193,7 @@ describe('useAI', () => {
       await result.current.processCommand('do something');
     });
 
-    expect(result.current.error).toBe('AI request failed');
+    expect(result.current.error).toBe('untyped-failure');
   });
 
   it('ignores empty commands or unavailable service', async () => {

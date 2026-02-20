@@ -1,16 +1,16 @@
 import OpenAI from 'openai';
+import { getProviderFromEnv, getModelForProvider } from '@/modules/ai/providerConfig';
 
 /** Proxy base paths to avoid CORS and keep API key server-side. */
 const DEV_PROXY_PATH = '/api/ai/v1';
 /** Default production path (Render). Set VITE_AI_PROXY_PATH to override. */
 const DEFAULT_PROD_PROXY_PATH = '/api/ai/v1';
 
-const GROQ_MODEL = 'gemini-2.0-flash';
-
 export interface IAIProxyEnv {
   DEV?: boolean;
   VITE_AI_PROXY_URL?: string;
   VITE_AI_PROXY_PATH?: string;
+  VITE_AI_PROVIDER?: string;
 }
 
 /** Resolves AI proxy base URL from env (testable). */
@@ -42,6 +42,14 @@ function getProxyBaseURL(): string {
   return getProxyBaseURLFromEnv(env, origin);
 }
 
+function getAIModel(): string {
+  const env: Record<string, string | undefined> = {
+    VITE_AI_PROVIDER: import.meta.env.VITE_AI_PROVIDER,
+  };
+  const provider = getProviderFromEnv(env);
+  return getModelForProvider(provider);
+}
+
 export const createAIClient = (): OpenAI => {
   const baseURL = getProxyBaseURL();
   const apiKey = 'proxy'; /* Proxy injects the real key; client does not send it */
@@ -52,7 +60,7 @@ export const createAIClient = (): OpenAI => {
 export const aiClient = createAIClient();
 
 export const AI_CONFIG = {
-  model: GROQ_MODEL,
+  model: getAIModel(),
   maxTokens: 4096,
   temperature: 0.3,
   topP: 0.9,
