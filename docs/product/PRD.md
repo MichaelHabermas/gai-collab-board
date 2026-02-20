@@ -1812,6 +1812,8 @@ Lines are resizable **only along their length** (not in the perpendicular "width
 - **Delete:** Deleting a frame leaves its children on the canvas (unparented).
 - **Duplicate/paste:** Duplicated or pasted objects are unparented; containment can resolve again on the next drag-end.
 
+Containment is determined by the object's **center** at drop; if it doesn't stick, try dropping so the center of the shape is clearly inside the frame. Overlapping frames: the **smallest** frame that contains the center wins.
+
 Implementation details: see `PLAN-frame-grouping.md` in the repo root.
 
 **Branch**: `feature/canvas-frames`

@@ -814,6 +814,60 @@ describe('BoardCanvas interactions', () => {
       expect(byId['child-1']?.y).toBe(120);
     });
 
+    it('frame drag move applies visual offset to children during drag', () => {
+      mockSelectedIds = ['frame-1'];
+      const onObjectsUpdate = vi.fn();
+      const frame = createObject({
+        id: 'frame-1',
+        type: 'frame',
+        x: 100,
+        y: 50,
+        width: 300,
+        height: 200,
+      });
+      const child = createObject({
+        id: 'child-1',
+        type: 'sticky',
+        x: 120,
+        y: 70,
+        parentFrameId: 'frame-1',
+      });
+      const objects = [frame, child];
+
+      render(
+        <BoardCanvasWithStore
+          boardId='board-1'
+          boardName='Board'
+          user={createUser()}
+          objects={objects}
+          canEdit={true}
+          onObjectsUpdate={onObjectsUpdate}
+        />
+      );
+
+      const frameProps = shapePropsById.get('frame-1');
+      const onDragMove = frameProps?.onDragMove as ((e: { target: { id?: () => string; x: () => number; y: () => number } }) => void) | undefined;
+      act(() => {
+        onDragMove?.({
+          target: {
+            id: () => 'frame-1',
+            x: () => 170,
+            y: () => 120,
+          },
+        });
+      });
+
+      const childProps = shapePropsById.get('child-1');
+      expect(childProps?.x).toBe(190);
+      expect(childProps?.y).toBe(140);
+
+      const onDragEnd = frameProps?.onDragEnd as ((x: number, y: number) => void) | undefined;
+      act(() => {
+        onDragEnd?.(150, 100);
+      });
+      expect(onObjectsUpdate).toHaveBeenCalledTimes(1);
+    });
+
     it('frame drag with no children calls onObjectUpdate', () => {
       mockSelectedIds = ['frame-1'];
       const onObjectUpdate = vi.fn();

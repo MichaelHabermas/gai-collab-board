@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'fs';
 import { resolve } from 'path';
 import { getActiveAIProviderConfig } from '../src/modules/ai/providerConfig';
+import { recordScriptUsage } from '../server/ai-usage-tracker';
 
 const DEFAULT_TIMEOUT_MS = 20_000;
 
@@ -62,6 +63,14 @@ const getTimeoutMs = (): number => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_TIMEOUT_MS;
 };
 
+const isChoicesResponse = (
+  value: unknown
+): value is {
+  choices?: Array<{ message?: { content?: string } }>;
+} => {
+  return typeof value === 'object' && value !== null;
+};
+
 const run = async (): Promise<void> => {
   loadEnv();
 
@@ -96,15 +105,18 @@ const run = async (): Promise<void> => {
       process.exit(1);
     }
 
-    let parsedResponse:
-      | {
-          choices?: Array<{ message?: { content?: string } }>;
-        }
-      | null = null;
+    let parsedResponse: unknown;
     try {
-      parsedResponse = JSON.parse(responseText) as typeof parsedResponse;
+      parsedResponse = JSON.parse(responseText);
     } catch {
       process.stderr.write(`AI proxy smoke failed: response is not valid JSON.\n`);
+      process.exit(1);
+    }
+
+    if (!isChoicesResponse(parsedResponse)) {
+      process.stderr.write(
+        'AI proxy smoke failed: unexpected response shape (response is not an object).\n'
+      );
       process.exit(1);
     }
 
@@ -114,6 +126,18 @@ const run = async (): Promise<void> => {
         'AI proxy smoke failed: unexpected response shape (missing or empty choices array).\n'
       );
       process.exit(1);
+    }
+
+    try {
+      recordScriptUsage({
+        script_name: 'smoke-ai-proxy',
+        mode: 'proxy',
+        response_body: responseText,
+        target_url: url,
+        model,
+      });
+    } catch {
+      // Usage tracking is best-effort and should not fail smoke checks.
     }
 
     process.stdout.write('AI proxy smoke passed.\n');

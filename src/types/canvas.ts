@@ -49,6 +49,13 @@ export interface IGroupDragOffset {
   dy: number;
 }
 
+/** Offset applied to frame children during frame drag so they move visually with the frame. */
+export interface IFrameDragOffset {
+  frameId: string;
+  dx: number;
+  dy: number;
+}
+
 /** Props for CanvasShapeRenderer. */
 export interface ICanvasShapeRendererProps {
   object: IBoardObject;
@@ -58,6 +65,8 @@ export interface ICanvasShapeRendererProps {
   selectionColor: string;
   /** When set, selected objects are rendered at (object.x + dx, object.y + dy) during group drag. */
   groupDragOffset?: IGroupDragOffset | null;
+  /** When set, children of this frame are rendered at (object.x + dx, object.y + dy) during frame drag. */
+  frameDragOffset?: IFrameDragOffset | null;
   getSelectHandler: (id: string) => () => void;
   getDragEndHandler: (id: string) => (x: number, y: number) => void;
   getTextChangeHandler: (id: string) => (text: string) => void;

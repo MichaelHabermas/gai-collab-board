@@ -24,6 +24,8 @@
     "preflight:release": "bun run scripts/preflight-release.ts",
     "deploy:firebase-rules": "bun run scripts/deploy-firebase-rules.ts",
     "smoke:ai-proxy": "bun run scripts/smoke-ai-proxy.ts",
+    "usage:record-event": "bun run scripts/record-usage-event.ts",
+    "usage:rebuild-report": "bun run scripts/rebuild-usage-report.ts",
     "benchmark:strict": "bun run scripts/release-gate.ts --skip-proxy-smoke",
     "release:gate": "bun run scripts/release-gate.ts",
     "cleanup": "bun run lint:fix && bun run format",

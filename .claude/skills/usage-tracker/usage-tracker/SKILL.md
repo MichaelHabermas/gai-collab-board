@@ -23,10 +23,11 @@ Two files under `.claude/` in the project root:
 1. `.claude/hooks/track-usage.mjs` — the hook script (Node.js, zero dependencies)
 2. `.claude/settings.local.json` — wires the hook to the Stop event
 
-These produce two output files that accumulate over time:
+These produce three output files that accumulate over time:
 
-- `USAGE.md` at project root — human-readable report with totals, daily breakdown, recent sessions
-- `.claude/usage/usage-data.json` — structured JSON for programmatic access
+- `USAGE.md` at project root — unified cumulative report (segmented by source + grand total) with Mermaid charts
+- `.claude/usage/usage-data.json` — legacy per-session dev usage store (backward compatibility)
+- `.claude/usage/unified-usage-data.json` — source-tagged cumulative ledger across dev/runtime/scripts/MCP
 
 ## Installation procedure
 
@@ -95,7 +96,7 @@ committing it as a spend log, others don't.
 Let them know:
 - Tracking starts on their next Claude Code session in this project
 - `USAGE.md` appears at project root after the first session
-- Raw data is in `.claude/usage/usage-data.json`
+- Raw data is in `.claude/usage/usage-data.json` and `.claude/usage/unified-usage-data.json`
 - The hook is silent and won't interrupt workflow
 - Pricing can be updated by editing the PRICING object in track-usage.mjs
 

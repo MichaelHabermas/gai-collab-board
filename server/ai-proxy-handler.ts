@@ -4,6 +4,7 @@
  */
 
 import { getProviderAndKey } from './ai-proxy-config.js';
+import { recordRuntimeProxyUsage } from './ai-usage-tracker.js';
 
 export interface IProxyResult {
   statusCode: number;
@@ -59,6 +60,18 @@ export async function handleProxyRequest(
       body: body ?? undefined,
     });
     const responseBody = await res.text();
+    const requestModel = parseModelFromRequestBody(body);
+    try {
+      await recordRuntimeProxyUsage({
+        response_body: responseBody,
+        status_code: res.status,
+        path_suffix: pathSuffix,
+        provider_base_url: config.baseURL,
+        model: requestModel,
+      });
+    } catch {
+      // Never fail proxy requests due to tracking failures.
+    }
     return {
       statusCode: res.status,
       body: responseBody,
@@ -73,5 +86,26 @@ export async function handleProxyRequest(
       body: JSON.stringify({ error: { message: `Proxy error: ${message}` } }),
       headers: { 'Content-Type': 'application/json' },
     };
+  }
+}
+
+function parseModelFromRequestBody(body: string | undefined): string | undefined {
+  if (!body) {
+    return undefined;
+  }
+  try {
+    const parsed = JSON.parse(body);
+    if (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      'model' in parsed &&
+      typeof parsed.model === 'string' &&
+      parsed.model.trim() !== ''
+    ) {
+      return parsed.model;
+    }
+    return undefined;
+  } catch {
+    return undefined;
   }
 }

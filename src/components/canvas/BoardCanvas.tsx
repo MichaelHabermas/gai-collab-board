@@ -158,6 +158,11 @@ export const BoardCanvas = memo(
     } | null>(null);
     const [groupDragOffset, setGroupDragOffset] = useState<{ dx: number; dy: number } | null>(null);
     const groupDragOffsetRef = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
+    const [frameDragOffset, setFrameDragOffset] = useState<{
+      frameId: string;
+      dx: number;
+      dy: number;
+    } | null>(null);
     const [isHoveringSelectionHandle, setIsHoveringSelectionHandle] = useState(false);
     const [connectorFrom, setConnectorFrom] = useState<{
       shapeId: string;
@@ -1138,6 +1143,7 @@ export const BoardCanvas = memo(
 
         const nextHandler = (x: number, y: number) => {
           handleObjectDragEnd(objectId, x, y);
+          setFrameDragOffset(null);
         };
         dragEndHandlerMapRef.current.set(objectId, nextHandler);
         return nextHandler;
@@ -1145,14 +1151,29 @@ export const BoardCanvas = memo(
       [handleObjectDragEnd]
     );
 
-    /** When snap-to-grid is on, force node position to grid on every drag move so it lines up during drag. */
+    /** When snap-to-grid is on, force node position to grid on every drag move so it lines up during drag.
+     * When dragging a frame, track offset so frame children can render at (x+dx, y+dy) during drag. */
     const handleDragMove = useCallback(
       (e: IKonvaDragEvent) => {
-        if (!snapToGridEnabled) {
-          return;
+        if (snapToGridEnabled) {
+          applySnapPositionToNode(e.target, objectsById, GRID_SIZE);
         }
 
-        applySnapPositionToNode(e.target, objectsById, GRID_SIZE);
+        const objectId = e.target.id?.() ?? e.target.name?.();
+        if (objectId && typeof objectId === 'string') {
+          const obj = objectsById.get(objectId);
+          if (obj?.type === 'frame') {
+            setFrameDragOffset({
+              frameId: objectId,
+              dx: e.target.x() - obj.x,
+              dy: e.target.y() - obj.y,
+            });
+          } else {
+            setFrameDragOffset(null);
+          }
+        } else {
+          setFrameDragOffset(null);
+        }
       },
       [objectsById, snapToGridEnabled]
     );
@@ -1299,6 +1320,7 @@ export const BoardCanvas = memo(
             canEdit={canEdit}
             selectionColor={selectionColor}
             groupDragOffset={groupDragOffset}
+            frameDragOffset={frameDragOffset}
             getSelectHandler={getSelectHandler}
             getDragEndHandler={getDragEndHandler}
             getTextChangeHandler={getTextChangeHandler}
@@ -1313,6 +1335,7 @@ export const BoardCanvas = memo(
         canEdit,
         selectionColor,
         groupDragOffset,
+        frameDragOffset,
         getSelectHandler,
         getDragEndHandler,
         getTextChangeHandler,

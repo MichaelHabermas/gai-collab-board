@@ -3,7 +3,7 @@ import { useObjectsStore, selectObject } from '@/stores/objectsStore';
 import { useSelectionStore } from '@/stores/selectionStore';
 import { CanvasShapeRenderer } from './CanvasShapeRenderer';
 import type { IBoardObject, IKonvaDragEvent } from '@/types';
-import type { IGroupDragOffset } from '@/types/canvas';
+import type { IGroupDragOffset, IFrameDragOffset } from '@/types/canvas';
 
 type IDragBoundFunc = (pos: { x: number; y: number }) => { x: number; y: number };
 
@@ -12,6 +12,7 @@ interface IStoreShapeRendererProps {
   canEdit: boolean;
   selectionColor: string;
   groupDragOffset?: IGroupDragOffset | null;
+  frameDragOffset?: IFrameDragOffset | null;
   getSelectHandler: (id: string) => () => void;
   getDragEndHandler: (id: string) => (x: number, y: number) => void;
   getTextChangeHandler: (id: string) => (text: string) => void;
@@ -34,6 +35,7 @@ export const StoreShapeRenderer = memo(
     canEdit,
     selectionColor,
     groupDragOffset,
+    frameDragOffset,
     getSelectHandler,
     getDragEndHandler,
     getTextChangeHandler,
@@ -55,6 +57,7 @@ export const StoreShapeRenderer = memo(
         canEdit={canEdit}
         selectionColor={selectionColor}
         groupDragOffset={groupDragOffset}
+        frameDragOffset={frameDragOffset}
         getSelectHandler={getSelectHandler}
         getDragEndHandler={getDragEndHandler}
         getTextChangeHandler={getTextChangeHandler}
@@ -77,6 +80,7 @@ interface IInnerProps {
   canEdit: boolean;
   selectionColor: string;
   groupDragOffset?: IGroupDragOffset | null;
+  frameDragOffset?: IFrameDragOffset | null;
   getSelectHandler: (id: string) => () => void;
   getDragEndHandler: (id: string) => (x: number, y: number) => void;
   getTextChangeHandler: (id: string) => (text: string) => void;

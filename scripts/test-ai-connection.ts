@@ -8,6 +8,7 @@
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 import { getActiveAIProviderConfig } from '../src/modules/ai/providerConfig';
+import { recordScriptUsage } from '../server/ai-usage-tracker';
 
 function loadEnv(): void {
   const envPath = resolve(process.cwd(), '.env');
@@ -105,6 +106,17 @@ async function run(): Promise<void> {
         choices?: Array<{ message?: { content?: string } }>;
       };
       const content = parsed?.choices?.[0]?.message?.content ?? '(no content)';
+      try {
+        recordScriptUsage({
+          script_name: 'test-ai-connection',
+          mode: 'direct',
+          response_body: text,
+          target_url: config.url,
+          model: config.model,
+        });
+      } catch {
+        // Usage tracking must not fail connectivity checks.
+      }
       process.stdout.write(`OK (${elapsed}ms) — ${content}\n`);
       process.exit(0);
     } catch (err) {
@@ -157,6 +169,17 @@ async function run(): Promise<void> {
     }
 
     const content = parsed?.choices?.[0]?.message?.content ?? '(no content)';
+    try {
+      recordScriptUsage({
+        script_name: 'test-ai-connection',
+        mode: 'proxy',
+        response_body: text,
+        target_url: PROXY_URL,
+        model: getModelFromEnv(),
+      });
+    } catch {
+      // Usage tracking must not fail connectivity checks.
+    }
     process.stdout.write(`OK (${elapsed}ms) — ${content}\n`);
     process.exit(0);
   } catch (err) {

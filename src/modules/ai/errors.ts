@@ -25,7 +25,8 @@ export const isRetryableError = (error: unknown): boolean => {
 
 const QUOTA_GUIDANCE =
   'Check your AI provider plan and billing, or try again later. You can switch provider in .env (VITE_AI_PROVIDER).';
-const AUTH_GUIDANCE = 'Set the correct API key in .env for local dev, or on the server in production.';
+const AUTH_GUIDANCE =
+  'Set the correct API key in .env for local dev, or on the server in production.';
 const NETWORK_GUIDANCE = 'Check your network and that the AI proxy is reachable.';
 const UNAVAILABLE_GUIDANCE = 'Retry in a few moments.';
 
@@ -35,12 +36,17 @@ export function normalizeAIErrorMessage(error: unknown): string {
     error != null && typeof error === 'object' && 'status' in error
       ? (error as { status?: number }).status
       : undefined;
-  const rawMessage = error instanceof Error ? error.message : typeof error === 'string' ? error : '';
+  const rawMessage =
+    error instanceof Error ? error.message : typeof error === 'string' ? error : '';
 
   if (status === 429 || /quota|rate limit|too many requests/i.test(rawMessage)) {
     return `Rate limit or quota exceeded. ${QUOTA_GUIDANCE}`;
   }
-  if (status === 401 || status === 403 || /invalid.*api key|unauthorized|forbidden/i.test(rawMessage)) {
+  if (
+    status === 401 ||
+    status === 403 ||
+    /invalid.*api key|unauthorized|forbidden/i.test(rawMessage)
+  ) {
     return `API key invalid or not configured. ${AUTH_GUIDANCE}`;
   }
   if (status != null && status >= 500 && status < 600) {

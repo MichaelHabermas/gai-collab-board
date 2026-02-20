@@ -23,6 +23,7 @@ export const CanvasShapeRenderer = memo(
     objectsById,
     selectionColor,
     groupDragOffset,
+    frameDragOffset,
     getSelectHandler,
     getDragEndHandler,
     getTextChangeHandler,
@@ -31,7 +32,12 @@ export const CanvasShapeRenderer = memo(
     handleObjectSelect,
     handleObjectDragEnd,
   }: ICanvasShapeRendererProps): ReactElement => {
-    const offset = isSelected && groupDragOffset ? groupDragOffset : null;
+    const offset =
+      obj.parentFrameId && frameDragOffset?.frameId === obj.parentFrameId
+        ? frameDragOffset
+        : isSelected && groupDragOffset
+          ? groupDragOffset
+          : null;
     const displayX = obj.x + (offset?.dx ?? 0);
     const displayY = obj.y + (offset?.dy ?? 0);
 
