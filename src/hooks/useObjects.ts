@@ -15,6 +15,7 @@ import {
   IUpdateObjectParams,
 } from '@/modules/sync/objectService';
 import { useObjectsStore } from '@/stores/objectsStore';
+import { consumePrefetchedObjects } from '@/lib/boardPrefetch';
 
 interface IUseObjectsParams {
   boardId: string | null;
@@ -199,7 +200,27 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
     [applyIncrementalChanges]
   );
 
-  // Subscribe to objects
+  // Consume prefetched board data during render (React-supported pattern for
+  // external sync). This avoids an extra render cycle from setState-in-effect.
+  // Ref mutations are deferred to the subscription effect (React compiler rule).
+  const [prevBoardId, setPrevBoardId] = useState(boardId);
+  if (boardId !== prevBoardId) {
+    setPrevBoardId(boardId);
+    if (boardId) {
+      const prefetched = consumePrefetchedObjects(boardId);
+      if (prefetched) {
+        setObjectsRaw(prefetched);
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
+    } else {
+      setObjectsRaw([]);
+      setLoading(false);
+    }
+  }
+
+  // Subscribe to objects for real-time updates from Firestore.
   useEffect(() => {
     if (!boardId) {
       objectsByIdRef.current.clear();
@@ -216,7 +237,28 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         setError('');
       }
 
-      setObjects((prevObjects) => applySnapshotUpdate(prevObjects, update));
+      if (update.isInitialSnapshot) {
+        // O(n) full rebuild — fine for initial load.
+        setObjects((prevObjects) => applySnapshotUpdate(prevObjects, update));
+      } else {
+        // Incremental: update React state (via raw setter to skip setAll)
+        // and apply per-object Zustand store updates (O(changed) not O(total)).
+        setObjectsRaw((prevObjects) => {
+          const nextObjects = applySnapshotUpdate(prevObjects, update);
+          // Per-object store updates — O(1) spatial index per change.
+          const store = useObjectsStore.getState();
+          for (const change of update.changes) {
+            if (change.type === 'removed') {
+              store.deleteObject(change.object.id);
+            } else {
+              store.setObject(change.object);
+            }
+          }
+
+          return nextObjects;
+        });
+      }
+
       setLoading(false);
     });
 

@@ -5,6 +5,7 @@
 ## Executive Summary
 
 The app currently ships **~1.6MB** of JavaScript before the user can interact:
+
 - `index.js` 542KB (app code + tree-shaken deps)
 - `firebase` 433KB (auth + firestore — always loaded)
 - `konva` 323KB (canvas engine — always loaded)
@@ -29,7 +30,7 @@ This document catalogs every identified issue, ranks by impact × difficulty, an
 
 **Proposed fix — Lazy route boundary:**
 
-```
+```text
 main.tsx → App.tsx (shell only: auth check + skeleton)
   ├─ / → lazy(() => import('./pages/WelcomePage'))
   ├─ /login → lazy(() => import('./pages/AuthPage'))
@@ -166,6 +167,7 @@ const visibleShapeIds = useVisibleShapeIds(viewport);            // O(cells) spa
 Both compute AABB checks independently. `useVisibleShapes` doesn't use the spatial index — it's the legacy O(n) path. `useVisibleShapeIds` uses the spatial index. Both run on every viewport change.
 
 `visibleObjects` is consumed by:
+
 1. `useAlignmentGuideCache` (line 1118) — needs full object data for guide computation
 2. `ConnectionNodesLayer` (line 1778) — needs full object data for anchor positions
 3. Object count display (line 1905) — trivial
@@ -246,6 +248,7 @@ if (update.type === 'initial') {
 **Current state:** `visibleObjects` (array of full IBoardObject) is passed to `useAlignmentGuideCache` and `ConnectionNodesLayer`. Both recreate when the array reference changes. The array changes whenever viewport changes or any object updates (since it's derived from the objects array prop).
 
 **Proposed fix:** Both consumers should read from the store directly using `visibleShapeIds`:
+
 - `useAlignmentGuideCache` can accept `visibleShapeIds` and look up objects from the store.
 - `ConnectionNodesLayer` can accept IDs and subscribe per-shape.
 
@@ -333,6 +336,7 @@ requestIdleCallback(() => {
 **Current state:** All routes are eager. `AuthPage`, `WelcomePage`, `BoardView`, `BoardListSidebar`, `ShareDialog` — all in the initial bundle.
 
 **Proposed fix:** Split into 3 route chunks:
+
 1. **Auth chunk** (~30KB): WelcomePage, AuthPage, auth flow
 2. **Board list chunk** (~50KB): BoardListSidebar, board creation, user preferences
 3. **Canvas chunk** (~900KB): BoardCanvas, Konva, shapes, AI, collaboration
@@ -350,6 +354,7 @@ Auth chunk loads immediately. Board list loads on auth success. Canvas loads on 
 **Current state:** Multi-select drag updates React state at 60Hz.
 
 **Proposed fix:** During multi-select drag:
+
 1. Store original positions of all selected shapes in a ref
 2. Apply offsets imperatively via `konvaNode.x(original + dx)` on each frame
 3. Call `layer.batchDraw()` for Konva to repaint
@@ -368,6 +373,7 @@ This is identical to how viewport pan already works (`applyViewportToStage`). Ze
 **Assessment:** React Server Components could eliminate the entire client-side Firebase SDK from the initial bundle (~500KB) by running auth and Firestore reads on the server. The Konva canvas would remain client-only (island architecture).
 
 **Why not now:**
+
 1. The app is a Vite SPA — migrating to Next.js App Router or a custom RSC setup is a fundamental architecture change.
 2. Firestore's real-time subscriptions don't map cleanly to RSC's request/response model.
 3. The collaborative nature (live cursors, presence) requires persistent client connections anyway.
@@ -380,7 +386,7 @@ This is identical to how viewport pan already works (`applyViewportToStage`). Ze
 ## Implementation Priority Matrix
 
 | ID | Issue | Impact | Difficulty | Phase |
-|---|---|---|---|---|
+| ---- | ---- | ---- | ---- | ---- |
 | P0-RUNTIME | Multi-select drag re-renders | 🔴 Critical | Medium | 1 |
 | P1-RUNTIME | Duplicate viewport culling | 🔴 High | Low | 1 |
 | P2-RUNTIME | Frame selector not memoized | 🟡 Medium | Trivial | 1 |
@@ -426,52 +432,52 @@ All items are independent — can be done in parallel.
 
 ### Phase 2: Perceived Speed (Est. 4-6 hours)
 
-5. **Add lazy route boundaries** (P0-LOAD)
+1. **Add lazy route boundaries** (P0-LOAD)
    - Extract WelcomePage, AuthPage, BoardView into lazy route components
    - App.tsx becomes auth-check shell with Suspense boundaries
    - Konva/firebase-rtdb/openai deferred to board route
 
-6. **Board data prefetch on hover** (P3-LOAD)
+2. **Board data prefetch on hover** (P3-LOAD)
    - Add `onMouseEnter` prefetch handler to BoardListSidebar items
    - Create prefetch cache in a store or module-level Map
    - Cancel unused prefetches after timeout
 
-7. **Chunk prefetch on hover** (PM-3)
+3. **Chunk prefetch on hover** (PM-3)
    - Add `onMouseEnter={() => import('...')}` to sidebar tab triggers
    - Covers AIChatPanel, PropertyInspector, ExportDialog
 
-8. **Board loading skeleton** (PM-1)
+4. **Board loading skeleton** (PM-1)
    - Replace spinner with structural skeleton matching board chrome
    - Fixed dimensions on all panels
 
 ### Phase 3: Data Path Optimization (Est. 4-6 hours)
 
-9. **Incremental Firestore sync** (P3-RUNTIME)
+1. **Incremental Firestore sync** (P3-RUNTIME)
    - Distinguish initial load vs incremental in useObjects
    - Use per-object `updateObject`/`deleteObject` for incremental changes
    - Reserve `setAll` for initial load only
 
-10. **Eliminate `visibleObjects` prop cascade** (P4-RUNTIME)
+2. **Eliminate `visibleObjects` prop cascade** (P4-RUNTIME)
     - `useAlignmentGuideCache` reads from store via IDs
     - `ConnectionNodesLayer` subscribes per-shape
 
-11. **Add preload hints** (P2-LOAD)
+3. **Add preload hints** (P2-LOAD)
     - Vite plugin to inject `<link rel="modulepreload">` for critical chunks
 
-12. **Audit optimistic paths** (PM-2)
+4. **Audit optimistic paths** (PM-2)
     - Verify all create/update operations use pending mechanism
 
-13. **Idle preloading** (PM-4)
+5. **Idle preloading** (PM-4)
     - `requestIdleCallback` for avatar images, chunk prefetch
 
 ### Phase 4: Structural (Est. 8-12 hours)
 
-14. **Full route-level code splitting** (S-1)
+1. **Full route-level code splitting** (S-1)
     - 3-chunk architecture: auth, board-list, canvas
     - Prefetch chain between chunks
     - Shared state (auth, theme) in common chunk
 
-15. **Imperative multi-select drag** (S-2)
+2. **Imperative multi-select drag** (S-2)
     - Cache Konva node refs for selected shapes
     - Apply offsets via `node.position()` during drag
     - Commit to store on drag end only
@@ -481,6 +487,7 @@ All items are independent — can be done in parallel.
 ## Verification Protocol
 
 After each phase:
+
 ```bash
 bun run typecheck && bun run lint && bun vitest run
 bun run build   # Check chunk sizes, confirm splitting worked
@@ -495,7 +502,7 @@ After Phase 4: Record 60Hz drag performance on a 1000-object board. Target: <8ms
 ## Expected Outcomes
 
 | Metric | Current | After Phase 1-2 | After Phase 4 |
-|---|---|---|---|
+| ---- | ---- | ---- | ---- |
 | Initial JS parsed | ~1.6MB | ~500KB (auth shell) | ~400KB |
 | TTI (fast 3G) | ~6-8s | ~2-3s | ~1.5-2s |
 | Multi-drag re-renders/frame | O(visible) | O(selected) | O(0) |
@@ -518,7 +525,7 @@ After Phase 4: Record 60Hz drag performance on a 1000-object board. Target: <8ms
 ## What We're NOT Doing (and Why)
 
 | Approach | Why Skip |
-|---|---|
+| ---- | ---- |
 | Server-side rendering (RSC/Next.js) | Architecture migration cost too high for current ROI. Client-side lazy loading achieves 80% of benefit. |
 | Canvas WebWorker offscreen rendering | OffscreenCanvas has limited Konva support and browser compat issues. |
 | WebAssembly canvas engine | Would replace Konva entirely — too invasive for the current stage. |

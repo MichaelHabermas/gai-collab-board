@@ -1,6 +1,7 @@
 import { Circle } from 'react-konva';
-import { memo, useCallback, type ReactElement } from 'react';
+import { memo, useCallback, useMemo, type ReactElement } from 'react';
 import { getAnchorPosition, isConnectableShapeType } from '@/lib/connectorAnchors';
+import { useObjectsStore } from '@/stores/objectsStore';
 import type { IBoardObject, ConnectorAnchor, IKonvaMouseEvent, IKonvaTouchEvent } from '@/types';
 
 const ANCHORS: ConnectorAnchor[] = ['top', 'right', 'bottom', 'left'];
@@ -11,17 +12,19 @@ const NODE_STROKE = '#1e40af';
 const NODE_STROKE_WIDTH = 1.5;
 
 interface IConnectionNodesLayerProps {
-  shapes: IBoardObject[];
+  shapeIds: string[];
   onNodeClick: (shapeId: string, anchor: ConnectorAnchor) => void;
 }
 
 /**
  * Renders connection nodes (anchor points) on connectable shapes for the connector tool.
- * Each node is a small circle; clicking it triggers onNodeClick(shapeId, anchor).
- * Stop propagation so the underlying shape is not selected.
+ * Reads shape data from the Zustand store so re-renders are driven by the visible ID set,
+ * not by every object mutation.
  */
 export const ConnectionNodesLayer = memo(
-  ({ shapes, onNodeClick }: IConnectionNodesLayerProps): ReactElement => {
+  ({ shapeIds, onNodeClick }: IConnectionNodesLayerProps): ReactElement => {
+    const objectsRecord = useObjectsStore((s) => s.objects);
+
     const handleNodeClick = useCallback(
       (e: IKonvaMouseEvent | IKonvaTouchEvent, shapeId: string, anchor: ConnectorAnchor) => {
         e.cancelBubble = true;
@@ -30,8 +33,12 @@ export const ConnectionNodesLayer = memo(
       [onNodeClick]
     );
 
-    const connectableShapes = shapes.filter((s): s is IBoardObject =>
-      isConnectableShapeType(s.type)
+    const connectableShapes = useMemo(
+      () =>
+        shapeIds
+          .map((id) => objectsRecord[id])
+          .filter((s): s is IBoardObject => s != null && isConnectableShapeType(s.type)),
+      [shapeIds, objectsRecord]
     );
 
     return (
@@ -39,6 +46,7 @@ export const ConnectionNodesLayer = memo(
         {connectableShapes.flatMap((shape) =>
           ANCHORS.map((anchor) => {
             const pos = getAnchorPosition(shape, anchor);
+
             return (
               <Circle
                 key={`${shape.id}-${anchor}`}

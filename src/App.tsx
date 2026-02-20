@@ -139,14 +139,54 @@ const BoardView = memo(function BoardView({
     });
   }, [board, user, boardId, skipAutoJoinBoardIdRef]);
 
+  // Prefetch heavy sidebar chunks during idle time after board mount.
+  useEffect(() => {
+    const prefetch = (): void => {
+      void import('@/components/ai/AIChatPanel');
+      void import('@/components/canvas/PropertyInspector');
+    };
+
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(prefetch);
+
+      return () => window.cancelIdleCallback(id);
+    }
+
+    const id = setTimeout(prefetch, 2000);
+
+    return () => clearTimeout(id);
+  }, []);
+
   if (!user) return <div />;
 
   if (boardLoading || objectsLoading) {
     return (
-      <div className='min-h-screen flex items-center justify-center bg-background'>
-        <div className='text-center'>
-          <Loader2 className='h-8 w-8 animate-spin text-primary mx-auto mb-4' />
-          <p className='text-muted-foreground'>Loading board...</p>
+      <div className='h-screen flex flex-col bg-background overflow-hidden'>
+        {/* Skeleton header */}
+        <header className='shrink-0 border-b border-border bg-card/90 h-12 px-4 py-2 flex items-center gap-4'>
+          <div className='h-5 w-28 rounded bg-muted animate-pulse' />
+          <div className='h-4 w-36 rounded bg-muted animate-pulse' />
+          <div className='flex-1' />
+          <div className='h-8 w-20 rounded bg-muted animate-pulse' />
+        </header>
+        {/* Skeleton body: toolbar + canvas + sidebar */}
+        <div className='flex flex-1 min-h-0 overflow-hidden'>
+          {/* Toolbar skeleton */}
+          <div className='w-12 shrink-0 border-r border-border bg-card flex flex-col items-center gap-2 py-3'>
+            {Array.from({ length: 6 }, (_, i) => (
+              <div key={i} className='h-8 w-8 rounded bg-muted animate-pulse' />
+            ))}
+          </div>
+          {/* Canvas skeleton */}
+          <div className='flex-1 bg-background flex items-center justify-center'>
+            <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
+          </div>
+          {/* Sidebar skeleton */}
+          <div className='w-14 shrink-0 border-l border-border bg-card flex flex-col items-center gap-2 py-3'>
+            {Array.from({ length: 4 }, (_, i) => (
+              <div key={i} className='h-8 w-8 rounded bg-muted animate-pulse' />
+            ))}
+          </div>
         </div>
       </div>
     );

@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ConnectionNodesLayer } from '@/components/canvas/ConnectionNodesLayer';
 import type { IBoardObject } from '@/types';
+import { useObjectsStore } from '@/stores/objectsStore';
 
 let circleIndex = 0;
 const circlePropsByIndex = new Map<number, Record<string, unknown>>();
@@ -47,6 +48,15 @@ const createShape = (overrides: Partial<IBoardObject>): IBoardObject => ({
   toAnchor: overrides.toAnchor,
 });
 
+/** Seed the Zustand store with objects keyed by id. */
+function seedStore(shapes: IBoardObject[]): void {
+  const record: Record<string, IBoardObject> = {};
+  for (const s of shapes) {
+    record[s.id] = s;
+  }
+  useObjectsStore.setState({ objects: record });
+}
+
 describe('ConnectionNodesLayer', () => {
   beforeEach(() => {
     circleIndex = 0;
@@ -59,8 +69,9 @@ describe('ConnectionNodesLayer', () => {
       createShape({ id: 'rect-1', type: 'rectangle' }),
       createShape({ id: 'text-1', type: 'text' }),
     ];
+    seedStore(shapes);
 
-    render(<ConnectionNodesLayer shapes={shapes} onNodeClick={onNodeClick} />);
+    render(<ConnectionNodesLayer shapeIds={['rect-1', 'text-1']} onNodeClick={onNodeClick} />);
 
     expect(screen.getAllByRole('button')).toHaveLength(4);
   });
@@ -68,8 +79,9 @@ describe('ConnectionNodesLayer', () => {
   it('calls onNodeClick with shape id and anchor on node click', () => {
     const onNodeClick = vi.fn();
     const shapes = [createShape({ id: 'sticky-1', type: 'sticky' })];
+    seedStore(shapes);
 
-    render(<ConnectionNodesLayer shapes={shapes} onNodeClick={onNodeClick} />);
+    render(<ConnectionNodesLayer shapeIds={['sticky-1']} onNodeClick={onNodeClick} />);
 
     const firstNode = screen.getByTestId('connector-node-0');
     fireEvent.click(firstNode);

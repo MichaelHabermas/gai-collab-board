@@ -1,11 +1,11 @@
 import { useEffect, useRef, type RefObject } from 'react';
-import type { IBoardObject, IPosition, IAlignmentCandidate } from '@/types';
+import type { IPosition, IAlignmentCandidate } from '@/types';
+import { useObjectsStore } from '@/stores/objectsStore';
 import { getObjectBounds } from '@/lib/canvasBounds';
 import { getAlignmentPositions } from '@/lib/alignmentGuides';
 
 interface IUseAlignmentGuideCacheParams {
-  objects: IBoardObject[];
-  visibleObjects: IBoardObject[];
+  visibleShapeIds: string[];
   visibleObjectIdsKey: string;
   snapToGridEnabled: boolean;
 }
@@ -21,12 +21,12 @@ interface IUseAlignmentGuideCacheReturn {
 }
 
 /**
- * Keeps guideCandidateBoundsRef and dragBoundFuncCacheRef in sync with objects/visibility/snap.
- * When inputs change, recomputes candidate bounds and clears the drag-bound-fn cache.
+ * Keeps guideCandidateBoundsRef and dragBoundFuncCacheRef in sync with visible objects.
+ * Reads object data directly from the Zustand store so this only recomputes
+ * when the visible set changes or snap setting changes — not on every object mutation.
  */
 export const useAlignmentGuideCache = ({
-  objects,
-  visibleObjects,
+  visibleShapeIds,
   visibleObjectIdsKey,
   snapToGridEnabled,
 }: IUseAlignmentGuideCacheParams): IUseAlignmentGuideCacheReturn => {
@@ -34,19 +34,22 @@ export const useAlignmentGuideCache = ({
   const dragBoundFuncCacheRef = useRef<IDragBoundFuncCache>(new Map());
 
   useEffect(() => {
-    const candidateObjects = visibleObjects.length > 0 ? visibleObjects : objects;
-    guideCandidateBoundsRef.current = candidateObjects.map((object) => ({
-      id: object.id,
-      candidate: (() => {
+    const objectsRecord = useObjectsStore.getState().objects;
+    guideCandidateBoundsRef.current = visibleShapeIds
+      .map((id) => {
+        const object = objectsRecord[id];
+        if (!object) return null;
+
         const bounds = getObjectBounds(object);
+
         return {
-          bounds,
-          positions: getAlignmentPositions(bounds),
+          id: object.id,
+          candidate: { bounds, positions: getAlignmentPositions(bounds) },
         };
-      })(),
-    }));
+      })
+      .filter((entry): entry is { id: string; candidate: IAlignmentCandidate } => entry != null);
     dragBoundFuncCacheRef.current.clear();
-  }, [objects, visibleObjectIdsKey, visibleObjects, snapToGridEnabled]);
+  }, [visibleShapeIds, visibleObjectIdsKey, snapToGridEnabled]);
 
   return {
     guideCandidateBoundsRef,

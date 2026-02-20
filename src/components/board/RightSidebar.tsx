@@ -11,6 +11,10 @@ import {
 } from 'lucide-react';
 import type { IRightSidebarProps } from '@/types';
 
+/** Prefetch heavy panel chunks on hover so they're cached by the time the user clicks. */
+const prefetchProps = (): void => { void import('@/components/canvas/PropertyInspector'); };
+const prefetchAI = (): void => { void import('@/components/ai/AIChatPanel'); };
+
 /**
  * Collapsible right panel: expanded (tabs + content) or collapsed icon rail.
  * State is persisted by the caller (e.g. useBoardSettings).
@@ -72,6 +76,7 @@ export const RightSidebar = memo(function RightSidebar({
                     setSidebarTab('props');
                     setSidebarCollapsed(false);
                   }}
+                  onMouseEnter={prefetchProps}
                   title='props'
                   aria-label='props'
                   data-testid='sidebar-rail-tab-props'
@@ -87,6 +92,7 @@ export const RightSidebar = memo(function RightSidebar({
                     setSidebarTab('ai');
                     setSidebarCollapsed(false);
                   }}
+                  onMouseEnter={prefetchAI}
                   title='AI'
                   aria-label='AI'
                   data-testid='sidebar-rail-tab-ai'
@@ -140,12 +146,14 @@ export const RightSidebar = memo(function RightSidebar({
                   <TabsTrigger
                     value='props'
                     className='text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground'
+                    onMouseEnter={prefetchProps}
                   >
                     Props
                   </TabsTrigger>
                   <TabsTrigger
                     value='ai'
                     className='text-muted-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground'
+                    onMouseEnter={prefetchAI}
                   >
                     AI
                   </TabsTrigger>

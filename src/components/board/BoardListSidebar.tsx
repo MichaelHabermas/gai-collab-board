@@ -29,6 +29,7 @@ import { useBoardSettings } from '@/hooks/useBoardSettings';
 import type { IBoard } from '@/types';
 import type { IUserPreferences } from '@/types';
 import type { User } from 'firebase/auth';
+import { prefetchBoard } from '@/lib/boardPrefetch';
 
 /** Board list item for display (full board or id+name only for recent/favorites) */
 interface IBoardListItem {
@@ -263,6 +264,7 @@ export const BoardListSidebar = memo(
             <button
               type='button'
               onClick={() => onSelectBoard(item.id)}
+              onMouseEnter={() => prefetchBoard(item.id)}
               className='flex items-center gap-2 flex-1 min-w-0 text-left'
               data-testid={`board-list-item-${item.id}`}
               title={

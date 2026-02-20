@@ -165,20 +165,20 @@ vi.mock('@/stores/selectionStore', () => ({
 
 vi.mock('@/components/canvas/ConnectionNodesLayer', () => ({
   ConnectionNodesLayer: ({
-    shapes,
+    shapeIds,
     onNodeClick,
   }: {
-    shapes: IBoardObject[];
+    shapeIds: string[];
     onNodeClick: (shapeId: string, anchor: 'top' | 'right' | 'bottom' | 'left') => void;
   }) => (
     <div>
       <button
         data-testid='connector-node-a'
-        onClick={() => onNodeClick(String(shapes[0]?.id), 'top')}
+        onClick={() => onNodeClick(String(shapeIds[0]), 'top')}
       />
       <button
         data-testid='connector-node-b'
-        onClick={() => onNodeClick(String(shapes[1]?.id), 'bottom')}
+        onClick={() => onNodeClick(String(shapeIds[1]), 'bottom')}
       />
     </div>
   ),

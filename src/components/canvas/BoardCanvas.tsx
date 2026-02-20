@@ -269,14 +269,6 @@ export const BoardCanvas = memo(
       [objects]
     );
 
-    // Derive visible objects from spatial-indexed IDs + object lookup (single code path)
-    const visibleObjects = useMemo(
-      () => visibleShapeIds
-        .map((id) => objectsById.get(id))
-        .filter((o): o is IBoardObject => o != null),
-      [visibleShapeIds, objectsById]
-    );
-
     // Linked connectors are excluded from transform (selectable for deletion only)
     const linkedConnectorIds = useMemo(
       () =>
@@ -1036,7 +1028,7 @@ export const BoardCanvas = memo(
       };
       groupDragOffsetRef.current = offset;
       setGroupDragOffset(offset);
-    }, []);
+    }, [setGroupDragOffset]);
 
     const handleSelectionDragEnd = useCallback(() => {
       const b = selectionDragBoundsRef.current;
@@ -1100,7 +1092,7 @@ export const BoardCanvas = memo(
 
       selectionDragBoundsRef.current = null;
       setGroupDragOffset(null);
-    }, [onObjectsUpdate, selectedIds, objectsById, snapToGridEnabled, objects]);
+    }, [onObjectsUpdate, selectedIds, objectsById, snapToGridEnabled, objects, setGroupDragOffset]);
 
     // Throttle guide updates via RAF; ref used by drag handler so it sees latest setter without effect.
     const alignmentGuidesRafIdRef = useRef<number>(0);
@@ -1122,8 +1114,7 @@ export const BoardCanvas = memo(
     }, [setGuidesThrottled]);
 
     const { guideCandidateBoundsRef, dragBoundFuncCacheRef } = useAlignmentGuideCache({
-      objects,
-      visibleObjects,
+      visibleShapeIds,
       visibleObjectIdsKey,
       snapToGridEnabled,
     });
@@ -1781,7 +1772,7 @@ export const BoardCanvas = memo(
           {activeTool === 'connector' && (
             <Layer name='connector-nodes' listening={true}>
               <ConnectionNodesLayer
-                shapes={visibleObjects}
+                shapeIds={visibleShapeIds}
                 onNodeClick={handleConnectorNodeClick}
               />
             </Layer>
@@ -1908,7 +1899,7 @@ export const BoardCanvas = memo(
             className='bg-card/80 text-card-foreground px-3 py-1.5 rounded-md text-sm font-medium backdrop-blur-sm'
             data-testid='object-count'
           >
-            {visibleObjects.length}/{objects.length}
+            {visibleShapeIds.length}/{objects.length}
           </div>
           {/* Zoom to selection */}
           <Button
