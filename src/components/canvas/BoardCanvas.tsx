@@ -66,10 +66,10 @@ import { useHistoryStore } from '@/stores/historyStore';
 import { useDragOffsetStore } from '@/stores/dragOffsetStore';
 import { useViewportActionsStore } from '@/stores/viewportActionsStore';
 import {
-  getFrameChildren,
-  resolveParentFrameId,
+  resolveParentFrameIdFromFrames,
   findContainingFrame,
 } from '@/hooks/useFrameContainment';
+import { perfTime } from '@/lib/perfTimer';
 
 interface IBoardCanvasProps {
   boardId: string;
@@ -840,57 +840,80 @@ export const BoardCanvas = memo(
           selectedIds.size > 1 && selectedIds.has(objectId) && onObjectsUpdate;
 
         if (multiSelected) {
-          const dx = x - draggedObj.x;
-          const dy = y - draggedObj.y;
-          const updates: Array<{ objectId: string; updates: Partial<IBoardObject> }> = [];
+          const updates = perfTime(
+            'handleObjectDragEnd:multi',
+            { selected: selectedIds.size, objects: objects.length },
+            () => {
+              const dx = x - draggedObj.x;
+              const dy = y - draggedObj.y;
+              const batch: Array<{ objectId: string; updates: Partial<IBoardObject> }> = [];
 
-          // Collect IDs being moved so we skip reparenting for frame children already in selection
-          const movedIds = new Set<string>(selectedIds);
+              // Cache frames once for the entire loop — O(n) filter runs ONCE, not per-selected-object
+              const frames = objects.filter((o) => o.type === 'frame');
+              const childIndex = useObjectsStore.getState().frameChildrenIndex;
 
-          for (const id of selectedIds) {
-            const obj = objectsById.get(id);
-            if (!obj) continue;
+              // Collect IDs being moved so we skip reparenting for frame children already in selection
+              const movedIds = new Set<string>(selectedIds);
 
-            let newX = obj.x + dx;
-            let newY = obj.y + dy;
-            if (snapToGridEnabled) {
-              const snapped = snapPositionToGrid(newX, newY, GRID_SIZE);
-              newX = snapped.x;
-              newY = snapped.y;
-            }
+              for (const id of selectedIds) {
+                const obj = objectsById.get(id);
+                if (!obj) continue;
 
-            const objUpdates: Partial<IBoardObject> = { x: newX, y: newY };
-
-            // If this is a frame, also move its children that aren't already in the selection
-            if (obj.type === 'frame') {
-              const children = getFrameChildren(obj.id, objects);
-              for (const child of children) {
-                if (movedIds.has(child.id)) continue;
-
-                let cx = child.x + dx;
-                let cy = child.y + dy;
+                let newX = obj.x + dx;
+                let newY = obj.y + dy;
                 if (snapToGridEnabled) {
-                  const snapped = snapPositionToGrid(cx, cy, GRID_SIZE);
-                  cx = snapped.x;
-                  cy = snapped.y;
+                  const snapped = snapPositionToGrid(newX, newY, GRID_SIZE);
+                  newX = snapped.x;
+                  newY = snapped.y;
                 }
 
-                updates.push({ objectId: child.id, updates: { x: cx, y: cy } });
-                movedIds.add(child.id);
-              }
-            }
+                const objUpdates: Partial<IBoardObject> = { x: newX, y: newY };
 
-            // Resolve reparenting for non-frame, non-connector objects
-            if (obj.type !== 'frame' && obj.type !== 'connector') {
-              const newBounds = { x1: newX, y1: newY, x2: newX + obj.width, y2: newY + obj.height };
-              const newParent = resolveParentFrameId(obj, newBounds, objects);
-              if (newParent !== obj.parentFrameId) {
-                objUpdates.parentFrameId = newParent ?? '';
-              }
-            }
+                // If this is a frame, also move its children that aren't already in the selection
+                if (obj.type === 'frame') {
+                  const childIds = childIndex.get(obj.id);
+                  if (childIds) {
+                    for (const childId of childIds) {
+                      if (movedIds.has(childId)) continue;
 
-            updates.push({ objectId: id, updates: objUpdates });
-          }
+                      const child = objectsById.get(childId);
+                      if (!child) continue;
+
+                      let cx = child.x + dx;
+                      let cy = child.y + dy;
+                      if (snapToGridEnabled) {
+                        const snapped = snapPositionToGrid(cx, cy, GRID_SIZE);
+                        cx = snapped.x;
+                        cy = snapped.y;
+                      }
+
+                      batch.push({ objectId: childId, updates: { x: cx, y: cy } });
+                      movedIds.add(childId);
+                    }
+                  }
+                }
+
+                // Resolve reparenting for non-frame, non-connector objects
+                if (obj.type !== 'frame' && obj.type !== 'connector') {
+                  const newBounds = {
+                    x1: newX,
+                    y1: newY,
+                    x2: newX + obj.width,
+                    y2: newY + obj.height,
+                  };
+                  const newParent = resolveParentFrameIdFromFrames(obj, newBounds, frames);
+                  if (newParent !== obj.parentFrameId) {
+                    objUpdates.parentFrameId = newParent ?? '';
+                  }
+                }
+
+                batch.push({ objectId: id, updates: objUpdates });
+              }
+
+              return batch;
+            }
+          );
+
           if (updates.length > 0) {
             onObjectsUpdate(updates);
           }
@@ -909,16 +932,19 @@ export const BoardCanvas = memo(
 
         const singleUpdates: Partial<IBoardObject> = { x: finalX, y: finalY };
 
-        // Frame drag: move children with it
+        // Frame drag: move children with it (use store index, not O(n) filter)
         if (draggedObj.type === 'frame' && onObjectsUpdate) {
           const dx = finalX - draggedObj.x;
           const dy = finalY - draggedObj.y;
-          const children = getFrameChildren(draggedObj.id, objects);
-          if (children.length > 0) {
+          const childIds = useObjectsStore.getState().frameChildrenIndex.get(draggedObj.id);
+          if (childIds && childIds.size > 0) {
             const batchUpdates: Array<{ objectId: string; updates: Partial<IBoardObject> }> = [
               { objectId, updates: singleUpdates },
             ];
-            for (const child of children) {
+            for (const childId of childIds) {
+              const child = objectsById.get(childId);
+              if (!child) continue;
+
               let cx = child.x + dx;
               let cy = child.y + dy;
               if (snapToGridEnabled) {
@@ -927,14 +953,15 @@ export const BoardCanvas = memo(
                 cy = snapped.y;
               }
 
-              batchUpdates.push({ objectId: child.id, updates: { x: cx, y: cy } });
+              batchUpdates.push({ objectId: childId, updates: { x: cx, y: cy } });
             }
             onObjectsUpdate(batchUpdates);
+
             return;
           }
         }
 
-        // Non-frame single drag: resolve reparenting
+        // Non-frame single drag: resolve reparenting (single call, O(n) filter is fine)
         if (draggedObj.type !== 'frame' && draggedObj.type !== 'connector') {
           const newBounds = {
             x1: finalX,
@@ -942,7 +969,8 @@ export const BoardCanvas = memo(
             x2: finalX + draggedObj.width,
             y2: finalY + draggedObj.height,
           };
-          const newParent = resolveParentFrameId(draggedObj, newBounds, objects);
+          const singleFrames = objects.filter((o) => o.type === 'frame');
+          const newParent = resolveParentFrameIdFromFrames(draggedObj, newBounds, singleFrames);
           if (newParent !== draggedObj.parentFrameId) {
             singleUpdates.parentFrameId = newParent ?? '';
           }
@@ -1035,56 +1063,79 @@ export const BoardCanvas = memo(
       if (!b || !onObjectsUpdate) {
         selectionDragBoundsRef.current = null;
         setGroupDragOffset(null);
+
         return;
       }
 
-      const { dx, dy } = groupDragOffsetRef.current;
-      const updates: Array<{ objectId: string; updates: Partial<IBoardObject> }> = [];
-      const movedIds = new Set(selectedIds);
+      const updates = perfTime(
+        'handleSelectionDragEnd',
+        { selected: selectedIds.size, objects: objects.length },
+        () => {
+          const { dx, dy } = groupDragOffsetRef.current;
+          const batch: Array<{ objectId: string; updates: Partial<IBoardObject> }> = [];
+          const movedIds = new Set(selectedIds);
 
-      // Snap group bounding box to grid (one snap for the whole group; preserve relative positions).
-      const groupNewLeft = b.x1 + dx;
-      const groupNewTop = b.y1 + dy;
-      const snappedGroup = snapToGridEnabled
-        ? snapPositionToGrid(groupNewLeft, groupNewTop, GRID_SIZE)
-        : { x: groupNewLeft, y: groupNewTop };
-      const snapOffsetX = snappedGroup.x - groupNewLeft;
-      const snapOffsetY = snappedGroup.y - groupNewTop;
+          // Cache frames once for the entire loop — O(n) filter runs ONCE, not per-selected-object
+          const frames = objects.filter((o) => o.type === 'frame');
+          const childIndex = useObjectsStore.getState().frameChildrenIndex;
 
-      for (const id of selectedIds) {
-        const obj = objectsById.get(id);
-        if (!obj) continue;
+          // Snap group bounding box to grid (one snap for the whole group; preserve relative positions).
+          const groupNewLeft = b.x1 + dx;
+          const groupNewTop = b.y1 + dy;
+          const snappedGroup = snapToGridEnabled
+            ? snapPositionToGrid(groupNewLeft, groupNewTop, GRID_SIZE)
+            : { x: groupNewLeft, y: groupNewTop };
+          const snapOffsetX = snappedGroup.x - groupNewLeft;
+          const snapOffsetY = snappedGroup.y - groupNewTop;
 
-        const newX = obj.x + dx + snapOffsetX;
-        const newY = obj.y + dy + snapOffsetY;
+          for (const id of selectedIds) {
+            const obj = objectsById.get(id);
+            if (!obj) continue;
 
-        const objUpdates: Partial<IBoardObject> = { x: newX, y: newY };
+            const newX = obj.x + dx + snapOffsetX;
+            const newY = obj.y + dy + snapOffsetY;
 
-        // Frame in selection: also move children not already in selection
-        if (obj.type === 'frame') {
-          const children = getFrameChildren(obj.id, objects);
-          for (const child of children) {
-            if (movedIds.has(child.id)) continue;
+            const objUpdates: Partial<IBoardObject> = { x: newX, y: newY };
 
-            const cx = child.x + dx + snapOffsetX;
-            const cy = child.y + dy + snapOffsetY;
+            // Frame in selection: also move children not already in selection (O(1) index lookup)
+            if (obj.type === 'frame') {
+              const childIds = childIndex.get(obj.id);
+              if (childIds) {
+                for (const childId of childIds) {
+                  if (movedIds.has(childId)) continue;
 
-            updates.push({ objectId: child.id, updates: { x: cx, y: cy } });
-            movedIds.add(child.id);
+                  const child = objectsById.get(childId);
+                  if (!child) continue;
+
+                  const cx = child.x + dx + snapOffsetX;
+                  const cy = child.y + dy + snapOffsetY;
+
+                  batch.push({ objectId: childId, updates: { x: cx, y: cy } });
+                  movedIds.add(childId);
+                }
+              }
+            }
+
+            // Reparent non-frame, non-connector objects (uses pre-cached frames list)
+            if (obj.type !== 'frame' && obj.type !== 'connector') {
+              const newBounds = {
+                x1: newX,
+                y1: newY,
+                x2: newX + obj.width,
+                y2: newY + obj.height,
+              };
+              const newParent = resolveParentFrameIdFromFrames(obj, newBounds, frames);
+              if (newParent !== obj.parentFrameId) {
+                objUpdates.parentFrameId = newParent ?? '';
+              }
+            }
+
+            batch.push({ objectId: id, updates: objUpdates });
           }
-        }
 
-        // Reparent non-frame, non-connector objects
-        if (obj.type !== 'frame' && obj.type !== 'connector') {
-          const newBounds = { x1: newX, y1: newY, x2: newX + obj.width, y2: newY + obj.height };
-          const newParent = resolveParentFrameId(obj, newBounds, objects);
-          if (newParent !== obj.parentFrameId) {
-            objUpdates.parentFrameId = newParent ?? '';
-          }
+          return batch;
         }
-
-        updates.push({ objectId: id, updates: objUpdates });
-      }
+      );
 
       if (updates.length > 0) {
         onObjectsUpdate(updates);
@@ -1297,12 +1348,12 @@ export const BoardCanvas = memo(
     // Enter frame: double-click frame body → select all children
     const handleEnterFrame = useCallback(
       (frameId: string) => {
-        const children = getFrameChildren(frameId, objects);
-        if (children.length > 0) {
-          setSelectedIds(children.map((c) => c.id));
+        const childIds = useObjectsStore.getState().frameChildrenIndex.get(frameId);
+        if (childIds && childIds.size > 0) {
+          setSelectedIds([...childIds]);
         }
       },
-      [objects, setSelectedIds]
+      [setSelectedIds]
     );
 
     useEffect(() => {

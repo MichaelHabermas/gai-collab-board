@@ -119,5 +119,21 @@ export const resolveParentFrameId = (
   if (obj.type === 'frame' || obj.type === 'connector') return undefined;
 
   const frames = allObjects.filter((o) => o.type === 'frame');
+
+  return findContainingFrame(objectBounds, frames, obj.id);
+};
+
+/**
+ * Same as `resolveParentFrameId` but takes a pre-filtered frames array.
+ * Use this in hot loops where the frames list is computed once outside the loop
+ * to avoid O(n) `allObjects.filter(type=frame)` on every call.
+ */
+export const resolveParentFrameIdFromFrames = (
+  obj: IBoardObject,
+  objectBounds: IBounds,
+  frames: IBoardObject[]
+): string | undefined => {
+  if (obj.type === 'frame' || obj.type === 'connector') return undefined;
+
   return findContainingFrame(objectBounds, frames, obj.id);
 };
