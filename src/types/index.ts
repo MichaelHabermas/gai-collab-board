@@ -68,3 +68,12 @@ export type {
 } from './konva';
 export type { IComment, ICreateCommentParams } from './comment';
 export type { IHistoryCommand, IHistoryEntry } from './history';
+export type {
+  ObjectChangeType,
+  IObjectChange,
+  IObjectsSnapshotUpdate,
+  IBatchUpdate,
+  IBoardRepository,
+  IDragUpdate,
+  IRealtimeSyncRepository,
+} from './repository';

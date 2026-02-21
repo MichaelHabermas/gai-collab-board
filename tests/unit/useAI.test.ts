@@ -33,13 +33,16 @@ const {
   mockAIServiceConstructor: vi.fn(),
 }));
 
-vi.mock('@/modules/sync/objectService', () => ({
-  createObject: mockCreateObject,
-  createObjectsBatch: mockCreateObjectsBatch,
-  updateObject: mockUpdateObject,
-  updateObjectsBatch: mockUpdateObjectsBatch,
-  deleteObject: mockDeleteObject,
-  deleteObjectsBatch: mockDeleteObjectsBatch,
+vi.mock('@/lib/repositoryProvider', () => ({
+  getBoardRepository: () => ({
+    createObject: mockCreateObject,
+    createObjectsBatch: mockCreateObjectsBatch,
+    updateObject: mockUpdateObject,
+    updateObjectsBatch: mockUpdateObjectsBatch,
+    deleteObject: mockDeleteObject,
+    deleteObjectsBatch: mockDeleteObjectsBatch,
+    subscribeToObjects: vi.fn(() => vi.fn()),
+  }),
 }));
 
 vi.mock('@/modules/ai', () => ({

@@ -1,19 +1,14 @@
 import { useState, useEffect, useCallback, useRef, type SetStateAction } from 'react';
 import { User } from 'firebase/auth';
-import type { IBoardObject } from '@/types';
-import {
-  createObject,
-  updateObject,
-  updateObjectsBatch,
-  deleteObject,
-  deleteObjectsBatch,
-  subscribeToObjectsWithChanges,
-  mergeObjectUpdates,
-  type IObjectChange,
-  type IObjectsSnapshotUpdate,
-  type ICreateObjectParams,
-  type IUpdateObjectParams,
-} from '@/modules/sync/objectService';
+import type {
+  IBoardObject,
+  IObjectChange,
+  IObjectsSnapshotUpdate,
+  ICreateObjectParams,
+  IUpdateObjectParams,
+} from '@/types';
+import { mergeObjectUpdates } from '@/modules/sync/objectService';
+import { getBoardRepository } from '@/lib/repositoryProvider';
 import { useObjectsStore } from '@/stores/objectsStore';
 import { consumePrefetchedObjects } from '@/lib/boardPrefetch';
 import { setWriteQueueBoard, queueWrite, flush as flushWriteQueue } from '@/lib/writeQueue';
@@ -253,7 +248,8 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
     // Mark that we're waiting for first callback to reset state
     isFirstCallbackRef.current = true;
 
-    const unsubscribe = subscribeToObjectsWithChanges(boardId, (update) => {
+    const repo = getBoardRepository();
+    const unsubscribe = repo.subscribeToObjects(boardId, (update) => {
       // Reset error on first callback after subscription
       if (isFirstCallbackRef.current) {
         isFirstCallbackRef.current = false;
@@ -321,8 +317,9 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
 
       try {
         setError('');
+        const repo = getBoardRepository();
         const createParams = { ...params, createdBy: user.uid };
-        const newObject = await createObject(boardId, createParams);
+        const newObject = await repo.createObject(boardId, createParams);
 
         return newObject;
       } catch (err) {
@@ -358,7 +355,8 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
 
       try {
         setError('');
-        await updateObject(boardId, objectId, updates);
+        const repo = getBoardRepository();
+        await repo.updateObject(boardId, objectId, updates);
         clearPending(objectId);
         inFlightIdsRef.current.delete(objectId);
       } catch (err) {
@@ -400,7 +398,8 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
 
       try {
         setError('');
-        await deleteObject(boardId, objectId);
+        const repo = getBoardRepository();
+        await repo.deleteObject(boardId, objectId);
         clearPending(objectId);
       } catch (err) {
         // Rollback on failure - restore the object
@@ -457,7 +456,8 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
 
       try {
         setError('');
-        await updateObjectsBatch(boardId, updates);
+        const repo = getBoardRepository();
+        await repo.updateObjectsBatch(boardId, updates);
 
         for (const id of objectIds) {
           clearPending(id);
@@ -499,7 +499,8 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
 
       try {
         setError('');
-        await deleteObjectsBatch(boardId, objectIds);
+        const repo = getBoardRepository();
+        await repo.deleteObjectsBatch(boardId, objectIds);
         setObjects((prev) => prev.filter((obj) => !objectIds.includes(obj.id)));
         for (const id of objectIds) {
           clearPending(id);

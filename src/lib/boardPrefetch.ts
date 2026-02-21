@@ -1,5 +1,5 @@
 import type { IBoardObject } from '@/types';
-import { subscribeToObjectsWithChanges } from '@/modules/sync/objectService';
+import { getBoardRepository } from '@/lib/repositoryProvider';
 
 /** Prefetch timeout — cancel subscription after this if the user doesn't navigate. */
 const PREFETCH_TTL_MS = 10_000;
@@ -27,7 +27,8 @@ export function prefetchBoard(boardId: string): void {
     timer: setTimeout(() => cancelPrefetch(boardId), PREFETCH_TTL_MS),
   };
 
-  entry.unsubscribe = subscribeToObjectsWithChanges(boardId, (update) => {
+  const repo = getBoardRepository();
+  entry.unsubscribe = repo.subscribeToObjects(boardId, (update) => {
     // Cache initial snapshot only — we don't need incremental updates for prefetch.
     if (update.isInitialSnapshot) {
       entry.objects = update.objects;

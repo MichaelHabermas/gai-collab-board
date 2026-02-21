@@ -69,14 +69,14 @@ function toAIElement(obj: IBoardObject, includeDetails: boolean): IAIBoardElemen
   };
 
   if (!includeDetails) {
-    if (obj.text !== undefined) {
+    if (obj.text) {
       base.text = obj.text;
     }
 
     return base;
   }
 
-  if (obj.text !== undefined) {
+  if (obj.text) {
     base.text = obj.text;
   }
 
@@ -96,7 +96,7 @@ function toAIElement(obj: IBoardObject, includeDetails: boolean): IAIBoardElemen
     base.fontSize = obj.fontSize;
   }
 
-  if (obj.opacity !== undefined) {
+  if (obj.opacity) {
     base.opacity = obj.opacity;
   }
 

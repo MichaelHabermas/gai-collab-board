@@ -8,7 +8,7 @@ alwaysApply: true
 ## Bun
 
 - **Use Bun as the runtime and package manager.** Run scripts with `bun run <script>` (or `bun <file>` for direct execution).
-- Do not use `npm run`, `pnpm`, or `node` for running project scripts or tooling.
+- Do not use `npm run`, `pnpm`, or `node`, `yarn`, or `npx` for running project scripts or tooling.
 
 ## Vite
 

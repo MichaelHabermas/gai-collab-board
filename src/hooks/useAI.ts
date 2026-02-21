@@ -2,14 +2,7 @@ import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import type { User } from 'firebase/auth';
 import type { IBoardObject } from '@/types';
 import { AIService, createToolExecutor } from '@/modules/ai';
-import {
-  createObject,
-  createObjectsBatch,
-  updateObject,
-  updateObjectsBatch,
-  deleteObject,
-  deleteObjectsBatch,
-} from '@/modules/sync/objectService';
+import { getBoardRepository } from '@/lib/repositoryProvider';
 import { normalizeAIErrorMessage } from '@/modules/ai/errors';
 import { useViewportActionsStore } from '@/stores/viewportActionsStore';
 
@@ -51,17 +44,19 @@ export const useAI = ({ boardId, user, objects }: IUseAIParams): IUseAIReturn =>
   const executorContext = useMemo(() => {
     if (!boardId || !user) return null;
 
+    const repo = getBoardRepository();
+
     return {
       boardId,
       createdBy: user.uid,
       userId: user.uid,
       getObjects: () => objectsRef.current,
-      createObject,
-      createObjectsBatch,
-      updateObject,
-      updateObjectsBatch,
-      deleteObject,
-      deleteObjectsBatch,
+      createObject: repo.createObject,
+      createObjectsBatch: repo.createObjectsBatch,
+      updateObject: repo.updateObject,
+      updateObjectsBatch: repo.updateObjectsBatch,
+      deleteObject: repo.deleteObject,
+      deleteObjectsBatch: repo.deleteObjectsBatch,
       ...(zoomToFitAll &&
         zoomToSelection &&
         setZoomLevel && {

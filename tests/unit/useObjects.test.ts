@@ -9,16 +9,21 @@ const mockUpdateObject = vi.fn();
 const mockUpdateObjectsBatch = vi.fn();
 const mockDeleteObject = vi.fn();
 const mockDeleteObjectsBatch = vi.fn();
-const mockSubscribeToObjectsWithChanges = vi.fn();
+const mockSubscribeToObjects = vi.fn();
 const mockMergeObjectUpdates = vi.fn();
 
+vi.mock('@/lib/repositoryProvider', () => ({
+  getBoardRepository: () => ({
+    createObject: (...args: unknown[]) => mockCreateObject(...args),
+    updateObject: (...args: unknown[]) => mockUpdateObject(...args),
+    updateObjectsBatch: (...args: unknown[]) => mockUpdateObjectsBatch(...args),
+    deleteObject: (...args: unknown[]) => mockDeleteObject(...args),
+    deleteObjectsBatch: (...args: unknown[]) => mockDeleteObjectsBatch(...args),
+    subscribeToObjects: (...args: unknown[]) => mockSubscribeToObjects(...args),
+  }),
+}));
+
 vi.mock('@/modules/sync/objectService', () => ({
-  createObject: (...args: unknown[]) => mockCreateObject(...args),
-  updateObject: (...args: unknown[]) => mockUpdateObject(...args),
-  updateObjectsBatch: (...args: unknown[]) => mockUpdateObjectsBatch(...args),
-  deleteObject: (...args: unknown[]) => mockDeleteObject(...args),
-  deleteObjectsBatch: (...args: unknown[]) => mockDeleteObjectsBatch(...args),
-  subscribeToObjectsWithChanges: (...args: unknown[]) => mockSubscribeToObjectsWithChanges(...args),
   mergeObjectUpdates: (...args: unknown[]) => mockMergeObjectUpdates(...args),
 }));
 
@@ -74,7 +79,7 @@ describe('useObjects', () => {
     subscriptionCallback = null;
     unsubscribeSpy = vi.fn();
 
-    mockSubscribeToObjectsWithChanges.mockImplementation(
+    mockSubscribeToObjects.mockImplementation(
       (
         _boardId: string,
         callback: (update: {
@@ -108,7 +113,7 @@ describe('useObjects', () => {
     );
 
     expect(result.current.loading).toBe(true);
-    expect(mockSubscribeToObjectsWithChanges).toHaveBeenCalledWith('board-1', expect.any(Function));
+    expect(mockSubscribeToObjects).toHaveBeenCalledWith('board-1', expect.any(Function));
 
     const remoteObjects = [createBoardObject()];
     act(() => {
@@ -576,7 +581,7 @@ describe('useObjects – updateObjects for group drag', () => {
     vi.clearAllMocks();
     subscriptionCallback = null;
     const unsubSpy = vi.fn();
-    mockSubscribeToObjectsWithChanges.mockImplementation(
+    mockSubscribeToObjects.mockImplementation(
       (
         _boardId: string,
         cb: (update: {

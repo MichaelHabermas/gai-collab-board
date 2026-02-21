@@ -2,9 +2,11 @@
  * Coalescing write queue for Firestore updates.
  * Batches rapid property changes into single writes per object.
  * Structural operations (create, delete) bypass the queue entirely.
+ *
+ * DIP: uses IBoardRepository for persistence instead of direct objectService import.
  */
 
-import { updateObjectsBatch, type IUpdateObjectParams } from '@/modules/sync/objectService';
+import type { IBoardRepository, IUpdateObjectParams } from '@/types';
 
 const DEBOUNCE_MS = 500;
 
@@ -16,13 +18,18 @@ interface IPendingWrite {
 const pendingWrites = new Map<string, IPendingWrite>();
 let timer: ReturnType<typeof setTimeout> | null = null;
 let activeBoardId: string | null = null;
+let repo: IBoardRepository | null = null;
 
 let totalFlushes = 0;
 let totalCoalesced = 0;
 
+/** Inject the repository for write operations. Call once at app startup. */
+export function initWriteQueue(repository: IBoardRepository): void {
+  repo = repository;
+}
+
 /** Set the active board for queued writes. Call when board changes. */
 export function setWriteQueueBoard(boardId: string | null): void {
-  // Flush any pending writes for the previous board before switching
   if (activeBoardId && activeBoardId !== boardId && pendingWrites.size > 0) {
     flush();
   }
@@ -38,7 +45,9 @@ export function queueWrite(objectId: string, changes: IUpdateObjectParams): void
     updates: existing ? { ...existing.updates, ...changes } : changes,
   });
 
-  if (timer) clearTimeout(timer);
+  if (timer) {
+    clearTimeout(timer);
+  }
 
   timer = setTimeout(flush, DEBOUNCE_MS);
 }
@@ -50,7 +59,9 @@ export async function flush(): Promise<void> {
     timer = null;
   }
 
-  if (pendingWrites.size === 0 || !activeBoardId) return;
+  if (pendingWrites.size === 0 || !activeBoardId || !repo) {
+    return;
+  }
 
   const batch = Array.from(pendingWrites.values());
   totalCoalesced += batch.length - 1;
@@ -58,7 +69,7 @@ export async function flush(): Promise<void> {
   pendingWrites.clear();
 
   try {
-    await updateObjectsBatch(activeBoardId, batch);
+    await repo.updateObjectsBatch(activeBoardId, batch);
 
     if (import.meta.env.DEV) {
       // eslint-disable-next-line no-console
@@ -67,13 +78,11 @@ export async function flush(): Promise<void> {
       );
     }
   } catch (err) {
-    // Re-queue failed writes so they aren't silently lost
     for (const entry of batch) {
       if (!pendingWrites.has(entry.objectId)) {
         pendingWrites.set(entry.objectId, entry);
       }
     }
-    // Schedule retry
     if (!timer) {
       timer = setTimeout(flush, DEBOUNCE_MS * 2);
     }
