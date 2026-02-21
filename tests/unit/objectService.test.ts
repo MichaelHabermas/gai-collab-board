@@ -514,6 +514,10 @@ describe('objectService', () => {
           fontSize: 14,
           opacity: 0.9,
           points: [0, 0, 100, 50],
+          fromObjectId: 'obj-a',
+          toObjectId: 'obj-b',
+          fromAnchor: 'right',
+          toAnchor: 'left',
           arrowheads: 'end',
           strokeStyle: 'dotted',
           parentFrameId: 'frame-2',
@@ -524,10 +528,21 @@ describe('objectService', () => {
       expect(mockBatchSet).toHaveBeenCalledTimes(1);
       expect(mockBatchCommit).toHaveBeenCalledTimes(1);
       expect(results).toHaveLength(1);
-      expect(results[0]?.opacity).toBe(0.9);
-      expect(results[0]?.arrowheads).toBe('end');
-      expect(results[0]?.strokeStyle).toBe('dotted');
-      expect(results[0]?.parentFrameId).toBe('frame-2');
+      const obj = results[0]!;
+      expect(obj.stroke).toBe('#000');
+      expect(obj.strokeWidth).toBe(3);
+      expect(obj.text).toBe('Link');
+      expect(obj.textFill).toBe('#fff');
+      expect(obj.fontSize).toBe(14);
+      expect(obj.opacity).toBe(0.9);
+      expect(obj.points).toEqual([0, 0, 100, 50]);
+      expect(obj.fromObjectId).toBe('obj-a');
+      expect(obj.toObjectId).toBe('obj-b');
+      expect(obj.fromAnchor).toBe('right');
+      expect(obj.toAnchor).toBe('left');
+      expect(obj.arrowheads).toBe('end');
+      expect(obj.strokeStyle).toBe('dotted');
+      expect(obj.parentFrameId).toBe('frame-2');
     });
 
     it('creates batch without optional fields', async () => {
@@ -544,10 +559,65 @@ describe('objectService', () => {
       ]);
 
       expect(results).toHaveLength(1);
-      expect(results[0]?.opacity).toBeUndefined();
-      expect(results[0]?.arrowheads).toBeUndefined();
-      expect(results[0]?.strokeStyle).toBeUndefined();
-      expect(results[0]?.parentFrameId).toBeUndefined();
+      const obj = results[0]!;
+      // All 14 optional fields must be undefined when not provided
+      expect(obj.stroke).toBeUndefined();
+      expect(obj.strokeWidth).toBeUndefined();
+      expect(obj.text).toBeUndefined();
+      expect(obj.textFill).toBeUndefined();
+      expect(obj.fontSize).toBeUndefined();
+      expect(obj.opacity).toBeUndefined();
+      expect(obj.points).toBeUndefined();
+      expect(obj.fromObjectId).toBeUndefined();
+      expect(obj.toObjectId).toBeUndefined();
+      expect(obj.fromAnchor).toBeUndefined();
+      expect(obj.toAnchor).toBeUndefined();
+      expect(obj.arrowheads).toBeUndefined();
+      expect(obj.strokeStyle).toBeUndefined();
+      expect(obj.parentFrameId).toBeUndefined();
+    });
+
+    it('creates batch with connector anchor fields', async () => {
+      const results = await createObjectsBatch('board-1', [
+        {
+          type: 'connector',
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 50,
+          fill: '#64748b',
+          fromObjectId: 'obj-a',
+          toObjectId: 'obj-b',
+          fromAnchor: 'right',
+          toAnchor: 'left',
+          createdBy: 'user-1',
+        },
+      ]);
+
+      expect(results).toHaveLength(1);
+      const obj = results[0]!;
+      expect(obj.fromObjectId).toBe('obj-a');
+      expect(obj.toObjectId).toBe('obj-b');
+      expect(obj.fromAnchor).toBe('right');
+      expect(obj.toAnchor).toBe('left');
+    });
+
+    it('creates batch with empty string text (truthy vs defined check)', async () => {
+      const results = await createObjectsBatch('board-1', [
+        {
+          type: 'sticky',
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 120,
+          fill: '#fef08a',
+          text: '',
+          createdBy: 'user-1',
+        },
+      ]);
+
+      // Empty string should be set because the check is `!== undefined`, not truthy
+      expect(results[0]?.text).toBe('');
     });
   });
 
