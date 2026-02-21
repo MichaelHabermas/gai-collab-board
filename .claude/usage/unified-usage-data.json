@@ -1441,6 +1441,26 @@
         "origin_source": "claude",
         "tool_call_count": 108
       }
+    },
+    {
+      "event_id": "dev:claude:1ecad907-07c4-409b-9854-4e4f1ee54b4f",
+      "source": "claude",
+      "timestamp": "2026-02-21T13:01:59.660Z",
+      "session_id": "1ecad907-07c4-409b-9854-4e4f1ee54b4f",
+      "provider": "anthropic",
+      "model": "claude-opus-4-6",
+      "input_tokens": 6,
+      "output_tokens": 18,
+      "cache_read_tokens": 110284,
+      "cache_create_tokens": 18136,
+      "total_tokens": 128444,
+      "estimated_cost": 0.5069159999999999,
+      "request_count": 1,
+      "estimation_method": "best_effort",
+      "metadata": {
+        "hook_source": "claude",
+        "by_model_count": 1
+      }
     }
   ]
 }

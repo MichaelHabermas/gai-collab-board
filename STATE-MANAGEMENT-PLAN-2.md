@@ -77,6 +77,8 @@ flowchart TB
     end
 ```
 
+
+
 ---
 
 ## Epics and Breakdown (Waves)
@@ -99,10 +101,12 @@ Tasks are executed in wave order. Each wave has a goal, user stories, features, 
 
 **Sub-Tasks (task table below):** S1 (align createObjectsBatch), S2 (standardize high-frequency update path).
 
+
 | Done | ID     | Title                                      | Tier   | Role        | Description                                                                                                                                                                                                                                                                                           |
 | ---- | ------ | ------------------------------------------ | ------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [ ]  | **S1** | Align createObjectsBatch with createObject | haiku  | quick-fixer | In [objectService.ts](src/modules/sync/objectService.ts), make `createObjectsBatch` use the same optional-field logic as `createObject` (conditional assignment for text, stroke, fromObjectId, toObjectId, fromAnchor, toAnchor, cornerRadius). Prevents connector creation bugs.                    |
-| [ ]  | **S2** | Standardize high-frequency update path     | sonnet | architect   | Introduce single `queueObjectUpdate(id, updates)` used by PropertyInspector, useObjectDragHandlers.handleTextChange, and any other high-freq callers. Ensure it updates Zustand + queueWrite consistently. Remove PropertyInspector's direct `queueUpdate` and `useObjectsStore.updateObject` bypass. |
+| [x]  | **S1** | Align createObjectsBatch with createObject | haiku  | quick-fixer | In [objectService.ts](src/modules/sync/objectService.ts), make `createObjectsBatch` use the same optional-field logic as `createObject` (conditional assignment for text, stroke, fromObjectId, toObjectId, fromAnchor, toAnchor, cornerRadius). Prevents connector creation bugs.                    |
+| [x]  | **S2** | Standardize high-frequency update path     | sonnet | architect   | Introduce single `queueObjectUpdate(id, updates)` used by PropertyInspector, useObjectDragHandlers.handleTextChange, and any other high-freq callers. Ensure it updates Zustand + queueWrite consistently. Remove PropertyInspector's direct `queueUpdate` and `useObjectsStore.updateObject` bypass. |
+
 
 ### Wave 2 — Epic 4 Alignment (Parallel)
 
@@ -120,10 +124,12 @@ Tasks are executed in wave order. Each wave has a goal, user stories, features, 
 
 **Sub-Tasks (task table below):** S3 (wire pagination), S4 (optimize applyIncrementalChanges).
 
+
 | Done | ID     | Title                            | Tier   | Role      | Description                                                                                                                                                                                                                                                                                            |
 | ---- | ------ | -------------------------------- | ------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | [ ]  | **S3** | Wire pagination for large boards | sonnet | architect | In [useObjects.ts](src/hooks/useObjects.ts), use `fetchObjectsPaginated` for initial load when object count exceeds threshold (e.g. 500). Use `subscribeToDeltaUpdates` for incremental sync after paginated load. Add `subscribeToObjectsWithChanges` fallback for small boards. Epic 4 Sub-Task 3–4. |
 | [ ]  | **S4** | Optimize applyIncrementalChanges | sonnet | architect | In [useObjects.ts](src/hooks/useObjects.ts), refactor `applyIncrementalChanges` to build `nextObjects` from `workingById` + change set instead of mapping over full `prevObjects`. Reduces O(n) iterations for large boards.                                                                           |
+
 
 ### Wave 3 — Major Refactor (Depends on S2)
 
@@ -141,10 +147,12 @@ Tasks are executed in wave order. Each wave has a goal, user stories, features, 
 
 **Sub-Tasks (task table below):** S5 (unify to Zustand), S6 (consolidate incremental store updates).
 
+
 | Done | ID     | Title                                      | Tier   | Role      | Description                                                                                                                                                                                                                                                                                                 |
 | ---- | ------ | ------------------------------------------ | ------ | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [ ]  | **S5** | Unify to Zustand as single source of truth | opus   | architect | Remove React state `objects` from useObjects. Make useHistory and useAI read from `useObjectsStore` (or thin wrapper). useObjects keeps only: subscription wiring, CRUD handlers, optimistic update orchestration. Zustand becomes canonical per Constitution Article I. Depends on S2 (standardized path). |
 | [ ]  | **S6** | Consolidate incremental store updates      | sonnet | architect | Add `applyChanges(changes)` to [objectsStore.ts](src/stores/objectsStore.ts) that handles adds/updates/deletes in one store update. useObjects calls it instead of separate `deleteObjects` + `setObjects`. Reduces index rebuilds. Can be done with or after S5.                                           |
+
 
 ### Wave 4 — Optimizations (Depends on S5)
 
@@ -160,9 +168,11 @@ Tasks are executed in wave order. Each wave has a goal, user stories, features, 
 
 **Sub-Tasks (task table below):** S7 (reduce O(n) conversions in BoardCanvas).
 
+
 | Done | ID     | Title                                  | Tier   | Role      | Description                                                                                                                                                                                              |
 | ---- | ------ | -------------------------------------- | ------ | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [ ]  | **S7** | Reduce O(n) conversions in BoardCanvas | sonnet | architect | After S5, BoardCanvas and hooks receive `objectsRecord` or derived structure. Avoid `Object.values(objectsRecord)` on every update. Pass record to consumers that need it; use selectors where possible. |
+
 
 ---
 
@@ -176,11 +186,13 @@ Tasks above are added to [.claude/tasks.md](.claude/tasks.md). Execution order: 
 
 For user-visible behavior, write acceptance tests before implementation:
 
+
 | Task   | E2E Focus                                                                                     |
 | ------ | --------------------------------------------------------------------------------------------- |
 | **S2** | Property change (color, text) propagates to store and Firestore; no stale state in history/AI |
 | **S3** | Large board (e.g. 600 objects) loads in batches; incremental updates merge correctly          |
 | **S5** | Undo/redo, AI tools, and canvas rendering all reflect same state after edits                  |
+
 
 **Process:** Create worktree `test-<feature>`, spawn tester agent to write Playwright/E2E tests, merge test branch before implementation.
 
@@ -219,6 +231,7 @@ For each task marked `review` in tasks.md:
 
 ## Key Files
 
+
 | File                                                                                       | Changes                                                                         |
 | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
 | [src/hooks/useObjects.ts](src/hooks/useObjects.ts)                                         | Remove React state (S5), pagination (S3), optimize applyIncrementalChanges (S4) |
@@ -229,6 +242,7 @@ For each task marked `review` in tasks.md:
 | [src/hooks/useHistory.ts](src/hooks/useHistory.ts)                                         | Read from Zustand (S5)                                                          |
 | [src/hooks/useAI.ts](src/hooks/useAI.ts)                                                   | Read from Zustand (S5)                                                          |
 | [src/components/canvas/BoardCanvas.tsx](src/components/canvas/BoardCanvas.tsx)             | Remove deprecated objects prop, optimize conversions (S7)                       |
+
 
 ---
 
@@ -256,3 +270,4 @@ For each task marked `review` in tasks.md:
 3. **Execute in batches:** First batch (S1, S2, S3) → second (S4) → third (S5) → fourth (S6, S7). Max 3 concurrent agents.
 4. **Review:** For each task in `review`, spawn reviewer; approve → merge worktree and mark done; reject → feedback and retry (max 3).
 5. **Merge and validate:** Merge worktrees via worktree-manager; run `bun run release:gate`; if gate fails, create fix tasks and return to execution.
+
