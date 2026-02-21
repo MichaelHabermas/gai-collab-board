@@ -1867,6 +1867,30 @@
       "cursor_latency_ms": 27,
       "object_update_latency_ms": 28,
       "batch_500_objects_ms": 60
+    },
+    {
+      "date": "2026-02-21",
+      "timestamp": "2026-02-21T23:17:48.386Z",
+      "timestamp_ms": 1771715868386,
+      "cursor_latency_ms": 16,
+      "object_update_latency_ms": 25,
+      "batch_500_objects_ms": 60
+    },
+    {
+      "date": "2026-02-21",
+      "timestamp": "2026-02-21T23:20:24.913Z",
+      "timestamp_ms": 1771716024913,
+      "cursor_latency_ms": 27,
+      "object_update_latency_ms": 32,
+      "batch_500_objects_ms": 60
+    },
+    {
+      "date": "2026-02-21",
+      "timestamp": "2026-02-21T23:25:06.113Z",
+      "timestamp_ms": 1771716306113,
+      "cursor_latency_ms": 17,
+      "object_update_latency_ms": 24,
+      "batch_500_objects_ms": 60
     }
   ]
 }

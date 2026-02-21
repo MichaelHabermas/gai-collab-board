@@ -1,16 +1,16 @@
 {
-  "capturedAt": "2026-02-21T23:10:58.007Z",
-  "capturedAtMs": 1771715458007,
+  "capturedAt": "2026-02-21T23:25:06.113Z",
+  "capturedAtMs": 1771716306113,
   "source": "sync.latency.test.ts",
   "metrics": [
     {
       "name": "cursor_latency",
-      "value": 27,
+      "value": 17,
       "unit": "ms"
     },
     {
       "name": "object_update_latency",
-      "value": 28,
+      "value": 24,
       "unit": "ms"
     },
     {
@@ -20,7 +20,7 @@
     },
     {
       "name": "e2e_propagation",
-      "value": 28,
+      "value": 29,
       "unit": "ms"
     },
     {

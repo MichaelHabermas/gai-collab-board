@@ -384,11 +384,11 @@ Deferred to [IMPERATIVE-KONVA-MIGRATION-V5-FOLLOW-UP.md](IMPERATIVE-KONVA-MIGRAT
 
 ### 6.4 — Epic 0 Definition of Done
 
-- [ ] Constitutional amendments (Articles XX–XXV, XXVII) added to `docs/CONSTITUTION.md`
-- [ ] Performance baselines captured and saved to `docs/perf-baselines/pre-migration.json` (per follow-up doc: manual or script)
-- [ ] All 13 new E2E tests written and passing against current codebase
-- [ ] All existing E2E tests still pass
-- [ ] `bun run validate` passes
+- [x] Constitutional amendments (Articles XX–XXV, XXVII) added to `docs/CONSTITUTION.md`
+- [x] Performance baselines captured and saved to `docs/perf-baselines/pre-migration.json` (per follow-up doc: manual or script)
+- [x] All 13 new E2E tests written and passing against current codebase
+- [x] All existing E2E tests still pass
+- [x] `bun run validate` passes
 - [ ] **PR merged to `development`**
 
 *Check off each item above as completed.*
@@ -450,31 +450,31 @@ Only compound shapes (StickyNote: Group, Frame: Group) set `cacheable: true`. Si
 
 ### Sub-Tasks
 
-- [ ] 1. **`src/canvas/factories/types.ts`** (~40 LOC) — Interfaces above.
+- [x] 1. **`src/canvas/factories/types.ts`** (~40 LOC) — Interfaces above.
 
-- [ ] 2. **`createRectangle.ts`** (~50 LOC) — Simplest factory.
+- [x] 2. **`createRectangle.ts`** (~50 LOC) — Simplest factory.
   - `create()`: `new Konva.Rect({ id, x, y, width, height, fill, stroke, strokeWidth, opacity, rotation, cornerRadius, dash })`.
   - `update()`: Diff each attr by reference. Only call `node.setAttr()` for changed fields. Return `true` if visual prop changed.
   - Port of: `shapes/RectangleShape.tsx` (85 LOC).
 
-- [ ] 3. **`createCircle.ts`** (~50 LOC) — Center-based positioning.
+- [x] 3. **`createCircle.ts`** (~50 LOC) — Center-based positioning.
   - `create()`: `new Konva.Ellipse({ id, x: obj.x + obj.width/2, y: obj.y + obj.height/2, radiusX: obj.width/2, radiusY: obj.height/2, ... })`.
   - Port of: `shapes/CircleShape.tsx` (93 LOC).
 
-- [ ] 4. **`createLine.ts`** (~50 LOC) — Points-based positioning.
+- [x] 4. **`createLine.ts`** (~50 LOC) — Points-based positioning.
   - `create()`: `new Konva.Line({ id, x, y, points: obj.points, ... })`.
   - Port of: `shapes/LineShape.tsx` (84 LOC).
 
-- [ ] 5. **`createConnector.ts`** (~100 LOC) — 4 arrowhead modes.
+- [x] 5. **`createConnector.ts`** (~100 LOC) — 4 arrowhead modes.
   - Branch on `obj.arrowheads`: `'end'` → Arrow, `'start'` → reversed Arrow, `'both'` → Group with 2 Arrows, `'none'` → Line.
   - `update()`: Recalculate points when linked endpoints move. If arrowhead mode changes, destroy and recreate.
   - Port of: `shapes/Connector.tsx` (192 LOC).
 
-- [ ] 6. **`createTextElement.ts`** (~60 LOC) — Text node.
+- [x] 6. **`createTextElement.ts`** (~60 LOC) — Text node.
   - `create()`: `new Konva.Text({ id, x, y, width, text, fontSize, fontFamily, fill, wrap: 'word', ... })`.
   - Port of: `shapes/TextElement.tsx` (224 LOC) — most LOC is overlay lifecycle, handled by TextEditController.
 
-- [ ] 7. **`createStickyNote.ts`** (~120 LOC) — Compound shape with caching.
+- [x] 7. **`createStickyNote.ts`** (~120 LOC) — Compound shape with caching.
   - `create()`: `new Konva.Group({ id, x, y })` with:
     - `Konva.Rect` (bg): fill, shadow props from `shapeShadowProps.ts`
     - `Konva.Rect` (fold): corner fold decoration
@@ -483,7 +483,7 @@ Only compound shapes (StickyNote: Group, Frame: Group) set `cacheable: true`. Si
   - `cacheable: true`
   - Port of: `shapes/StickyNote.tsx` (328 LOC) — factory handles node creation only.
 
-- [ ] 8. **`createFrame.ts`** (~130 LOC) — Compound shape with child count.
+- [x] 8. **`createFrame.ts`** (~130 LOC) — Compound shape with child count.
   - `create()`: `new Konva.Group({ id, x, y })` with:
     - `Konva.Rect` (titleBar): gradient fill, title area
     - `Konva.Rect` (body): frame body, lighter fill
@@ -493,7 +493,7 @@ Only compound shapes (StickyNote: Group, Frame: Group) set `cacheable: true`. Si
   - Child count text updated by `KonvaNodeManager` (reads `frameChildrenIndex` after store change), not the factory.
   - Port of: `shapes/Frame.tsx` (389 LOC).
 
-- [ ] 9. **`src/canvas/factories/index.ts`** (~30 LOC) — Registry.
+- [x] 9. **`src/canvas/factories/index.ts`** (~30 LOC) — Registry.
 
    ```typescript
    const FACTORY_REGISTRY = new Map<ShapeType, IShapeFactoryEntry>([
@@ -508,7 +508,7 @@ Only compound shapes (StickyNote: Group, Frame: Group) set `cacheable: true`. Si
    export function getFactory(type: ShapeType): IShapeFactoryEntry { ... }
    ```
 
-- [ ] 10. **Unit tests** (~200 LOC):
+- [x] 10. **Unit tests** (~200 LOC):
   - Each factory: `create()` returns correct Konva node class and structure
   - Each factory: `update()` patches only changed attrs (spy on `node.setAttr`)
   - Each factory: `update()` returns `true` for visual changes, `false` for position-only
@@ -518,10 +518,10 @@ Only compound shapes (StickyNote: Group, Frame: Group) set `cacheable: true`. Si
 
 ### Epic 1 Definition of Done
 
-- [ ] All 7 factory files + types + registry created and passing unit tests
-- [ ] Registry returns correct factory for each shape type
-- [ ] `bun run validate` passes
-- [ ] No existing files modified
+- [x] All 7 factory files + types + registry created and passing unit tests
+- [x] Registry returns correct factory for each shape type
+- [x] `bun run validate` passes
+- [x] No existing files modified
 - [ ] PR merged to `development` before Epic 2 begins
 
 ---
