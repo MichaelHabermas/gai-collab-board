@@ -1,4 +1,5 @@
 import type { ConnectorAnchor, ICreateObjectParams } from '@/types';
+import { DEFAULT_FONT_COLOR, DEFAULT_SHAPE_STROKE_WIDTH } from '../defaults';
 import {
   resolveStickyColor,
   findOpenSpace,
@@ -120,7 +121,7 @@ function buildNodeParams(
     height: dims.height,
     fill: color,
     text: node.label,
-    textFill: '#1e293b',
+    textFill: DEFAULT_FONT_COLOR,
     fontSize: 14,
     createdBy,
   };
@@ -146,7 +147,7 @@ function buildEdgeConnector(
     height: 0,
     fill: 'transparent',
     stroke: '#64748b',
-    strokeWidth: 2,
+    strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH,
     fromObjectId: `__node_${edge.from}__`,
     toObjectId: `__node_${edge.to}__`,
     fromAnchor: anchors.from,

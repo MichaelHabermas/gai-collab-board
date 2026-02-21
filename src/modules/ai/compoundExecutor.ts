@@ -17,6 +17,7 @@ import { computeQuadrantLayout } from './layouts/quadrantLayout';
 import { computeColumnLayout } from './layouts/columnLayout';
 import { computeFlowchartLayout } from './layouts/flowchartLayout';
 import { computeMindMapLayout } from './layouts/mindmapLayout';
+import { DEFAULT_SHAPE_STROKE_WIDTH } from './defaults';
 import {
   BATCH_CAP,
   isArrowheadMode,
@@ -192,7 +193,7 @@ export const createCompoundExecutor = (ctx: ICompoundExecutorContext) => {
       height: Math.abs(toPos.y - fromPos.y),
       fill: '#64748b',
       stroke: '#64748b',
-      strokeWidth: 2,
+      strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH,
       points: [0, 0, toPos.x - fromPos.x, toPos.y - fromPos.y],
       fromObjectId: fromObj.id,
       toObjectId: toObj.id,
