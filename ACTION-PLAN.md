@@ -10,12 +10,14 @@
 ## How to Use This Plan
 
 Each fix is broken into:
+
 - **Epic** — the theme (bug fix, performance, testing, deliverable)
 - **Feature/Fix branch** — one branch per logical unit of work, branched from `development`
 - **Commits** — granular, one logical change per commit
 - **Subtasks** — concrete steps inside each commit, actionable by any developer or LLM agent
 
 **Workflow per branch:**
+
 ```
 git checkout development && git pull
 git checkout -b fix/<branch-name>
@@ -47,6 +49,7 @@ git branch -d fix/<branch-name>
 **File:** `src/components/canvas/shapes/TextElement.tsx`
 
 **Subtasks:**
+
 1. Read the component and locate the `useEffect` or event handler that creates the textarea overlay and attaches `keydown`/`blur`/`input` listeners (~line 140)
 2. Identify where `removeTextarea()` is called — confirm it only runs on blur/escape, not on unmount
 3. Add a `useEffect` cleanup return that calls `removeTextarea()` if the textarea ref is still mounted
@@ -58,6 +61,7 @@ git branch -d fix/<branch-name>
 **File:** `src/components/canvas/shapes/StickyNote.tsx`
 
 **Subtasks:**
+
 1. Read the component and locate the text-editing listener attachment (~line 208)
 2. Apply the same unmount-safe cleanup pattern from Commit 1
 3. Run `bun run test:run -- StickyNote` to confirm no regressions
@@ -67,6 +71,7 @@ git branch -d fix/<branch-name>
 **File:** `src/components/canvas/shapes/Frame.tsx`
 
 **Subtasks:**
+
 1. Read the component and locate the title-editing listener attachment (~line 260)
 2. Apply the same unmount-safe cleanup pattern from Commits 1-2
 3. Run `bun run test:run -- Frame` to confirm no regressions
@@ -74,6 +79,7 @@ git branch -d fix/<branch-name>
 #### Commit 4: Run full validate
 
 **Subtasks:**
+
 1. Run `bun run validate`
 2. Fix any lint or type errors introduced
 3. Confirm all existing tests pass
@@ -91,6 +97,7 @@ git branch -d fix/<branch-name>
 **File:** `src/modules/ai/aiService.ts`
 
 **Subtasks:**
+
 1. Read `aiService.ts` and locate the `JSON.parse(toolCall.function.arguments ?? '{}')` call (~line 178)
 2. Wrap it in a try/catch block
 3. In the catch: log the raw string for debugging, return an error result like `{ error: 'Failed to parse AI tool arguments. Please try rephrasing your command.' }`
@@ -102,6 +109,7 @@ git branch -d fix/<branch-name>
 **File:** `tests/unit/aiService.test.ts` (or appropriate test file)
 
 **Subtasks:**
+
 1. Add a test case: when `toolCall.function.arguments` is `'{invalid json'`, the service returns a user-friendly error instead of throwing
 2. Add a test case: when `toolCall.function.arguments` is `undefined`, defaults to `'{}'` and proceeds
 3. Run the test to confirm both pass
@@ -119,8 +127,10 @@ git branch -d fix/<branch-name>
 **File:** `src/lib/firebase.ts`
 
 **Subtasks:**
+
 1. Read `firebase.ts` and locate where `import.meta.env.VITE_FIREBASE_*` values are read (~lines 22-28)
 2. Before the Firebase `initializeApp()` call, add a validation function:
+
    ```typescript
    function validateFirebaseEnv(): Record<string, string> {
      const required = [
@@ -138,6 +148,7 @@ git branch -d fix/<branch-name>
      return Object.fromEntries(required.map((k) => [k, import.meta.env[k]]));
    }
    ```
+
 3. Call it before `initializeApp()` and use the returned values
 4. Run `bun run validate`
 
@@ -160,19 +171,24 @@ git branch -d fix/<branch-name>
 **File:** `src/types/guards.ts` (new file)
 
 **Subtasks:**
+
 1. Create `src/types/guards.ts`
 2. Add type guard for board objects:
+
    ```typescript
    function isBoardObject(value: unknown): value is IBoardObject {
      return typeof value === 'object' && value !== null && 'id' in value && 'type' in value;
    }
    ```
+
 3. Add type guard for Konva node types (Group, Rect, Ellipse) using Konva's `getClassName()`:
+
    ```typescript
    function isKonvaGroup(node: Konva.Node): node is Konva.Group {
      return node.getClassName() === 'Group';
    }
    ```
+
 4. Export all guards
 
 #### Commit 2: Replace casts in TransformHandler.tsx
@@ -180,6 +196,7 @@ git branch -d fix/<branch-name>
 **File:** `src/components/canvas/TransformHandler.tsx`
 
 **Subtasks:**
+
 1. Read the file and locate the 4 `as Konva.Group`, `as Konva.Rect`, `as Konva.Ellipse` casts (~lines 68, 75, 98, 112)
 2. Replace each with the corresponding type guard + early return or conditional
 3. Run `bun run test:run -- TransformHandler` (or related tests)
@@ -189,6 +206,7 @@ git branch -d fix/<branch-name>
 **File:** `src/modules/sync/boardService.ts`
 
 **Subtasks:**
+
 1. Read the file and locate the 4 `as IBoard` casts (~lines 61, 71, 93, 110)
 2. Replace with `isBoardObject()` or a `isBoard()` type guard
 3. Handle the case where the data doesn't match (return null or throw descriptive error)
@@ -199,6 +217,7 @@ git branch -d fix/<branch-name>
 **File:** `src/modules/ai/aiService.ts`
 
 **Subtasks:**
+
 1. Locate the 3 casts: `functionName as IToolCall['name']` (~line 182), `(error as Error).message` (~line 195), `(lastUserContent.content as string)` (~line 230)
 2. For error: use `error instanceof Error ? error.message : String(error)`
 3. For functionName: validate it exists in the tool registry before using
@@ -210,6 +229,7 @@ git branch -d fix/<branch-name>
 **File:** `src/components/ai/AIChatPanel.tsx`
 
 **Subtasks:**
+
 1. Locate `window as unknown as {...}` (~line 98)
 2. Replace with a proper interface extension or a type guard
 3. Run `bun run test:run -- AIChatPanel`
@@ -219,6 +239,7 @@ git branch -d fix/<branch-name>
 **File:** `src/hooks/useObjects.ts`
 
 **Subtasks:**
+
 1. Locate the 3 casts: `as IBoardObject[]` (~lines 163, 515, 572)
 2. For `.filter(Boolean) as IBoardObject[]` — use a type-narrowing filter: `.filter((obj): obj is IBoardObject => Boolean(obj))`
 3. For `Object.values() as IBoardObject[]` — add proper generic typing to the source record
@@ -227,6 +248,7 @@ git branch -d fix/<branch-name>
 #### Commit 7: Run full validate
 
 **Subtasks:**
+
 1. `bun run validate`
 2. Fix any type errors or lint issues introduced
 3. Confirm all tests pass
@@ -244,8 +266,10 @@ git branch -d fix/<branch-name>
 **File:** `src/hooks/useObjects.ts`
 
 **Subtasks:**
+
 1. Locate `JSON.stringify(a.points) === JSON.stringify(b.points)` (~line 41)
 2. Replace with a shallow array comparison:
+
    ```typescript
    function shallowArrayEqual(a?: number[], b?: number[]): boolean {
      if (a === b) return true;
@@ -256,6 +280,7 @@ git branch -d fix/<branch-name>
      return true;
    }
    ```
+
 3. Use this in the comparison function
 4. Run `bun run test:run -- useObjects`
 
@@ -264,6 +289,7 @@ git branch -d fix/<branch-name>
 **File:** `src/hooks/useAI.ts`
 
 **Subtasks:**
+
 1. Locate the effect that runs on every `objects` change (~lines 94-99)
 2. Add a debounce (300-500ms) so the AI context isn't recomputed on every keystroke/drag
 3. Use a ref to store the timeout ID and clear it on cleanup
@@ -282,6 +308,7 @@ git branch -d fix/<branch-name>
 **File:** `src/hooks/useBoardSubscription.ts`
 
 **Subtasks:**
+
 1. Read the hook
 2. Add an `onError` callback to the Firestore `onSnapshot` call
 3. Log the error and set an error state that the consuming component can display
@@ -292,6 +319,7 @@ git branch -d fix/<branch-name>
 **File:** `src/hooks/useComments.ts`
 
 **Subtasks:**
+
 1. Same pattern as Commit 1 — add `onError` to the snapshot listener
 2. Surface errors via a returned error state
 3. Run related tests
@@ -315,6 +343,7 @@ git branch -d fix/<branch-name>
 **File:** `tests/unit/toolExecutor.test.ts`
 
 **Subtasks:**
+
 1. Run `bun run test:coverage` and identify the lowest branch-coverage files
 2. For `toolExecutor.ts`: add tests for error paths (invalid tool name, missing parameters, null object ID)
 3. Add tests for at least 5 untested tool execution branches
@@ -325,6 +354,7 @@ git branch -d fix/<branch-name>
 **File:** `tests/unit/boardService.test.ts`
 
 **Subtasks:**
+
 1. Add tests for: permission denied paths, missing board, invalid role, member not found
 2. Add tests for edge cases: empty board name, duplicate member add
 3. Re-run coverage
@@ -334,6 +364,7 @@ git branch -d fix/<branch-name>
 **File:** `tests/unit/useObjectDragHandlers.test.ts`
 
 **Subtasks:**
+
 1. Add tests for: drag cancelled, drop outside bounds, multi-select drag, alignment snap thresholds
 2. Add tests for frame containment edge cases
 3. Re-run coverage
@@ -343,6 +374,7 @@ git branch -d fix/<branch-name>
 **File:** `tests/unit/BoardCanvas.*.test.tsx`
 
 **Subtasks:**
+
 1. Add tests for: tool switching, layer visibility toggling, empty board rendering
 2. Add tests for: guest vs. authenticated user rendering differences
 3. Re-run coverage
@@ -350,6 +382,7 @@ git branch -d fix/<branch-name>
 #### Commit 5: Verify 80% threshold passes
 
 **Subtasks:**
+
 1. Run `bun run test:coverage`
 2. Confirm all 4 metrics (statements, branches, functions, lines) are at or above 80%
 3. If branches still below 80%, identify the next lowest-coverage file and add targeted tests
@@ -366,6 +399,7 @@ git branch -d fix/<branch-name>
 #### Commit 1: Profile and identify FPS bottlenecks
 
 **Subtasks:**
+
 1. Open the deployed app in Chrome DevTools Performance tab
 2. Record a 10-second session of: pan, zoom, drag multiple objects, rotate
 3. Identify the top 3 functions by self-time
@@ -376,6 +410,7 @@ git branch -d fix/<branch-name>
 **File:** `src/hooks/useObjectDragHandlers.ts` (or relevant alignment file)
 
 **Subtasks:**
+
 1. Check if alignment guides are computed for ALL objects on every drag frame
 2. If so: limit to visible objects only (use spatial index), or throttle to every 2nd frame
 3. Measure FPS before and after
@@ -385,6 +420,7 @@ git branch -d fix/<branch-name>
 **File:** `src/components/canvas/BoardCanvas.tsx`
 
 **Subtasks:**
+
 1. Check if the overlay layer (cursors, guides) is causing full redraws
 2. If so: use `layer.batchDraw()` instead of React re-renders for cursor updates
 3. Measure FPS before and after
@@ -394,6 +430,7 @@ git branch -d fix/<branch-name>
 **File:** `README.md`
 
 **Subtasks:**
+
 1. Run the benchmark E2E test: `bun run test:e2e -- benchmark`
 2. Update the performance section with the new FPS number
 3. If FPS is still below 60, document the bottleneck and what was tried
@@ -411,7 +448,8 @@ git branch -d fix/<branch-name>
 **No branch needed — this is a recording task.**  
 **Time estimate:** 1-2 hours (including script writing and 2-3 takes)
 
-#### Subtasks:
+#### Subtasks
+
 1. **Write a script** (3-5 minutes, timed):
    - 0:00-0:30 — Introduction: what is CollabBoard, tech stack (React, Konva, Firebase, Groq)
    - 0:30-1:30 — Core features: create sticky notes, shapes, connectors, frames; transform, select, group
@@ -432,7 +470,8 @@ git branch -d fix/<branch-name>
 **No branch needed.**  
 **Time estimate:** 15 minutes
 
-#### Subtasks:
+#### Subtasks
+
 1. Take 2-3 screenshots: landing page, board with objects, AI command in action
 2. Write a post for X or LinkedIn:
    - What you built (CollabBoard — real-time whiteboard with AI)
@@ -453,6 +492,7 @@ git branch -d fix/<branch-name>
 #### Commit 1: Fix post-rotate rendering
 
 **Subtasks:**
+
 1. Identify the rotate rendering bug mentioned in the demo video
 2. Check `TransformHandler.tsx` for the rotation end handler
 3. Ensure the shape's position/bounds are recalculated after rotation ends
@@ -461,6 +501,7 @@ git branch -d fix/<branch-name>
 #### Commit 2: Improve connector drawing UX (or document limitation)
 
 **Subtasks:**
+
 1. If fixable quickly: allow free-draw connectors (click empty canvas → drag to target)
 2. If not fixable in time: add a tooltip or status bar message: "Click a source node, then click a target node to create a connector"
 3. Either way, document the current behavior in README under "Known Limitations"
@@ -482,6 +523,7 @@ git branch -d fix/<branch-name>
 **File:** `tests/e2e/network-resilience.spec.ts`
 
 **Subtasks:**
+
 1. Create a Playwright test that: creates objects → goes offline (via `context.setOffline(true)`) → creates more objects → comes back online → verifies all objects synced
 2. Run locally to confirm
 
@@ -496,6 +538,7 @@ git branch -d fix/<branch-name>
 **File:** `src/components/canvas/CanvasToolbarWrapper.tsx` (or Toolbar component)
 
 **Subtasks:**
+
 1. Add `aria-label` to each tool button (e.g., "Sticky Note tool", "Rectangle tool")
 2. Add `role="toolbar"` to the toolbar container
 
@@ -510,6 +553,7 @@ git branch -d fix/<branch-name>
 **File:** `src/lib/writeQueue.ts`
 
 **Subtasks:**
+
 1. After 3 failed retries for the same object, emit an error event or set error state
 2. Display a toast notification: "Failed to save changes. Check your connection."
 
@@ -557,6 +601,7 @@ bun run test:ai-connection          # AI proxy responds
 ```
 
 Then manually verify:
+
 - [ ] Deployed app loads at gai-collab-board.onrender.com
 - [ ] Create board, add objects, verify sync between two browser tabs
 - [ ] Issue AI command ("Create a SWOT analysis"), confirm it works
