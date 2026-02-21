@@ -138,6 +138,41 @@ This PRD outlines the requirements and implementation plan for enhancing an exis
 5. Error handling: Validate commands (e.g., id exists for UPDATE). Log failures without crashing app.
 6. Tests: Mock AI responses, verify commands update state and Firebase. End-to-end: Simulate "add rect" command.
 
+### Epic 4: Test Completion, Listener Optimization & Performance Hardening
+
+**Goal**: Fill remaining test gaps, optimize Firestore listeners for large boards, harden performance assertions against the plan's success metrics, and eliminate code smells (`as` casts) in persistence code.
+
+**User Stories**:
+
+- As a developer, I want dedicated unit tests for every layout engine so regressions are caught early.
+- As a user with a large board (1000+ elements), I want paginated initial loads so the app starts quickly.
+- As a developer, I want hard performance assertions that enforce the plan's success metrics in CI.
+
+**Features**:
+
+- Layout engine unit tests for all 5 layout modules.
+- Paginated fetch (`fetchObjectsPaginated`) and delta subscription (`subscribeToDeltaUpdates`) for large board optimization.
+- Type guards replacing `as` casts in `objectService.ts`.
+- Hard performance assertions for <500ms sync and 1000-element batch creation.
+
+**Feature Branches and Commits**:
+
+- Branch: `feat/epic4-hardening`
+  - Commit: `feat: add layout engine unit tests (layoutUtils, quadrant, column, flowchart, mindmap)`
+  - Commit: `feat: add paginated fetch and delta subscription for large boards`
+  - Commit: `refactor: replace as-casts with type guards in objectService`
+  - Commit: `feat: add hard performance assertions for plan success metrics`
+  - Commit: `docs: add Epic 4 to STATE-IMPROVEMENT-PLAN, update TOOL_EXPANSION_PLAN status`
+
+**Sub-Tasks**:
+
+1. Write unit tests for `layoutUtils.ts`, `quadrantLayout.ts`, `columnLayout.ts`, `flowchartLayout.ts`, `mindmapLayout.ts` — 63 tests covering geometry, bounding boxes, edge cases.
+2. Add `isBoardObject` type guard and `isObjectChangeType` guard to `objectService.ts`, replacing all `as` casts.
+3. Add `fetchObjectsPaginated(boardId, batchSize)` for batched initial load using `limit()` + `startAfter()`.
+4. Add `subscribeToDeltaUpdates(boardId, afterTimestamp, callback)` for delta reconnection using `where('updatedAt', '>', timestamp)`.
+5. Add hard performance assertions: <500ms end-to-end propagation, 1000-element batch under 3s.
+6. Run full validation (`bun run validate`), typecheck, build.
+
 ## Implementation Roadmap
 
 1. **Setup**: Merge branches sequentially: state-orchestration → firebase-persistence → ai-crud-bridge.

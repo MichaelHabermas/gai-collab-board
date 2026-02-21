@@ -1,6 +1,6 @@
 # AI Tool Expansion Plan — CollabBoard
 
-> **Status:** Draft — awaiting approval
+> **Status:** Implemented
 > **Date:** 2026-02-20
 > **Scope:** Expand the AI tool system from 27 atomic tools to ~39 tools (12 new), including 4 compound template tools that reduce complex operations from 7-25 LLM round-trips to 1.
 

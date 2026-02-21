@@ -43,9 +43,13 @@ vi.mock('firebase/firestore', () => ({
     return mockFirestoreUpdateDoc(reference, data);
   },
   deleteDoc: vi.fn(),
+  getDocs: vi.fn(() => Promise.resolve({ docs: [] })),
   onSnapshot: vi.fn(() => vi.fn()),
   query: vi.fn((ref) => ref),
   orderBy: vi.fn(),
+  where: vi.fn(),
+  limit: vi.fn(),
+  startAfter: vi.fn(),
   writeBatch: vi.fn(() => ({
     set: (reference: unknown, data: unknown) => mockBatchSet(reference, data),
     update: vi.fn(),
@@ -125,6 +129,44 @@ describe('Sync Benchmark Integration Tests', () => {
       expect(mockBatchSet).toHaveBeenCalledTimes(500);
       expect(mockBatchCommit).toHaveBeenCalledTimes(1);
       assertLatencyLessThan(durationMs, BATCH_DURATION_TARGET_MS);
+    }
+  );
+
+  it('enforces <500ms end-to-end propagation (STATE-IMPROVEMENT-PLAN success metric)', async () => {
+    const { updateObject } = await import('@/modules/sync/objectService');
+
+    const start = Date.now();
+    await updateObject('benchmark-board', 'prop-test', { x: 100, y: 200 });
+    const durationMs = Date.now() - start;
+    collectedMetrics.push({ name: 'e2e_propagation', value: durationMs, unit: 'ms' });
+
+    expect(durationMs).toBeLessThan(500);
+  });
+
+  it(
+    'enforces 1000-element batch creation under 3s (STATE-IMPROVEMENT-PLAN success metric)',
+    { timeout: 30_000 },
+    async () => {
+      const { createObjectsBatch } = await import('@/modules/sync/objectService');
+
+      const objects: ICreateObjectParams[] = Array.from({ length: 1000 }, (_, index) => ({
+        type: 'sticky',
+        x: (index % 40) * 110,
+        y: Math.floor(index / 40) * 80,
+        width: 100,
+        height: 70,
+        fill: '#fef08a',
+        text: `Element ${index + 1}`,
+        createdBy: 'benchmark-user',
+      }));
+
+      const start = Date.now();
+      const created = await createObjectsBatch('benchmark-board', objects);
+      const durationMs = Date.now() - start;
+      collectedMetrics.push({ name: 'batch_1000_objects', value: durationMs, unit: 'ms' });
+
+      expect(created).toHaveLength(1000);
+      expect(durationMs).toBeLessThan(3000);
     }
   );
 

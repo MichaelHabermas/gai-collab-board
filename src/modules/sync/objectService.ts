@@ -1,22 +1,45 @@
 import {
   collection,
-  type DocumentChange,
+  type DocumentData,
   doc,
   setDoc,
   updateDoc,
   deleteDoc,
   onSnapshot,
+  getDocs,
   Timestamp,
   Unsubscribe,
   query,
   orderBy,
+  where,
+  limit,
+  startAfter,
   writeBatch,
 } from 'firebase/firestore';
 import { firestore } from '@/lib/firebase';
 import type { IBoardObject, ICreateObjectParams, IUpdateObjectParams } from '@/types';
 
 const OBJECTS_SUBCOLLECTION = 'objects';
+const LARGE_BOARD_BATCH_SIZE = 500;
+
 export type ObjectChangeType = 'added' | 'modified' | 'removed';
+
+function isBoardObject(value: DocumentData): value is IBoardObject {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof value.id === 'string' &&
+    typeof value.type === 'string' &&
+    typeof value.x === 'number' &&
+    typeof value.y === 'number'
+  );
+}
+
+const VALID_CHANGE_TYPES: ReadonlySet<string> = new Set(['added', 'modified', 'removed']);
+
+function isObjectChangeType(value: string): value is ObjectChangeType {
+  return VALID_CHANGE_TYPES.has(value);
+}
 
 export interface IObjectChange {
   type: ObjectChangeType;
@@ -295,32 +318,125 @@ export const subscribeToObjectsWithChanges = (
   let isFirstSnapshot = true;
 
   return onSnapshot(objectsQuery, (snapshot) => {
-    const objects: IBoardObject[] =
-      'docs' in snapshot && Array.isArray(snapshot.docs)
-        ? snapshot.docs.map((snapshotDoc) => snapshotDoc.data() as IBoardObject)
-        : (() => {
-            const nextObjects: IBoardObject[] = [];
-            snapshot.forEach((snapshotDoc) => {
-              nextObjects.push(snapshotDoc.data() as IBoardObject);
-            });
-            return nextObjects;
-          })();
+    const objects: IBoardObject[] = [];
 
-    const changes: IObjectChange[] =
-      typeof snapshot.docChanges === 'function'
-        ? snapshot.docChanges().map(
-            (change: DocumentChange): IObjectChange => ({
-              type: change.type as ObjectChangeType,
-              object: change.doc.data() as IBoardObject,
-            })
-          )
-        : [];
+    if ('docs' in snapshot && Array.isArray(snapshot.docs)) {
+      for (const snapshotDoc of snapshot.docs) {
+        const data = snapshotDoc.data();
+        if (isBoardObject(data)) {
+          objects.push(data);
+        }
+      }
+    } else {
+      snapshot.forEach((snapshotDoc) => {
+        const data = snapshotDoc.data();
+        if (isBoardObject(data)) {
+          objects.push(data);
+        }
+      });
+    }
+
+    const changes: IObjectChange[] = [];
+
+    if (typeof snapshot.docChanges === 'function') {
+      for (const change of snapshot.docChanges()) {
+        const data = change.doc.data();
+        if (isBoardObject(data) && isObjectChangeType(change.type)) {
+          changes.push({ type: change.type, object: data });
+        }
+      }
+    }
 
     callback({
       objects,
       changes,
       isInitialSnapshot: isFirstSnapshot,
     });
+    isFirstSnapshot = false;
+  });
+};
+
+// ============================================================================
+// Paginated Fetch (large boards)
+// ============================================================================
+
+/**
+ * Fetches objects in batches for large boards.
+ * Use when the initial load should avoid downloading all documents at once.
+ */
+export const fetchObjectsPaginated = async (
+  boardId: string,
+  batchSize = LARGE_BOARD_BATCH_SIZE
+): Promise<IBoardObject[]> => {
+  const objectsRef = getObjectsCollection(boardId);
+  const allObjects: IBoardObject[] = [];
+  let cursor: DocumentData | undefined;
+
+  for (;;) {
+    const batchQuery = cursor
+      ? query(objectsRef, orderBy('createdAt', 'asc'), startAfter(cursor), limit(batchSize))
+      : query(objectsRef, orderBy('createdAt', 'asc'), limit(batchSize));
+
+    const snapshot = await getDocs(batchQuery);
+
+    for (const snapshotDoc of snapshot.docs) {
+      const data = snapshotDoc.data();
+      if (isBoardObject(data)) {
+        allObjects.push(data);
+      }
+    }
+
+    if (snapshot.docs.length < batchSize) {
+      break;
+    }
+
+    cursor = snapshot.docs[snapshot.docs.length - 1];
+  }
+
+  return allObjects;
+};
+
+/**
+ * Subscribes to objects updated after a given timestamp.
+ * Use for delta reconnection — merge results with cached state.
+ */
+export const subscribeToDeltaUpdates = (
+  boardId: string,
+  afterTimestamp: Timestamp,
+  callback: (update: IObjectsSnapshotUpdate) => void
+): Unsubscribe => {
+  const objectsRef = getObjectsCollection(boardId);
+  const deltaQuery = query(
+    objectsRef,
+    where('updatedAt', '>', afterTimestamp),
+    orderBy('updatedAt', 'asc')
+  );
+  let isFirstSnapshot = true;
+
+  return onSnapshot(deltaQuery, (snapshot) => {
+    const objects: IBoardObject[] = [];
+
+    if ('docs' in snapshot && Array.isArray(snapshot.docs)) {
+      for (const snapshotDoc of snapshot.docs) {
+        const data = snapshotDoc.data();
+        if (isBoardObject(data)) {
+          objects.push(data);
+        }
+      }
+    }
+
+    const changes: IObjectChange[] = [];
+
+    if (typeof snapshot.docChanges === 'function') {
+      for (const change of snapshot.docChanges()) {
+        const data = change.doc.data();
+        if (isBoardObject(data) && isObjectChangeType(change.type)) {
+          changes.push({ type: change.type, object: data });
+        }
+      }
+    }
+
+    callback({ objects, changes, isInitialSnapshot: isFirstSnapshot });
     isFirstSnapshot = false;
   });
 };
@@ -336,5 +452,6 @@ export const subscribeToObjectsWithChanges = (
 export const mergeObjectUpdates = (local: IBoardObject, remote: IBoardObject): IBoardObject => {
   const localTime = local.updatedAt?.toMillis?.() || 0;
   const remoteTime = remote.updatedAt?.toMillis?.() || 0;
+
   return remoteTime > localTime ? remote : local;
 };
