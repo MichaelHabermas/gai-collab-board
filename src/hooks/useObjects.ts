@@ -17,6 +17,93 @@ import {
   flush as flushWriteQueue,
 } from '@/lib/writeQueue';
 
+// ============================================================================
+// Pure functions — extracted for testability (S4)
+// ============================================================================
+
+/** Returns true when two objects have identical visual fields. */
+export function isObjectDataUnchanged(a: IBoardObject, b: IBoardObject): boolean {
+  return (
+    a.x === b.x &&
+    a.y === b.y &&
+    a.width === b.width &&
+    a.height === b.height &&
+    a.rotation === b.rotation &&
+    a.text === b.text &&
+    a.fill === b.fill &&
+    a.stroke === b.stroke &&
+    a.strokeWidth === b.strokeWidth &&
+    a.opacity === b.opacity &&
+    a.fontSize === b.fontSize &&
+    a.parentFrameId === b.parentFrameId &&
+    // points is an array — compare by value, not reference
+    JSON.stringify(a.points) === JSON.stringify(b.points)
+  );
+}
+
+interface IApplyIncrementalResult {
+  nextById: Map<string, IBoardObject>;
+  didChange: boolean;
+}
+
+/**
+ * Apply incremental Firestore changes to the working object map.
+ * Uses copy-on-write: defers O(n) map clone until first mutation detected.
+ * Returns the (possibly new) map and a flag indicating whether anything changed.
+ *
+ * Complexity: O(k) when nothing changed, O(n + k) when mutations occur
+ * (one map clone + one change iteration). Eliminates the O(n*k) `.some()`
+ * scan from the previous implementation.
+ */
+export function applyIncrementalChanges(
+  objectsById: Map<string, IBoardObject>,
+  changes: IObjectChange[],
+  comparator: (a: IBoardObject, b: IBoardObject) => boolean
+): IApplyIncrementalResult {
+  if (changes.length === 0) {
+    return { nextById: objectsById, didChange: false };
+  }
+
+  let didMutate = false;
+  let workingById: Map<string, IBoardObject> | null = null;
+
+  for (const change of changes) {
+    const remote = change.object;
+    const existing = objectsById.get(remote.id);
+
+    if (change.type === 'removed') {
+      if (existing) {
+        if (!workingById) workingById = new Map(objectsById);
+
+        workingById.delete(remote.id);
+        didMutate = true;
+      }
+
+      continue;
+    }
+
+    // Use visual field comparison: only mutate if the remote object differs
+    // from what we already have. Suppresses spurious re-renders from
+    // Firestore echoes with new server timestamps but identical data.
+    if (!existing || !comparator(existing, remote)) {
+      if (!workingById) workingById = new Map(objectsById);
+
+      workingById.set(remote.id, remote);
+      didMutate = true;
+    }
+  }
+
+  if (!didMutate) {
+    return { nextById: objectsById, didChange: false };
+  }
+
+  return { nextById: workingById!, didChange: true };
+}
+
+// ============================================================================
+// Hook
+// ============================================================================
+
 interface IUseObjectsParams {
   boardId: string | null;
   user: User | null;
@@ -107,115 +194,53 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
     }
   }, []);
 
-  /** Returns true when two objects have identical visual fields. */
-  const isObjectDataUnchanged = useCallback((a: IBoardObject, b: IBoardObject): boolean => {
-    return (
-      a.x === b.x &&
-      a.y === b.y &&
-      a.width === b.width &&
-      a.height === b.height &&
-      a.rotation === b.rotation &&
-      a.text === b.text &&
-      a.fill === b.fill &&
-      a.stroke === b.stroke &&
-      a.strokeWidth === b.strokeWidth &&
-      a.opacity === b.opacity &&
-      a.fontSize === b.fontSize &&
-      a.parentFrameId === b.parentFrameId &&
-      // points is an array — compare by value, not reference
-      JSON.stringify(a.points) === JSON.stringify(b.points)
-    );
-  }, []);
-
-  const applyIncrementalChanges = useCallback(
-    (prevObjects: IBoardObject[], changes: IObjectChange[]): IBoardObject[] => {
-      if (changes.length === 0) {
-        return prevObjects;
-      }
-
-      const workingById = new Map(objectsByIdRef.current);
-      let didMutate = false;
-
-      for (const change of changes) {
-        const remote = change.object;
-        const existing = workingById.get(remote.id);
-
-        if (change.type === 'removed') {
-          if (existing) {
-            workingById.delete(remote.id);
-            didMutate = true;
-          }
-
-          continue;
-        }
-
-        // Use visual field comparison: only mutate if the remote object differs
-        // from what we already have. This replaces the old timestamp comparison +
-        // mergeObjectUpdates approach which always triggered re-renders because
-        // Firestore echoes have new server timestamps even when data is identical.
-        if (!existing || !isObjectDataUnchanged(existing, remote)) {
-          workingById.set(remote.id, remote);
-          didMutate = true;
-        }
-      }
-
-      if (!didMutate) {
-        return prevObjects;
-      }
-
-      const nextObjects = prevObjects
-        .map((object) => workingById.get(object.id))
-        .filter((object): object is IBoardObject => object !== undefined);
-
-      for (const change of changes) {
-        if (change.type !== 'added') {
-          continue;
-        }
-
-        const alreadyInOrder = nextObjects.some((object) => object.id === change.object.id);
-        if (!alreadyInOrder) {
-          nextObjects.push(change.object);
-        }
-      }
-
-      objectsByIdRef.current = new Map(nextObjects.map((object) => [object.id, object]));
-
-      return nextObjects;
-    },
-    [isObjectDataUnchanged]
-  );
-
   const applySnapshotUpdate = useCallback(
     (prevObjects: IBoardObject[], update: IObjectsSnapshotUpdate): IBoardObject[] => {
       if (update.isInitialSnapshot) {
         const initialObjects = update.objects.map((remoteObject) => {
           const pendingLocalObject = pendingUpdatesRef.current.get(remoteObject.id);
+
           return pendingLocalObject
             ? mergeObjectUpdates(pendingLocalObject, remoteObject)
             : remoteObject;
         });
         objectsByIdRef.current = new Map(initialObjects.map((object) => [object.id, object]));
+
         return initialObjects;
       }
 
-      const nextObjects = applyIncrementalChanges(prevObjects, update.changes);
-      // Fallback: if incremental changes didn't mutate the array but the server
-      // snapshot has a different count, a change was missed (e.g. a deletion not
-      // captured in the change stream). Do a full refresh from the snapshot.
-      if (nextObjects === prevObjects && update.objects.length !== prevObjects.length) {
-        const refreshedObjects = update.objects.map((remoteObject) => {
-          const pendingLocalObject = pendingUpdatesRef.current.get(remoteObject.id);
-          return pendingLocalObject
-            ? mergeObjectUpdates(pendingLocalObject, remoteObject)
-            : remoteObject;
-        });
-        objectsByIdRef.current = new Map(refreshedObjects.map((object) => [object.id, object]));
-        return refreshedObjects;
+      // S4: use extracted pure function with copy-on-write map
+      const { nextById, didChange } = applyIncrementalChanges(
+        objectsByIdRef.current,
+        update.changes,
+        isObjectDataUnchanged
+      );
+
+      if (!didChange) {
+        // Fallback: if incremental changes didn't mutate the map but the server
+        // snapshot has a different count, a change was missed (e.g. a deletion not
+        // captured in the change stream). Do a full refresh from the snapshot.
+        if (update.objects.length !== prevObjects.length) {
+          const refreshedObjects = update.objects.map((remoteObject) => {
+            const pendingLocalObject = pendingUpdatesRef.current.get(remoteObject.id);
+
+            return pendingLocalObject
+              ? mergeObjectUpdates(pendingLocalObject, remoteObject)
+              : remoteObject;
+          });
+          objectsByIdRef.current = new Map(refreshedObjects.map((object) => [object.id, object]));
+
+          return refreshedObjects;
+        }
+
+        return prevObjects;
       }
 
-      return nextObjects;
+      objectsByIdRef.current = nextById;
+
+      return Array.from(nextById.values());
     },
-    [applyIncrementalChanges]
+    []
   );
 
   // Consume prefetched board data during render (React-supported pattern for
