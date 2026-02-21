@@ -53,16 +53,31 @@ vi.mock('@/lib/writeQueue', () => ({
   flush: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock('@/stores/objectsStore', () => ({
-  useObjectsStore: {
-    getState: () => ({
-      setAll: vi.fn(),
-      clear: vi.fn(),
-      setObjects: vi.fn(),
-      deleteObjects: vi.fn(),
-      objects: {},
-    }),
+let mockObjectsRecord: Record<string, IBoardObject> = {};
+const mockStoreState = {
+  setAll: vi.fn((list: IBoardObject[]) => {
+    mockObjectsRecord = list.reduce<Record<string, IBoardObject>>((acc, o) => {
+      acc[o.id] = o;
+
+      return acc;
+    }, {});
+  }),
+  clear: vi.fn(() => {
+    mockObjectsRecord = {};
+  }),
+  setObjects: vi.fn(),
+  deleteObjects: vi.fn(),
+  applyChanges: vi.fn(),
+  get objects() {
+    return mockObjectsRecord;
   },
+};
+vi.mock('@/stores/objectsStore', () => ({
+  useObjectsStore: Object.assign(
+    (selector: (s: typeof mockStoreState) => unknown) => selector(mockStoreState),
+    { getState: () => mockStoreState }
+  ),
+  selectAllObjects: (state: { objects: Record<string, unknown> }) => Object.values(state.objects),
 }));
 
 const createTimestamp = (seconds: number, nanoseconds = 0) =>

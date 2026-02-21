@@ -5,6 +5,7 @@ import { AIService, createToolExecutor } from '@/modules/ai';
 import { getBoardRepository } from '@/lib/repositoryProvider';
 import { normalizeAIErrorMessage } from '@/modules/ai/errors';
 import { useViewportActionsStore } from '@/stores/viewportActionsStore';
+import { useObjectsStore } from '@/stores/objectsStore';
 
 export interface IChatMessage {
   role: 'user' | 'assistant';
@@ -14,7 +15,6 @@ export interface IChatMessage {
 interface IUseAIParams {
   boardId: string | null;
   user: User | null;
-  objects: IBoardObject[];
 }
 
 interface IUseAIReturn {
@@ -26,14 +26,14 @@ interface IUseAIReturn {
   clearMessages: () => void;
 }
 
-export const useAI = ({ boardId, user, objects }: IUseAIParams): IUseAIReturn => {
+export const useAI = ({ boardId, user }: IUseAIParams): IUseAIReturn => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [messages, setMessages] = useState<IChatMessage[]>([]);
 
   const aiServiceRef = useRef<AIService | null>(null);
-  const objectsRef = useRef<IBoardObject[]>(objects);
-  objectsRef.current = objects;
+  const objectsRecord = useObjectsStore((s) => s.objects);
+  const objects = useMemo(() => Object.values(objectsRecord) as IBoardObject[], [objectsRecord]);
 
   const zoomToFitAll = useViewportActionsStore((s) => s.zoomToFitAll);
   const zoomToSelection = useViewportActionsStore((s) => s.zoomToSelection);
@@ -50,7 +50,7 @@ export const useAI = ({ boardId, user, objects }: IUseAIParams): IUseAIReturn =>
       boardId,
       createdBy: user.uid,
       userId: user.uid,
-      getObjects: () => objectsRef.current,
+      getObjects: () => Object.values(useObjectsStore.getState().objects),
       createObject: repo.createObject,
       createObjectsBatch: repo.createObjectsBatch,
       updateObject: repo.updateObject,
@@ -93,7 +93,9 @@ export const useAI = ({ boardId, user, objects }: IUseAIParams): IUseAIReturn =>
 
   useEffect(() => {
     const service = aiServiceRef.current;
-    if (service) service.updateBoardState(objects);
+    if (service) {
+      service.updateBoardState(objects);
+    }
   }, [objects]);
 
   const processCommand = useCallback(async (userMessage: string) => {

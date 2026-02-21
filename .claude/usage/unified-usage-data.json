@@ -1525,27 +1525,27 @@
     {
       "event_id": "dev:claude:b4126014-fb0d-4abe-80c4-c53f38b8b951",
       "source": "claude",
-      "timestamp": "2026-02-21T13:48:27.904Z",
+      "timestamp": "2026-02-21T13:58:07.751Z",
       "session_id": "b4126014-fb0d-4abe-80c4-c53f38b8b951",
       "provider": "anthropic",
-      "model": "claude-opus-4-6",
-      "input_tokens": 12,
-      "output_tokens": 74,
+      "model": "claude-opus-4-6,claude-haiku-4-5-20251001",
+      "input_tokens": 32,
+      "output_tokens": 90,
       "cache_read_tokens": 391627,
-      "cache_create_tokens": 93099,
-      "total_tokens": 484812,
-      "estimated_cost": 2.33877675,
+      "cache_create_tokens": 241407,
+      "total_tokens": 633156,
+      "estimated_cost": 2.4871647500000003,
       "request_count": 1,
       "estimation_method": "best_effort",
       "metadata": {
         "hook_source": "claude",
-        "by_model_count": 1
+        "by_model_count": 2
       }
     },
     {
       "event_id": "mcp:claude:b4126014-fb0d-4abe-80c4-c53f38b8b951",
       "source": "mcp",
-      "timestamp": "2026-02-21T13:48:28.121Z",
+      "timestamp": "2026-02-21T13:58:07.957Z",
       "session_id": "b4126014-fb0d-4abe-80c4-c53f38b8b951",
       "provider": "claude",
       "model": "mcp-tooling",

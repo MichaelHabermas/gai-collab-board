@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, type SetStateAction } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { User } from 'firebase/auth';
 import type {
   IBoardObject,
@@ -10,7 +10,7 @@ import type {
 } from '@/types';
 import { mergeObjectUpdates } from '@/modules/sync/objectService';
 import { getBoardRepository } from '@/lib/repositoryProvider';
-import { useObjectsStore } from '@/stores/objectsStore';
+import { useObjectsStore, type IApplyChangesChangeset } from '@/stores/objectsStore';
 import { consumePrefetchedObjects } from '@/lib/boardPrefetch';
 import {
   setWriteQueueBoard,
@@ -159,36 +159,10 @@ interface IUseObjectsReturn {
  * Provides real-time synchronization with Firestore.
  */
 export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsReturn => {
-  const [objects, setObjectsRaw] = useState<IBoardObject[]>([]);
+  const objectsRecord = useObjectsStore((s) => s.objects);
+  const objects = useMemo(() => Object.values(objectsRecord) as IBoardObject[], [objectsRecord]);
   const [loading, setLoading] = useState<boolean>(!boardId ? false : true);
   const [error, setError] = useState<string>('');
-
-  // Wrapper: updates React state and defers Zustand store sync to the next microtask.
-  // Zustand mutations inside a setState updater trigger subscriber re-renders during
-  // React's render phase → "Cannot update BoardCanvas while rendering BoardView2".
-  // useCallback required for stable identity (used in useEffect/useCallback deps elsewhere).
-  // eslint-disable-next-line local/no-unnecessary-use-callback -- stable identity required by react-hooks/exhaustive-deps
-  const setObjects = useCallback((updater: SetStateAction<IBoardObject[]>) => {
-    setObjectsRaw((prev) => {
-      const next = typeof updater === 'function' ? updater(prev) : updater;
-      queueMicrotask(() => useObjectsStore.getState().setAll(next));
-
-      return next;
-    });
-  }, []);
-
-  // Clear store and pending timeouts when unmounting or switching boards.
-  useEffect(() => {
-    const timeouts = pendingTimeoutsRef.current;
-    const pending = pendingUpdatesRef.current;
-
-    return () => {
-      useObjectsStore.getState().clear();
-      for (const t of timeouts.values()) clearTimeout(t);
-      timeouts.clear();
-      pending.clear();
-    };
-  }, [boardId]);
 
   // Keep track of pending updates for rollback
   const pendingUpdatesRef = useRef<Map<string, IBoardObject>>(new Map());
@@ -273,24 +247,28 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
     []
   );
 
-  // Consume prefetched board data during render (React-supported pattern for
-  // external sync). This avoids an extra render cycle from setState-in-effect.
-  const [prevBoardId, setPrevBoardId] = useState(boardId);
-  if (boardId !== prevBoardId) {
-    setPrevBoardId(boardId);
+  const prevBoardIdRef = useRef(boardId);
+
+  // Consume prefetched board data when boardId changes (ref-based to avoid setState in effect).
+  useEffect(() => {
+    if (boardId === prevBoardIdRef.current) {
+      return;
+    }
+
+    prevBoardIdRef.current = boardId;
     if (boardId) {
       const prefetched = consumePrefetchedObjects(boardId);
       if (prefetched) {
-        setObjectsRaw(prefetched);
-        setLoading(false);
+        useObjectsStore.getState().setAll(prefetched);
+        queueMicrotask(() => setLoading(false));
       } else {
-        setLoading(true);
+        queueMicrotask(() => setLoading(true));
       }
     } else {
-      setObjectsRaw([]);
-      setLoading(false);
+      useObjectsStore.getState().clear();
+      queueMicrotask(() => setLoading(false));
     }
-  }
+  }, [boardId]);
 
   // Subscribe to objects for real-time updates from Firestore.
   // S3: branches on board size — small boards use full subscription,
@@ -299,13 +277,22 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
     if (!boardId) {
       setWriteQueueBoard(null);
       objectsByIdRef.current.clear();
+      const timeouts = pendingTimeoutsRef.current;
+      const pending = pendingUpdatesRef.current;
 
-      return;
+      return () => {
+        useObjectsStore.getState().clear();
+        for (const t of timeouts.values()) clearTimeout(t);
+        timeouts.clear();
+        pending.clear();
+      };
     }
 
     setWriteQueueBoard(boardId);
     isFirstCallbackRef.current = true;
 
+    const timeouts = pendingTimeoutsRef.current;
+    const pending = pendingUpdatesRef.current;
     let cancelled = false;
     let unsubscribe: (() => void) | null = null;
     const repo = getBoardRepository();
@@ -331,25 +318,32 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
       }
 
       if (update.isInitialSnapshot) {
-        setObjects((prevObjects) => applySnapshotUpdate(prevObjects, update));
-      } else {
-        setObjectsRaw((prevObjects) => applySnapshotUpdate(prevObjects, update));
-
         const store = useObjectsStore.getState();
-        const toDelete: string[] = [];
-        const toSet: IBoardObject[] = [];
+        const prevObjects = Object.values(store.objects);
+        const nextObjects = applySnapshotUpdate(prevObjects, update);
+        store.setAll(nextObjects);
+      } else {
+        const store = useObjectsStore.getState();
+        const prevObjects = Object.values(store.objects);
+        const nextObjects = applySnapshotUpdate(prevObjects, update);
 
-        for (const change of update.changes) {
-          if (change.type === 'removed') {
-            toDelete.push(change.object.id);
-          } else {
-            toSet.push(change.object);
-          }
+        const changeset: IApplyChangesChangeset = {
+          add: update.changes.filter((c) => c.type === 'added').map((c) => c.object),
+          update: update.changes
+            .filter((c) => c.type === 'modified')
+            .map((c) => ({ id: c.object.id, updates: c.object })),
+          delete: update.changes.filter((c) => c.type === 'removed').map((c) => c.object.id),
+        };
+
+        const hasChangesetWork =
+          changeset.add.length > 0 || changeset.update.length > 0 || changeset.delete.length > 0;
+
+        if (hasChangesetWork) {
+          store.applyChanges(changeset);
+        } else if (nextObjects.length !== prevObjects.length) {
+          // Fallback path: full snapshot refresh (e.g. missed deletion in change stream)
+          store.setAll(nextObjects);
         }
-
-        if (toDelete.length > 0) store.deleteObjects(toDelete);
-
-        if (toSet.length > 0) store.setObjects(toSet);
       }
 
       setLoading(false);
@@ -372,7 +366,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
 
         const byId = new Map(allObjects.map((o) => [o.id, o]));
         objectsByIdRef.current = byId;
-        setObjects(() => allObjects);
+        useObjectsStore.getState().setAll(allObjects);
         setLoading(false);
 
         const cursor = findMaxUpdatedAt(byId);
@@ -393,8 +387,13 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
       cancelled = true;
       flushWriteQueue();
       if (unsubscribe) unsubscribe();
+
+      useObjectsStore.getState().clear();
+      for (const t of timeouts.values()) clearTimeout(t);
+      timeouts.clear();
+      pending.clear();
     };
-  }, [applySnapshotUpdate, boardId, setObjects]);
+  }, [applySnapshotUpdate, boardId]);
 
   // Create object with optimistic update
   const handleCreateObject = useCallback(
@@ -429,19 +428,17 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         return;
       }
 
-      // Find the current object for potential rollback
-      const currentObject = objects.find((obj) => obj.id === objectId);
+      const store = useObjectsStore.getState();
+      const currentObject = store.objects[objectId];
       if (!currentObject) {
         setError('Object not found');
         return;
       }
 
-      // Store original for rollback
       setPending(objectId, currentObject);
       inFlightIdsRef.current.add(objectId);
 
-      // Optimistic update
-      setObjects((prev) => prev.map((obj) => (obj.id === objectId ? { ...obj, ...updates } : obj)));
+      store.updateObject(objectId, updates);
 
       try {
         setError('');
@@ -451,10 +448,9 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         inFlightIdsRef.current.delete(objectId);
       } catch (err) {
         inFlightIdsRef.current.delete(objectId);
-        // Rollback on failure
         const original = pendingUpdatesRef.current.get(objectId);
         if (original) {
-          setObjects((prev) => prev.map((obj) => (obj.id === objectId ? original : obj)));
+          useObjectsStore.getState().setObject(original);
           clearPending(objectId);
         }
 
@@ -462,7 +458,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         setError(errorMessage);
       }
     },
-    [boardId, objects, setObjects, setPending, clearPending]
+    [boardId, setPending, clearPending]
   );
 
   // Delete object with optimistic update and rollback
@@ -473,18 +469,15 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         return;
       }
 
-      // Find the current object for potential rollback
-      const currentObject = objects.find((obj) => obj.id === objectId);
+      const store = useObjectsStore.getState();
+      const currentObject = store.objects[objectId];
       if (!currentObject) {
         setError('Object not found');
         return;
       }
 
-      // Store original for rollback
       setPending(objectId, currentObject);
-
-      // Optimistic delete
-      setObjects((prev) => prev.filter((obj) => obj.id !== objectId));
+      store.deleteObject(objectId);
 
       try {
         setError('');
@@ -492,10 +485,9 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         await repo.deleteObject(boardId, objectId);
         clearPending(objectId);
       } catch (err) {
-        // Rollback on failure - restore the object
         const original = pendingUpdatesRef.current.get(objectId);
         if (original) {
-          setObjects((prev) => [...prev, original]);
+          useObjectsStore.getState().setObject(original);
           clearPending(objectId);
         }
 
@@ -503,7 +495,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         setError(errorMessage);
       }
     },
-    [boardId, objects, setObjects, setPending, clearPending]
+    [boardId, setPending, clearPending]
   );
 
   // Update multiple objects in one batch (optimistic update + rollback)
@@ -518,31 +510,25 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         return;
       }
 
+      const store = useObjectsStore.getState();
       const objectIds = updates.map((u) => u.objectId);
-      const originals = objectIds
-        .map((id) => objects.find((obj) => obj.id === id))
-        .filter(Boolean) as IBoardObject[];
+      const originals = objectIds.map((id) => store.objects[id]).filter(Boolean) as IBoardObject[];
 
       for (const obj of originals) {
         setPending(obj.id, obj);
       }
 
-      // Mark as in-flight to suppress self-echoes from Firestore subscription.
       for (const id of objectIds) {
         inFlightIdsRef.current.add(id);
       }
 
-      setObjects((prev) => {
-        const next = prev.map((obj) => {
-          const entry = updates.find((u) => u.objectId === obj.id);
+      const nextObjects = Object.values(store.objects).map((obj) => {
+        const entry = updates.find((u) => u.objectId === obj.id);
 
-          return entry ? { ...obj, ...entry.updates } : obj;
-        });
-        // Keep ref in sync so subscription callbacks do not reconcile from stale ref and cause one-by-one flicker
-        objectsByIdRef.current = new Map(next.map((object) => [object.id, object]));
-
-        return next;
+        return entry ? { ...obj, ...entry.updates } : obj;
       });
+      objectsByIdRef.current = new Map(nextObjects.map((o) => [o.id, o]));
+      store.setObjects(nextObjects);
 
       try {
         setError('');
@@ -555,7 +541,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         }
       } catch (err) {
         for (const original of originals) {
-          setObjects((prev) => prev.map((o) => (o.id === original.id ? original : o)));
+          useObjectsStore.getState().setObject(original);
           clearPending(original.id);
         }
 
@@ -567,7 +553,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         setError(errorMessage);
       }
     },
-    [boardId, objects, setObjects, setPending, clearPending]
+    [boardId, setPending, clearPending]
   );
 
   // Delete multiple objects in one batch (defer state update until batch resolves)
@@ -582,7 +568,8 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         return;
       }
 
-      const toRemove = objects.filter((obj) => objectIds.includes(obj.id));
+      const store = useObjectsStore.getState();
+      const toRemove = objectIds.map((id) => store.objects[id]).filter(Boolean) as IBoardObject[];
       for (const obj of toRemove) {
         setPending(obj.id, obj);
       }
@@ -591,11 +578,14 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         setError('');
         const repo = getBoardRepository();
         await repo.deleteObjectsBatch(boardId, objectIds);
-        setObjects((prev) => prev.filter((obj) => !objectIds.includes(obj.id)));
+        store.deleteObjects(objectIds);
         for (const id of objectIds) {
           clearPending(id);
         }
       } catch (err) {
+        for (const original of toRemove) {
+          useObjectsStore.getState().setObject(original);
+        }
         for (const id of objectIds) {
           clearPending(id);
         }
@@ -603,7 +593,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
         setError(errorMessage);
       }
     },
-    [boardId, objects, setObjects, setPending, clearPending]
+    [boardId, setPending, clearPending]
   );
 
   // Queue a debounced Firestore write with immediate optimistic update.
@@ -612,12 +602,7 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
     (objectId: string, updates: IUpdateObjectParams): void => {
       if (!boardId) return;
 
-      // Canonical path: Zustand update + write queue (Constitution Article X)
       canonicalQueueObjectUpdate(objectId, updates);
-      // Backward compat: keep React state in sync until S5 migrates all consumers to Zustand
-      setObjectsRaw((prev) =>
-        prev.map((obj) => (obj.id === objectId ? { ...obj, ...updates } : obj))
-      );
     },
     [boardId]
   );

@@ -5,6 +5,7 @@ import type { IBoardObject } from '@/types';
 import { useAI } from '@/hooks/useAI';
 import { AIError } from '@/modules/ai/errors';
 import { useViewportActionsStore } from '@/stores/viewportActionsStore';
+import { useObjectsStore } from '@/stores/objectsStore';
 import type { IViewportActionsValue } from '@/types';
 
 const {
@@ -100,6 +101,7 @@ describe('useAI', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setStoreViewportActions(null);
+    useObjectsStore.getState().clear();
 
     mockCreateToolExecutor.mockReturnValue({
       execute: mockExecute,
@@ -118,14 +120,9 @@ describe('useAI', () => {
   it('builds tool executor with viewport callbacks when store has actions', () => {
     const viewportActions = buildViewportActions();
     setStoreViewportActions(viewportActions);
+    useObjectsStore.getState().setAll([buildObject()]);
 
-    renderHook(() =>
-      useAI({
-        boardId: 'board-1',
-        user: buildUser(),
-        objects: [buildObject()],
-      })
-    );
+    renderHook(() => useAI({ boardId: 'board-1', user: buildUser() }));
 
     expect(mockCreateToolExecutor).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -147,13 +144,7 @@ describe('useAI', () => {
   it('processes a successful command and appends user + assistant messages', async () => {
     mockProcessCommand.mockResolvedValue('Created one sticky note');
 
-    const { result } = renderHook(() =>
-      useAI({
-        boardId: 'board-1',
-        user: buildUser(),
-        objects: [],
-      })
-    );
+    const { result } = renderHook(() => useAI({ boardId: 'board-1', user: buildUser() }));
 
     await act(async () => {
       await result.current.processCommand('  create one sticky  ');
@@ -171,13 +162,7 @@ describe('useAI', () => {
   it('sets normalized error message on command failure (e.g. 503)', async () => {
     mockProcessCommand.mockRejectedValue(new AIError('Provider unavailable', 'provider_error', 503));
 
-    const { result } = renderHook(() =>
-      useAI({
-        boardId: 'board-1',
-        user: buildUser(),
-        objects: [],
-      })
-    );
+    const { result } = renderHook(() => useAI({ boardId: 'board-1', user: buildUser() }));
 
     await act(async () => {
       await result.current.processCommand('create board');
@@ -191,13 +176,7 @@ describe('useAI', () => {
   it('uses normalized message for non-Error failures', async () => {
     mockProcessCommand.mockRejectedValue('untyped-failure');
 
-    const { result } = renderHook(() =>
-      useAI({
-        boardId: 'board-1',
-        user: buildUser(),
-        objects: [],
-      })
-    );
+    const { result } = renderHook(() => useAI({ boardId: 'board-1', user: buildUser() }));
 
     await act(async () => {
       await result.current.processCommand('do something');
@@ -208,11 +187,7 @@ describe('useAI', () => {
 
   it('ignores empty commands or unavailable service', async () => {
     const { result: noServiceResult } = renderHook(() =>
-      useAI({
-        boardId: null,
-        user: null,
-        objects: [],
-      })
+      useAI({ boardId: null, user: null })
     );
 
     await act(async () => {
@@ -229,23 +204,18 @@ describe('useAI', () => {
     const firstObjects = [buildObject({ id: 'obj-a' })];
     const secondObjects = [buildObject({ id: 'obj-b' }), buildObject({ id: 'obj-c' })];
 
-    const { result, rerender } = renderHook(
-      ({ objects }) =>
-        useAI({
-          boardId: 'board-1',
-          user: buildUser(),
-          objects,
-        }),
-      {
-        initialProps: { objects: firstObjects },
-      }
+    useObjectsStore.getState().setAll(firstObjects);
+
+    const { result, rerender } = renderHook(() =>
+      useAI({ boardId: 'board-1', user: buildUser() })
     );
 
     await waitFor(() => {
       expect(mockUpdateBoardState).toHaveBeenCalledWith(firstObjects);
     });
 
-    rerender({ objects: secondObjects });
+    useObjectsStore.getState().setAll(secondObjects);
+    rerender();
 
     await waitFor(() => {
       expect(mockUpdateBoardState).toHaveBeenCalledWith(secondObjects);
@@ -281,13 +251,8 @@ describe('useAI', () => {
       exportFullBoard,
     });
 
-    const { rerender } = renderHook(() =>
-      useAI({
-        boardId: 'board-1',
-        user: buildUser(),
-        objects: [buildObject()],
-      })
-    );
+    useObjectsStore.getState().setAll([buildObject()]);
+    const { rerender } = renderHook(() => useAI({ boardId: 'board-1', user: buildUser() }));
 
     expect(mockAIServiceConstructor).toHaveBeenCalledTimes(1);
 

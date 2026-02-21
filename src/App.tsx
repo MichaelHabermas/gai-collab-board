@@ -85,7 +85,6 @@ const BoardView = memo(function BoardView({
   useSidebarPrefetch();
 
   const {
-    objects,
     loading: objectsLoading,
     createObject,
     updateObject,
@@ -95,7 +94,6 @@ const BoardView = memo(function BoardView({
   } = useObjects({ boardId, user });
 
   const history = useHistory({
-    objects,
     createObject,
     updateObject,
     deleteObject,
@@ -103,7 +101,7 @@ const BoardView = memo(function BoardView({
   });
 
   const { onlineUsers } = usePresence({ boardId, user });
-  const ai = useAI({ boardId, user, objects });
+  const ai = useAI({ boardId, user });
   const {
     commentsByObjectId,
     loading: commentsLoading,
