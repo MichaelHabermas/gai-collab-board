@@ -37,7 +37,7 @@ This PRD outlines the requirements and implementation plan for enhancing an exis
 
 ## Epics and Breakdown
 
-### Epic 1: State Orchestration and Coordinate Mapping
+### Epic 1: State Orchestration and Coordinate Mapping ✅ COMPLETED
 
 **Goal**: Decouple board state from Konva's internal tree, using a JSON-based model with world coordinates for consistency across views and devices. This ensures AI can manipulate state without Konva dependencies.
 
@@ -69,7 +69,7 @@ This PRD outlines the requirements and implementation plan for enhancing an exis
 4. Integrate with existing app: Modify Konva stage setup to map `BoardState.elements` to Konva shapes (e.g., loop: `new Konva.Rect({...el})`). Add event listeners for dragend to update state via CoordinateUtils.
 5. Unit tests: Test conversions (e.g., zoom=2, panX=100 should convert correctly). Mock state updates.
 
-### Epic 2: Firebase Hybrid Persistence Layer
+### Epic 2: Firebase Hybrid Persistence Layer ✅ COMPLETED
 
 **Goal**: Provide real-time persistence and sync using Firestore for structured, persistent elements and RTDB for ephemeral, high-frequency data. This enables collaborative editing with optimized performance.
 
