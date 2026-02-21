@@ -5,6 +5,7 @@ export type {
   ArrowheadMode,
   StrokeStyle,
   IBoardObject,
+  IBoardState,
   IBoard,
   ICreateObjectParams,
   IUpdateObjectParams,

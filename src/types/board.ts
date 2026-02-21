@@ -1,5 +1,6 @@
 import { Timestamp } from 'firebase/firestore';
-import { UserRole } from './user';
+import type { UserRole } from './user';
+import type { IViewportPosition, IViewportScale } from './viewport';
 
 export type ShapeType = 'sticky' | 'rectangle' | 'circle' | 'line' | 'text' | 'frame' | 'connector';
 
@@ -80,6 +81,18 @@ export interface IBoardObject {
   createdBy: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+}
+
+/**
+ * Unified JSON-serializable snapshot of the board: elements + viewport.
+ * Serialization contract for AI consumption and persistence (Constitution Articles I, IV).
+ */
+export interface IBoardState {
+  elements: Record<string, IBoardObject>;
+  viewport: {
+    position: IViewportPosition;
+    scale: IViewportScale;
+  };
 }
 
 export interface IBoard {
