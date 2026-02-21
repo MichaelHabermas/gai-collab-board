@@ -5,7 +5,14 @@ import { useRef, useCallback, useState, useEffect, useMemo, memo, type ReactElem
 import Konva from 'konva';
 import { useCanvasViewport } from '@/hooks/useCanvasViewport';
 import { CursorLayer } from './CursorLayer';
-import { STICKY_COLORS } from './shapes';
+import {
+  DEFAULT_STICKY_WIDTH,
+  DEFAULT_STICKY_HEIGHT,
+  DEFAULT_TEXT_WIDTH,
+  DEFAULT_TEXT_HEIGHT,
+  DEFAULT_TEXT_FONT_SIZE,
+  STICKY_COLORS,
+} from '@/lib/boardObjectDefaults';
 import { CanvasToolbarWrapper } from './CanvasToolbarWrapper';
 import { CanvasControlPanel } from './CanvasControlPanel';
 import { StoreShapeRenderer } from './StoreShapeRenderer';
@@ -67,9 +74,6 @@ interface IBoardCanvasProps {
 const GRID_SIZE = 20;
 const GRID_STROKE_WIDTH = 1;
 export const GRID_LINE_OPACITY = 0.5;
-
-// Default sizes for new objects
-const DEFAULT_STICKY_SIZE = { width: 200, height: 200 };
 
 /**
  * Isolated selection drag handle — subscribes to groupDragOffset at 60Hz
@@ -542,10 +546,10 @@ export const BoardCanvas = memo(
           if ((toolAtClick === 'sticky' || activeTool === 'sticky') && canEdit && onObjectCreate) {
             const params = {
               type: 'sticky' as const,
-              x: canvasX - DEFAULT_STICKY_SIZE.width / 2,
-              y: canvasY - DEFAULT_STICKY_SIZE.height / 2,
-              width: DEFAULT_STICKY_SIZE.width,
-              height: DEFAULT_STICKY_SIZE.height,
+              x: canvasX - DEFAULT_STICKY_WIDTH / 2,
+              y: canvasY - DEFAULT_STICKY_HEIGHT / 2,
+              width: DEFAULT_STICKY_WIDTH,
+              height: DEFAULT_STICKY_HEIGHT,
               fill: activeColor,
               text: 'New note...',
               rotation: 0,
@@ -573,11 +577,11 @@ export const BoardCanvas = memo(
               type: 'text' as const,
               x: canvasX,
               y: canvasY,
-              width: 200,
-              height: 30,
+              width: DEFAULT_TEXT_WIDTH,
+              height: DEFAULT_TEXT_HEIGHT,
               fill: activeColor === STICKY_COLORS.yellow ? '#1f2937' : activeColor,
               text: '',
-              fontSize: 16,
+              fontSize: DEFAULT_TEXT_FONT_SIZE,
               rotation: 0,
             };
 

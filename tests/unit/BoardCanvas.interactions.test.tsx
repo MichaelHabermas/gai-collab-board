@@ -421,9 +421,9 @@ describe('BoardCanvas interactions', () => {
         expect.objectContaining({
           type: 'sticky',
           x: 400,
-          y: 200,
+          y: 240,
           width: 200,
-          height: 200,
+          height: 120,
           text: 'New note...',
         })
       );
