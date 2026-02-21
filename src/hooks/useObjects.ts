@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, type SetStateAction } from 'r
 import { User } from 'firebase/auth';
 import type {
   IBoardObject,
+  IDeltaCursor,
   IObjectChange,
   IObjectsSnapshotUpdate,
   ICreateObjectParams,
@@ -98,6 +99,35 @@ export function applyIncrementalChanges(
   }
 
   return { nextById: workingById!, didChange: true };
+}
+
+/** Board size threshold: boards with more objects use paginated initial load (Article XIV). */
+export const PAGINATION_THRESHOLD = 500;
+
+/**
+ * Find the maximum updatedAt timestamp across all objects in the map.
+ * Used as the delta cursor for subscribeToDeltaUpdates after paginated load.
+ */
+export function findMaxUpdatedAt(objectsById: Map<string, IBoardObject>): IDeltaCursor | null {
+  let maxSeconds = 0;
+  let maxNanos = 0;
+
+  for (const obj of objectsById.values()) {
+    const ts = obj.updatedAt;
+    if (!ts) continue;
+
+    const s = typeof ts.seconds === 'number' ? ts.seconds : 0;
+    const n = typeof ts.nanoseconds === 'number' ? ts.nanoseconds : 0;
+
+    if (s > maxSeconds || (s === maxSeconds && n > maxNanos)) {
+      maxSeconds = s;
+      maxNanos = n;
+    }
+  }
+
+  if (maxSeconds === 0 && maxNanos === 0) return null;
+
+  return { seconds: maxSeconds, nanoseconds: maxNanos };
 }
 
 // ============================================================================
@@ -245,7 +275,6 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
 
   // Consume prefetched board data during render (React-supported pattern for
   // external sync). This avoids an extra render cycle from setState-in-effect.
-  // Ref mutations are deferred to the subscription effect (React compiler rule).
   const [prevBoardId, setPrevBoardId] = useState(boardId);
   if (boardId !== prevBoardId) {
     setPrevBoardId(boardId);
@@ -264,6 +293,8 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
   }
 
   // Subscribe to objects for real-time updates from Firestore.
+  // S3: branches on board size — small boards use full subscription,
+  // large boards use paginated initial load + delta subscription.
   useEffect(() => {
     if (!boardId) {
       setWriteQueueBoard(null);
@@ -273,26 +304,26 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
     }
 
     setWriteQueueBoard(boardId);
-
-    // Mark that we're waiting for first callback to reset state
     isFirstCallbackRef.current = true;
 
+    let cancelled = false;
+    let unsubscribe: (() => void) | null = null;
     const repo = getBoardRepository();
-    const unsubscribe = repo.subscribeToObjects(boardId, (update) => {
-      // Reset error on first callback after subscription
+
+    // Shared update handler — used by both subscription strategies.
+    const handleUpdate = (update: IObjectsSnapshotUpdate): void => {
+      if (cancelled) return;
+
       if (isFirstCallbackRef.current) {
         isFirstCallbackRef.current = false;
         setError('');
       }
 
       // Pre-filter: skip changes for objects with in-flight Firestore writes.
-      // These are self-echoes — the local state already reflects the correct position.
       if (!update.isInitialSnapshot && inFlightIdsRef.current.size > 0) {
         const filtered = update.changes.filter((c) => !inFlightIdsRef.current.has(c.object.id));
 
-        if (filtered.length === 0) {
-          return;
-        }
+        if (filtered.length === 0) return;
 
         if (filtered.length < update.changes.length) {
           update = { ...update, changes: filtered };
@@ -300,15 +331,10 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
       }
 
       if (update.isInitialSnapshot) {
-        // O(n) full rebuild — fine for initial load.
         setObjects((prevObjects) => applySnapshotUpdate(prevObjects, update));
       } else {
-        // Incremental: update React state first, then Zustand store OUTSIDE
-        // the setState updater to avoid triggering Zustand subscribers mid-render
-        // ("Cannot update BoardCanvas while rendering BoardView" warning).
         setObjectsRaw((prevObjects) => applySnapshotUpdate(prevObjects, update));
 
-        // Batched Zustand store updates — one index rebuild total, not per-object.
         const store = useObjectsStore.getState();
         const toDelete: string[] = [];
         const toSet: IBoardObject[] = [];
@@ -327,11 +353,46 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
       }
 
       setLoading(false);
+    };
+
+    // Attach the appropriate subscription based on board size.
+    // Probe first to decide: small boards get full subscription,
+    // large boards get paginated initial load + delta subscription.
+    const setupSubscription = async (): Promise<void> => {
+      const probe = await repo.fetchObjectsBatch(boardId, PAGINATION_THRESHOLD + 1);
+      if (cancelled) return;
+
+      if (probe.length <= PAGINATION_THRESHOLD) {
+        // Small board: use full subscription (current behavior).
+        unsubscribe = repo.subscribeToObjects(boardId, handleUpdate);
+      } else {
+        // Large board: paginated initial load + delta subscription.
+        const allObjects = await repo.fetchObjectsPaginated(boardId);
+        if (cancelled) return;
+
+        const byId = new Map(allObjects.map((o) => [o.id, o]));
+        objectsByIdRef.current = byId;
+        setObjects(() => allObjects);
+        setLoading(false);
+
+        const cursor = findMaxUpdatedAt(byId);
+        if (cursor && !cancelled) {
+          unsubscribe = repo.subscribeToDeltaUpdates(boardId, cursor, handleUpdate);
+        }
+      }
+    };
+
+    setupSubscription().catch((err) => {
+      if (!cancelled) {
+        setError(err instanceof Error ? err.message : 'Failed to load board');
+        setLoading(false);
+      }
     });
 
     return () => {
+      cancelled = true;
       flushWriteQueue();
-      unsubscribe();
+      if (unsubscribe) unsubscribe();
     };
   }, [applySnapshotUpdate, boardId, setObjects]);
 

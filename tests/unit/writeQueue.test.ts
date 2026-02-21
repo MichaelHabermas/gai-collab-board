@@ -26,6 +26,9 @@ function createMockRepo(): IBoardRepository {
     deleteObject: vi.fn(),
     deleteObjectsBatch: vi.fn(),
     subscribeToObjects: vi.fn(),
+    fetchObjectsBatch: vi.fn().mockResolvedValue([]),
+    fetchObjectsPaginated: vi.fn().mockResolvedValue([]),
+    subscribeToDeltaUpdates: vi.fn().mockReturnValue(() => {}),
   };
 }
 

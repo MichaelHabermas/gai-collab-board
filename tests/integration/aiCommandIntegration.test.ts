@@ -63,6 +63,9 @@ describe('AI Command Integration', () => {
       }),
       deleteObjectsBatch: vi.fn().mockResolvedValue(undefined),
       subscribeToObjects: vi.fn().mockReturnValue(() => {}),
+      fetchObjectsBatch: vi.fn().mockResolvedValue([]),
+      fetchObjectsPaginated: vi.fn().mockResolvedValue([]),
+      subscribeToDeltaUpdates: vi.fn().mockReturnValue(() => {}),
     };
   });
 

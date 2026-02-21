@@ -400,6 +400,30 @@ export const subscribeToObjectsWithChanges = (
 // ============================================================================
 
 /**
+ * Fetch a limited batch of objects for board size probing (S3).
+ * Single getDocs call — use to determine if pagination is needed
+ * before committing to a subscription strategy.
+ */
+export const fetchObjectsBatch = async (
+  boardId: string,
+  batchLimit: number
+): Promise<IBoardObject[]> => {
+  const objectsRef = getObjectsCollection(boardId);
+  const batchQuery = query(objectsRef, orderBy('createdAt', 'asc'), limit(batchLimit));
+  const snapshot = await getDocs(batchQuery);
+  const objects: IBoardObject[] = [];
+
+  for (const snapshotDoc of snapshot.docs) {
+    const data = snapshotDoc.data();
+    if (isBoardObject(data)) {
+      objects.push(data);
+    }
+  }
+
+  return objects;
+};
+
+/**
  * Fetches objects in batches for large boards.
  * Use when the initial load should avoid downloading all documents at once.
  */

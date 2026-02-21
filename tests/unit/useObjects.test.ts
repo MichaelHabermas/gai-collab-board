@@ -11,6 +11,9 @@ const mockUpdateObjectsBatch = vi.fn();
 const mockDeleteObject = vi.fn();
 const mockDeleteObjectsBatch = vi.fn();
 const mockSubscribeToObjects = vi.fn();
+const mockFetchObjectsBatch = vi.fn().mockResolvedValue([]);
+const mockFetchObjectsPaginated = vi.fn().mockResolvedValue([]);
+const mockSubscribeToDeltaUpdates = vi.fn().mockReturnValue(() => {});
 const mockMergeObjectUpdates = vi.fn();
 
 vi.mock('@/lib/repositoryProvider', () => ({
@@ -21,6 +24,9 @@ vi.mock('@/lib/repositoryProvider', () => ({
     deleteObject: (...args: unknown[]) => mockDeleteObject(...args),
     deleteObjectsBatch: (...args: unknown[]) => mockDeleteObjectsBatch(...args),
     subscribeToObjects: (...args: unknown[]) => mockSubscribeToObjects(...args),
+    fetchObjectsBatch: (...args: unknown[]) => mockFetchObjectsBatch(...args),
+    fetchObjectsPaginated: (...args: unknown[]) => mockFetchObjectsPaginated(...args),
+    subscribeToDeltaUpdates: (...args: unknown[]) => mockSubscribeToDeltaUpdates(...args),
   }),
 }));
 
@@ -65,6 +71,11 @@ const createUser = (uid: string = 'user-1'): User =>
     displayName: uid,
   }) as User;
 
+/** Flush the async subscription probe (fetchObjectsBatch) so subscriptionCallback gets populated. */
+const flushProbe = async (): Promise<void> => {
+  await act(async () => {});
+};
+
 describe('useObjects', () => {
   let subscriptionCallback:
     | ((update: {
@@ -105,13 +116,15 @@ describe('useObjects', () => {
     vi.restoreAllMocks();
   });
 
-  it('subscribes to board objects and clears loading after first callback', () => {
+  it('subscribes to board objects and clears loading after first callback', async () => {
     const { result, unmount } = renderHook(() =>
       useObjects({
         boardId: 'board-1',
         user: createUser(),
       })
     );
+
+    await flushProbe();
 
     expect(result.current.loading).toBe(true);
     expect(mockSubscribeToObjects).toHaveBeenCalledWith('board-1', expect.any(Function));
@@ -169,6 +182,8 @@ describe('useObjects', () => {
       })
     );
 
+    await flushProbe();
+
     act(() => {
       subscriptionCallback?.({
         objects: [baseObject],
@@ -197,6 +212,8 @@ describe('useObjects', () => {
         user: createUser(),
       })
     );
+
+    await flushProbe();
 
     act(() => {
       subscriptionCallback?.({
@@ -227,6 +244,8 @@ describe('useObjects', () => {
         user: createUser(),
       })
     );
+
+    await flushProbe();
 
     act(() => {
       subscriptionCallback?.({
@@ -267,6 +286,8 @@ describe('useObjects', () => {
       })
     );
 
+    await flushProbe();
+
     act(() => {
       subscriptionCallback?.({
         objects: [objA, objB],
@@ -306,6 +327,8 @@ describe('useObjects', () => {
       })
     );
 
+    await flushProbe();
+
     act(() => {
       subscriptionCallback?.({
         objects: [objA, objB],
@@ -338,6 +361,8 @@ describe('useObjects', () => {
         user: createUser(),
       })
     );
+
+    await flushProbe();
 
     act(() => {
       subscriptionCallback?.({
@@ -388,6 +413,8 @@ describe('useObjects', () => {
       })
     );
 
+    await flushProbe();
+
     act(() => {
       subscriptionCallback?.({
         objects: [originalObject],
@@ -421,7 +448,7 @@ describe('useObjects', () => {
     });
   });
 
-  it('keeps object references stable when a snapshot has no changes', () => {
+  it('keeps object references stable when a snapshot has no changes', async () => {
     const baseObject = createBoardObject({ id: 'stable-1', updatedAt: createTimestamp(1000) });
 
     const { result } = renderHook(() =>
@@ -430,6 +457,8 @@ describe('useObjects', () => {
         user: createUser(),
       })
     );
+
+    await flushProbe();
 
     act(() => {
       subscriptionCallback?.({
@@ -458,7 +487,7 @@ describe('useObjects', () => {
     expect(result.current.objects[0]).toBe(firstReference);
   });
 
-  it('detects stroke/strokeWidth/fontSize/points changes as modified (not unchanged)', () => {
+  it('detects stroke/strokeWidth/fontSize/points changes as modified (not unchanged)', async () => {
     const objectWithVisuals = createBoardObject({
       id: 'obj-vis',
       stroke: '#000000',
@@ -474,6 +503,8 @@ describe('useObjects', () => {
         user: createUser(),
       })
     );
+
+    await flushProbe();
 
     act(() => {
       subscriptionCallback?.({
@@ -527,7 +558,7 @@ describe('useObjects', () => {
     expect(result.current.objects[0]?.points).toEqual([10, 10, 200, 200]);
   });
 
-  it('updates only changed objects for incremental snapshot changes', () => {
+  it('updates only changed objects for incremental snapshot changes', async () => {
     const objectA = createBoardObject({ id: 'obj-a', text: 'A', updatedAt: createTimestamp(1000) });
     const objectB = createBoardObject({ id: 'obj-b', text: 'B', updatedAt: createTimestamp(1000) });
 
@@ -537,6 +568,8 @@ describe('useObjects', () => {
         user: createUser(),
       })
     );
+
+    await flushProbe();
 
     act(() => {
       subscriptionCallback?.({
@@ -605,6 +638,8 @@ describe('useObjects – updateObjects for group drag', () => {
       useObjects({ boardId: 'board-1', user: createUser() })
     );
 
+    await flushProbe();
+
     act(() => {
       subscriptionCallback?.({
         objects: [objA, objB],
@@ -646,6 +681,8 @@ describe('useObjects – updateObjects for group drag', () => {
       useObjects({ boardId: 'board-1', user: createUser() })
     );
 
+    await flushProbe();
+
     act(() => {
       subscriptionCallback?.({
         objects,
@@ -679,6 +716,8 @@ describe('useObjects – updateObjects for group drag', () => {
       useObjects({ boardId: 'board-1', user: createUser() })
     );
 
+    await flushProbe();
+
     act(() => {
       subscriptionCallback?.({
         objects: [objA, objB],
@@ -707,6 +746,8 @@ describe('useObjects – updateObjects for group drag', () => {
     const { result } = renderHook(() =>
       useObjects({ boardId: 'board-1', user: createUser() })
     );
+
+    await flushProbe();
 
     act(() => {
       subscriptionCallback?.({
@@ -770,6 +811,8 @@ describe('useObjects – updateObjects for group drag', () => {
     const { result } = renderHook(() =>
       useObjects({ boardId: 'board-1', user: createUser() })
     );
+
+    await flushProbe();
 
     act(() => {
       subscriptionCallback?.({
@@ -989,6 +1032,8 @@ describe('useObjects – additional branch coverage', () => {
       useObjects({ boardId: 'board-1', user: createUser() })
     );
 
+    await flushProbe();
+
     act(() => {
       subscriptionCallback?.({
         objects: [baseObject],
@@ -1036,6 +1081,8 @@ describe('useObjects – additional branch coverage', () => {
       useObjects({ boardId: 'board-1', user: createUser() })
     );
 
+    await flushProbe();
+
     act(() => {
       subscriptionCallback?.({
         objects: [baseObject],
@@ -1058,6 +1105,8 @@ describe('useObjects – additional branch coverage', () => {
     const { result } = renderHook(() =>
       useObjects({ boardId: 'board-1', user: createUser() })
     );
+
+    await flushProbe();
 
     act(() => {
       subscriptionCallback?.({
@@ -1083,6 +1132,8 @@ describe('useObjects – additional branch coverage', () => {
     const { result } = renderHook(() =>
       useObjects({ boardId: 'board-1', user: createUser() })
     );
+
+    await flushProbe();
 
     act(() => {
       subscriptionCallback?.({
@@ -1119,6 +1170,8 @@ describe('useObjects – additional branch coverage', () => {
       useObjects({ boardId: 'board-1', user: createUser() })
     );
 
+    await flushProbe();
+
     act(() => {
       subscriptionCallback?.({
         objects: [objA],
@@ -1140,13 +1193,15 @@ describe('useObjects – additional branch coverage', () => {
     expect(useObjectsStore.getState().objects['a']?.x).toBe(999);
   });
 
-  it('handles removed objects in incremental changes', () => {
+  it('handles removed objects in incremental changes', async () => {
     const objA = createBoardObject({ id: 'a' });
     const objB = createBoardObject({ id: 'b' });
 
     const { result } = renderHook(() =>
       useObjects({ boardId: 'board-1', user: createUser() })
     );
+
+    await flushProbe();
 
     act(() => {
       subscriptionCallback?.({
@@ -1173,13 +1228,15 @@ describe('useObjects – additional branch coverage', () => {
     expect(result.current.objects[0]?.id).toBe('a');
   });
 
-  it('falls back to full snapshot refresh when incremental changes have count mismatch', () => {
+  it('falls back to full snapshot refresh when incremental changes have count mismatch', async () => {
     const objA = createBoardObject({ id: 'a', updatedAt: createTimestamp(1000) });
     const objB = createBoardObject({ id: 'b', updatedAt: createTimestamp(1000) });
 
     const { result } = renderHook(() =>
       useObjects({ boardId: 'board-1', user: createUser() })
     );
+
+    await flushProbe();
 
     act(() => {
       subscriptionCallback?.({
@@ -1264,6 +1321,8 @@ describe('useObjects – additional branch coverage', () => {
       useObjects({ boardId: 'board-1', user: createUser() })
     );
 
+    await flushProbe();
+
     act(() => {
       subscriptionCallback?.({
         objects: [baseObject],
@@ -1287,6 +1346,8 @@ describe('useObjects – additional branch coverage', () => {
     const { result } = renderHook(() =>
       useObjects({ boardId: 'board-1', user: createUser() })
     );
+
+    await flushProbe();
 
     act(() => {
       subscriptionCallback?.({

@@ -73,6 +73,7 @@ export type {
   IObjectChange,
   IObjectsSnapshotUpdate,
   IBatchUpdate,
+  IDeltaCursor,
   IBoardRepository,
   IDragUpdate,
   IRealtimeSyncRepository,
