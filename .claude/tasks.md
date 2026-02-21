@@ -50,7 +50,7 @@ Base branch: current (development). Source: plan single_source_board_defaults.
 
 ## T5 — Layouts and compoundExecutor use shared constants
 
-- **Status:** pending
+- **Status:** review
 - **Tier:** haiku
 - **Role:** quick-fixer
 - **Worktree name:** board-defaults-layouts

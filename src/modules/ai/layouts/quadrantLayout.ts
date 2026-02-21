@@ -1,4 +1,5 @@
 import type { ICreateObjectParams } from '@/types';
+import { DEFAULT_SHAPE_STROKE_WIDTH } from '../defaults';
 import {
   resolveStickyColor,
   findOpenSpace,
@@ -126,7 +127,7 @@ function buildAxisLines(
     height: 0,
     fill: 'transparent',
     stroke: '#94a3b8',
-    strokeWidth: 2,
+    strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH,
     points: [0, 0, totalWidth, 0],
     parentFrameId: FRAME_PLACEHOLDER_ID,
     createdBy,
@@ -140,7 +141,7 @@ function buildAxisLines(
     height: totalHeight,
     fill: 'transparent',
     stroke: '#94a3b8',
-    strokeWidth: 2,
+    strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH,
     points: [0, 0, 0, totalHeight],
     parentFrameId: FRAME_PLACEHOLDER_ID,
     createdBy,

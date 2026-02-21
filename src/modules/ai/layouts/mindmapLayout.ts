@@ -1,4 +1,5 @@
 import type { ConnectorAnchor, ICreateObjectParams } from '@/types';
+import { DEFAULT_SHAPE_STROKE_WIDTH } from '../defaults';
 import {
   resolveStickyColor,
   findOpenSpace,
@@ -78,7 +79,7 @@ function buildConnector(
     height: 0,
     fill: 'transparent',
     stroke: '#94a3b8',
-    strokeWidth: 2,
+    strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH,
     fromObjectId: fromId,
     toObjectId: toId,
     fromAnchor,
