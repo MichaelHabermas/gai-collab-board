@@ -28,7 +28,7 @@ Base branch: current (development). Source: plan single_source_board_defaults.
 
 ## T3 — Remove duplicate STICKY_COLORS and wire consumers
 
-- **Status:** review
+- **Status:** done
 - **Tier:** sonnet
 - **Role:** architect
 - **Worktree name:** board-defaults-sticky-colors
@@ -50,7 +50,7 @@ Base branch: current (development). Source: plan single_source_board_defaults.
 
 ## T5 — Layouts and compoundExecutor use shared constants
 
-- **Status:** review
+- **Status:** done
 - **Tier:** haiku
 - **Role:** quick-fixer
 - **Worktree name:** board-defaults-layouts
