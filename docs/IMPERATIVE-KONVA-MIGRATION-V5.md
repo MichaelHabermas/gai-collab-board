@@ -254,6 +254,8 @@ src/canvas/                              # NEW top-level module
 
 **Every file stays under the 300-line project limit.** Every drag sub-module stays under 200 LOC.
 
+**Enforcement:** LOC limits (300 for CanvasHost/useCanvasSetup, 200 per drag module) are enforced in PR review; split before merge if exceeded.
+
 ---
 
 ## 6. Epic 0: Constitutional Amendments, Baselines, E2E Safety Net
@@ -262,7 +264,7 @@ src/canvas/                              # NEW top-level module
 
 ### 6.1 — Constitutional Amendments
 
-Add the following to `docs/CONSTITUTION.md` as Articles XX–XXV and XXVII (additive to Articles I–XIX). OOP vs. functions is an implementation note below, not a constitution article.
+Add the following to `docs/CONSTITUTION.md` as Articles XX–XXV and XXVII (additive to Articles I–XIX). When amending CONSTITUTION.md, do not use a range that implies XXVI; the implementation note replaces it. OOP vs. functions is an implementation note below, not a constitution article.
 
 #### Article XX — Imperative Canvas Rendering Contract
 
@@ -329,6 +331,7 @@ Add the following to `docs/CONSTITUTION.md` as Articles XX–XXV and XXVII (addi
 2. Epic 5 is the cut-over. It is a single atomic PR that replaces `<BoardCanvas>` with `<CanvasHost>`. This PR must pass all E2E tests.
 3. Epic 6 deletes dead files. It is a separate PR from Epic 5. If Epic 5 introduces regressions discovered post-merge, Epic 6 is blocked and Epic 5 is reverted.
 4. At no point during the migration may both `BoardCanvas` and `CanvasHost` be active simultaneously in production. Feature flags are acceptable for local testing only.
+5. **Rollback:** Revert the Epic 5 merge (or the BoardCanvas → CanvasHost swap in a follow-up PR); do not merge Epic 6 until Epic 5 is stable.
 
 **Implementation note (OOP vs. functions):** Imperative Konva node management requires mutable state (Konva nodes have lifecycle methods). Use classes for modules that own node lifecycles: `KonvaNodeManager`, `LayerManager`, `TransformerManager`, `OverlayManager`. Use pure functions for stateless logic: drag sub-modules, `ShapeEventWiring.wireEvents()`, shape factories. Controllers with simple state machines (`DrawingController`, `MarqueeController`, etc.) use closure-based modules (factory functions returning method objects). Use classes only when state genuinely benefits from `this` — justify in PR.
 
@@ -341,16 +344,18 @@ Capture BEFORE writing any factory code. Store results in `docs/perf-baselines/p
 | Frame time during 100-object drag | Chrome DevTools Performance tab, drag a selected shape for 3s, record p50/p95/p99 frame times | Chrome DevTools |
 | Frame time during 500-object pan | Same, but pan across a board with 500 objects | Chrome DevTools |
 | React component re-renders during drag | React DevTools Profiler, count StoreShapeRenderer re-renders during a single drag | React DevTools |
-| Zustand selector evaluations per drag frame | Custom instrumentation in `selectObject` and `selectGroupDragOffset` selectors | `scripts/capture-perf-baseline.ts` |
+| Zustand selector evaluations per drag frame | Custom instrumentation in `selectObject` and `selectGroupDragOffset` selectors | Manual or follow-up script |
 | Bundle size (gzipped) | `bun run build` then measure `dist/assets/*.js` | Build output |
 | `bun run perf:check` output | Run existing perf benchmark | Existing script |
-| Time-to-interactive for 1000-object board | Measure from `setAll()` to first `batchDraw()` complete | `scripts/capture-perf-baseline.ts` |
+| Time-to-interactive for 1000-object board | Measure from `setAll()` to first `batchDraw()` complete | Manual or follow-up script |
+
+*Epic 0: capture these metrics manually; the script is optional (see follow-up doc).*
 
 **Baseline capture:** Capture the metrics above manually and save to `docs/perf-baselines/pre-migration.json`. Schema and optional automated script spec are in [IMPERATIVE-KONVA-MIGRATION-V5-FOLLOW-UP.md](IMPERATIVE-KONVA-MIGRATION-V5-FOLLOW-UP.md#2-performance-baseline-capture). Epic 0 does not require an automated script; add one later if repeatability is needed.
 
 ### 6.3 — E2E Safety Net
 
-Write Playwright E2E tests for every interaction the migration touches. Tests must pass against the CURRENT codebase before any migration code is written (Article XIX pattern).
+Write Playwright E2E tests for every interaction the migration touches. Tests must pass against the CURRENT codebase before any migration code is written (Article XIX: E2E must pass on current codebase before migration changes; same pattern here).
 
 All E2E paths use `tests/e2e/`.
 
@@ -518,8 +523,6 @@ Only compound shapes (StickyNote: Group, Frame: Group) set `cacheable: true`. Si
 - [ ] No existing files modified
 - [ ] PR merged to `development` before Epic 2 begins
 
-*Check off each sub-task and DoD item above as completed.*
-
 ---
 
 ## 8. Epic 2: KonvaNodeManager & LayerManager
@@ -665,8 +668,6 @@ function createSelectionSyncController(
 - [ ] `bun run validate` passes
 - [ ] No existing files modified
 - [ ] PR merged to `development` before Epic 3 begins
-
-*Check off each sub-task and DoD item above as completed.*
 
 ---
 
@@ -1054,13 +1055,13 @@ Imperative replacement for the `SelectionDragHandle` component in BoardCanvas.
 - [ ] No existing files modified
 - [ ] PR merged to `development` before Epic 5 begins (may merge in parallel with Epic 3)
 
-*Check off each sub-task and DoD item above as completed.*
-
 ---
 
 ## 11. Epic 5: CanvasHost & Integration
 
 **Goal:** Build `CanvasHost.tsx` + `useCanvasSetup.ts` and swap in for `BoardCanvas.tsx`. This is the cut-over — the first moment existing files change.
+
+**Prerequisite:** Epics 2, 3, and 4 must be merged to `development` before opening the Epic 5 PR.
 
 **Estimated LOC:** ~250 for CanvasHost + ~200 for useCanvasSetup + ~50 for import change = ~500 total.
 
@@ -1202,6 +1203,7 @@ export function CanvasHost({ boardId, ... }: ICanvasHostProps): ReactElement {
 | Shape selection (click) | Click shape → blue border |
 | Multi-select (Shift+click) | Shift+click → multiple selected |
 | Marquee selection | Drag empty area → selection rect |
+| Selection box drag handle | Drag selection box → whole selection moves |
 | Shape drag (single) | Drag → position updates → Firestore |
 | Shape drag (multi) | Drag one → all selected move together |
 | Snap to grid | Enable grid → drag → snaps to 20px |
@@ -1226,7 +1228,7 @@ export function CanvasHost({ boardId, ... }: ICanvasHostProps): ReactElement {
 - [ ] 1. **Create `useCanvasSetup.ts`** (~200 LOC)
 - [ ] 2. **Create `CanvasHost.tsx`** (~250 LOC)
 - [ ] 3. **Wire all surviving hooks** — Verify `useCanvasViewport` works with plain Konva.Stage ref via `IStageRefLike`.
-- [ ] 4. **Replace `<BoardCanvas>` import** — Single import swap in parent component.
+- [ ] 4. **Replace `<BoardCanvas>` import** — Single import swap in `App` (`src/App.tsx`).
 - [ ] 5. **Run full E2E suite** — All 13 new Epic 0 tests + all existing tests must pass.
 - [ ] 6. **Run performance comparison** — Capture post-migration baselines.
 - [ ] 7. **Manual test matrix** — Every row in integration checklist verified.
@@ -1240,8 +1242,6 @@ export function CanvasHost({ boardId, ... }: ICanvasHostProps): ReactElement {
 - [ ] Performance baselines captured (post-migration)
 - [ ] `bun run validate` passes
 - [ ] **PR merged to `development`**
-
-*Check off each sub-task and DoD item above as completed.*
 
 ---
 
@@ -1265,7 +1265,7 @@ See **Appendix B** for the full 26-file manifest with LOC counts. Summary:
 
 ### Performance Verification
 
-Compare against Epic 0 baselines in `docs/perf-baselines/pre-migration.json`:
+Compare against Epic 0 baselines in `docs/perf-baselines/pre-migration.json`. If pre-migration p95 frame time is already >16 ms, investigate and improve before or alongside the migration.
 
 | Metric | Pre-Migration | Post-Migration Target | How to Measure |
 |--------|--------------|----------------------|---------------|
@@ -1284,23 +1284,23 @@ Compare against Epic 0 baselines in `docs/perf-baselines/pre-migration.json`:
 - [ ] 2. Remove `react-konva` from `package.json` — `bun install`.
 - [ ] 3. Update `shapes/index.ts` — keep only `STICKY_COLORS` and `StickyColor`.
 - [ ] 4. Fix orphaned imports — `bun run validate` catches these.
-- [ ] 5. Capture post-migration performance baselines — `docs/perf-baselines/post-migration.json`.
-- [ ] 6. Compare pre vs. post — write comparison in PR description.
-- [ ] 7. Update `CLAUDE.md` — Component chain: `CanvasHost → useCanvasSetup → KonvaNodeManager → Shape Factories`.
-- [ ] 8. Run `bun run release:gate` — full release validation.
+- [ ] 5. Re-evaluate `useFrameContainment` and `useViewportActions`; if canvas-only after migration, add to deletion manifest and delete in this PR or a follow-up.
+- [ ] 6. Capture post-migration performance baselines — `docs/perf-baselines/post-migration.json`.
+- [ ] 7. Compare pre vs. post — write comparison in PR description.
+- [ ] 8. Update `CLAUDE.md` — Component chain: `CanvasHost → useCanvasSetup → KonvaNodeManager → Shape Factories`.
+- [ ] 9. Run `bun run release:gate` — full release validation.
 
 ### Epic 6 Definition of Done
 
 - [ ] All 26 dead files deleted (Appendix B)
 - [ ] `react-konva` removed from package.json
+- [ ] `useFrameContainment` / `useViewportActions` either kept (non-canvas use confirmed) or added to manifest and deleted
 - [ ] Performance comparison shows ≥50% reduction in drag frame times
 - [ ] No regressions in any E2E test
 - [ ] `bun run validate` passes
 - [ ] `bun run release:gate` passes
 - [ ] CLAUDE.md updated
 - [ ] **PR merged to `development`**
-
-*Check off each sub-task and DoD item above as completed.*
 
 ---
 
@@ -1495,6 +1495,8 @@ type StoreApi<T> = {
 3. The full store state includes `objects`, `frameChildrenIndex`, `connectorsByEndpoint`, and all action functions. The subscription callback must check `state.objects !== prevState.objects` to determine if objects actually changed.
 
 4. Reference equality on the `objects` Record works because Zustand's `updateObject` creates a new Record spread: `{ ...state.objects, [id]: { ...state.objects[id], ...updates } }`. Only the changed entry gets a new reference.
+
+5. If upgrading Zustand, re-verify the subscription signature `subscribe(listener)` with `(state, prevState)` before relying on this contract.
 
 ### Correct subscription pattern
 
