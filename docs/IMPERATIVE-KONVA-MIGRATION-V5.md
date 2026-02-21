@@ -26,6 +26,7 @@
 16. [Appendix A: Honest LOC Estimates](#appendix-a-honest-loc-estimates)
 17. [Appendix B: Dying Code Manifest](#appendix-b-dying-code-manifest)
 18. [Appendix C: Zustand v5 Subscription Contract](#appendix-c-zustand-v5-subscription-contract)
+19. [Appendix D: Drag Behavior Checklist](#appendix-d-drag-behavior-checklist)
 
 ---
 
@@ -677,6 +678,8 @@ function createSelectionSyncController(
 
 **Estimated LOC:** ~1,200 new lines across 11 files.
 
+**Behavior contract:** Epic 3 is done only when every behavior in **[Appendix D: Drag Behavior Checklist](#appendix-d-drag-behavior-checklist)** is satisfied (by unit test, integration test, or explicit manual verification). The checklist is the source of truth for "what the current hook does"; the rewrite must preserve it.
+
 **Why "rewrite" not "extract":** Handler factory maps, ref-syncing, useCallback dependency arrays — all React-specific patterns that don't exist in imperative Konva. Every function signature changes because they read from stores directly instead of receiving values through React closures.
 
 ### DragCoordinator.ts (~50 LOC)
@@ -948,6 +951,7 @@ function createTextEditController(
 - [ ] DragCoordinator is a thin dispatcher, not a monolith
 - [ ] MarqueeController uses no React state (plain object)
 - [ ] TextEditController reuses canvasTextEditOverlay.ts unchanged
+- [ ] **All items in [Appendix D: Drag Behavior Checklist](#appendix-d-drag-behavior-checklist) verified** (each row marked as covered by unit test, integration test, or manual verification in PR)
 - [ ] `bun run validate` passes
 - [ ] No existing files modified
 - [ ] PR merged to `development` before Epic 5 begins (may merge in parallel with Epic 4)
@@ -1521,3 +1525,79 @@ const unsub = useObjectsStore.subscribe((state, prevState) => {
   }
 });
 ```
+
+---
+
+## Appendix D: Drag Behavior Checklist
+
+Derived from `src/hooks/useObjectDragHandlers.ts` and `src/hooks/useFrameContainment.ts`. Epic 3 DoD requires every row below to be verified (unit test, integration test, or explicit manual check in PR). Source line references are to the current hook for traceability.
+
+### Selection (click / tap)
+
+| ID | Behavior | Source | Verified by |
+|----|----------|--------|-------------|
+| D1 | Click on shape without meta key → selection becomes that single shape (`setSelectedIds([objectId])`). | 165–176 | |
+| D2 | Click on shape with Shift/Ctrl/Cmd → toggle that shape in selection (`toggleSelectedId(objectId)`). | 168–170 | |
+
+### Single-shape drag end
+
+| ID | Behavior | Source | Verified by |
+|----|----------|--------|-------------|
+| D3 | On drag end, alignment guides are cleared. | 180 | |
+| D4 | Single shape: final position is snapped to grid (20px) when `snapToGridEnabled`. | 269–273 | |
+| D5 | Single shape: `onObjectUpdate(objectId, { x, y })` (and optionally `parentFrameId`) is called; then `clearDragState`; spatial index dragging cleared. | 365–368 | |
+| D6 | Single frame drag: frame + all its children move by (dx, dy); children snapped to grid if enabled; single batch `onObjectsUpdate`. | 278–306 | |
+| D7 | Single non-frame, non-connector: `parentFrameId` resolved via center-point containment; if drop position center is inside a frame, `parentFrameId` set to that frame (smallest containing frame by area). | 308–318, useFrameContainment | |
+| D8 | Connectors and frames are never reparented (no `parentFrameId` update). | 235, 311, useFrameContainment | |
+| D9 | Auto-expand frame: if dropped child would extend outside current parent frame (padding 20, title height 32), frame bounds are expanded to include child and both object + frame updates sent in one `onObjectsUpdate`. | 320–363 | |
+| D10 | A frame cannot be the parent of itself (`excludeId` in containment check). | useFrameContainment | |
+
+### Multi-shape drag end (one of selected shapes dragged)
+
+| ID | Behavior | Source | Verified by |
+|----|----------|--------|-------------|
+| D11 | All selected shapes move by same (dx, dy); positions snapped to grid when `snapToGridEnabled`. | 191–252 | |
+| D12 | For each selected frame, its children (not already in selection) also move by (dx, dy) and get batch updates; each child updated only once. | 213–232 | |
+| D13 | For each selected non-frame, non-connector, `parentFrameId` resolved from final bounds; batch includes `parentFrameId` when changed. | 348–357 | |
+| D14 | Single `onObjectsUpdate(batch)`; then drag state and spatial index cleared. | 255–264 | |
+
+### Selection-box (selection handle) drag
+
+| ID | Behavior | Source | Verified by |
+|----|----------|--------|-------------|
+| D15 | Selection drag start: bounds stored; drag set = selected IDs plus all children of any selected frame; `spatialIndex.setDragging(dragIds)`; alignment guides cleared. | 374–391 | |
+| D16 | Selection drag move: `groupDragOffset` = (e.target.x - bounds.x1, e.target.y - bounds.y1); store updated via `setGroupDragOffset(offset)`. | 393–405 | |
+| D17 | Selection drag end: all selected (and frame children not in selection) get new position from bounds + groupDragOffset; snap applied to group origin when `snapToGridEnabled`; reparenting per shape via center-point; single `onObjectsUpdate(batch)`; bounds ref and groupDragOffset cleared; spatial index cleared. | 374–417 | |
+
+### Drag bound func (during drag)
+
+| ID | Behavior | Source | Verified by |
+|----|----------|--------|-------------|
+| D18 | When `snapToGridEnabled`, dragBoundFunc returns `snapPositionToGrid(pos, 20)`; alignment guides set to empty during drag. | 442–446 | |
+| D19 | When snap-to-grid off: alignment guides computed from dragged bounds and nearby candidates (spatial query with expand 4px, or all candidates); `computeSnappedPositionFromGuides` applied; returned position is snapped; guides updated (RAF-throttled). | 448–458 | |
+| D20 | dragBoundFunc is keyed by (objectId, width, height); cache invalidated when visible set or snap setting changes (imperative port: build candidates per drag or when store slice changes). | 509–561, useAlignmentGuideCache | |
+
+### Drag move (during one-shape or multi-shape drag)
+
+| ID | Behavior | Source | Verified by |
+|----|----------|--------|-------------|
+| D21 | When `snapToGridEnabled`, node position is applied with `applySnapPositionToNode` during dragmove. | 434–436 | |
+| D22 | Drag exemption set once per drag: either single object or (if multi-selected) selected IDs plus all children of any selected frame; `spatialIndex.setDragging(dragIds)`. | 439–456 | |
+| D23 | Dragging a frame: `setFrameDragOffset({ frameId, dx, dy })` where dx/dy are node position minus stored frame position. | 459–464 | |
+| D24 | Dragging a non-connector: drop target frame ID updated (throttled 100ms) via `findContainingFrame(dragBounds, frames, obj.id)`; `setDropTargetFrameId(targetFrame ?? null)`. | 465–477 | |
+
+### Frame containment rules (shared)
+
+| ID | Behavior | Source | Verified by |
+|----|----------|--------|-------------|
+| D25 | Containment uses **center point** of object bounds inside frame bounds. | useFrameContainment `isInsideFrame` | |
+| D26 | When multiple frames overlap, **smallest by area** is chosen as parent. | useFrameContainment `findContainingFrame` | |
+
+### Other handlers (must behave the same)
+
+| ID | Behavior | Source | Verified by |
+|----|----------|--------|-------------|
+| D27 | Enter frame (e.g. double-click frame): selection becomes that frame's children (`setSelectedIds([...childIds])`). | 451–458 | |
+| D28 | Transform end: resize/position snapped to grid when `snapToGridEnabled`; line-like shapes get width/height from points; `onObjectUpdate(objectId, attrs)`. | 441–462 | |
+| D29 | Text change: `queueObjectUpdate(objectId, { text })`. | 432–434 | |
+| D30 | After drag end handler runs, `clearDragState()` is called (clears groupDragOffset, dropTargetFrameId, frameDragOffset as per store). | 731–732 | |

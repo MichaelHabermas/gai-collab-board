@@ -2,6 +2,15 @@
 
 Short plan for improving the AI Assistant: defaults, behavior, context, and layout.
 
+## Key Objectives
+
+- Ensure modular design following SOLID principles:
+  - **Single Responsibility Principle (SRP)**:
+  - **Open-Closed Principle (OCP)**
+  - **Liskov Substitution Principle (LSP)**
+  - **Interface Segregation Principle (ISP)**
+  - **Dependency Inversion Principle (DIP)**
+
 ---
 
 ## 1. Defaults / single source of truth (Option A)
