@@ -4,23 +4,17 @@ Base branch: `spike/ai-chat-improvements`. Source: docs/AI-CHAT-IMPROVEMENT-PLAN
 
 ---
 
-## T1 — AI defaults module and executor merge
+## T1 — Create src/lib/boardObjectDefaults.ts
 
-- **Status:** done
-- **Tier:** opus
-- **Role:** architect
-- **Worktree name:** ai-defaults
-- **Description:** Add a single TypeScript module (e.g. `src/modules/ai/defaults.ts`) that exports typed default objects per intent: sticky, shape (rectangle/circle/line), frame, text, connector, plus compound intents (mindMap, flowchart, quadrant, columnLayout). Executors merge template + user-specified props (user wins); omitted fields stay as template values.
+- **Status:** review
+- **Tier:** architect
+- **Worktree name:** board-defaults-lib
+- **Description:** Add `src/lib/boardObjectDefaults.ts` as single source for board object default dimensions, colors, and options (constants only). Exports: sticky/frame/shape/text/connector defaults, STICKY_COLORS, StickyColor type.
 - **Acceptance criteria:**
-  1. `defaults.ts` exists with typed exports used by toolExecutor and compoundExecutor.
-  2. No duplicate default constants in toolExecutor.ts or compoundHelpers.ts; they import and merge.
-  3. Merge rule: start from template for that intent, overwrite only provided keys.
-  4. `bun run validate` passes.
+  1. File exists with all requested constants and type export.
+  2. `bun run validate` passes.
 - **Dependencies:** None
-- **Notes:** **Review #2 — REJECTED**
-  - File: `src/modules/ai/defaults.ts`
-  - Issue: `mergeWithTemplate` uses `if (value)` (line 214), which skips explicit falsy values (0, false, ''). The JSDoc requires overwriting when the key is present with `value !== undefined` so that e.g. `opacity: 0` overwrites the template.
-  - Fix: Change `if (value)` to `if (value !== undefined)` so only omitted keys keep template values; explicit falsy values overwrite.
+- **Notes:** Implemented; ready for review.
 
 ---
 
