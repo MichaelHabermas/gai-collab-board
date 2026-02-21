@@ -488,13 +488,19 @@ export interface IBoard {
   updatedAt: Timestamp;
 }
 
-export interface IBoardObject {
-  id: string;
-  type: ShapeType;
+export interface IPosition {
   x: number;
   y: number;
+}
+
+export interface ISize {
   width: number;
   height: number;
+}
+
+export interface IBoardObject extends IPosition, ISize {
+  id: string;
+  type: ShapeType;
   rotation: number;
   fill: string;
   stroke?: string;
@@ -506,21 +512,7 @@ export interface IBoardObject {
   updatedAt: Timestamp;
 }
 
-export interface IPosition {
-  x: number;
-  y: number;
-}
-
-export interface ISize {
-  width: number;
-  height: number;
-}
-
-export interface Transform {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+export interface Transform extends IPosition, ISize {
   rotation: number;
   scaleX: number;
   scaleY: number;
@@ -541,17 +533,15 @@ export interface PresenceData {
   visitorId: string;
   displayName: string;
   online: boolean;
-  lastSeen: number;
+  lastSeen: Timestamp;
   color: string;
 }
 
-export interface CursorData {
+export interface CursorData extends IPosition {
   uid: string;
-  x: number;
-  y: number;
   displayName: string;
   color: string;
-  lastUpdated: number;
+  lastUpdated: Timestamp;
 }
 ```
 

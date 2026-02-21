@@ -1205,27 +1205,27 @@
     {
       "event_id": "dev:claude:c1be01bb-63f4-4e66-a51c-5c875769242b",
       "source": "claude",
-      "timestamp": "2026-02-21T00:40:03.869Z",
+      "timestamp": "2026-02-21T00:50:01.309Z",
       "session_id": "c1be01bb-63f4-4e66-a51c-5c875769242b",
       "provider": "anthropic",
-      "model": "claude-opus-4-6",
-      "input_tokens": 11,
-      "output_tokens": 43,
+      "model": "claude-opus-4-6,claude-haiku-4-5-20251001",
+      "input_tokens": 31,
+      "output_tokens": 45,
       "cache_read_tokens": 173666,
-      "cache_create_tokens": 160188,
-      "total_tokens": 333908,
-      "estimated_cost": 3.2674139999999996,
+      "cache_create_tokens": 292960,
+      "total_tokens": 466702,
+      "estimated_cost": 3.4002099999999995,
       "request_count": 1,
       "estimation_method": "best_effort",
       "metadata": {
         "hook_source": "claude",
-        "by_model_count": 1
+        "by_model_count": 2
       }
     },
     {
       "event_id": "mcp:claude:c1be01bb-63f4-4e66-a51c-5c875769242b",
       "source": "mcp",
-      "timestamp": "2026-02-21T00:40:04.118Z",
+      "timestamp": "2026-02-21T00:50:01.532Z",
       "session_id": "c1be01bb-63f4-4e66-a51c-5c875769242b",
       "provider": "claude",
       "model": "mcp-tooling",
@@ -1240,6 +1240,46 @@
       "metadata": {
         "origin_source": "claude",
         "tool_call_count": 1
+      }
+    },
+    {
+      "event_id": "dev:claude:e1b88441-218d-4a6b-b765-63cd83834ba6",
+      "source": "claude",
+      "timestamp": "2026-02-21T01:01:39.147Z",
+      "session_id": "e1b88441-218d-4a6b-b765-63cd83834ba6",
+      "provider": "anthropic",
+      "model": "claude-opus-4-6",
+      "input_tokens": 36,
+      "output_tokens": 235,
+      "cache_read_tokens": 1687478,
+      "cache_create_tokens": 91317,
+      "total_tokens": 1779066,
+      "estimated_cost": 4.26157575,
+      "request_count": 1,
+      "estimation_method": "best_effort",
+      "metadata": {
+        "hook_source": "claude",
+        "by_model_count": 1
+      }
+    },
+    {
+      "event_id": "mcp:claude:e1b88441-218d-4a6b-b765-63cd83834ba6",
+      "source": "mcp",
+      "timestamp": "2026-02-21T01:01:40.060Z",
+      "session_id": "e1b88441-218d-4a6b-b765-63cd83834ba6",
+      "provider": "claude",
+      "model": "mcp-tooling",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_create_tokens": 0,
+      "total_tokens": 0,
+      "estimated_cost": 0.006,
+      "request_count": 12,
+      "estimation_method": "best_effort",
+      "metadata": {
+        "origin_source": "claude",
+        "tool_call_count": 12
       }
     }
   ]
