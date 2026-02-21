@@ -87,10 +87,10 @@ vi.mock('@/lib/perfTimer', () => ({
 }));
 
 vi.mock('@/lib/writeQueue', () => ({
-  queueWrite: vi.fn(),
+  queueObjectUpdate: vi.fn(),
 }));
 
-import { queueWrite } from '@/lib/writeQueue';
+import { queueObjectUpdate } from '@/lib/writeQueue';
 import { spatialIndex } from '@/stores/objectsStore';
 import { snapPositionToGrid, snapResizeRectToGrid, applySnapPositionToNode } from '@/lib/snapToGrid';
 import { getWidthHeightFromPoints } from '@/lib/lineTransform';
@@ -381,7 +381,7 @@ describe('useObjectDragHandlers', () => {
   // --- Text Change ---
 
   describe('handleTextChange', () => {
-    it('optimistically updates store and queues write', () => {
+    it('delegates to canonical queueObjectUpdate', () => {
       const config = makeConfig();
       const { result } = renderHook(() => useObjectDragHandlers(config));
 
@@ -389,8 +389,8 @@ describe('useObjectDragHandlers', () => {
         result.current.handleTextChange('a', 'Hello world');
       });
 
-      expect(mockUpdateObject).toHaveBeenCalledWith('a', { text: 'Hello world' });
-      expect(queueWrite).toHaveBeenCalledWith('a', { text: 'Hello world' });
+      // handleTextChange delegates to the canonical queueObjectUpdate (Article X)
+      expect(queueObjectUpdate).toHaveBeenCalledWith('a', { text: 'Hello world' });
     });
   });
 
@@ -458,8 +458,7 @@ describe('useObjectDragHandlers', () => {
         handler('Updated text');
       });
 
-      expect(mockUpdateObject).toHaveBeenCalledWith('a', { text: 'Updated text' });
-      expect(queueWrite).toHaveBeenCalledWith('a', { text: 'Updated text' });
+      expect(queueObjectUpdate).toHaveBeenCalledWith('a', { text: 'Updated text' });
     });
   });
 

@@ -30,7 +30,7 @@ import { resolveParentFrameIdFromFrames, findContainingFrame } from '@/hooks/use
 import { useAlignmentGuideCache } from '@/hooks/useAlignmentGuideCache';
 import { useObjectDragHandlersRefSync } from '@/hooks/useObjectDragHandlersRefSync';
 import { perfTime } from '@/lib/perfTimer';
-import { queueWrite } from '@/lib/writeQueue';
+import { queueObjectUpdate } from '@/lib/writeQueue';
 
 const GRID_SIZE = 20;
 const DROP_TARGET_THROTTLE_MS = 100;
@@ -543,8 +543,7 @@ export function useObjectDragHandlers(
   // --- Text change (optimistic + queued write) ---
 
   const handleTextChange = useCallback((objectId: string, text: string) => {
-    useObjectsStore.getState().updateObject(objectId, { text });
-    queueWrite(objectId, { text });
+    queueObjectUpdate(objectId, { text });
   }, []);
 
   // --- Drag move (grid snap, spatial exemption, drop target detection) ---

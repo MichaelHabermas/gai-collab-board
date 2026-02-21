@@ -7,6 +7,7 @@
  */
 
 import type { IBoardRepository, IUpdateObjectParams } from '@/types';
+import { useObjectsStore } from '@/stores/objectsStore';
 
 const DEBOUNCE_MS = 500;
 
@@ -50,6 +51,16 @@ export function queueWrite(objectId: string, changes: IUpdateObjectParams): void
   }
 
   timer = setTimeout(flush, DEBOUNCE_MS);
+}
+
+/**
+ * Canonical high-frequency update path (Constitution Article X).
+ * Atomically: (a) optimistic Zustand store update, (b) write queue enqueue.
+ * All high-frequency property mutations MUST use this function.
+ */
+export function queueObjectUpdate(objectId: string, updates: IUpdateObjectParams): void {
+  useObjectsStore.getState().updateObject(objectId, updates);
+  queueWrite(objectId, updates);
 }
 
 /** Flush all pending writes immediately. Returns a promise that resolves when the batch completes. */
