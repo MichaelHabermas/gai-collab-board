@@ -153,7 +153,7 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ## IK1 — Constitutional Amendments (Articles XX–XXV, XXVII)
 
-- **Status:** pending
+- **Status:** done
 - **Tier:** haiku
 - **Role:** quick-fixer
 - **Worktree name:** epic0-constitution
@@ -175,7 +175,7 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ## IK3 — E2E Drag Tests
 
-- **Status:** pending
+- **Status:** done
 - **Tier:** sonnet
 - **Role:** tester
 - **Worktree name:** epic0-e2e-drag
@@ -186,7 +186,7 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ## IK4 — E2E Connector + Transform Tests
 
-- **Status:** pending
+- **Status:** done
 - **Tier:** sonnet
 - **Role:** tester
 - **Worktree name:** epic0-e2e-connector-transform
@@ -197,18 +197,20 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ## IK5 — E2E Frame + Text + Drawing Tests
 
-- **Status:** pending
+- **Status:** done
 - **Tier:** sonnet
 - **Role:** tester
 - **Worktree name:** epic0-e2e-frame-text-draw
 - **Description:** Playwright tests: frameReparenting.spec.ts, stickyTextEdit.spec.ts, frameTitleEdit.spec.ts, alignmentGuides.spec.ts, drawingTools.spec.ts.
 - **Dependencies:** IK4
+- **Notes:** All 5 new specs pass. snapToGridDrag.spec.ts passes. textOverlayStability.spec.ts: 2 tests fail (overlay closes on blur when pan/zoom triggers focus loss); StickyNote given data-testid for overlay.
 
 ---
 
 ## IK6 — Factory Types + Registry
 
-- **Status:** pending
+- **Status:** done
+- **Notes:** types.ts + index.ts created. Registry has stub entries for all 7 shape types; IK7/8/9 will replace with real factories. format/lint/typecheck pass; main.test.tsx timeout is pre-existing.
 - **Tier:** sonnet
 - **Role:** architect
 - **Worktree name:** epic1-factory-types
@@ -219,7 +221,7 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ## IK7 — Simple Factories
 
-- **Status:** pending
+- **Status:** done
 - **Tier:** sonnet
 - **Role:** architect
 - **Worktree name:** epic1-simple-factories
@@ -230,18 +232,19 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ## IK8 — Complex Factories
 
-- **Status:** pending
+- **Status:** done
 - **Tier:** opus
 - **Role:** architect
 - **Worktree name:** epic1-complex-factories
 - **Description:** createStickyNote.ts and createFrame.ts (cacheable=true) with tests.
 - **Dependencies:** IK6
+- **Notes:** createStickyNote.ts, createFrame.ts, types.ts, index.ts created. Unit tests in tests/unit/canvasFactories.test.ts (Konva mocked for jsdom). All 13 factory tests pass. validate fails only on pre-existing main.test.tsx timeout.
 
 ---
 
 ## IK9 — Connector + TextElement Factories
 
-- **Status:** pending
+- **Status:** done
 - **Tier:** sonnet
 - **Role:** architect
 - **Worktree name:** epic1-connector-text

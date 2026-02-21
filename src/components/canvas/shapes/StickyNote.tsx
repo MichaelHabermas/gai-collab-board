@@ -127,6 +127,7 @@ export const StickyNote = memo(
 
           const textarea = document.createElement('textarea');
           textarea.className = 'sticky-note-edit-overlay';
+          textarea.setAttribute('data-testid', 'sticky-note-edit-overlay');
           document.body.appendChild(textarea);
 
           textarea.value = text;
