@@ -78,7 +78,7 @@ function makeObj(overrides: Partial<IBoardObject> & { id: string }): IBoardObjec
     x: 0,
     y: 0,
     width: 200,
-    height: 120,
+    height: 200,
     rotation: 0,
     fill: '#fef08a',
     createdBy: USER_ID,
@@ -207,8 +207,8 @@ describe('compoundExecutor', () => {
   describe('groupIntoFrame', () => {
     it('creates frame around objects and updates parentFrameId', async () => {
       const objects = [
-        makeObj({ id: 'obj-1', x: 100, y: 100, width: 200, height: 120 }),
-        makeObj({ id: 'obj-2', x: 400, y: 200, width: 200, height: 120 }),
+        makeObj({ id: 'obj-1', x: 100, y: 100, width: 200, height: 200 }),
+        makeObj({ id: 'obj-2', x: 400, y: 200, width: 200, height: 200 }),
       ];
       mockCreateObject.mockResolvedValue(makeObj({ id: 'frame-1', type: 'frame' }));
 
@@ -352,7 +352,7 @@ describe('compoundExecutor', () => {
     it('returns object properties', async () => {
       const obj = makeObj({
         id: 'obj-1',
-        x: 50, y: 60, width: 200, height: 120,
+        x: 50, y: 60, width: 200, height: 200,
         text: 'Hello', fill: '#fef08a',
       });
 

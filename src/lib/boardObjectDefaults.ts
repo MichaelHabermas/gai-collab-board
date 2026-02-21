@@ -1,7 +1,18 @@
 /** Single source for board object default dimensions, colors, and options. Constants only. */
 
-export const DEFAULT_STICKY_WIDTH = 200;
-export const DEFAULT_STICKY_HEIGHT = 120;
+import { IDimensions, IPosition } from "@/types";
+
+export const DEFAULT_WIDTH = 200;
+export const DEFAULT_HEIGHT = 200;
+
+export const DEFAULT_STICKY_WIDTH = DEFAULT_WIDTH;
+export const DEFAULT_STICKY_HEIGHT = DEFAULT_HEIGHT;
+
+/** Default size for rectangle (square) shape when not specified. */
+export const DEFAULT_RECTANGLE_WIDTH = DEFAULT_WIDTH;
+export const DEFAULT_RECTANGLE_HEIGHT = DEFAULT_HEIGHT;
+export const DEFAULT_DIMENSIONS: IDimensions = { width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT };
+export const DEFAULT_POSITION: IPosition = { x: 100, y: 100 };
 
 export const DEFAULT_FILL = '#fef08a';
 export const DEFAULT_FONT_COLOR = '#1e293b';

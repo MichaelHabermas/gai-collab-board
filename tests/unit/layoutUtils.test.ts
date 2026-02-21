@@ -120,7 +120,7 @@ describe('layoutUtils', () => {
   describe('constants', () => {
     it('exports expected constant values', () => {
       expect(DEFAULT_STICKY_WIDTH).toBe(200);
-      expect(DEFAULT_STICKY_HEIGHT).toBe(120);
+      expect(DEFAULT_STICKY_HEIGHT).toBe(200);
       expect(DEFAULT_FRAME_PADDING).toBe(30);
       expect(FRAME_PLACEHOLDER_ID).toBe('__frame__');
     });

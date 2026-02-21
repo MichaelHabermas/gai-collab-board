@@ -47,7 +47,7 @@ function makeObject(overrides: Partial<IBoardObject> & { id: string; type: strin
     x: 0,
     y: 0,
     width: 200,
-    height: 120,
+    height: 200,
     rotation: 0,
     fill: '#fef08a',
     createdBy: USER_ID,
@@ -447,7 +447,7 @@ describe('AI Board Agent – Command Test Suite', () => {
 
       // Now arrange the created objects in a 2x3 grid
       const gridObjects = createdIds.map((id) =>
-        makeObject({ id, type: 'sticky', width: 200, height: 120, x: 0, y: 0 })
+        makeObject({ id, type: 'sticky', width: 200, height: 200, x: 0, y: 0 })
       );
       const gridCtx = createContext(gridObjects);
       const { execute: gridExecute } = createToolExecutor(gridCtx);

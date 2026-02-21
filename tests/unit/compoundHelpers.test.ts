@@ -100,7 +100,7 @@ describe('resolveShapeType', () => {
 describe('defaultWidthForType', () => {
   it('returns known defaults', () => {
     expect(defaultWidthForType('sticky')).toBe(200);
-    expect(defaultWidthForType('rectangle')).toBe(150);
+    expect(defaultWidthForType('rectangle')).toBe(200);
     expect(defaultWidthForType('circle')).toBe(100);
     expect(defaultWidthForType('frame')).toBe(300);
   });
@@ -116,13 +116,13 @@ describe('defaultWidthForType', () => {
 
 describe('defaultHeightForType', () => {
   it('returns known defaults', () => {
-    expect(defaultHeightForType('sticky')).toBe(120);
-    expect(defaultHeightForType('rectangle')).toBe(100);
+    expect(defaultHeightForType('sticky')).toBe(200);
+    expect(defaultHeightForType('rectangle')).toBe(200);
     expect(defaultHeightForType('frame')).toBe(200);
   });
 
-  it('falls back to 120 for unknown type', () => {
-    expect(defaultHeightForType('unknown')).toBe(120);
+  it('falls back to 200 for unknown type', () => {
+    expect(defaultHeightForType('unknown')).toBe(200);
   });
 });
 

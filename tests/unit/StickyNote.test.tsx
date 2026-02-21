@@ -8,7 +8,7 @@ const mockOverlayRect = {
   top: 24,
   left: 36,
   width: 180,
-  height: 120,
+  height: 200,
   avgScale: 1,
 };
 

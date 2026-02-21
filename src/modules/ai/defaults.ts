@@ -2,6 +2,8 @@ import type { ConnectorAnchor } from '@/types';
 import {
   DEFAULT_STICKY_WIDTH,
   DEFAULT_STICKY_HEIGHT,
+  DEFAULT_RECTANGLE_WIDTH,
+  DEFAULT_RECTANGLE_HEIGHT,
   DEFAULT_FRAME_WIDTH,
   DEFAULT_FRAME_HEIGHT,
   DEFAULT_FRAME_PADDING,
@@ -19,6 +21,8 @@ export type { StickyColor } from '@/lib/boardObjectDefaults';
 export {
   DEFAULT_STICKY_WIDTH,
   DEFAULT_STICKY_HEIGHT,
+  DEFAULT_RECTANGLE_WIDTH,
+  DEFAULT_RECTANGLE_HEIGHT,
   DEFAULT_FRAME_WIDTH,
   DEFAULT_FRAME_HEIGHT,
   DEFAULT_FRAME_PADDING,
@@ -110,8 +114,8 @@ export const STICKY_TEMPLATE: IStickyDefaults = {
 };
 
 export const SHAPE_RECTANGLE_TEMPLATE: IShapeDefaults = {
-  width: 150,
-  height: 100,
+  width: DEFAULT_RECTANGLE_WIDTH,
+  height: DEFAULT_RECTANGLE_HEIGHT,
   fill: DEFAULT_SHAPE_FILL,
 };
 

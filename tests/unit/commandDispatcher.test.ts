@@ -17,7 +17,7 @@ function makeObject(overrides: Partial<IBoardObject> = {}): IBoardObject {
     x: 0,
     y: 0,
     width: 200,
-    height: 120,
+    height: 200,
     rotation: 0,
     fill: '#fef08a',
     createdBy: 'user-1',
@@ -68,7 +68,7 @@ describe('createCommandDispatcher', () => {
         x: 100,
         y: 200,
         width: 200,
-        height: 120,
+        height: 200,
         fill: '#fef08a',
         text: 'Hello',
       },
@@ -86,7 +86,7 @@ describe('createCommandDispatcher', () => {
         x: 100,
         y: 200,
         width: 200,
-        height: 120,
+        height: 200,
         fill: '#fef08a',
         text: 'Hello',
         createdBy: 'user-1',
@@ -235,7 +235,7 @@ describe('createCommandDispatcher', () => {
       const dispatcher = makeDispatcher();
       const result = await dispatcher.applyRaw({
         action: 'CREATE',
-        payload: { type: 'sticky', x: 0, y: 0, width: 200, height: 120, fill: '#fef08a' },
+        payload: { type: 'sticky', x: 0, y: 0, width: 200, height: 200, fill: '#fef08a' },
       });
 
       expect(result.success).toBe(true);
