@@ -10,6 +10,7 @@ import { getAnchorPosition } from '@/lib/connectorAnchors';
 import { computeAlignUpdates, computeDistributeUpdates } from '@/lib/alignDistribute';
 import { STICKY_COLORS } from '@/components/canvas/shapes';
 import { createCompoundExecutor, COMPOUND_TOOL_NAMES } from './compoundExecutor';
+import { createBoardStateManager, type IBoardStateProvider } from '@/lib/boardStateManager';
 
 const DEFAULT_STICKY_WIDTH = 200;
 const DEFAULT_STICKY_HEIGHT = 120;
@@ -76,6 +77,20 @@ export interface IToolExecutorContext {
 
 export const createToolExecutor = (ctx: IToolExecutorContext) => {
   const { boardId, createdBy, userId, getObjects } = ctx;
+
+  const stateProvider: IBoardStateProvider = {
+    getObjects() {
+      const arr = getObjects();
+      const record: Record<string, IBoardObject> = {};
+      for (const obj of arr) {
+        record[obj.id] = obj;
+      }
+
+      return record;
+    },
+    getViewport: () => ({ position: { x: 0, y: 0 }, scale: { x: 1, y: 1 } }),
+  };
+  const stateManager = createBoardStateManager(stateProvider);
 
   const compoundExecutor = createCompoundExecutor({
     boardId,
@@ -475,43 +490,11 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
 
       case 'getBoardState': {
         const { includeDetails = false } = tool.arguments as { includeDetails?: boolean };
-        const objects = getObjects();
+        const elements = stateManager.getElementsForAI(includeDetails);
+
         return {
-          objectCount: objects.length,
-          objects: objects.map((obj) => {
-            if (includeDetails) {
-              const base = {
-                id: obj.id,
-                type: obj.type,
-                x: obj.x,
-                y: obj.y,
-                width: obj.width,
-                height: obj.height,
-                text: obj.text,
-                fill: obj.fill,
-              };
-              if (obj.type === 'connector') {
-                return {
-                  ...base,
-                  fromObjectId: obj.fromObjectId,
-                  toObjectId: obj.toObjectId,
-                  ...(obj.fromAnchor !== undefined && { fromAnchor: obj.fromAnchor }),
-                  ...(obj.toAnchor !== undefined && { toAnchor: obj.toAnchor }),
-                };
-              }
-
-              return base;
-            }
-
-            return {
-              id: obj.id,
-              type: obj.type,
-              x: obj.x,
-              y: obj.y,
-              text: obj.text,
-              fill: obj.fill,
-            };
-          }),
+          objectCount: elements.length,
+          objects: elements,
         };
       }
 
