@@ -16,7 +16,7 @@ We are Live! Firebase hosting configured, AI proxy deployed to Render.
 
 ### Core Whiteboard
 
-- **Infinite Canvas** — Smooth pan and zoom at 60 FPS
+- **Infinite Canvas** — Smooth pan and zoom (performance varies by device)
 - **Sticky Notes** — Create, edit text, and change colors
 - **Shapes** — Rectangles, circles, and lines with customizable colors
 - **Connectors** — Lines and arrows with configurable arrowheads (none, start, end, both) and stroke styles (solid, dashed, dotted)
@@ -122,6 +122,12 @@ The app will be available at `http://localhost:5173`
 ## Deployment
 
 To deploy to Render, see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for build, proxy, and environment variables.
+
+## Demo & Resources
+
+- **Demo Video:** [Watch on Loom](https://www.loom.com/share/d11bd491f9f74db5941d23fce2c6ce6d)
+- **X/Twitter:** [Launch post](https://x.com/MichaelHabermas/status/1894773866140549456)
+- **LinkedIn:** [Launch post](https://www.linkedin.com/posts/michael-habermas_collabboard-activity-7430287496992911360-D67-)
 
 ## Usage
 
@@ -251,6 +257,8 @@ flowchart LR
 | Cursor sync latency | <50ms                                 |
 | Object capacity     | 500+ objects                          |
 | Concurrent users    | 5+ without degradation                |
+
+> Performance optimization is ongoing. Benchmarked at 44 FPS on Chromium; varies by device, object count, and load.
 
 ## Contributing
 
