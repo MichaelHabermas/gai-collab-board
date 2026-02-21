@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { useComments } from '@/hooks/useComments';
 import * as commentService from '@/modules/sync/commentService';
 import type { IComment } from '@/types';
@@ -54,7 +54,7 @@ describe('useComments', () => {
 
   it('updates state on error', () => {
     const mockError = new Error('Test Error');
-    (commentService.subscribeToComments as any).mockImplementation((_id: string, cb: Function, errorCb: Function) => {
+    (commentService.subscribeToComments as any).mockImplementation((_id: string, _cb: Function, errorCb: Function) => {
       errorCb(mockError);
       return mockUnsubscribe;
     });

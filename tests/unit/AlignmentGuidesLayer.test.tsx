@@ -49,8 +49,9 @@ describe('AlignmentGuidesLayer', () => {
       <AlignmentGuidesLayer guides={{ horizontal: [100], vertical: [] }} />
     );
     
-    const line = getAllByTestId('konva-line')[0];
-    expect(line.getAttribute('stroke')).toBe('#3b82f6');
+    const lines = getAllByTestId('konva-line');
+    const line = lines[0];
+    expect(line?.getAttribute('stroke')).toBe('#3b82f6');
   });
 
   it('computes color from CSS variable when theme is present', () => {
@@ -70,9 +71,9 @@ describe('AlignmentGuidesLayer', () => {
     const { getAllByTestId } = render(
       <AlignmentGuidesLayer guides={{ horizontal: [100], vertical: [] }} />
     );
-    
-    const line = getAllByTestId('konva-line')[0];
-    expect(line.getAttribute('stroke')).toBe('#ff0000');
+    const lines = getAllByTestId('konva-line');
+    const line = lines[0];
+    expect(line?.getAttribute('stroke')).toBe('#ff0000');
 
     // Restore original
     window.getComputedStyle = originalGetComputedStyle;

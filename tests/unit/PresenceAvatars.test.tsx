@@ -4,55 +4,55 @@ import { PresenceAvatars } from '@/components/presence/PresenceAvatars';
 import type { IPresenceData } from '@/modules/sync/realtimeService';
 
 describe('PresenceAvatars', () => {
+  const now = Date.now();
   const mockUsers: IPresenceData[] = [
     {
       uid: 'user1',
       displayName: 'Alice Smith',
+      photoURL: null,
       color: '#ef4444',
       online: true,
-      lastActive: Date.now(),
-      boardId: 'board1',
+      lastSeen: now,
     },
     {
       uid: 'user2',
       displayName: 'Bob Jones',
+      photoURL: null,
       color: '#f97316',
       online: false,
-      lastActive: Date.now(),
-      boardId: 'board1',
+      lastSeen: now,
     },
     {
       uid: 'user3',
       displayName: 'Charlie Brown',
+      photoURL: 'https://example.com/avatar.jpg',
       color: '#eab308',
       online: true,
-      lastActive: Date.now(),
-      boardId: 'board1',
-      photoURL: 'https://example.com/avatar.jpg',
+      lastSeen: now,
     },
     {
       uid: 'user4',
       displayName: 'David',
+      photoURL: null,
       color: '#22c55e',
       online: true,
-      lastActive: Date.now(),
-      boardId: 'board1',
+      lastSeen: now,
     },
     {
       uid: 'user5',
       displayName: 'Eve',
+      photoURL: null,
       color: '#invalid-color',
       online: true,
-      lastActive: Date.now(),
-      boardId: 'board1',
+      lastSeen: now,
     },
     {
       uid: 'user6',
       displayName: 'Frank',
+      photoURL: null,
       color: '#3b82f6',
       online: true,
-      lastActive: Date.now(),
-      boardId: 'board1',
+      lastSeen: now,
     },
   ];
 

@@ -229,8 +229,7 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           width?: number;
           height?: number;
         };
-        const frameTitle =
-          rawTitle && rawTitle !== '' ? rawTitle : DEFAULT_FRAME_TITLE;
+        const frameTitle = rawTitle && rawTitle !== '' ? rawTitle : DEFAULT_FRAME_TITLE;
         const userProvided = {
           ...(width !== undefined && { width }),
           ...(height !== undefined && { height }),
@@ -328,8 +327,7 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           fontSize?: number;
           color?: string;
         };
-        const textContent =
-          rawText && rawText !== '' ? rawText : DEFAULT_TEXT_CONTENT;
+        const textContent = rawText && rawText !== '' ? rawText : DEFAULT_TEXT_CONTENT;
         const userProvided = {
           ...(fontSize !== undefined && { fontSize }),
           ...(color !== undefined && { fill: color }),

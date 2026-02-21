@@ -22,6 +22,19 @@ describe('snapToGrid', () => {
       expect(snapToGrid(-5, gridSize)).toEqual(0);
       expect(snapToGrid(-15, gridSize)).toBe(-20);
     });
+
+    it('returns 0 instead of -0 for consistency', () => {
+      const result = snapToGrid(-0.0001, gridSize);
+      expect(result).toBe(0);
+      expect(Object.is(result, -0)).toBe(false);
+    });
+
+    it('works with different grid sizes', () => {
+      expect(snapToGrid(7, 10)).toBe(10);
+      expect(snapToGrid(14, 10)).toBe(10);
+      expect(snapToGrid(5, 5)).toBe(5);
+      expect(snapToGrid(12, 5)).toBe(10);
+    });
   });
 
   describe('snapPositionToGrid', () => {
@@ -66,6 +79,52 @@ describe('snapToGrid', () => {
         gridSize
       );
       expect(result).toEqual({ x: 20, y: 20, width: 80, height: 100 });
+    });
+
+    it('snaps top edge while keeping bottom edge fixed', () => {
+      const result = snapResizeRectToGrid(
+        { x: 20, y: 20, width: 80, height: 80 },
+        { x: 20, y: 7, width: 80, height: 93 },
+        gridSize
+      );
+      expect(result).toEqual({ x: 20, y: 0, width: 80, height: 100 });
+    });
+
+    it('enforces minimum height when snapping would make height < gridSize (top moved)', () => {
+      const oldRect = { x: 20, y: 20, width: 80, height: 80 };
+      const nextRect = { x: 20, y: 95, width: 80, height: 5 };
+      const result = snapResizeRectToGrid(oldRect, nextRect, gridSize);
+      expect(result.height).toBe(gridSize);
+      expect(result.y).toBe(100 - gridSize);
+    });
+
+    it('enforces minimum height when snapping would make height < gridSize (bottom moved)', () => {
+      const oldRect = { x: 20, y: 20, width: 80, height: 80 };
+      const nextRect = { x: 20, y: 20, width: 80, height: 5 };
+      const result = snapResizeRectToGrid(oldRect, nextRect, gridSize);
+      expect(result).toEqual({ x: 20, y: 20, width: 80, height: 20 });
+    });
+
+    it('enforces minimum width when snapping would make width < gridSize (left moved)', () => {
+      const oldRect = { x: 20, y: 20, width: 80, height: 80 };
+      const nextRect = { x: 95, y: 20, width: 5, height: 80 };
+      const result = snapResizeRectToGrid(oldRect, nextRect, gridSize);
+      expect(result.width).toBe(gridSize);
+      expect(result.x).toBe(100 - gridSize);
+    });
+
+    it('enforces minimum width when snapping would make width < gridSize (right moved)', () => {
+      const oldRect = { x: 20, y: 20, width: 80, height: 80 };
+      const nextRect = { x: 20, y: 20, width: 5, height: 80 };
+      const result = snapResizeRectToGrid(oldRect, nextRect, gridSize);
+      expect(result).toEqual({ x: 20, y: 20, width: 20, height: 80 });
+    });
+
+    it('returns unchanged rect when width and height change below epsilon', () => {
+      const oldRect = { x: 20, y: 20, width: 80, height: 80 };
+      const nextRect = { x: 20, y: 20, width: 80.0001, height: 80.0001 };
+      const result = snapResizeRectToGrid(oldRect, nextRect, gridSize);
+      expect(result).toEqual(nextRect);
     });
   });
 

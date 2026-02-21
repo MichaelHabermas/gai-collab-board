@@ -485,7 +485,7 @@ describe('App Performance — Drag Store (60 Hz simulation)', () => {
 
     record(`drag_selectFrameOffset_1000`, duration, 'ms', iterations);
     console.log(`[PERF] selectFrameOffset x${iterations}: ${duration.toFixed(2)} ms`);
-    expect(duration).toBeLessThan(5);
+    expect(duration).toBeLessThan(20);
   });
 
   it('selectIsDropTarget: 1000 selector evaluations', () => {

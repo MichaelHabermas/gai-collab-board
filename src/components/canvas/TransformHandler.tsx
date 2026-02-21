@@ -58,7 +58,6 @@ export const TransformHandler = memo(
       nodes.forEach((node) => {
         const scaleX = node.scaleX();
         const scaleY = node.scaleY();
-        const className = node.getClassName();
 
         let attrs: ITransformEndAttrs;
 

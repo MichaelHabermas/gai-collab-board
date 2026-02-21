@@ -5,7 +5,9 @@ import {
   isInsideFrame,
   findContainingFrame,
   getFrameChildren,
+  getChildrenBounds,
   resolveParentFrameId,
+  resolveParentFrameIdFromFrames,
   hasParentFrame,
 } from '@/hooks/useFrameContainment';
 
@@ -122,6 +124,32 @@ describe('getFrameChildren', () => {
   });
 });
 
+// ── getChildrenBounds ────────────────────────────────────────────────
+
+describe('getChildrenBounds', () => {
+  it('returns null when frame has no children', () => {
+    const objects = [makeObj({ id: 'orphan' })];
+    expect(getChildrenBounds('frame-1', objects)).toBeNull();
+  });
+
+  it('returns null when objects array is empty', () => {
+    expect(getChildrenBounds('frame-1', [])).toBeNull();
+  });
+
+  it('returns bounding box of all direct children', () => {
+    const frame = makeFrame({ id: 'frame-1' });
+    const child1 = makeObj({ id: 'c1', parentFrameId: 'frame-1', x: 10, y: 20, width: 50, height: 30 });
+    const child2 = makeObj({ id: 'c2', parentFrameId: 'frame-1', x: 70, y: 5, width: 20, height: 25 });
+    const objects = [frame, child1, child2];
+    const bounds = getChildrenBounds('frame-1', objects);
+    expect(bounds).not.toBeNull();
+    expect(bounds?.x).toBe(10);
+    expect(bounds?.y).toBe(5);
+    expect(bounds?.width).toBe(80);
+    expect(bounds?.height).toBe(45);
+  });
+});
+
 // ── hasParentFrame ───────────────────────────────────────────────────
 
 describe('hasParentFrame', () => {
@@ -173,5 +201,44 @@ describe('resolveParentFrameId', () => {
     const sticky = makeObj({ id: 'sticky-1', x: 100, y: 100, width: 50, height: 50 });
     const bounds = { x1: 100, y1: 100, x2: 150, y2: 150 }; // center 125,125
     expect(resolveParentFrameId(sticky, bounds, [bigFrame, smallFrame, sticky])).toBe('frame-small');
+  });
+});
+
+// ── resolveParentFrameIdFromFrames ───────────────────────────────────
+
+describe('resolveParentFrameIdFromFrames', () => {
+  const frames = [
+    makeFrame({ id: 'frame-1', x: 0, y: 0, width: 300, height: 300 }),
+  ];
+
+  it('returns undefined for frame objects', () => {
+    const childFrame = makeFrame({ id: 'frame-2', x: 50, y: 50, width: 100, height: 100 });
+    const bounds = { x1: 50, y1: 50, x2: 150, y2: 150 };
+    expect(resolveParentFrameIdFromFrames(childFrame, bounds, frames)).toBeUndefined();
+  });
+
+  it('returns undefined for connector objects', () => {
+    const connector = makeObj({
+      id: 'conn-1',
+      type: 'connector',
+      x: 50,
+      y: 50,
+      width: 100,
+      height: 100,
+    });
+    const bounds = { x1: 50, y1: 50, x2: 150, y2: 150 };
+    expect(resolveParentFrameIdFromFrames(connector, bounds, frames)).toBeUndefined();
+  });
+
+  it('returns frame ID when sticky center is inside a frame', () => {
+    const sticky = makeObj({ id: 'sticky-1', x: 50, y: 50, width: 100, height: 100 });
+    const bounds = { x1: 50, y1: 50, x2: 150, y2: 150 };
+    expect(resolveParentFrameIdFromFrames(sticky, bounds, frames)).toBe('frame-1');
+  });
+
+  it('returns undefined when sticky center is outside all frames', () => {
+    const sticky = makeObj({ id: 'sticky-1', x: 400, y: 400, width: 100, height: 100 });
+    const bounds = { x1: 400, y1: 400, x2: 500, y2: 500 };
+    expect(resolveParentFrameIdFromFrames(sticky, bounds, frames)).toBeUndefined();
   });
 });

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AIChatPanel } from '@/components/ai/AIChatPanel';
 import { useObjectsStore } from '@/stores/objectsStore';
@@ -145,5 +145,249 @@ describe('AIChatPanel AI Commands', () => {
 
     expect(onSend).not.toHaveBeenCalled();
     expect(input).toHaveValue('Make a circle');
+  });
+});
+
+describe('AIChatPanel branches', () => {
+  const defaultProps = {
+    messages: [] as { role: 'user' | 'assistant'; content: string }[],
+    loading: false,
+    error: '',
+    onSend: vi.fn().mockResolvedValue(undefined),
+    onClearError: vi.fn(),
+    onClearMessages: vi.fn(),
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSelectedIds = new Set<string>();
+    useObjectsStore.getState().clear();
+  });
+
+  it('shows empty state placeholder when no messages and not loading', () => {
+    render(<AIChatPanel {...defaultProps} />);
+    expect(screen.getByText(/Ask to create sticky notes/)).toBeInTheDocument();
+  });
+
+  it('shows loading state with Thinking and spinner', () => {
+    render(<AIChatPanel {...defaultProps} loading={true} />);
+    expect(screen.getByText('Thinking...')).toBeInTheDocument();
+  });
+
+  it('does not show empty placeholder when loading', () => {
+    render(<AIChatPanel {...defaultProps} loading={true} />);
+    expect(screen.queryByText(/Ask to create sticky notes/)).not.toBeInTheDocument();
+  });
+
+  it('shows error and Dismiss calls onClearError', () => {
+    const onClearError = vi.fn();
+    render(
+      <AIChatPanel
+        {...defaultProps}
+        error="Something went wrong"
+        onClearError={onClearError}
+      />
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent('Something went wrong');
+    const dismiss = screen.getByText('Dismiss');
+    fireEvent.click(dismiss);
+    expect(onClearError).toHaveBeenCalledTimes(1);
+  });
+
+  it('Clear button calls onClearMessages', () => {
+    const onClearMessages = vi.fn();
+    render(<AIChatPanel {...defaultProps} onClearMessages={onClearMessages} />);
+    fireEvent.click(screen.getByText('Clear'));
+    expect(onClearMessages).toHaveBeenCalledTimes(1);
+  });
+
+  it('submit with empty input does not call onSend', async () => {
+    const onSend = vi.fn().mockResolvedValue(undefined);
+    render(<AIChatPanel {...defaultProps} onSend={onSend} />);
+    const form = screen.getByTestId('ai-chat-input').closest('form');
+    if (form) {
+      fireEvent.submit(form);
+    }
+    expect(onSend).not.toHaveBeenCalled();
+  });
+
+  it('submit with whitespace-only input does not call onSend', async () => {
+    const onSend = vi.fn().mockResolvedValue(undefined);
+    render(<AIChatPanel {...defaultProps} onSend={onSend} />);
+    const input = screen.getByTestId('ai-chat-input');
+    fireEvent.change(input, { target: { value: '   ' } });
+    const form = input.closest('form');
+    if (form) {
+      fireEvent.submit(form);
+    }
+    expect(onSend).not.toHaveBeenCalled();
+  });
+
+  it('submit with text calls onSend and clears input', async () => {
+    const onSend = vi.fn().mockResolvedValue(undefined);
+    render(<AIChatPanel {...defaultProps} onSend={onSend} />);
+    const input = screen.getByTestId('ai-chat-input');
+    fireEvent.change(input, { target: { value: 'Hello' } });
+    const form = input.closest('form');
+    if (form) {
+      fireEvent.submit(form);
+    }
+    expect(onSend).toHaveBeenCalledWith('Hello');
+    expect(input).toHaveValue('');
+  });
+
+  it('renders user message as plain text', () => {
+    render(
+      <AIChatPanel
+        {...defaultProps}
+        messages={[{ role: 'user', content: 'User said this' }]}
+      />
+    );
+    expect(screen.getByText('User said this')).toBeInTheDocument();
+  });
+
+  it('renders assistant message with Markdown', () => {
+    render(
+      <AIChatPanel
+        {...defaultProps}
+        messages={[{ role: 'assistant', content: '**Bold** and normal' }]}
+      />
+    );
+    expect(document.body).toHaveTextContent('Bold');
+    expect(document.body).toHaveTextContent('and normal');
+  });
+
+  describe('voice input', () => {
+    it('sets voiceError when SpeechRecognition is not supported', () => {
+      const origSpeech = (global as unknown as { SpeechRecognition?: unknown }).SpeechRecognition;
+      const origWebkit = (global as unknown as { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition;
+      delete (global as unknown as { SpeechRecognition?: unknown }).SpeechRecognition;
+      delete (global as unknown as { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition;
+
+      render(<AIChatPanel {...defaultProps} />);
+      const voiceBtn = screen.queryByTestId('ai-voice-input');
+      if (voiceBtn) {
+        fireEvent.click(voiceBtn);
+        expect(screen.getByText(/Voice input is not supported/)).toBeInTheDocument();
+      }
+
+      (global as unknown as { SpeechRecognition?: unknown }).SpeechRecognition = origSpeech;
+      (global as unknown as { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition = origWebkit;
+    });
+
+    it('appends transcript to input when SpeechRecognition fires onresult', async () => {
+      let instance: {
+        onresult: ((e: { results: ArrayLike<{ 0: { transcript: string }; length: number }> }) => void) | null;
+        onerror: (() => void) | null;
+        onend: (() => void) | null;
+      } | null = null;
+      const MockRecognition = vi.fn().mockImplementation(function (this: {
+        start: () => void;
+        continuous: boolean;
+        interimResults: boolean;
+        lang: string;
+        onresult: ((e: { results: ArrayLike<{ 0: { transcript: string }; length: number }> }) => void) | null;
+        onerror: (() => void) | null;
+        onend: (() => void) | null;
+      }) {
+        instance = this;
+        this.start = vi.fn();
+        this.continuous = false;
+        this.interimResults = false;
+        this.lang = 'en-US';
+        this.onresult = null;
+        this.onerror = null;
+        this.onend = null;
+      });
+      (global as unknown as { SpeechRecognition: typeof MockRecognition }).SpeechRecognition = MockRecognition;
+      (global as unknown as { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition = undefined;
+
+      render(<AIChatPanel {...defaultProps} />);
+      await act(async () => {
+        fireEvent.click(screen.getByTestId('ai-voice-input'));
+      });
+      const resultItem = { 0: { transcript: 'hello' }, length: 1 };
+      const resultsList = {
+        length: 1,
+        0: resultItem,
+        item: (i: number) => (i === 0 ? resultItem : undefined),
+      };
+      await act(async () => {
+        if (instance?.onresult) {
+          instance.onresult({ results: resultsList });
+        }
+      });
+      await waitFor(() => {
+        expect(screen.getByTestId('ai-chat-input')).toHaveValue('hello');
+      });
+
+      delete (global as unknown as { SpeechRecognition?: unknown }).SpeechRecognition;
+    });
+
+    it('sets voiceError when SpeechRecognition fires onerror', async () => {
+      let instance: { onerror: (() => void) | null } | null = null;
+      const MockRecognition = vi.fn().mockImplementation(function (this: {
+        start: () => void;
+        onresult: null;
+        onerror: (() => void) | null;
+        onend: null;
+      }) {
+        instance = this;
+        this.start = vi.fn();
+        this.onresult = null;
+        this.onerror = null;
+        this.onend = null;
+      });
+      (global as unknown as { SpeechRecognition: typeof MockRecognition }).SpeechRecognition = MockRecognition;
+      (global as unknown as { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition = undefined;
+
+      render(<AIChatPanel {...defaultProps} />);
+      await act(async () => {
+        fireEvent.click(screen.getByTestId('ai-voice-input'));
+      });
+      await act(async () => {
+        if (instance?.onerror) {
+          instance.onerror();
+        }
+      });
+      expect(screen.getByText(/Voice input failed/)).toBeInTheDocument();
+
+      delete (global as unknown as { SpeechRecognition?: unknown }).SpeechRecognition;
+    });
+
+    it('typing in input clears voiceError after onerror', async () => {
+      let instance: { onerror: (() => void) | null } | null = null;
+      const MockRecognition = vi.fn().mockImplementation(function (this: {
+        start: () => void;
+        onresult: null;
+        onerror: (() => void) | null;
+        onend: null;
+      }) {
+        instance = this;
+        this.start = vi.fn();
+        this.onresult = null;
+        this.onerror = null;
+        this.onend = null;
+      });
+      (global as unknown as { SpeechRecognition: typeof MockRecognition }).SpeechRecognition = MockRecognition;
+      (global as unknown as { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition = undefined;
+
+      render(<AIChatPanel {...defaultProps} />);
+      await act(async () => {
+        fireEvent.click(screen.getByTestId('ai-voice-input'));
+      });
+      await act(async () => {
+        if (instance?.onerror) {
+          instance.onerror();
+        }
+      });
+      expect(screen.getByText(/Voice input failed/)).toBeInTheDocument();
+      await act(async () => {
+        fireEvent.change(screen.getByTestId('ai-chat-input'), { target: { value: 'x' } });
+      });
+      expect(screen.queryByText(/Voice input failed/)).not.toBeInTheDocument();
+
+      delete (global as unknown as { SpeechRecognition?: unknown }).SpeechRecognition;
+    });
   });
 });

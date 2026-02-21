@@ -24,7 +24,9 @@ import {
 
 export function shallowArrayEqual(a?: number[], b?: number[]): boolean {
   if (a === b) return true;
+
   if (!a || !b || a.length !== b.length) return false;
+
   for (let i = 0; i < a.length; i++) {
     if (a[i] !== b[i]) return false;
   }
@@ -169,7 +171,10 @@ interface IUseObjectsReturn {
  */
 export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsReturn => {
   const objectsRecord = useObjectsStore((s) => s.objects);
-  const objects = useMemo(() => Object.values(objectsRecord).filter((obj): obj is IBoardObject => Boolean(obj)), [objectsRecord]);
+  const objects = useMemo(
+    () => Object.values(objectsRecord).filter((obj): obj is IBoardObject => Boolean(obj)),
+    [objectsRecord]
+  );
   const [loading, setLoading] = useState<boolean>(!boardId ? false : true);
   const [error, setError] = useState<string>('');
 
@@ -521,7 +526,9 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
 
       const store = useObjectsStore.getState();
       const objectIds = updates.map((u) => u.objectId);
-      const originals = objectIds.map((id) => store.objects[id]).filter((obj): obj is IBoardObject => Boolean(obj));
+      const originals = objectIds
+        .map((id) => store.objects[id])
+        .filter((obj): obj is IBoardObject => Boolean(obj));
 
       for (const obj of originals) {
         setPending(obj.id, obj);
@@ -578,7 +585,9 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
       }
 
       const store = useObjectsStore.getState();
-      const toRemove = objectIds.map((id) => store.objects[id]).filter((obj): obj is IBoardObject => Boolean(obj));
+      const toRemove = objectIds
+        .map((id) => store.objects[id])
+        .filter((obj): obj is IBoardObject => Boolean(obj));
       for (const obj of toRemove) {
         setPending(obj.id, obj);
       }

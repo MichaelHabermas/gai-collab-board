@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { useBoardSubscription } from '@/hooks/useBoardSubscription';
 import * as boardService from '@/modules/sync/boardService';
 import type { IBoard } from '@/types';
@@ -44,7 +44,7 @@ describe('useBoardSubscription', () => {
 
   it('updates state on error', () => {
     const mockError = new Error('Test Error');
-    (boardService.subscribeToBoard as any).mockImplementation((_id: string, cb: Function, errorCb: Function) => {
+    (boardService.subscribeToBoard as any).mockImplementation((_id: string, _cb: Function, errorCb: Function) => {
       errorCb(mockError);
       return mockUnsubscribe;
     });

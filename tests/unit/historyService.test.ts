@@ -117,4 +117,87 @@ describe('historyService', () => {
       expect(mockCtx.updateObject.mock.calls[0]?.[0]).toBe('obj-3');
     });
   });
+
+  describe('undo boundaries and missing data', () => {
+    it('undoes empty entry without calling context', async () => {
+      await executeUndo([], mockCtx);
+      expect(mockCtx.createObject).not.toHaveBeenCalled();
+      expect(mockCtx.updateObject).not.toHaveBeenCalled();
+      expect(mockCtx.deleteObject).not.toHaveBeenCalled();
+    });
+
+    it('skips undefined command slot in entry (sparse array)', async () => {
+      const entry: IHistoryEntry = [
+        { type: 'create', objectId: 'obj-1', after: makeObj('obj-1') },
+        undefined as unknown as IHistoryEntry[0],
+        { type: 'create', objectId: 'obj-2', after: makeObj('obj-2') },
+      ];
+      await executeUndo(entry, mockCtx);
+      expect(mockCtx.deleteObject).toHaveBeenCalledTimes(2);
+      expect(mockCtx.deleteObject).toHaveBeenCalledWith('obj-2');
+      expect(mockCtx.deleteObject).toHaveBeenCalledWith('obj-1');
+    });
+
+    it('undo delete without before does not call createObject', async () => {
+      const entry: IHistoryEntry = [
+        { type: 'delete', objectId: 'obj-2' },
+      ];
+      await executeUndo(entry, mockCtx);
+      expect(mockCtx.createObject).not.toHaveBeenCalled();
+    });
+
+    it('undo update without before does not call updateObject', async () => {
+      const entry: IHistoryEntry = [
+        { type: 'update', objectId: 'obj-3', after: makeObj('obj-3') },
+      ];
+      await executeUndo(entry, mockCtx);
+      expect(mockCtx.updateObject).not.toHaveBeenCalled();
+    });
+
+    it('continues when a command throws (best effort)', async () => {
+      mockCtx.deleteObject.mockRejectedValueOnce(new Error('external delete'));
+      const entry: IHistoryEntry = [
+        { type: 'create', objectId: 'a', after: makeObj('a') },
+        { type: 'create', objectId: 'b', after: makeObj('b') },
+      ];
+      await executeUndo(entry, mockCtx);
+      expect(mockCtx.deleteObject).toHaveBeenCalledWith('a');
+      expect(mockCtx.deleteObject).toHaveBeenCalledWith('b');
+    });
+  });
+
+  describe('redo boundaries and missing data', () => {
+    it('redoes empty entry without calling context', async () => {
+      await executeRedo([], mockCtx);
+      expect(mockCtx.createObject).not.toHaveBeenCalled();
+      expect(mockCtx.updateObject).not.toHaveBeenCalled();
+      expect(mockCtx.deleteObject).not.toHaveBeenCalled();
+    });
+
+    it('redo create without after does not call createObject', async () => {
+      const entry: IHistoryEntry = [
+        { type: 'create', objectId: 'obj-1' },
+      ];
+      await executeRedo(entry, mockCtx);
+      expect(mockCtx.createObject).not.toHaveBeenCalled();
+    });
+
+    it('redo update without after does not call updateObject', async () => {
+      const entry: IHistoryEntry = [
+        { type: 'update', objectId: 'obj-3', before: makeObj('obj-3') },
+      ];
+      await executeRedo(entry, mockCtx);
+      expect(mockCtx.updateObject).not.toHaveBeenCalled();
+    });
+
+    it('continues when a command throws (best effort)', async () => {
+      mockCtx.createObject.mockRejectedValueOnce(new Error('create failed'));
+      const entry: IHistoryEntry = [
+        { type: 'create', objectId: 'a', after: makeObj('a') },
+        { type: 'create', objectId: 'b', after: makeObj('b') },
+      ];
+      await executeRedo(entry, mockCtx);
+      expect(mockCtx.createObject).toHaveBeenCalledTimes(2);
+    });
+  });
 });

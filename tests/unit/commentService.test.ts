@@ -111,4 +111,21 @@ describe('commentService', () => {
     snapshotHandler(mockSnapshot);
     expect(callback).toHaveBeenCalledWith(mockComments);
   });
+
+  it('subscribeToComments calls onError when snapshot errors (branch line 93)', async () => {
+    const unsubFn = vi.fn();
+    mockOnSnapshot.mockReturnValue(unsubFn);
+
+    const { subscribeToComments } = await import('@/modules/sync/commentService');
+    const callback = vi.fn();
+    const onError = vi.fn();
+
+    subscribeToComments('board-1', callback, onError);
+
+    const errorHandler = mockOnSnapshot.mock.calls[0]?.[2] as ((error: Error) => void) | undefined;
+    expect(errorHandler).toBeDefined();
+    const err = new Error('Permission denied');
+    errorHandler?.(err);
+    expect(onError).toHaveBeenCalledWith(err);
+  });
 });

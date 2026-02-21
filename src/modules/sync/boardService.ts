@@ -63,6 +63,7 @@ export const getBoard = async (boardId: string): Promise<IBoard | null> => {
   if (isBoard(data)) {
     return data;
   }
+
   return null;
 };
 
@@ -125,6 +126,7 @@ export const updateBoardName = async (
 
     const data = snap.data();
     if (!isBoard(data)) throw new Error('Invalid board data');
+
     const board = data;
     if (!canUserManage(board, userId)) {
       throw new Error('Only the board owner can rename the board');
@@ -146,6 +148,7 @@ export const addBoardMember = async (
 
     const data = snap.data();
     if (!isBoard(data)) throw new Error('Invalid board data');
+
     const board = data;
     const updatedMembers = { ...board.members, [userId]: role };
     tx.update(boardRef, { members: updatedMembers, updatedAt: Timestamp.now() });
@@ -160,6 +163,7 @@ export const removeBoardMember = async (boardId: string, userId: string): Promis
 
     const data = snap.data();
     if (!isBoard(data)) throw new Error('Invalid board data');
+
     const board = data;
     if (board.ownerId === userId) {
       throw new Error('Cannot remove the owner from the board');
@@ -183,6 +187,7 @@ export const updateMemberRole = async (
 
     const data = snap.data();
     if (!isBoard(data)) throw new Error('Invalid board data');
+
     const board = data;
     if (board.ownerId === userId && role !== 'owner') {
       throw new Error("Cannot change the owner's role");
@@ -205,6 +210,7 @@ export const deleteBoard = async (boardId: string, userId: string): Promise<void
 
     const data = snap.data();
     if (!isBoard(data)) throw new Error('Invalid board data');
+
     const board = data;
     if (!canUserManage(board, userId)) {
       throw new Error('Only the board owner can delete the board');

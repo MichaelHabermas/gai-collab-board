@@ -155,6 +155,14 @@ describe('boardService - deleteBoard', () => {
     vi.clearAllMocks();
   });
 
+  it('should throw when boardId is guest board (cannot delete guest board)', async () => {
+    await expect(deleteBoard('guest', 'owner-user')).rejects.toThrow(
+      'The guest board cannot be deleted'
+    );
+    expect(mockTxGet).not.toHaveBeenCalled();
+    expect(mockTxDelete).not.toHaveBeenCalled();
+  });
+
   it('should throw when board does not exist', async () => {
     mockTxGet.mockResolvedValue(makeSnapshot(null));
     await expect(deleteBoard('missing-id', 'owner-user')).rejects.toThrow('Board not found');
@@ -323,6 +331,16 @@ describe('boardService - getBoard', () => {
     const board = await getBoard('nonexistent');
     expect(board).toBeNull();
   });
+
+  it('returns null when doc exists but data fails isBoard guard', async () => {
+    mockGetDoc.mockResolvedValue({
+      exists: () => true,
+      data: () => ({ id: 'bad-doc' }),
+    });
+
+    const board = await getBoard('board-123');
+    expect(board).toBeNull();
+  });
 });
 
 // ======================================================================
@@ -435,6 +453,22 @@ describe('boardService - subscribeToBoard', () => {
     snapshotCallback?.({
       exists: () => false,
       data: () => undefined,
+    });
+
+    expect(callback).toHaveBeenCalledWith(null);
+  });
+
+  it('calls callback with null when snapshot exists but data fails isBoard guard', () => {
+    const callback = vi.fn();
+    subscribeToBoard('board-123', callback);
+
+    const snapshotCallback = mockOnSnapshot.mock.calls[0]?.[1] as
+      | ((snapshot: { exists: () => boolean; data: () => unknown }) => void)
+      | undefined;
+
+    snapshotCallback?.({
+      exists: () => true,
+      data: () => ({ id: 'bad', noName: true }),
     });
 
     expect(callback).toHaveBeenCalledWith(null);

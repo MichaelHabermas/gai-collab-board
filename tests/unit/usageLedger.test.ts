@@ -5,7 +5,9 @@ import {
   AI_USAGE_SOURCE_RUNTIME_PROXY,
   buildUsageTimeSeries,
   createEmptyUsageLedger,
+  normalizeUsageEvent,
   reduceUsageRollup,
+  sanitizeUsageNumber,
   upsertUsageEvent,
   type IAIUsageEvent,
 } from '@/modules/ai/usageLedger';
@@ -97,5 +99,49 @@ describe('usageLedger', () => {
     expect(series.input_tokens).toEqual([100, 200]);
     expect(series.output_tokens).toEqual([40, 80]);
     expect(series.cumulative_cost).toEqual([0.01, 0.03]);
+  });
+
+  it('sanitizeUsageNumber returns 0 for non-finite values (branch 96)', () => {
+    expect(sanitizeUsageNumber(Number.NaN)).toBe(0);
+    expect(sanitizeUsageNumber(Number.POSITIVE_INFINITY)).toBe(0);
+    expect(sanitizeUsageNumber(Number.NEGATIVE_INFINITY)).toBe(0);
+  });
+
+  it('sanitizeUsageNumber returns 0 for negative values (branch 99-100)', () => {
+    expect(sanitizeUsageNumber(-1)).toBe(0);
+    expect(sanitizeUsageNumber(-0.5)).toBe(0);
+  });
+
+  it('sanitizeUsageNumber returns value for finite non-negative (branch 100)', () => {
+    expect(sanitizeUsageNumber(0)).toBe(0);
+    expect(sanitizeUsageNumber(10)).toBe(10);
+    expect(sanitizeUsageNumber(0.5)).toBe(0.5);
+  });
+
+  it('normalizeUsageEvent sanitizes negative and NaN fields', () => {
+    const event = makeEvent({
+      input_tokens: -10,
+      output_tokens: Number.NaN,
+      estimated_cost: 100,
+    });
+    const out = normalizeUsageEvent(event);
+    expect(out.input_tokens).toBe(0);
+    expect(out.output_tokens).toBe(0);
+    expect(out.estimated_cost).toBe(100);
+  });
+
+  it('buildUsageTimeSeries uses raw timestamp as label when date is invalid (branch 188)', () => {
+    const events = [
+      makeEvent({
+        event_id: 'bad-ts',
+        timestamp: 'not-a-valid-date',
+        input_tokens: 10,
+        output_tokens: 5,
+        estimated_cost: 0.001,
+      }),
+    ];
+    const series = buildUsageTimeSeries(events, 10);
+    expect(series.labels).toHaveLength(1);
+    expect(series.labels[0]).toBe('not-a-valid-date');
   });
 });

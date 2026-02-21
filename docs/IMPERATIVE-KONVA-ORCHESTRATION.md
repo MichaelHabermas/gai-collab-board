@@ -14,7 +14,7 @@ React-Konva puts React reconciliation in the canvas hot path. Every shape = Reac
 ## SOLID Principles Enforcement
 
 | Principle | How It's Applied |
-|-----------|-----------------|
+| :----------: | :----------------: |
 | **SRP** | One factory per shape type. One controller per interaction mode. Drag split into 5 modules (commit, alignment, bounds, reparenting, coordinator). |
 | **OCP** | Factory registry (`Map<ShapeType, IShapeFactoryEntry>`) — add shapes without modifying KonvaNodeManager. StageEventRouter dispatches by tool without router changes. |
 | **LSP** | All factories satisfy `IShapeFactoryEntry`. All shape nodes satisfy `IShapeNodes`. Any factory substitutable in registry. |
@@ -32,11 +32,13 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 ```
 
 **Parallel work opportunities:**
+
 - Epic 3 can start after Epic 1 (needs factory types only, not KonvaNodeManager)
 - Epic 4 can start after Epic 2 (needs layer references)
 - Epics 3 and 4 can proceed in parallel
 
 **Hard dependencies:**
+
 - Epic 0 → Epic 1 (baselines + rules + E2E safety net)
 - Epic 1 → Epic 2 (factories are inputs to manager)
 - Epics 2 + 3 + 4 → Epic 5 (all modules required for cutover)
@@ -47,7 +49,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 ## WAVE 1: Epic 0 — Foundation (3 parallel agents)
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC |
-|------|-------|------|------|------|--------|---------|
+| :----------: | :----------: | :----------: | :----------: | :----------: | :----------: | :----------: |
 | T1 | Constitutional Amendments (Articles XX–XXV, XXVII) | haiku | quick-fixer | — | epic0-constitution | 120 |
 | T2 | Performance Baselines → `docs/perf-baselines/pre-migration.json` | sonnet | architect | — | epic0-perf-baselines | 50 |
 | T3 | E2E: marquee, single drag, multi-drag, undo/redo (4 specs) | sonnet | tester | — | epic0-e2e-drag | 400 |
@@ -58,22 +60,27 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 **Review gate W1-R** after all merge: constitution present, baselines captured, 13 new E2E + existing pass.
 
 ### T1 — Constitutional Amendments
+
 - **Description:** Add Articles XX–XXV and XXVII to `docs/CONSTITUTION.md`. Exact text in V5 doc §6.1.
 - **AC:** All 7 articles present. `bun run validate` passes. No code changes.
 
 ### T2 — Performance Baselines
+
 - **Description:** Capture pre-migration metrics. Save to `docs/perf-baselines/pre-migration.json`. Metrics: frame time during 100-obj drag (p50/p95/p99), 500-obj pan, React re-renders during drag, selector evals per drag frame, bundle size (gzipped), `bun run perf:check`, TTI for 1000-object board.
 - **AC:** JSON file created with all 7 metrics per V5 doc §6.2.
 
 ### T3 — E2E Drag Tests (batch 1/3)
+
 - **Description:** Playwright tests: `marqueeSelection.spec.ts`, `shapeDrag.spec.ts`, `multiSelectDrag.spec.ts`, `undoRedoDrag.spec.ts`. Follow existing pattern from `snapToGridDrag.spec.ts`. All in `tests/e2e/`.
 - **AC:** All 4 test files pass against current codebase. Existing E2E still pass.
 
 ### T4 — E2E Connector + Transform Tests (batch 2/3)
+
 - **Description:** Playwright tests: `connectorCreation.spec.ts`, `connectorEndpointDrag.spec.ts`, `shapeResize.spec.ts`, `shapeRotate.spec.ts`.
 - **AC:** All 4 test files pass against current codebase.
 
 ### T5 — E2E Frame + Text + Drawing Tests (batch 3/3)
+
 - **Description:** Playwright tests: `frameReparenting.spec.ts`, `stickyTextEdit.spec.ts`, `frameTitleEdit.spec.ts`, `alignmentGuides.spec.ts`, `drawingTools.spec.ts`. Verify existing `snapToGridDrag.spec.ts` and `textOverlayStability.spec.ts` still pass.
 - **AC:** All 5 test files pass. Existing 2 specs still pass.
 
@@ -82,7 +89,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 ## WAVE 2: Epic 1 — Shape Factories (3 parallel after T6)
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC | SOLID |
-|------|-------|------|------|------|--------|---------|-------|
+| :----------: | :----------: | :----------: | :----------: | :----------: | :----------: | :----------: | :----------: |
 | T6 | Factory types.ts + registry index.ts + dir scaffold | sonnet | architect | W1-R | epic1-factory-types | 70 | OCP, ISP, DIP |
 | T7 | createRectangle + createCircle + createLine + tests | sonnet | architect | T6 | epic1-simple-factories | 250 | SRP, LSP |
 | T8 | createStickyNote + createFrame + tests (cacheable=true) | opus | architect | T6 | epic1-complex-factories | 400 | SRP, OCP |
@@ -92,18 +99,22 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 **Review gate W2-R:** all 7 factories + types + registry, getFactory returns correct factory per type.
 
 ### T6 — Factory Types + Registry
+
 - **Description:** Create `src/canvas/factories/types.ts` (IShapeNodes, ShapeFactory, ShapeUpdater, IShapeFactoryEntry ~40 LOC) and `src/canvas/factories/index.ts` (Map registry + getFactory ~30 LOC). Create `src/canvas/` directory structure.
 - **AC:** Interfaces compile strict TS. `getFactory('rectangle')` returns entry. No existing files modified.
 
 ### T7 — Simple Factories
+
 - **Description:** `createRectangle.ts` (~50), `createCircle.ts` (~50), `createLine.ts` (~50). Each has `create(obj) → IShapeNodes` and `update(nodes, obj, prev) → boolean`. Port from RectangleShape.tsx (85), CircleShape.tsx (93), LineShape.tsx (84). Unit tests for each.
 - **AC:** create() returns correct Konva node type. update() patches only changed attrs. update() returns true for visual, false for position-only.
 
 ### T8 — Complex Factories
+
 - **Description:** `createStickyNote.ts` (~120): Group → bg Rect + fold Rect + Text. `createFrame.ts` (~130): Group → titleBar Rect + body Rect + title Text + dropHint Text. Both `cacheable: true`. Port from StickyNote.tsx (328) and Frame.tsx (389). Unit tests.
 - **AC:** Compound Group structure verified. Parts map correct. cacheable=true. update() handles visual props.
 
 ### T9 — Connector + TextElement Factories
+
 - **Description:** `createConnector.ts` (~100): 4 arrowhead modes (end→Arrow, start→reversed, both→Group(2×Arrow), none→Line). Port from Connector.tsx (192). `createTextElement.ts` (~60): port from TextElement.tsx (224). Unit tests for all 4 connector modes.
 - **AC:** All 4 arrowhead modes produce correct nodes. Connector update recalculates points.
 
@@ -112,7 +123,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 ## WAVE 3: Epic 2 + Epic 3 Start (3 parallel)
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC | SOLID |
-|------|-------|------|------|------|--------|---------|-------|
+| :----------: | :----------: | :----------: | :----------: | :----------: | :----------: | :----------: | :----------: |
 | T10 | LayerManager (4 layers, RAF batchDraw) | sonnet | architect | W2-R | epic2-layer-manager | 130 | SRP |
 | T11 | KonvaNodeManager (O(changed) diff, connector dedup) | opus | architect | T10 | epic2-node-manager | 550 | SRP, OCP, DIP |
 | T12 | SelectionSyncController (layer moves, cache lifecycle) | sonnet | architect | T11 | epic2-selection-sync | 250 | SRP |
@@ -123,18 +134,22 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 **Review gate W3-R:** O(changed) diff verified, connector dedup verified, Appendix D items D1–D10, D15–D20 covered.
 
 ### T10 — LayerManager
+
 - **Description:** `src/canvas/LayerManager.ts` (~80 LOC). Closure-based. 4 Konva layers (static, active, overlay, selection) in z-order. `scheduleBatchDraw(layer)` coalesces to 1 RAF/frame/layer. `destroy()` cancels RAFs. Unit tests.
 - **AC:** 4 layers created and attached. batchDraw coalesces. destroy cancels pending.
 
 ### T11 — KonvaNodeManager
+
 - **Description:** `src/canvas/KonvaNodeManager.ts` (~350 LOC). Class: `start()` subscribes to objectsStore, `handleStoreChange(next, prev)` diffs by reference equality O(changed), creates via factory, updates via factory, destroys. Connector dedup via `Set<string>`. Internal `IManagedNode`. `getNode(id)`, `getAllManagedIds()`, `setCacheState()`, `setEditingState()`, `destroy()`. Unit tests (~200 LOC).
 - **AC:** Add→created, Update→patched not recreated, Delete→destroyed. Reference-equal skipped (spy). Connector dedup verified. Articles XX, XXI, XXII enforced.
 
 ### T12 — SelectionSyncController
+
 - **Description:** `src/canvas/SelectionSyncController.ts` (~120 LOC). Closure-based. Subscribes to selectionStore + dragOffsetStore. Moves nodes between static/active layers. Applies groupDragOffset imperatively. Cache lifecycle per Article XXIII. Unit tests.
 - **AC:** Select→active layer. Deselect→static. Cache cleared on select, restored on deselect. Offset applied.
 
 ### T13 — Drag Sub-Modules
+
 - **Description:** Three modules:
   - `dragCommit.ts` (~200): selectObject(), commitDragEnd(), handleSelectionDragStart/Move/End(). Reads stores directly.
   - `dragBounds.ts` (~80): createDragBoundFunc() with grid snap.
@@ -143,6 +158,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 - **AC:** Appendix D items D1–D10, D15–D17 covered. selectObject toggles selection. commitDragEnd calls queueObjectUpdate. findContainingFrame picks smallest frame.
 
 ### T14 — alignmentEngine
+
 - **Description:** `src/canvas/drag/alignmentEngine.ts` (~150 LOC). Wraps `src/lib/alignmentGuides.ts` pure functions. `onDragMove(e, candidates, overlayManager)` computes guides + snap. `buildGuideCandidates(visibleIds, draggedIds, objects)`. Unit tests.
 - **AC:** Appendix D items D18–D20 covered. Guide computation correct. overlayManager.updateGuides called.
 
@@ -151,7 +167,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 ## WAVE 4: Epic 3 Remaining + Epic 4 Start (3 parallel)
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC | SOLID |
-|------|-------|------|------|------|--------|---------|-------|
+| :----------: | :----------: | :----------: | :----------: | :----------: | :----------: | :----------: | :----------: |
 | T15 | DragCoordinator (thin dispatcher, <50 LOC) | haiku | quick-fixer | T13, T14 | epic3-drag-coordinator | 80 | SRP, DIP |
 | T16 | StageEventRouter + ShapeEventWiring | sonnet | architect | T15 | epic3-event-wiring | 400 | SRP, ISP |
 | T17 | DrawingController + MarqueeController + ConnectorController | sonnet | architect | W3-R | epic3-controllers | 450 | SRP, ISP |
@@ -162,14 +178,17 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 **Review gate W4-R:** **All Appendix D items verified.** No React state in MarqueeController. canvasTextEditOverlay.ts unchanged.
 
 ### T15 — DragCoordinator
+
 - **Description:** `src/canvas/drag/DragCoordinator.ts` (~50 LOC). `createDragCoordinator(config)` returns `IDragCoordinator`. Routes to dragCommit, alignmentEngine, dragBounds, frameDragReparenting. No logic of its own. Unit test.
 - **AC:** Each method dispatches to correct sub-module. Config injected. Under 50 LOC.
 
 ### T16 — StageEventRouter + ShapeEventWiring
+
 - **Description:** `StageEventRouter.ts` (~120): stage mousedown/mousemove/mouseup/wheel/touch dispatch by activeTool. RAF-throttles mousemove. Returns destroy(). `ShapeEventWiring.ts` (~150): wireEvents(node, id, config) attaches click/drag/dblclick. unwireEvents(node) removes all. Unit tests.
 - **AC:** Dispatches to correct controller per tool. RAF throttling works. wireEvents attaches correct events. Article XXV enforced.
 
 ### T17 — Controllers (Drawing, Marquee, Connector)
+
 - **Description:** Three closure-based state machines:
   - `DrawingController.ts` (~100): start/move/end, overlayManager preview, min 5px. Replaces useShapeDrawing (250).
   - `MarqueeController.ts` (~80): start/move/end, AABB hit-test, **no React state**. Replaces useMarqueeSelection (127).
@@ -178,10 +197,12 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 - **AC:** State transitions correct. Min size validated. AABB correct. Two-click creates connector.
 
 ### T18 — TextEditController
+
 - **Description:** `src/canvas/events/TextEditController.ts` (~80 LOC). open(objectId): get managed node, hide Konva text, create DOM textarea via existing `canvasTextEditOverlay.ts` + `canvasOverlayPosition.ts` (UNCHANGED). On blur/Enter: queueObjectUpdate. nodeManager.setEditingState(). Unit tests.
 - **AC:** DOM textarea opens. Existing overlay libs unchanged. Appendix D item D29 covered.
 
 ### T19 — OverlayManager
+
 - **Description:** `src/canvas/OverlayManager.ts` (~250 LOC). Class on overlay layer. 5 subsystems: marquee (show/update/hide), alignment guides (updateGuides), drawing preview (show/update/hide), remote cursors (updateCursors), connection anchors (updateConnectionNodes/highlightAnchor/clear). Replaces SelectionLayer (66), ConnectionNodesLayer (72), CursorLayer (74), AlignmentGuidesLayer (67). Unit tests.
 - **AC:** All 5 subsystems functional. destroy() cleans up. Under 300 LOC.
 
@@ -190,7 +211,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 ## WAVE 5: Epic 4 Remaining (2 parallel)
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC | SOLID |
-|------|-------|------|------|------|--------|---------|-------|
+| :----------: | :----------: | :----------: | :----------: | :----------: | :----------: | :----------: | :----------: |
 | T20 | TransformerManager (exact TransformHandler config) | sonnet | architect | W4-R | epic4-transformer | 200 | SRP |
 | T21 | GridRenderer + SelectionDragHandle | haiku | quick-fixer | W4-R | epic4-grid-handle | 130 | SRP |
 
@@ -198,10 +219,12 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 **Review gate W5-R:** Transformer config exact match. Grid renders at different zoom levels.
 
 ### T20 — TransformerManager
+
 - **Description:** `src/canvas/TransformerManager.ts` (~120 LOC). Class. Konva.Transformer with exact config from TransformHandler.tsx lines 148–181. `syncNodes(selectedIds, activeLayer)`, `handleTransformEnd(callback)` extracts shape-aware attrs. Unit tests.
 - **AC:** Config matches exactly (flipEnabled, rotationSnaps, anchors, boundBoxFunc). syncNodes correct. Appendix D item D28 covered.
 
 ### T21 — GridRenderer + SelectionDragHandle
+
 - **Description:** `GridRenderer.ts` (~40 LOC): grid sceneFunc port. `SelectionDragHandle.ts` (~40 LOC): imperative drag handle. Unit tests.
 - **AC:** Grid renders. Drag handle responds to events. Each under 40 LOC.
 
@@ -210,7 +233,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 ## WAVE 6: Epic 5 — THE CUTOVER (sequential, 1 opus agent)
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC |
-|------|-------|------|------|------|--------|---------|
+| :----------: | :----------: | :----------: | :----------: | :----------: | :----------: | :----------: |
 | T22 | useCanvasSetup.ts (DI, subscriptions, cleanup) | opus | architect | W5-R | epic5-integration | 200 |
 | T23 | CanvasHost.tsx (React shell, surviving hooks) | opus | architect | T22 | epic5-integration | 250 |
 | T24 | Import swap BoardCanvas→CanvasHost + full E2E + manual matrix | opus | architect | T23 | epic5-integration | 60 |
@@ -219,14 +242,17 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 **Review gate W6-R (opus reviewer):** All E2E pass. Integration checklist verified. Under 300 LOC each.
 
 ### T22 — useCanvasSetup.ts
+
 - **Description:** `src/canvas/useCanvasSetup.ts` (~200 LOC). Manager instantiation in DI order. Wire Zustand vanilla subscriptions (objectsStore, selectionStore, dragOffsetStore) per Appendix C. Returns `{ stage, destroy }`. Cleanup destroys all managers + unsubscribes.
 - **AC:** All managers instantiated. Subscriptions per Appendix C. destroy() cleans everything. Under 300 LOC.
 
 ### T23 — CanvasHost.tsx
+
 - **Description:** `src/canvas/CanvasHost.tsx` (~250 LOC). React shell: tool/color state, surviving hooks (useCanvasViewport, useVisibleShapeIds, useBoardSubscription, useCursors, useCanvasKeyboardShortcuts, useCanvasOperations). Mount effect calls setupCanvas. Renders container div + toolbar + control panel.
 - **AC:** All surviving hooks wired. Mount/unmount lifecycle correct. Under 300 LOC.
 
 ### T24 — Import Swap + Full Integration
+
 - **Description:** Replace `<BoardCanvas>` import with `<CanvasHost>` in App.tsx. Run full E2E suite (13 new + existing). Verify manual integration checklist (27 items from V5 §11). Capture post-migration baselines.
 - **AC:** All E2E pass. Integration checklist verified. Baselines captured. Article XXVII (single atomic cutover).
 
@@ -237,7 +263,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 **Blocked until Epic 5 confirmed stable. If Epic 5 regresses, Epic 6 blocked and Epic 5 reverted (Article XXVII.3).**
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC |
-|------|-------|------|------|------|--------|---------|
+| :----------: | :----------: | :----------: | :----------: | :----------: | :----------: | :----------: |
 | T25 | Delete 26 dead files + remove react-konva dep | sonnet | architect | W6-R | epic6-cleanup | -4907 |
 | T26 | Update shapes/index.ts + CLAUDE.md | haiku | quick-fixer | T25 | epic6-cleanup | 10 |
 | T27 | Performance verification + `bun run release:gate` | sonnet | architect | T26 | epic6-cleanup | 50 |
@@ -246,14 +272,17 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 **Review gate W7-R:** ≥50% drag frame time reduction required. react-konva removed. release:gate passes.
 
 ### T25 — Delete Dead Files
+
 - **Description:** Delete all 26 files in Appendix B (15 components ~3,165 LOC + 10 hooks ~1,533 LOC). Remove `react-konva` from package.json. `bun install`. Fix orphaned imports. Evaluate useFrameContainment + useViewportActions: delete if purely canvas-coupled.
 - **AC:** All 26 files deleted. react-konva removed. No orphaned imports. `bun run validate` passes.
 
 ### T26 — Update shapes/index.ts + CLAUDE.md
+
 - **Description:** Modify shapes/index.ts: keep only STICKY_COLORS + StickyColor. Update CLAUDE.md component chain: `CanvasHost → useCanvasSetup → KonvaNodeManager → Shape Factories`.
 - **AC:** shapes/index.ts minimal. CLAUDE.md updated.
 
 ### T27 — Performance Verification
+
 - **Description:** Capture final baselines → `docs/perf-baselines/post-migration.json`. Compare pre vs post. Run `bun run release:gate`. Write comparison in PR.
 - **AC:** ≥50% drag frame time reduction. 0 shape React re-renders during drag. Bundle ≈-45KB. release:gate passes.
 
@@ -262,7 +291,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 ## WAVE 8: Final Merge
 
 | Task | Title | Tier | Role | Deps |
-|------|-------|------|------|------|
+| :----------: | :----------: | :----------: | :----------: | :----------: |
 | T28 | Merge `spike/react-konva-1` → `development` | sonnet | architect | W7-R |
 
 ---
@@ -270,7 +299,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 ## Summary
 
 | Metric | Value |
-|--------|-------|
+| :----------: | :----------: |
 | Total tasks | 28 (+ 7 review gates) |
 | Total new code | ~3,290 LOC |
 | Total new tests | ~850 LOC |
@@ -284,7 +313,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 ## Risk Mitigations
 
 | Wave | Risk | Mitigation |
-|------|------|------------|
+| :----------: | :----------: | :----------: |
 | W1 | E2E tests flaky against current codebase | Run twice, fix flakes before proceeding |
 | W2 | Factory update() misses visual props | Spy-based tests verify every attr |
 | W3 | KonvaNodeManager O(n) instead of O(changed) | Unit test with 500 objects, spy on factory.update for unchanged |
@@ -299,7 +328,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 ## Critical Files Reference
 
 | File | Role |
-|------|------|
+| :----------: | :----------: |
 | `docs/IMPERATIVE-KONVA-MIGRATION-V5.md` | Source of truth. Appendix D behavior checklist. |
 | `src/hooks/useObjectDragHandlers.ts` (792 LOC) | Being rewritten → 5 drag modules. Every behavior per Appendix D. |
 | `src/components/canvas/BoardCanvas.tsx` (938 LOC) | Being replaced by CanvasHost. Wiring reference for Epic 5. |
@@ -313,6 +342,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 ## Verification Protocol
 
 **After each wave review gate:**
+
 1. `bun run validate` (format → lint:fix → typecheck → test)
 2. All unit tests pass for new modules
 3. No existing files modified (Epics 1–4)

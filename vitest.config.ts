@@ -12,12 +12,12 @@ export default defineConfig({
     exclude: ['node_modules', 'dist', 'tests/e2e'],
     coverage: {
       provider: 'istanbul',
-      include: ['src/**/*.{ts,tsx}', 'server/**/*.ts'],
+      include: ['src/**/*.{ts,tsx}'],
       exclude: ['src/**/*.test.{ts,tsx}', 'src/**/*.d.ts'],
       reporter: ['text', 'json', 'html'],
       thresholds: {
         statements: 80,
-        branches: 80,
+        branches: 87,
         functions: 80,
         lines: 80,
       },

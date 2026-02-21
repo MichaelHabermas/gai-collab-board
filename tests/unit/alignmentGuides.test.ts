@@ -119,6 +119,30 @@ describe('alignmentGuides', () => {
       expect(pos.x).toBe(100);
       expect(pos.y).toBe(210);
     });
+
+    it('snaps y to centerY horizontal guide when center aligns within threshold', () => {
+      const pos = computeSnappedPositionFromGuides(
+        { vertical: [], horizontal: [240] },
+        { x: 0, y: 230 },
+        50,
+        10,
+        5
+      );
+      expect(pos.y).toBe(235);
+      expect(pos.x).toBe(0);
+    });
+
+    it('snaps y to bottom horizontal guide when bottom edge aligns within threshold', () => {
+      const pos = computeSnappedPositionFromGuides(
+        { vertical: [], horizontal: [300] },
+        { x: 0, y: 205 },
+        50,
+        90,
+        5
+      );
+      expect(pos.y).toBe(210);
+      expect(pos.x).toBe(0);
+    });
   });
 
   describe('performance instrumentation', () => {

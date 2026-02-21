@@ -33,5 +33,9 @@ describe('firebase initialization', () => {
     expect(firebaseModule.app).toBeDefined();
     expect(firebaseModule.auth).toBeDefined();
     expect(firebaseModule.firestore).toBeDefined();
+
+    const db1 = firebaseModule.getRealtimeDb();
+    const db2 = firebaseModule.getRealtimeDb();
+    expect(db1).toBe(db2);
   });
 });

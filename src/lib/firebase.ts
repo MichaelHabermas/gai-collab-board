@@ -29,7 +29,7 @@ function validateFirebaseEnv(): IFirebaseConfig {
   if (missing.length > 0) {
     throw new Error(
       `Missing required Firebase environment variables: ${missing.join(', ')}. ` +
-      'Copy .env.example to .env and fill in your Firebase config.'
+        'Copy .env.example to .env and fill in your Firebase config.'
     );
   }
 

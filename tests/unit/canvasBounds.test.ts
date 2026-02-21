@@ -66,6 +66,30 @@ describe('canvasBounds', () => {
       expect(b.x2 - b.x1).toBeGreaterThan(0);
       expect(b.y2 - b.y1).toBeGreaterThan(0);
     });
+
+    it('expands line bounds when extent is below MIN_POINTS_BOUND_SIZE', () => {
+      const obj: IBoardObject = {
+        ...makeSticky({ id: 'line-tiny', x: 10, y: 20, width: 0, height: 0 }),
+        type: 'line',
+        points: [0, 0, 1, 0],
+      };
+      const b = getObjectBounds(obj);
+      expect(b.x2 - b.x1).toBeGreaterThanOrEqual(2);
+      expect(b.y2 - b.y1).toBeGreaterThanOrEqual(2);
+      expect(b.x1).toBeLessThanOrEqual(10);
+      expect(b.x2).toBeGreaterThanOrEqual(11);
+    });
+
+    it('expands connector bounds when vertical extent is below MIN_POINTS_BOUND_SIZE', () => {
+      const obj: IBoardObject = {
+        ...makeSticky({ id: 'conn-vert', x: 0, y: 0, width: 0, height: 0 }),
+        type: 'connector',
+        points: [0, 0, 0, 1],
+      };
+      const b = getObjectBounds(obj);
+      expect(b.y2 - b.y1).toBeGreaterThanOrEqual(2);
+      expect(b.x2 - b.x1).toBeGreaterThanOrEqual(2);
+    });
   });
 
   describe('getSelectionBounds', () => {
@@ -157,6 +181,21 @@ describe('canvasBounds', () => {
         makeSticky({ id: '2', x: 100, y: 50, width: 20, height: 20 }),
       ];
       expect(getBoardBounds(objects)).toEqual({ x1: 5, y1: 5, x2: 120, y2: 70 });
+    });
+
+    it('returns null when first element is missing (sparse array)', () => {
+      const sparse: IBoardObject[] = [];
+      sparse[1] = makeSticky({ id: '1', x: 10, y: 10, width: 10, height: 10 });
+      expect(getBoardBounds(sparse)).toBeNull();
+    });
+
+    it('skips undefined elements in the loop', () => {
+      const withHole: IBoardObject[] = [
+        makeSticky({ id: '1', x: 0, y: 0, width: 10, height: 10 }),
+        undefined as unknown as IBoardObject,
+        makeSticky({ id: '2', x: 100, y: 100, width: 10, height: 10 }),
+      ];
+      expect(getBoardBounds(withHole)).toEqual({ x1: 0, y1: 0, x2: 110, y2: 110 });
     });
   });
 

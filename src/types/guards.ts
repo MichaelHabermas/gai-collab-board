@@ -6,25 +6,34 @@ export function isBoardObject(value: unknown): value is IBoardObject {
 }
 
 export function isBoard(value: unknown): value is IBoard {
-  return typeof value === 'object' && value !== null && 'id' in value && 'name' in value && 'ownerId' in value;
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'id' in value &&
+    'name' in value &&
+    'ownerId' in value
+  );
 }
 
 export function isKonvaGroup(node: Konva.Node): node is Konva.Group {
-  return node.getClassName() === 'Group';
+  return typeof node === 'object' && node !== null && node.getClassName() === 'Group';
 }
 
 export function isKonvaRect(node: Konva.Node): node is Konva.Rect {
-  return node.getClassName() === 'Rect';
+  return typeof node === 'object' && node !== null && node.getClassName() === 'Rect';
 }
 
 export function isKonvaEllipse(node: Konva.Node): node is Konva.Ellipse {
-  return node.getClassName() === 'Ellipse';
+  return typeof node === 'object' && node !== null && node.getClassName() === 'Ellipse';
 }
 
 export function isKonvaLine(node: Konva.Node): node is Konva.Line {
-  return node.getClassName() === 'Line' || node.getClassName() === 'Arrow';
+  if (typeof node !== 'object' || !node) return false;
+
+  const name = node.getClassName();
+  return name === 'Line' || name === 'Arrow';
 }
 
 export function isKonvaText(node: Konva.Node): node is Konva.Text {
-  return node.getClassName() === 'Text';
+  return typeof node === 'object' && node !== null && node.getClassName() === 'Text';
 }

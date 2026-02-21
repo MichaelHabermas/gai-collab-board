@@ -199,20 +199,7 @@ export const StickyNote = memo(
         });
       }, [text, width, height, fontSize, onTextChange, textFillColor]);
 
-      // Clean up overlay on unmount
-      useEffect(() => {
-        return () => {
-          if (removeOverlayRef.current) {
-            removeOverlayRef.current();
-          }
-        };
-      }, []);
-
-      const handleDragEnd = useShapeDragHandler(onDragEnd);
-
-      // Transform end (resize/rotate) is handled only by TransformHandler; no duplicate handler here.
-
-      // Combine refs
+      // Forward ref and clean up overlay on unmount
       useEffect(() => {
         if (ref) {
           if (typeof ref === 'function') {
@@ -221,7 +208,17 @@ export const StickyNote = memo(
             ref.current = groupRef.current;
           }
         }
+
+        return () => {
+          if (removeOverlayRef.current) {
+            removeOverlayRef.current();
+          }
+        };
       }, [ref]);
+
+      const handleDragEnd = useShapeDragHandler(onDragEnd);
+
+      // Transform end (resize/rotate) is handled only by TransformHandler; no duplicate handler here.
 
       // Cache as bitmap when idle (not selected, not editing) for faster redraws.
       // Invalidates when any visual prop changes.

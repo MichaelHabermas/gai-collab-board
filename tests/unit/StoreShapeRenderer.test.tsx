@@ -7,7 +7,7 @@ import { useDragOffsetStore, selectGroupDragOffset } from '@/stores/dragOffsetSt
 
 vi.mock('@/stores/objectsStore', () => ({
   useObjectsStore: vi.fn(),
-  selectObject: vi.fn((id: string) => (state: any) => id), // dummy selector returning id just to test passing it
+  selectObject: vi.fn((id: string) => (_state: unknown) => id), // dummy selector returning id just to test passing it
 }));
 
 vi.mock('@/stores/selectionStore', () => ({
@@ -152,11 +152,11 @@ describe('StoreShapeRenderer', () => {
       return mockObject;
     });
     
-    (useSelectionStore as any).mockImplementation((selector: any) => false);
-    
-    (useDragOffsetStore as any).mockImplementation((selector: any) => {
+    (useSelectionStore as any).mockImplementation((_selector: unknown) => false);
+
+    (useDragOffsetStore as any).mockImplementation((selector: unknown) => {
       // Mock true for isDropTarget
-      if (typeof selector === 'function' && selector.name !== 'selectFrameOffset' && selector.name !== '_selectNullGroupOffset') {
+      if (typeof selector === 'function' && (selector as { name?: string }).name !== 'selectFrameOffset' && (selector as { name?: string }).name !== '_selectNullGroupOffset') {
          return true;
       }
       return null;

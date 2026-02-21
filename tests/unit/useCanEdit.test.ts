@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { useCanEdit } from '@/modules/auth/useCanEdit';
 import { useAuth } from '@/modules/auth/useAuth';
 import * as syncModules from '@/modules/sync';
-import type { IBoard, UserRole } from '@/types';
+import type { IBoard } from '@/types';
 
 // Mock dependencies
 vi.mock('@/modules/auth/useAuth', () => ({
@@ -48,11 +48,11 @@ describe('useCanEdit', () => {
 
   it('subscribes to board and updates state when board loads', () => {
     const mockBoard = { id: 'board1', ownerId: 'owner1' } as IBoard;
-    (syncModules.subscribeToBoard as any).mockImplementation((id: string, cb: Function) => {
+    (syncModules.subscribeToBoard as any).mockImplementation((_id: string, cb: Function) => {
       cb(mockBoard);
       return mockUnsubscribe;
     });
-    
+
     // User is logged out, so it should still return false for everything but loading is false
     const { result } = renderHook(() => useCanEdit('board1'));
     
@@ -66,7 +66,7 @@ describe('useCanEdit', () => {
     
     (useAuth as any).mockReturnValue({ user: mockUser });
     
-    (syncModules.subscribeToBoard as any).mockImplementation((id: string, cb: Function) => {
+    (syncModules.subscribeToBoard as any).mockImplementation((_id: string, cb: (board: IBoard) => void) => {
       cb(mockBoard);
       return mockUnsubscribe;
     });
