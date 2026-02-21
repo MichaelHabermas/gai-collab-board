@@ -3,7 +3,6 @@ import { computeQuadrantLayout, type IQuadrantConfig } from '@/modules/ai/layout
 import {
   FRAME_PLACEHOLDER_ID,
   DEFAULT_STICKY_WIDTH,
-  DEFAULT_STICKY_HEIGHT,
   DEFAULT_FRAME_PADDING,
 } from '@/modules/ai/layouts/layoutUtils';
 
@@ -23,17 +22,8 @@ function nth<T>(arr: T[], index: number): T {
 // ---------------------------------------------------------------------------
 
 const CELL_GAP = 20;
-const SECTION_HEADER_HEIGHT = 50;
-const STICKY_GAP = 15;
 const MIN_CELL_WIDTH = 440;
-const STICKIES_PER_ROW_THRESHOLD = 3;
 const CELL_WIDTH = Math.max(2 * DEFAULT_STICKY_WIDTH + 40, MIN_CELL_WIDTH); // 440
-
-function computeCellHeight(itemCount: number): number {
-  const rows = Math.max(itemCount, 2);
-
-  return rows * (DEFAULT_STICKY_HEIGHT + STICKY_GAP) + SECTION_HEADER_HEIGHT;
-}
 
 const CREATED_BY = 'test-user';
 
