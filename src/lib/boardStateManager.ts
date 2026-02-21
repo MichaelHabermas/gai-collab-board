@@ -11,6 +11,10 @@ import type {
   IViewportPosition,
   IViewportScale,
 } from '@/types';
+import type { IVersionedAIState } from '@/types/aiCommand';
+
+/** AI state schema version. Bump on breaking changes (Constitution Article IV). */
+export const AI_STATE_VERSION = 1;
 
 /** Abstraction over concrete stores so the manager is testable without Zustand. */
 export interface IBoardStateProvider {
@@ -51,6 +55,7 @@ export interface IBoardStateManager {
   getState(): IBoardState;
   getElementsJSON(): string;
   getElementsForAI(includeDetails: boolean): IAIBoardElement[];
+  getVersionedStateForAI(includeDetails: boolean): IVersionedAIState;
   getElementById(id: string): IBoardObject | undefined;
   getElementsByType(type: ShapeType): IBoardObject[];
 }
@@ -163,6 +168,16 @@ export function createBoardStateManager(provider: IBoardStateProvider): IBoardSt
       const objects = provider.getObjects();
 
       return Object.values(objects).map((obj) => toAIElement(obj, includeDetails));
+    },
+
+    getVersionedStateForAI(includeDetails: boolean): IVersionedAIState {
+      const elements = this.getElementsForAI(includeDetails);
+
+      return {
+        version: AI_STATE_VERSION,
+        elements,
+        elementCount: elements.length,
+      };
     },
 
     getElementById(id: string): IBoardObject | undefined {

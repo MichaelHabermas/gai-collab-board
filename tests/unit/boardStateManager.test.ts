@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   createBoardStateManager,
+  AI_STATE_VERSION,
   type IBoardStateProvider,
   type IBoardStateManager,
 } from '@/lib/boardStateManager';
@@ -198,6 +199,46 @@ describe('createBoardStateManager', () => {
 
     it('returns empty array for unmatched type', () => {
       expect(manager.getElementsByType('frame')).toHaveLength(0);
+    });
+  });
+
+  describe('getVersionedStateForAI', () => {
+    it('includes AI_STATE_VERSION', () => {
+      const versioned = manager.getVersionedStateForAI(false);
+
+      expect(versioned.version).toBe(AI_STATE_VERSION);
+      expect(versioned.version).toBe(1);
+    });
+
+    it('includes element count', () => {
+      const versioned = manager.getVersionedStateForAI(false);
+
+      expect(versioned.elementCount).toBe(4);
+    });
+
+    it('includes elements matching getElementsForAI', () => {
+      const versioned = manager.getVersionedStateForAI(true);
+      const elements = manager.getElementsForAI(true);
+
+      expect(versioned.elements).toEqual(elements);
+    });
+
+    it('returns 0 elements for empty board', () => {
+      const mgr = createBoardStateManager(createMockProvider({}));
+      const versioned = mgr.getVersionedStateForAI(false);
+
+      expect(versioned.elementCount).toBe(0);
+      expect(versioned.elements).toEqual([]);
+    });
+
+    it('strips internal metadata from elements', () => {
+      const versioned = manager.getVersionedStateForAI(true);
+
+      for (const el of versioned.elements) {
+        expect(el).not.toHaveProperty('createdBy');
+        expect(el).not.toHaveProperty('createdAt');
+        expect(el).not.toHaveProperty('updatedAt');
+      }
     });
   });
 });

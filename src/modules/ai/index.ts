@@ -11,3 +11,14 @@ export {
   getActiveAIProviderConfig,
   type AIProviderId,
 } from './providerConfig';
+export {
+  createCommandDispatcher,
+  type ICommandDispatcher,
+  type ICommandDispatcherConfig,
+} from './commandDispatcher';
+export {
+  validateCommand,
+  type ValidationResult,
+  type IValidationSuccess,
+  type IValidationFailure,
+} from './commandValidator';

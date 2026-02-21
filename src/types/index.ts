@@ -77,3 +77,12 @@ export type {
   IDragUpdate,
   IRealtimeSyncRepository,
 } from './repository';
+export type {
+  AICommandAction,
+  AICommand,
+  ICreateCommandPayload,
+  IUpdateCommandPayload,
+  IDeleteCommandPayload,
+  ICommandResult,
+  IVersionedAIState,
+} from './aiCommand';
