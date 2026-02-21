@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components -- exports STICKY_COLORS and StickyColor for consumers */
 import { Group, Rect, Text } from 'react-konva';
 import { forwardRef, useState, useRef, useCallback, useEffect, useMemo, memo } from 'react';
 import type { ReactElement } from 'react';
@@ -17,19 +16,6 @@ import {
 import { getOverlayRectFromLocalCorners } from '@/lib/canvasOverlayPosition';
 import { attachOverlayRepositionLifecycle } from '@/lib/canvasTextEditOverlay';
 import type { IDragBoundFunc, ITransformEndRectAttrs, IKonvaDragEvent } from '@/types';
-
-// Sticky note color palette
-export const STICKY_COLORS = {
-  yellow: '#fef08a',
-  pink: '#fda4af',
-  blue: '#93c5fd',
-  green: '#86efac',
-  purple: '#c4b5fd',
-  orange: '#fed7aa',
-  red: '#ef4444',
-} as const;
-
-export type StickyColor = keyof typeof STICKY_COLORS;
 
 const DEFAULT_STICKY_FONT_SIZE = 14;
 const DEFAULT_STICKY_TEXT_COLOR = '#000000';

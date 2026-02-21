@@ -13,7 +13,7 @@ import {
   Undo2,
   Redo2,
 } from 'lucide-react';
-import { STICKY_COLORS } from './shapes/StickyNote';
+import { STICKY_COLORS } from '@/lib/boardObjectDefaults';
 import { cn } from '@/lib/utils';
 import type { ToolMode } from '@/types';
 

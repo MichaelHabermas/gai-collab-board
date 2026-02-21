@@ -8,7 +8,7 @@ import {
 } from '@/modules/sync/userPreferencesService';
 import { getAnchorPosition } from '@/lib/connectorAnchors';
 import { computeAlignUpdates, computeDistributeUpdates } from '@/lib/alignDistribute';
-import { STICKY_COLORS } from '@/components/canvas/shapes';
+import { STICKY_COLORS } from '@/lib/boardObjectDefaults';
 import { createCompoundExecutor, COMPOUND_TOOL_NAMES } from './compoundExecutor';
 import { createBoardStateManager, type IBoardStateProvider } from '@/lib/boardStateManager';
 import {
