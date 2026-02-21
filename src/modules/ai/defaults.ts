@@ -190,18 +190,29 @@ export function getDefaultHeightForType(type: string): number {
 // Merge helper: start from template, overwrite only user-provided keys
 // ---------------------------------------------------------------------------
 
+function isKeyOfPartial<T extends object>(
+  obj: Partial<T>,
+  key: string
+): key is Extract<keyof T, string> {
+  return key in obj;
+}
+
 /**
  * Merges user-provided keys over a template. Only keys present in userProvided
  * (with value !== undefined) overwrite the template; omitted fields stay as template values.
+ * Explicit falsy values (e.g. opacity: 0, false, '') overwrite the template.
  */
 export function mergeWithTemplate<T extends object>(template: T, userProvided: Partial<T>): T {
-  const result = { ...template } as T;
+  const result: T = { ...template };
 
-  for (const key of Object.keys(userProvided) as (keyof T)[]) {
+  for (const key of Object.keys(userProvided)) {
+    if (!isKeyOfPartial(userProvided, key)) {
+      continue;
+    }
+
     const value = userProvided[key];
-
     if (value) {
-      (result as Record<keyof T, unknown>)[key] = value;
+      result[key] = value;
     }
   }
 
