@@ -1,5 +1,5 @@
 import { useEffect, type MutableRefObject } from 'react';
-import { addBoardMember } from '@/modules/sync/boardService';
+import { addBoardMember, isGuestBoard } from '@/modules/sync/boardService';
 import type { IBoard } from '@/types';
 import type { User } from 'firebase/auth';
 
@@ -19,6 +19,10 @@ export function useBoardAutoJoin({
   skipAutoJoinBoardIdRef,
 }: IUseBoardAutoJoinParams): void {
   useEffect(() => {
+    if (isGuestBoard(boardId)) {
+      return;
+    }
+
     if (skipAutoJoinBoardIdRef?.current === boardId) {
       skipAutoJoinBoardIdRef.current = null;
       return;

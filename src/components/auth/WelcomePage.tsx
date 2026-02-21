@@ -1,7 +1,8 @@
 import { memo, type ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Users, Zap, Layers, ArrowRight } from 'lucide-react';
+import { Users, Zap, Layers, ArrowRight, LayoutDashboard } from 'lucide-react';
+import { GUEST_BOARD_ID } from '@/lib/constants';
 
 interface IFeatureCard {
   icon: ReactElement;
@@ -93,11 +94,26 @@ export const WelcomePage = memo((): ReactElement => {
               build together
             </span>
           </h2>
-          <p className='text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-10'>
+          <p className='text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-6'>
             CollabBoard is the real-time collaborative whiteboard that turns scattered ideas into
             structured thinking — powered by AI, built for teams.
           </p>
-          <div className='flex flex-col sm:flex-row gap-4 justify-center'>
+          <p className='text-slate-400 max-w-2xl mx-auto mb-10'>
+            A shared guest board is open to everyone — try it without signing in.
+          </p>
+          <div className='flex flex-col sm:flex-row gap-4 justify-center flex-wrap'>
+            <Button
+              size='lg'
+              variant='outline'
+              asChild
+              className='border-slate-500 text-slate-200 hover:bg-slate-700/50 hover:text-white h-12 px-8 text-base'
+              data-testid='guest-board-cta'
+            >
+              <Link to={`/board/${GUEST_BOARD_ID}`}>
+                <LayoutDashboard className='mr-2 h-5 w-5' aria-hidden />
+                Open guest board
+              </Link>
+            </Button>
             <Button
               size='lg'
               asChild

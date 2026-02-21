@@ -18,6 +18,7 @@ import {
   removeBoardMember,
   updateBoardName,
   canUserManage,
+  isGuestBoard,
 } from '@/modules/sync/boardService';
 import {
   subscribeToUserPreferences,
@@ -73,7 +74,7 @@ export const BoardListSidebar = memo(
 
     useEffect(() => {
       const unsubscribe = subscribeToUserBoards(user.uid, (userBoards) => {
-        setBoards(userBoards);
+        setBoards(userBoards.filter((b) => !isGuestBoard(b.id)));
         setLoading(false);
       });
       return () => unsubscribe();
@@ -223,18 +224,22 @@ export const BoardListSidebar = memo(
     }, [boardsById]);
 
     const recentBoardItems: IBoardListItem[] = useMemo(() => {
-      return preferences.recentBoardIds.map((id) => {
-        const b = boardsById.get(id);
-        return {
-          id,
-          name: b?.name || 'Untitled Board',
-          board: b ?? null,
-        };
-      });
+      return preferences.recentBoardIds
+        .filter((id) => !isGuestBoard(id))
+        .map((id) => {
+          const b = boardsById.get(id);
+          return {
+            id,
+            name: b?.name || 'Untitled Board',
+            board: b ?? null,
+          };
+        });
     }, [preferences.recentBoardIds, boardsById]);
 
     const favoriteBoardItems: IBoardListItem[] = useMemo(() => {
-      const uniqueFavoriteIds = Array.from(new Set(preferences.favoriteBoardIds));
+      const uniqueFavoriteIds = Array.from(new Set(preferences.favoriteBoardIds)).filter(
+        (id) => !isGuestBoard(id)
+      );
       const idsInBoardList = uniqueFavoriteIds.filter((id) => boardsById.has(id));
       return idsInBoardList.map((id) => {
         const b = boardsById.get(id);

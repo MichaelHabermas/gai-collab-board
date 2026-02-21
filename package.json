@@ -19,6 +19,7 @@
     "test:ai-connection": "bun run scripts/test-ai-connection.ts",
     "perf:check": "bun run scripts/run-performance-check.ts",
     "clear-boards": "bun run scripts/clear-boards.ts",
+    "seed-guest-board": "bun run scripts/seed-guest-board.ts",
     "proxy": "bun run server/index.ts",
     "validate": "bun run format && bun run lint:fix && bun run typecheck && bun run test:run",
     "preflight:release": "bun run scripts/preflight-release.ts",
