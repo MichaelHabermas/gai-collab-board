@@ -28,7 +28,7 @@ Base branch: current (development). Source: plan single_source_board_defaults.
 
 ## T3 — Remove duplicate STICKY_COLORS and wire consumers
 
-- **Status:** pending
+- **Status:** review
 - **Tier:** sonnet
 - **Role:** architect
 - **Worktree name:** board-defaults-sticky-colors

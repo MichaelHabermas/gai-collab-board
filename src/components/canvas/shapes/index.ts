@@ -1,4 +1,5 @@
-export { StickyNote, STICKY_COLORS, type StickyColor } from './StickyNote';
+export { StickyNote } from './StickyNote';
+export { STICKY_COLORS, type StickyColor } from '@/lib/boardObjectDefaults';
 export { RectangleShape } from './RectangleShape';
 export { CircleShape } from './CircleShape';
 export { LineShape } from './LineShape';
