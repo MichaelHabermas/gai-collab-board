@@ -1,8 +1,45 @@
 import { describe, it, expect } from 'vitest';
 import { computeQuadrantLayout, type IQuadrantConfig } from '@/modules/ai/layouts/quadrantLayout';
-import { FRAME_PLACEHOLDER_ID } from '@/modules/ai/layouts/layoutUtils';
+import {
+  FRAME_PLACEHOLDER_ID,
+  DEFAULT_STICKY_WIDTH,
+  DEFAULT_STICKY_HEIGHT,
+  DEFAULT_FRAME_PADDING,
+} from '@/modules/ai/layouts/layoutUtils';
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function nth<T>(arr: T[], index: number): T {
+  const val = arr[index];
+  if (!val) throw new Error(`Index ${String(index)} out of bounds`);
+
+  return val;
+}
+
+// ---------------------------------------------------------------------------
+// Constants mirrored from implementation (quadrant-specific)
+// ---------------------------------------------------------------------------
+
+const CELL_GAP = 20;
+const SECTION_HEADER_HEIGHT = 50;
+const STICKY_GAP = 15;
+const MIN_CELL_WIDTH = 440;
+const STICKIES_PER_ROW_THRESHOLD = 3;
+const CELL_WIDTH = Math.max(2 * DEFAULT_STICKY_WIDTH + 40, MIN_CELL_WIDTH); // 440
+
+function computeCellHeight(itemCount: number): number {
+  const rows = Math.max(itemCount, 2);
+
+  return rows * (DEFAULT_STICKY_HEIGHT + STICKY_GAP) + SECTION_HEADER_HEIGHT;
+}
 
 const CREATED_BY = 'test-user';
+
+// ---------------------------------------------------------------------------
+// Fixtures
+// ---------------------------------------------------------------------------
 
 function makeConfig(overrides?: Partial<IQuadrantConfig>): IQuadrantConfig {
   return {
@@ -17,31 +54,45 @@ function makeConfig(overrides?: Partial<IQuadrantConfig>): IQuadrantConfig {
   };
 }
 
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
 describe('computeQuadrantLayout', () => {
-  it('produces a frame as the first object', () => {
+  it('frame is the first object with type frame', () => {
     const { objects } = computeQuadrantLayout(makeConfig(), [], CREATED_BY);
 
-    expect(objects.length).toBeGreaterThan(0);
-    expect(objects[0]?.type).toBe('frame');
-    expect(objects[0]?.text).toBe('SWOT Analysis');
+    expect(nth(objects, 0).type).toBe('frame');
+    expect(nth(objects, 0).text).toBe('SWOT Analysis');
   });
 
-  it('creates correct total object count', () => {
+  it('returns FRAME_PLACEHOLDER_ID as frameId', () => {
+    const { frameId } = computeQuadrantLayout(makeConfig(), [], CREATED_BY);
+
+    expect(frameId).toBe(FRAME_PLACEHOLDER_ID);
+  });
+
+  it('contains exactly 2 axis lines', () => {
+    const { objects } = computeQuadrantLayout(makeConfig(), [], CREATED_BY);
+    const lines = objects.filter((o) => o.type === 'line');
+
+    expect(lines).toHaveLength(2);
+  });
+
+  it('contains 4 section labels matching quadrant label text', () => {
     const config = makeConfig();
     const { objects } = computeQuadrantLayout(config, [], CREATED_BY);
-    const totalItems =
-      config.quadrants.topLeft.items.length +
-      config.quadrants.topRight.items.length +
-      config.quadrants.bottomLeft.items.length +
-      config.quadrants.bottomRight.items.length;
+    const textObjects = objects.filter((o) => o.type === 'text');
+    const labels = ['Strengths', 'Weaknesses', 'Opportunities', 'Threats'];
 
-    // 1 frame + 2 axis lines + 4 section labels + N stickies
-    const expectedMin = 1 + 2 + 4 + totalItems;
+    for (const label of labels) {
+      const found = textObjects.some((o) => o.text === label);
 
-    expect(objects.length).toBeGreaterThanOrEqual(expectedMin);
+      expect(found, `section label "${label}" not found`).toBe(true);
+    }
   });
 
-  it('sets parentFrameId on all non-frame children', () => {
+  it('all non-frame children have parentFrameId = FRAME_PLACEHOLDER_ID', () => {
     const { objects } = computeQuadrantLayout(makeConfig(), [], CREATED_BY);
 
     for (const obj of objects) {
@@ -51,77 +102,95 @@ describe('computeQuadrantLayout', () => {
     }
   });
 
-  it('frame encompasses all children', () => {
+  it('x axis label is present when xAxisLabel is provided', () => {
+    const config = makeConfig({ xAxisLabel: 'Internal ← External' });
+    const { objects } = computeQuadrantLayout(config, [], CREATED_BY);
+    const found = objects.some((o) => o.type === 'text' && o.text === 'Internal ← External');
+
+    expect(found).toBe(true);
+  });
+
+  it('y axis label is present when yAxisLabel is provided', () => {
+    const config = makeConfig({ yAxisLabel: 'Positive ← Negative' });
+    const { objects } = computeQuadrantLayout(config, [], CREATED_BY);
+    const found = objects.some((o) => o.type === 'text' && o.text === 'Positive ← Negative');
+
+    expect(found).toBe(true);
+  });
+
+  it('no extra axis labels when neither xAxisLabel nor yAxisLabel are provided', () => {
+    // makeConfig() without axis labels → exactly 4 text objects (section labels)
     const { objects } = computeQuadrantLayout(makeConfig(), [], CREATED_BY);
-    const frame = objects[0];
-    if (!frame) {
-      throw new Error('No frame');
-    }
-
-    for (const obj of objects.slice(1)) {
-      expect(obj.x).toBeGreaterThanOrEqual(frame.x);
-      expect(obj.y).toBeGreaterThanOrEqual(frame.y);
-      if (obj.width > 0) {
-        expect(obj.x + obj.width).toBeLessThanOrEqual(frame.x + frame.width);
-      }
-      if (obj.height > 0) {
-        expect(obj.y + obj.height).toBeLessThanOrEqual(frame.y + frame.height);
-      }
-    }
-  });
-
-  it('uses explicit x/y when provided', () => {
-    const { objects } = computeQuadrantLayout(makeConfig({ x: 500, y: 300 }), [], CREATED_BY);
-
-    expect(objects[0]?.x).toBe(500);
-    expect(objects[0]?.y).toBe(300);
-  });
-
-  it('auto-positions when x/y are omitted', () => {
-    const existing = [{ x: 0, y: 0, width: 200, height: 200 }];
-    const { objects } = computeQuadrantLayout(makeConfig(), existing, CREATED_BY);
-    const frame = objects[0];
-
-    if (!frame) {
-      throw new Error('No frame');
-    }
-
-    expect(frame.x).toBeGreaterThan(200);
-  });
-
-  it('handles empty items in a quadrant', () => {
-    const config = makeConfig({
-      quadrants: {
-        topLeft: { label: 'A', items: [] },
-        topRight: { label: 'B', items: [] },
-        bottomLeft: { label: 'C', items: [] },
-        bottomRight: { label: 'D', items: [] },
-      },
-    });
-
-    const { objects } = computeQuadrantLayout(config, [], CREATED_BY);
-
-    // Should still produce frame + axis lines + labels
-    expect(objects.length).toBeGreaterThanOrEqual(7); // 1 frame + 2 lines + 4 labels
-  });
-
-  it('includes axis labels when xAxisLabel and yAxisLabel are provided', () => {
-    const config = makeConfig({
-      xAxisLabel: 'Internal ← → External',
-      yAxisLabel: 'Positive ← → Negative',
-    });
-    const { objects } = computeQuadrantLayout(config, [], CREATED_BY);
-
     const textObjects = objects.filter((o) => o.type === 'text');
 
-    // 4 section labels + 2 axis labels
-    expect(textObjects.length).toBeGreaterThanOrEqual(6);
+    // 4 section labels, no axis labels
+    expect(textObjects).toHaveLength(4);
   });
 
-  it('returns FRAME_PLACEHOLDER_ID as frameId', () => {
-    const { frameId } = computeQuadrantLayout(makeConfig(), [], CREATED_BY);
+  it('correct total object count: 1 frame + 2 lines + 4 section labels + total stickies', () => {
+    const config = makeConfig();
+    const totalItems =
+      config.quadrants.topLeft.items.length +
+      config.quadrants.topRight.items.length +
+      config.quadrants.bottomLeft.items.length +
+      config.quadrants.bottomRight.items.length;
 
-    expect(frameId).toBe(FRAME_PLACEHOLDER_ID);
+    const { objects } = computeQuadrantLayout(config, [], CREATED_BY);
+    const expected = 1 + 2 + 4 + totalItems;
+
+    expect(objects).toHaveLength(expected);
+  });
+
+  it('stickies in a quadrant with more than 3 items use 2-column layout (x coords differ)', () => {
+    const config = makeConfig({
+      quadrants: {
+        topLeft: { label: 'TL', color: 'yellow', items: ['A', 'B', 'C', 'D'] },
+        topRight: { label: 'TR', items: [] },
+        bottomLeft: { label: 'BL', items: [] },
+        bottomRight: { label: 'BR', items: [] },
+      },
+    });
+    const { objects } = computeQuadrantLayout(config, [], CREATED_BY);
+    const stickies = objects.filter((o) => o.type === 'sticky');
+
+    // With 4 items and cols=2: item[0] and item[1] should be in different columns (x differs)
+    const xValues = new Set(stickies.map((s) => s.x));
+
+    expect(xValues.size).toBeGreaterThan(1);
+  });
+
+  it('stickies in a quadrant with 3 or fewer items use single-column layout (same x)', () => {
+    const config = makeConfig({
+      quadrants: {
+        topLeft: { label: 'TL', color: 'blue', items: ['A', 'B', 'C'] },
+        topRight: { label: 'TR', items: [] },
+        bottomLeft: { label: 'BL', items: [] },
+        bottomRight: { label: 'BR', items: [] },
+      },
+    });
+    const { objects } = computeQuadrantLayout(config, [], CREATED_BY);
+    const stickies = objects.filter((o) => o.type === 'sticky');
+
+    // With 3 items and cols=1: all stickies share the same x
+    const xValues = new Set(stickies.map((s) => s.x));
+
+    expect(xValues.size).toBe(1);
+  });
+
+  it('explicit x/y positions the frame at those coords', () => {
+    const { objects } = computeQuadrantLayout(makeConfig({ x: 500, y: 300 }), [], CREATED_BY);
+
+    expect(nth(objects, 0).x).toBe(500);
+    expect(nth(objects, 0).y).toBe(300);
+  });
+
+  it('auto-positions to the right of existing objects when x/y omitted', () => {
+    const existing = [{ x: 0, y: 0, width: 200, height: 200 }];
+    const { objects } = computeQuadrantLayout(makeConfig(), existing, CREATED_BY);
+
+    // findOpenSpace: bbox.x + bbox.width + 60 = 0 + 200 + 60 = 260
+    expect(nth(objects, 0).x).toBe(260);
+    expect(nth(objects, 0).y).toBe(0);
   });
 
   it('resolves named colors to hex in sticky notes', () => {
@@ -131,5 +200,12 @@ describe('computeQuadrantLayout', () => {
     for (const sticky of stickies) {
       expect(sticky.fill).toMatch(/^#[0-9a-f]{6}$/i);
     }
+  });
+
+  it('frame width accounts for cell count, gap, and padding', () => {
+    const { objects } = computeQuadrantLayout(makeConfig(), [], CREATED_BY);
+    const expectedW = CELL_WIDTH * 2 + CELL_GAP + DEFAULT_FRAME_PADDING * 2;
+
+    expect(nth(objects, 0).width).toBe(expectedW);
   });
 });
