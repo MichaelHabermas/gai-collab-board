@@ -178,6 +178,7 @@ export const createObjectsBatch = async (
     const objectsRef = getObjectsCollection(boardId);
     const objectRef = doc(objectsRef);
 
+    // Build object with only required fields (same pattern as createObject)
     const object: IBoardObject = {
       id: objectRef.id,
       type: params.type,
@@ -187,18 +188,56 @@ export const createObjectsBatch = async (
       height: params.height,
       rotation: params.rotation ?? 0,
       fill: params.fill,
-      stroke: params.stroke,
-      strokeWidth: params.strokeWidth,
-      text: params.text,
-      textFill: params.textFill,
-      fontSize: params.fontSize,
-      points: params.points,
       createdBy: params.createdBy,
       createdAt: now,
       updatedAt: now,
     };
+
+    // Only add optional fields if defined (Firestore doesn't allow undefined)
+    if (params.stroke) {
+      object.stroke = params.stroke;
+    }
+
+    if (params.strokeWidth) {
+      object.strokeWidth = params.strokeWidth;
+    }
+
+    // Empty string is valid for sticky/text; do not use truthy check
+    // eslint-disable-next-line local/prefer-falsy-over-explicit-nullish -- empty string must set text
+    if (params.text !== undefined) {
+      object.text = params.text;
+    }
+
+    if (params.textFill) {
+      object.textFill = params.textFill;
+    }
+
+    if (params.fontSize) {
+      object.fontSize = params.fontSize;
+    }
+
     if (params.opacity) {
       object.opacity = params.opacity;
+    }
+
+    if (params.points) {
+      object.points = params.points;
+    }
+
+    if (params.fromObjectId) {
+      object.fromObjectId = params.fromObjectId;
+    }
+
+    if (params.toObjectId) {
+      object.toObjectId = params.toObjectId;
+    }
+
+    if (params.fromAnchor) {
+      object.fromAnchor = params.fromAnchor;
+    }
+
+    if (params.toAnchor) {
+      object.toAnchor = params.toAnchor;
     }
 
     if (params.arrowheads) {
@@ -359,6 +398,30 @@ export const subscribeToObjectsWithChanges = (
 // ============================================================================
 // Paginated Fetch (large boards)
 // ============================================================================
+
+/**
+ * Fetch a limited batch of objects for board size probing (S3).
+ * Single getDocs call — use to determine if pagination is needed
+ * before committing to a subscription strategy.
+ */
+export const fetchObjectsBatch = async (
+  boardId: string,
+  batchLimit: number
+): Promise<IBoardObject[]> => {
+  const objectsRef = getObjectsCollection(boardId);
+  const batchQuery = query(objectsRef, orderBy('createdAt', 'asc'), limit(batchLimit));
+  const snapshot = await getDocs(batchQuery);
+  const objects: IBoardObject[] = [];
+
+  for (const snapshotDoc of snapshot.docs) {
+    const data = snapshotDoc.data();
+    if (isBoardObject(data)) {
+      objects.push(data);
+    }
+  }
+
+  return objects;
+};
 
 /**
  * Fetches objects in batches for large boards.

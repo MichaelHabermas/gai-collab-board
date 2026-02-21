@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { Timestamp } from 'firebase/firestore';
 import {
   useObjectsStore,
+  type IApplyChangesChangeset,
   selectFrameChildren,
   selectFrames,
   selectObject,
@@ -367,6 +368,66 @@ describe('objectsStore — index management', () => {
       expect(Object.keys(state.objects)).toHaveLength(0);
       expect(state.frameChildrenIndex.size).toBe(0);
       expect(state.connectorsByEndpoint.size).toBe(0);
+    });
+  });
+
+  describe('applyChanges (Article XV)', () => {
+    it('produces exactly one subscriber notification for mixed add/update/delete', () => {
+      useObjectsStore.getState().clear();
+      const a = makeObj({ id: 'a', text: 'A' });
+      const b = makeObj({ id: 'b', text: 'B' });
+      const c = makeObj({ id: 'c', text: 'C' });
+      const d = makeObj({ id: 'd', text: 'D' });
+      const e = makeObj({ id: 'e', text: 'E' });
+      useObjectsStore.getState().setAll([a, b, c, d, e]);
+
+      let subscriberCallCount = 0;
+      const unsub = useObjectsStore.subscribe(() => {
+        subscriberCallCount += 1;
+      });
+
+      const changeset: IApplyChangesChangeset = {
+        add: [
+          makeObj({ id: 'add1', text: 'Add1' }),
+          makeObj({ id: 'add2', text: 'Add2' }),
+          makeObj({ id: 'add3', text: 'Add3' }),
+          makeObj({ id: 'add4', text: 'Add4' }),
+          makeObj({ id: 'add5', text: 'Add5' }),
+        ],
+        update: [
+          { id: 'a', updates: { text: 'A-updated' } },
+          { id: 'b', updates: { text: 'B-updated' } },
+          { id: 'c', updates: { text: 'C-updated' } },
+        ],
+        delete: ['d', 'e'],
+      };
+
+      useObjectsStore.getState().applyChanges(changeset);
+
+      unsub();
+      expect(subscriberCallCount).toBe(1);
+    });
+
+    it('applies adds, updates, and deletes correctly in one call', () => {
+      useObjectsStore.getState().clear();
+      const a = makeObj({ id: 'a', text: 'A' });
+      const b = makeObj({ id: 'b', text: 'B' });
+      useObjectsStore.getState().setAll([a, b]);
+
+      const changeset: IApplyChangesChangeset = {
+        add: [makeObj({ id: 'new1', text: 'New1' })],
+        update: [{ id: 'a', updates: { text: 'A-updated', x: 10 } }],
+        delete: ['b'],
+      };
+
+      useObjectsStore.getState().applyChanges(changeset);
+
+      const state = useObjectsStore.getState();
+      expect(state.objects['a']?.text).toBe('A-updated');
+      expect(state.objects['a']?.x).toBe(10);
+      expect(state.objects['new1']?.text).toBe('New1');
+      expect(state.objects['b']).toBeUndefined();
+      expect(Object.keys(state.objects).sort()).toEqual(['a', 'new1']);
     });
   });
 });

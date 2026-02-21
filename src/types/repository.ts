@@ -24,6 +24,12 @@ export interface IBatchUpdate {
   updates: IUpdateObjectParams;
 }
 
+/** Provider-agnostic timestamp cursor for delta subscriptions (S3). */
+export interface IDeltaCursor {
+  readonly seconds: number;
+  readonly nanoseconds: number;
+}
+
 /**
  * Persistent board object CRUD + subscription (Firestore-backed).
  * Constitution Article III: all persistence ops go through this interface.
@@ -37,6 +43,19 @@ export interface IBoardRepository {
   deleteObjectsBatch(boardId: string, objectIds: string[]): Promise<void>;
   subscribeToObjects(
     boardId: string,
+    callback: (update: IObjectsSnapshotUpdate) => void
+  ): () => void;
+
+  /** Probe board size: fetch up to `batchLimit` objects (S3). */
+  fetchObjectsBatch(boardId: string, batchLimit: number): Promise<IBoardObject[]>;
+
+  /** Fetch all objects in batches for large boards (S3). */
+  fetchObjectsPaginated(boardId: string, batchSize?: number): Promise<IBoardObject[]>;
+
+  /** Subscribe to objects modified after cursor — delta sync for large boards (S3). */
+  subscribeToDeltaUpdates(
+    boardId: string,
+    afterTimestamp: IDeltaCursor,
     callback: (update: IObjectsSnapshotUpdate) => void
   ): () => void;
 }

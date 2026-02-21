@@ -14,7 +14,7 @@ export interface IUseMarqueeSelectionReturn {
   onMarqueeMove: (coords: IPosition) => void;
   onMarqueeEnd: (
     e: IKonvaMouseEvent,
-    objects: IBoardObject[],
+    objectsRecord: Record<string, IBoardObject>,
     getCanvasCoords: (stage: Konva.Stage, pointer: Konva.Vector2d) => IPosition,
     setSelectedIds: (ids: string[]) => void
   ) => void;
@@ -54,7 +54,7 @@ export function useMarqueeSelection(): IUseMarqueeSelectionReturn {
   const onMarqueeEnd = useCallback(
     (
       e: IKonvaMouseEvent,
-      objects: IBoardObject[],
+      objectsRecord: Record<string, IBoardObject>,
       getCanvasCoords: (stage: Konva.Stage, pointer: Konva.Vector2d) => IPosition,
       setSelectedIds: (ids: string[]) => void
     ) => {
@@ -79,6 +79,7 @@ export function useMarqueeSelection(): IUseMarqueeSelectionReturn {
           const selY2 = Math.max(start.y1, end.y);
 
           if (Math.abs(selX2 - selX1) > 5 && Math.abs(selY2 - selY1) > 5) {
+            const objects = Object.values(objectsRecord);
             const selectedObjectIds = objects
               .filter((obj) => {
                 const { x1: objX1, y1: objY1, x2: objX2, y2: objY2 } = getObjectBounds(obj);

@@ -11,7 +11,10 @@ import {
   Unsubscribe,
 } from 'firebase/firestore';
 import { firestore } from '@/lib/firebase';
+import { isGuestBoard } from '@/lib/constants';
 import { IBoard, UserRole } from '@/types';
+
+export { GUEST_BOARD_ID, isGuestBoard } from '@/lib/constants';
 
 const BOARDS_COLLECTION = 'boards';
 
@@ -167,6 +170,10 @@ export const updateMemberRole = async (
 };
 
 export const deleteBoard = async (boardId: string, userId: string): Promise<void> => {
+  if (isGuestBoard(boardId)) {
+    throw new Error('The guest board cannot be deleted');
+  }
+
   const boardRef = doc(firestore, BOARDS_COLLECTION, boardId);
   await runTransaction(firestore, async (tx) => {
     const snap = await tx.get(boardRef);

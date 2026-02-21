@@ -3,7 +3,7 @@ import type { IBoardObject, ConnectorAnchor, ToolMode, ICreateObjectParams } fro
 import { getAnchorPosition } from '@/lib/connectorAnchors';
 
 interface IUseConnectorCreationParams {
-  objects: IBoardObject[];
+  objectsRecord: Record<string, IBoardObject>;
   activeColor: string;
   onObjectCreate?: (params: Omit<ICreateObjectParams, 'createdBy'>) => Promise<IBoardObject | null>;
   setActiveTool: (tool: ToolMode) => void;
@@ -22,7 +22,7 @@ interface IUseConnectorCreationReturn {
 }
 
 export function useConnectorCreation({
-  objects,
+  objectsRecord,
   activeColor,
   onObjectCreate,
   setActiveTool,
@@ -53,8 +53,8 @@ export function useConnectorCreation({
         return;
       }
 
-      const fromObj = objects.find((o) => o.id === connectorFrom.shapeId);
-      const toObj = objects.find((o) => o.id === shapeId);
+      const fromObj = objectsRecord[connectorFrom.shapeId];
+      const toObj = objectsRecord[shapeId];
       if (!fromObj || !toObj || !onObjectCreate) {
         setConnectorFrom(null);
         return;
@@ -91,7 +91,7 @@ export function useConnectorCreation({
           setConnectorFrom(null);
         });
     },
-    [connectorFrom, objects, onObjectCreate, activeColor, setActiveTool, activeToolRef]
+    [connectorFrom, objectsRecord, onObjectCreate, activeColor, setActiveTool, activeToolRef]
   );
 
   return { connectorFrom, handleConnectorNodeClick, clearConnector };

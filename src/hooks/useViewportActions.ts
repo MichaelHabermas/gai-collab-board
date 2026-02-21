@@ -1,10 +1,10 @@
-import { useCallback, useMemo, useEffect, type RefObject } from 'react';
-import { getSelectionBounds, getBoardBounds } from '@/lib/canvasBounds';
+import { useCallback, useMemo, useEffect, type MutableRefObject } from 'react';
+import { getSelectionBoundsFromRecord, getBoardBoundsFromRecord } from '@/lib/canvasBounds';
 import { useViewportActionsStore } from '@/stores/viewportActionsStore';
 import type { IBoardObject, IBounds, ExportImageFormat, IViewportActionsValue } from '@/types';
 
 interface IUseViewportActionsParams {
-  objects: IBoardObject[];
+  objectsRecord: Record<string, IBoardObject>;
   selectedIds: ReadonlySet<string>;
   zoomToFitBounds: (bounds: IBounds) => void;
   resetViewport: () => void;
@@ -15,7 +15,7 @@ interface IUseViewportActionsParams {
     zoomToFitBounds: (b: IBounds) => void,
     format: ExportImageFormat
   ) => void;
-  objectsRef: RefObject<IBoardObject[]>;
+  objectsRecordRef: MutableRefObject<Record<string, IBoardObject>>;
 }
 
 interface IUseViewportActionsReturn {
@@ -29,30 +29,30 @@ interface IUseViewportActionsReturn {
 }
 
 export function useViewportActions({
-  objects,
+  objectsRecord,
   selectedIds,
   zoomToFitBounds,
   resetViewport,
   zoomTo,
   exportViewport,
   exportFullBoard,
-  objectsRef,
+  objectsRecordRef,
 }: IUseViewportActionsParams): IUseViewportActionsReturn {
   const handleZoomToSelection = useCallback(() => {
-    const bounds = getSelectionBounds(objects, selectedIds);
+    const bounds = getSelectionBoundsFromRecord(objectsRecord, selectedIds);
     if (bounds) {
       zoomToFitBounds(bounds);
     }
-  }, [objects, selectedIds, zoomToFitBounds]);
+  }, [objectsRecord, selectedIds, zoomToFitBounds]);
 
   const handleZoomToFitAll = useCallback(() => {
-    const bounds = getBoardBounds(objects);
+    const bounds = getBoardBoundsFromRecord(objectsRecord);
     if (bounds) {
       zoomToFitBounds(bounds);
     } else {
       resetViewport();
     }
-  }, [objects, zoomToFitBounds, resetViewport]);
+  }, [objectsRecord, zoomToFitBounds, resetViewport]);
 
   const handleZoomPreset = useCallback(
     (scale: number) => {
@@ -70,12 +70,12 @@ export function useViewportActions({
 
   const handleZoomToObjectIds = useCallback(
     (objectIds: string[]) => {
-      const bounds = getSelectionBounds(objects, objectIds);
+      const bounds = getSelectionBoundsFromRecord(objectsRecord, objectIds);
       if (bounds) {
         zoomToFitBounds(bounds);
       }
     },
-    [objects, zoomToFitBounds]
+    [objectsRecord, zoomToFitBounds]
   );
 
   const handleExportViewport = useCallback(
@@ -87,9 +87,10 @@ export function useViewportActions({
 
   const handleExportFullBoard = useCallback(
     (format?: ExportImageFormat) => {
-      exportFullBoard(objectsRef.current, zoomToFitBounds, format ?? 'png');
+      const record = objectsRecordRef.current ?? {};
+      exportFullBoard(Object.values(record), zoomToFitBounds, format ?? 'png');
     },
-    [exportFullBoard, objectsRef, zoomToFitBounds]
+    [exportFullBoard, objectsRecordRef, zoomToFitBounds]
   );
 
   // Wire actions into the global viewport actions store for external consumers

@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, lazy, memo, Suspense, type ReactElement } from 'react';
-import { useParams, useNavigate, Routes, Route, Navigate } from 'react-router-dom';
+import { useParams, useNavigate, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '@/modules/auth';
 import { AuthPage } from '@/components/auth/AuthPage';
 import { WelcomePage } from '@/components/auth/WelcomePage';
@@ -7,7 +7,16 @@ import { Button } from '@/components/ui/button';
 import { ShareDialog } from '@/components/board/ShareDialog';
 import { BoardListSidebar } from '@/components/board/BoardListSidebar';
 import { RightSidebar } from '@/components/board/RightSidebar';
-import { LogOut, Loader2, Share2, Sun, Moon, Pencil, PanelLeft } from 'lucide-react';
+import {
+  LogOut,
+  Loader2,
+  Share2,
+  Sun,
+  Moon,
+  Pencil,
+  PanelLeft,
+  LayoutDashboard,
+} from 'lucide-react';
 import { BoardCanvas } from '@/components/canvas/BoardCanvas';
 import { useObjects } from '@/hooks/useObjects';
 import { useAI } from '@/hooks/useAI';
@@ -21,6 +30,7 @@ import {
   canUserEdit,
   canUserManage,
   updateBoardName,
+  isGuestBoard,
 } from '@/modules/sync/boardService';
 import { ConnectionStatus } from '@/components/ui/ConnectionStatus';
 import { PresenceAvatars } from '@/components/presence/PresenceAvatars';
@@ -49,6 +59,9 @@ const PropertyInspector = lazy(() =>
   import('@/components/canvas/PropertyInspector').then((m) => ({ default: m.PropertyInspector }))
 );
 import type { IBoard } from '@/types';
+import { getOrCreateAnonymousId, type IAnonymousGuest } from '@/lib/guestSession';
+import { GUEST_BOARD_ID } from '@/lib/constants';
+import type { User } from 'firebase/auth';
 
 interface IBoardViewProps {
   boardId: string;
@@ -58,6 +71,8 @@ interface IBoardViewProps {
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
   skipAutoJoinBoardIdRef?: React.MutableRefObject<string | null>;
+  /** When set, use this as the current user (for anonymous guest board). */
+  guestUser?: IAnonymousGuest | null;
 }
 
 const BoardView = memo(function BoardView({
@@ -68,8 +83,17 @@ const BoardView = memo(function BoardView({
   theme,
   onToggleTheme,
   skipAutoJoinBoardIdRef,
+  guestUser,
 }: IBoardViewProps): ReactElement {
-  const { user, signOut } = useAuth();
+  const auth = useAuth();
+  const user = guestUser
+    ? ({
+        uid: guestUser.id,
+        displayName: guestUser.displayName,
+        email: null,
+        photoURL: null,
+      } as User)
+    : auth.user;
   const { board, boardLoading } = useBoardSubscription(boardId);
   const [headerRenameOpen, setHeaderRenameOpen] = useState(false);
   const [headerRenameName, setHeaderRenameName] = useState<string>('');
@@ -85,7 +109,6 @@ const BoardView = memo(function BoardView({
   useSidebarPrefetch();
 
   const {
-    objects,
     loading: objectsLoading,
     createObject,
     updateObject,
@@ -95,7 +118,6 @@ const BoardView = memo(function BoardView({
   } = useObjects({ boardId, user });
 
   const history = useHistory({
-    objects,
     createObject,
     updateObject,
     deleteObject,
@@ -103,7 +125,7 @@ const BoardView = memo(function BoardView({
   });
 
   const { onlineUsers } = usePresence({ boardId, user });
-  const ai = useAI({ boardId, user, objects });
+  const ai = useAI({ boardId, user });
   const {
     commentsByObjectId,
     loading: commentsLoading,
@@ -154,9 +176,9 @@ const BoardView = memo(function BoardView({
     );
   }
 
-  // Check if user can edit - default to true for authenticated users if board doesn't exist yet
-  // This allows the first user to create objects while the board is being created
-  const canEdit = board ? canUserEdit(board, user.uid) : true;
+  // Guest board is editable by everyone; otherwise use role-based canEdit
+  const canEdit = board ? (isGuestBoard(board.id) ? true : canUserEdit(board, user.uid)) : true;
+  const isGuest = board ? isGuestBoard(board.id) : false;
 
   return (
     <div className='h-screen flex flex-col bg-background overflow-hidden'>
@@ -165,7 +187,7 @@ const BoardView = memo(function BoardView({
         <div className='px-4 py-2 flex items-center justify-between gap-6'>
           <div className='flex items-center gap-4'>
             <h1 className='text-lg font-bold text-foreground'>CollabBoard</h1>
-            {board && canUserManage(board, user.uid) ? (
+            {!isGuest && board && canUserManage(board, user.uid) ? (
               <div className='flex items-center gap-1'>
                 <span className='text-sm text-muted-foreground'>
                   {board.name || 'Untitled Board'}
@@ -188,52 +210,54 @@ const BoardView = memo(function BoardView({
             ) : (
               <span
                 className='text-sm text-muted-foreground'
-                title='Only the board owner can rename this board.'
+                title={isGuest ? undefined : 'Only the board owner can rename this board.'}
               >
                 {board?.name || 'Untitled Board'}
               </span>
             )}
-            <Dialog open={headerRenameOpen} onOpenChange={setHeaderRenameOpen}>
-              <DialogContent className='bg-card border-border' aria-describedby={undefined}>
-                <DialogHeader>
-                  <DialogTitle className='text-card-foreground'>Rename board</DialogTitle>
-                  <DialogDescription className='sr-only'>
-                    Enter a new name for the board.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className='grid gap-2 py-2'>
-                  <Label htmlFor='header-rename-name' className='text-foreground'>
-                    Board name
-                  </Label>
-                  <Input
-                    id='header-rename-name'
-                    value={headerRenameName}
-                    onChange={(e) => setHeaderRenameName(e.target.value)}
-                    className='bg-muted border-border text-foreground'
-                    data-testid='header-rename-name-input'
-                    placeholder='Untitled Board'
-                  />
-                </div>
-                <DialogFooter>
-                  <Button variant='outline' size='sm' onClick={() => setHeaderRenameOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button
-                    size='sm'
-                    onClick={async () => {
-                      const name = headerRenameName.trim() || 'Untitled Board';
-                      await updateBoardName(boardId, name, user.uid);
-                      setHeaderRenameOpen(false);
-                    }}
-                    data-testid='header-rename-submit'
-                  >
-                    Save
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            {!isGuest && (
+              <Dialog open={headerRenameOpen} onOpenChange={setHeaderRenameOpen}>
+                <DialogContent className='bg-card border-border' aria-describedby={undefined}>
+                  <DialogHeader>
+                    <DialogTitle className='text-card-foreground'>Rename board</DialogTitle>
+                    <DialogDescription className='sr-only'>
+                      Enter a new name for the board.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className='grid gap-2 py-2'>
+                    <Label htmlFor='header-rename-name' className='text-foreground'>
+                      Board name
+                    </Label>
+                    <Input
+                      id='header-rename-name'
+                      value={headerRenameName}
+                      onChange={(e) => setHeaderRenameName(e.target.value)}
+                      className='bg-muted border-border text-foreground'
+                      data-testid='header-rename-name-input'
+                      placeholder='Untitled Board'
+                    />
+                  </div>
+                  <DialogFooter>
+                    <Button variant='outline' size='sm' onClick={() => setHeaderRenameOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button
+                      size='sm'
+                      onClick={async () => {
+                        const name = headerRenameName.trim() || 'Untitled Board';
+                        await updateBoardName(boardId, name, user.uid);
+                        setHeaderRenameOpen(false);
+                      }}
+                      data-testid='header-rename-submit'
+                    >
+                      Save
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
             <ConnectionStatus />
-            {board && (
+            {!isGuest && board && (
               <ShareDialog board={board} currentUserId={user.uid} onLeaveBoard={onLeaveBoard}>
                 <Button
                   variant='outline'
@@ -245,7 +269,7 @@ const BoardView = memo(function BoardView({
                 </Button>
               </ShareDialog>
             )}
-            {board && !canUserManage(board, user.uid) && (
+            {!isGuest && board && !canUserManage(board, user.uid) && (
               <Button
                 type='button'
                 variant='outline'
@@ -257,6 +281,20 @@ const BoardView = memo(function BoardView({
               >
                 <PanelLeft className='h-4 w-4 mr-2' aria-hidden />
                 Leave board
+              </Button>
+            )}
+            {!isGuest && (
+              <Button
+                variant='outline'
+                size='sm'
+                asChild
+                className='border-border text-foreground hover:bg-accent'
+                data-testid='header-guest-board-link'
+              >
+                <Link to={`/board/${GUEST_BOARD_ID}`}>
+                  <LayoutDashboard className='h-4 w-4 mr-2' aria-hidden />
+                  Guest board
+                </Link>
               </Button>
             )}
           </div>
@@ -276,16 +314,29 @@ const BoardView = memo(function BoardView({
             >
               {theme === 'dark' ? <Sun className='h-4 w-4' /> : <Moon className='h-4 w-4' />}
             </Button>
-            <span className='text-sm text-muted-foreground'>{user.email}</span>
-            <Button
-              variant='ghost'
-              size='sm'
-              onClick={signOut}
-              className='text-foreground hover:bg-accent'
-            >
-              <LogOut className='h-4 w-4 mr-2' />
-              Sign Out
-            </Button>
+            {guestUser ? (
+              <Button
+                variant='outline'
+                size='sm'
+                asChild
+                className='border-border text-foreground hover:bg-accent'
+              >
+                <Link to='/login'>Sign in</Link>
+              </Button>
+            ) : (
+              <>
+                <span className='text-sm text-muted-foreground'>{user.email}</span>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  onClick={auth.signOut}
+                  className='text-foreground hover:bg-accent'
+                >
+                  <LogOut className='h-4 w-4 mr-2' />
+                  Sign Out
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -474,6 +525,45 @@ const LoggedOutBoardRedirect = (): ReactElement => {
   return <Navigate to={`/login?returnUrl=/board/${boardId ?? ''}`} replace />;
 };
 
+const GuestBoardRoute = (): ReactElement => {
+  const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
+  const [guestUser] = useState<IAnonymousGuest>(() => getOrCreateAnonymousId());
+  const handleSelectBoard = useCallback(
+    (id: string) => {
+      navigate(`/board/${id}`, { replace: false });
+    },
+    [navigate]
+  );
+  const handleCreateNewBoard = useCallback(() => {
+    navigate('/login?tab=signup', { replace: false });
+    return Promise.reject(new Error('Sign in to create a board'));
+  }, [navigate]);
+  const handleLeaveBoard = useCallback(() => {
+    navigate('/', { replace: false });
+  }, [navigate]);
+  return (
+    <BoardView
+      boardId={GUEST_BOARD_ID}
+      onSelectBoard={handleSelectBoard}
+      onCreateNewBoard={handleCreateNewBoard}
+      onLeaveBoard={handleLeaveBoard}
+      theme={theme}
+      onToggleTheme={toggleTheme}
+      guestUser={guestUser}
+    />
+  );
+};
+
+const LoggedOutOrGuestBoard = (): ReactElement => {
+  const { boardId } = useParams<{ boardId: string }>();
+  if (boardId === GUEST_BOARD_ID) {
+    return <GuestBoardRoute />;
+  }
+
+  return <LoggedOutBoardRedirect />;
+};
+
 export const App = (): ReactElement => {
   const { user, loading } = useAuth();
 
@@ -493,7 +583,7 @@ export const App = (): ReactElement => {
       <Routes>
         <Route path='/' element={<WelcomePage />} />
         <Route path='/login' element={<AuthPage />} />
-        <Route path='/board/:boardId' element={<LoggedOutBoardRedirect />} />
+        <Route path='/board/:boardId' element={<LoggedOutOrGuestBoard />} />
         <Route path='*' element={<Navigate to='/' replace />} />
       </Routes>
     );

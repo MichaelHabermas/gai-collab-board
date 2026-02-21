@@ -141,7 +141,6 @@ export const BoardCanvas = memo(
     const [activeColor, setActiveColor] = useState<string>(STICKY_COLORS.yellow);
     const selectedIds = useSelectionStore((state) => state.selectedIds);
     const objectsRecord = useObjectsStore((s) => s.objects);
-    const objects = useMemo(() => Object.values(objectsRecord) as IBoardObject[], [objectsRecord]);
     const canUndoHistory = useHistoryStore((s) => s.canUndo);
     const canRedoHistory = useHistoryStore((s) => s.canRedo);
     const setSelectedIds = useSelectionStore((state) => state.setSelectedIds);
@@ -161,7 +160,7 @@ export const BoardCanvas = memo(
     // Phase 2: track WHICH frame is being dragged (stable during drag — only changes on start/end)
     const draggingFrameId = useDragOffsetStore((s) => s.frameDragOffset?.frameId ?? null);
     const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
-    const objectsRef = useRef<IBoardObject[]>(objects);
+    const objectsRecordRef = useRef<Record<string, IBoardObject>>(objectsRecord);
     const pendingPointerRef = useRef<IPosition | null>(null);
     const pointerFrameRef = useRef<number | null>(null);
     const viewportPersistTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -187,7 +186,7 @@ export const BoardCanvas = memo(
       [theme]
     );
 
-    useBoardCanvasRefSync(objects, activeTool, objectsRef, activeToolRef);
+    useBoardCanvasRefSync(objectsRecord, activeTool, objectsRecordRef, activeToolRef);
 
     const handleViewportPersist = useCallback(
       (nextViewport: IViewportState) => {
@@ -238,10 +237,6 @@ export const BoardCanvas = memo(
     // Already sorted with frames first (render order).
     const visibleShapeIds = useVisibleShapeIds(viewport);
     const visibleObjectIdsKey = useMemo(() => visibleShapeIds.join('|'), [visibleShapeIds]);
-    const objectsById = useMemo(
-      () => new Map(objects.map((object) => [object.id, object])),
-      [objects]
-    );
 
     // --- Object drag/selection/transform handlers (extracted hook) ---
     const {
@@ -262,8 +257,7 @@ export const BoardCanvas = memo(
       setIsHoveringSelectionHandle,
       onDragMoveProp,
     } = useObjectDragHandlers({
-      objects,
-      objectsById,
+      objectsRecord,
       selectedIds,
       setSelectedIds,
       toggleSelectedId,
@@ -275,14 +269,17 @@ export const BoardCanvas = memo(
       visibleObjectIdsKey,
     });
 
-    // Linked connectors are excluded from transform (selectable for deletion only)
-    const linkedConnectorIds = useMemo(
-      () =>
-        objects
-          .filter((o) => o.type === 'connector' && o.fromObjectId != null && o.toObjectId != null)
-          .map((o) => o.id),
-      [objects]
-    );
+    // Linked connectors are excluded from transform (selectable for deletion only). O(record) by key, no full array.
+    const linkedConnectorIds = useMemo(() => {
+      const ids: string[] = [];
+      for (const id in objectsRecord) {
+        const o = objectsRecord[id];
+        if (o?.type === 'connector' && o.fromObjectId != null && o.toObjectId != null) {
+          ids.push(id);
+        }
+      }
+      return ids;
+    }, [objectsRecord]);
     // Track whether the canvas is actively being panned (pan-tool drag or middle-mouse pan).
     // Stored as a ref so cursor throttle reads it without triggering re-renders.
     const isPanningRef = useRef(false);
@@ -311,7 +308,7 @@ export const BoardCanvas = memo(
     });
 
     const { handleConnectorNodeClick, clearConnector } = useConnectorCreation({
-      objects,
+      objectsRecord,
       activeColor,
       onObjectCreate,
       setActiveTool,
@@ -327,7 +324,7 @@ export const BoardCanvas = memo(
     // Type assertion needed because useCanvasOperations uses a more permissive type
     const selectedIdsArray = useMemo(() => [...selectedIds], [selectedIds]);
     useCanvasOperations({
-      objects,
+      objectsRecord,
       selectedIds: selectedIdsArray,
       onObjectCreate:
         (onObjectCreate as (params: Partial<IBoardObject>) => Promise<IBoardObject | null>) ||
@@ -475,7 +472,7 @@ export const BoardCanvas = memo(
           });
         }
 
-        marquee.onMarqueeEnd(e, objects, getCanvasCoords, setSelectedIds);
+        marquee.onMarqueeEnd(e, objectsRecord, getCanvasCoords, setSelectedIds);
 
         if (pointerFrameRef.current != null) {
           cancelAnimationFrame(pointerFrameRef.current);
@@ -489,7 +486,7 @@ export const BoardCanvas = memo(
         activeTool,
         activeColor,
         onObjectCreate,
-        objects,
+        objectsRecord,
         getCanvasCoords,
         setSelectedIds,
         drawing,
@@ -767,16 +764,17 @@ export const BoardCanvas = memo(
       [shouldHandlePointerMutations, handleStageMouseUp, setIsMiddlePanning]
     );
 
-    const { handleZoomToSelection, handleZoomToFitAll, handleZoomPreset } = useViewportActions({
-      objects,
-      selectedIds,
-      zoomToFitBounds,
-      resetViewport,
-      zoomTo,
-      exportViewport,
-      exportFullBoard,
-      objectsRef,
-    });
+    const { handleZoomToSelection, handleZoomToFitAll, handleZoomPreset, handleExportFullBoard } =
+      useViewportActions({
+        objectsRecord,
+        selectedIds,
+        zoomToFitBounds,
+        resetViewport,
+        zoomTo,
+        exportViewport,
+        exportFullBoard,
+        objectsRecordRef,
+      });
 
     return (
       <div
@@ -951,16 +949,14 @@ export const BoardCanvas = memo(
           snapToGridEnabled={snapToGridEnabled}
           setSnapToGridEnabled={setSnapToGridEnabled}
           exportViewport={exportViewport}
-          exportFullBoard={exportFullBoard}
-          objects={objects}
-          zoomToFitBounds={zoomToFitBounds}
+          onExportFullBoard={handleExportFullBoard}
+          objectsRecord={objectsRecord}
           handleZoomToSelection={handleZoomToSelection}
           handleZoomToFitAll={handleZoomToFitAll}
           handleZoomPreset={handleZoomPreset}
           selectedIds={selectedIds}
           selectedIdsArray={selectedIdsArray}
           visibleCount={visibleShapeIds.length}
-          totalCount={objects.length}
           zoomPercent={Math.round(viewport.scale.x * 100)}
           onObjectUpdate={onObjectUpdate}
           canEdit={canEdit}

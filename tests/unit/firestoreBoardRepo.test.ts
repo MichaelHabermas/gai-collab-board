@@ -9,6 +9,9 @@ const mockUpdateObjectsBatch = vi.fn();
 const mockDeleteObject = vi.fn();
 const mockDeleteObjectsBatch = vi.fn();
 const mockSubscribeToObjectsWithChanges = vi.fn();
+const mockFetchObjectsBatch = vi.fn().mockResolvedValue([]);
+const mockFetchObjectsPaginated = vi.fn().mockResolvedValue([]);
+const mockSubscribeToDeltaUpdates = vi.fn().mockReturnValue(() => {});
 
 vi.mock('@/modules/sync/objectService', () => ({
   createObject: (...args: unknown[]) => mockCreateObject(...args),
@@ -18,6 +21,9 @@ vi.mock('@/modules/sync/objectService', () => ({
   deleteObject: (...args: unknown[]) => mockDeleteObject(...args),
   deleteObjectsBatch: (...args: unknown[]) => mockDeleteObjectsBatch(...args),
   subscribeToObjectsWithChanges: (...args: unknown[]) => mockSubscribeToObjectsWithChanges(...args),
+  fetchObjectsBatch: (...args: unknown[]) => mockFetchObjectsBatch(...args),
+  fetchObjectsPaginated: (...args: unknown[]) => mockFetchObjectsPaginated(...args),
+  subscribeToDeltaUpdates: (...args: unknown[]) => mockSubscribeToDeltaUpdates(...args),
 }));
 
 vi.mock('firebase/firestore', () => ({
@@ -162,5 +168,8 @@ describe('FirestoreBoardRepo', () => {
     expect(typeof repo.deleteObject).toBe('function');
     expect(typeof repo.deleteObjectsBatch).toBe('function');
     expect(typeof repo.subscribeToObjects).toBe('function');
+    expect(typeof repo.fetchObjectsBatch).toBe('function');
+    expect(typeof repo.fetchObjectsPaginated).toBe('function');
+    expect(typeof repo.subscribeToDeltaUpdates).toBe('function');
   });
 });

@@ -15,7 +15,7 @@ import type {
 } from '@/types';
 import { useObjectsStore, spatialIndex } from '@/stores/objectsStore';
 import { useDragOffsetStore } from '@/stores/dragOffsetStore';
-import { getSelectionBounds } from '@/lib/canvasBounds';
+import { getSelectionBoundsFromRecord } from '@/lib/canvasBounds';
 import {
   computeAlignmentGuidesWithCandidates,
   computeSnappedPositionFromGuides,
@@ -30,14 +30,13 @@ import { resolveParentFrameIdFromFrames, findContainingFrame } from '@/hooks/use
 import { useAlignmentGuideCache } from '@/hooks/useAlignmentGuideCache';
 import { useObjectDragHandlersRefSync } from '@/hooks/useObjectDragHandlersRefSync';
 import { perfTime } from '@/lib/perfTimer';
-import { queueWrite } from '@/lib/writeQueue';
+import { queueObjectUpdate } from '@/lib/writeQueue';
 
 const GRID_SIZE = 20;
 const DROP_TARGET_THROTTLE_MS = 100;
 
 export interface IUseObjectDragHandlersConfig {
-  objects: IBoardObject[];
-  objectsById: Map<string, IBoardObject>;
+  objectsRecord: Record<string, IBoardObject>;
   selectedIds: ReadonlySet<string>;
   setSelectedIds: (ids: string[]) => void;
   toggleSelectedId: (id: string) => void;
@@ -74,12 +73,19 @@ export interface IUseObjectDragHandlersReturn {
   onDragMoveProp: ((e: IKonvaDragEvent) => void) | undefined;
 }
 
+function getObj(
+  record: Record<string, IBoardObject>,
+  byId: Map<string, IBoardObject>,
+  id: string
+): IBoardObject | undefined {
+  return byId.get(id) ?? record[id];
+}
+
 export function useObjectDragHandlers(
   config: IUseObjectDragHandlersConfig
 ): IUseObjectDragHandlersReturn {
   const {
-    objects,
-    objectsById,
+    objectsRecord,
     selectedIds,
     setSelectedIds,
     toggleSelectedId,
@@ -90,6 +96,17 @@ export function useObjectDragHandlers(
     visibleShapeIds,
     visibleObjectIdsKey,
   } = config;
+
+  const objectsById = useMemo(() => {
+    const map = new Map<string, IBoardObject>();
+    for (const id of visibleShapeIds) {
+      const obj = objectsRecord[id];
+      if (obj) {
+        map.set(id, obj);
+      }
+    }
+    return map;
+  }, [objectsRecord, visibleShapeIds]);
 
   // --- Refs ---
   const selectionDragBoundsRef = useRef<{ x1: number; y1: number; x2: number; y2: number } | null>(
@@ -124,7 +141,7 @@ export function useObjectDragHandlers(
     });
   }, []);
 
-  useObjectDragHandlersRefSync(objects, framesRef, setGuidesThrottled, setGuidesThrottledRef);
+  useObjectDragHandlersRefSync(objectsRecord, framesRef, setGuidesThrottled, setGuidesThrottledRef);
 
   // --- Alignment guide cache ---
   const { guideCandidateBoundsRef, dragBoundFuncCacheRef } = useAlignmentGuideCache({
@@ -139,8 +156,8 @@ export function useObjectDragHandlers(
       return null;
     }
 
-    return getSelectionBounds(objects, selectedIds);
-  }, [objects, selectedIds]);
+    return getSelectionBoundsFromRecord(objectsRecord, selectedIds);
+  }, [objectsRecord, selectedIds]);
 
   const isHoveringSelectionHandleEffective = selectionBounds != null && isHoveringSelectionHandle;
 
@@ -162,7 +179,7 @@ export function useObjectDragHandlers(
   const handleObjectDragEnd = useCallback(
     (objectId: string, x: number, y: number) => {
       setAlignmentGuides(null);
-      const draggedObj = objectsById.get(objectId);
+      const draggedObj = getObj(objectsRecord, objectsById, objectId);
       if (!draggedObj) return;
 
       const multiSelected = selectedIds.size > 1 && selectedIds.has(objectId) && onObjectsUpdate;
@@ -170,17 +187,17 @@ export function useObjectDragHandlers(
       if (multiSelected) {
         const updates = perfTime(
           'handleObjectDragEnd:multi',
-          { selected: selectedIds.size, objects: objects.length },
+          { selected: selectedIds.size, objects: Object.keys(objectsRecord).length },
           () => {
             const dx = x - draggedObj.x;
             const dy = y - draggedObj.y;
             const batch: Array<{ objectId: string; updates: Partial<IBoardObject> }> = [];
-            const frames = objects.filter((o) => o.type === 'frame');
+            const frames = framesRef.current;
             const childIndex = useObjectsStore.getState().frameChildrenIndex;
             const movedIds = new Set<string>(selectedIds);
 
             for (const id of selectedIds) {
-              const obj = objectsById.get(id);
+              const obj = getObj(objectsRecord, objectsById, id);
               if (!obj) continue;
 
               let newX = obj.x + dx;
@@ -199,7 +216,7 @@ export function useObjectDragHandlers(
                   for (const childId of childIds) {
                     if (movedIds.has(childId)) continue;
 
-                    const child = objectsById.get(childId);
+                    const child = getObj(objectsRecord, objectsById, childId);
                     if (!child) continue;
 
                     let cx = child.x + dx;
@@ -267,7 +284,7 @@ export function useObjectDragHandlers(
             { objectId, updates: singleUpdates },
           ];
           for (const childId of childIds) {
-            const child = objectsById.get(childId);
+            const child = getObj(objectsRecord, objectsById, childId);
             if (!child) continue;
 
             let cx = child.x + dx;
@@ -296,7 +313,7 @@ export function useObjectDragHandlers(
           x2: finalX + draggedObj.width,
           y2: finalY + draggedObj.height,
         };
-        const singleFrames = objects.filter((o) => o.type === 'frame');
+        const singleFrames = framesRef.current;
         const newParent = resolveParentFrameIdFromFrames(draggedObj, newBounds, singleFrames);
         if (newParent !== draggedObj.parentFrameId) {
           singleUpdates.parentFrameId = newParent ?? '';
@@ -305,7 +322,7 @@ export function useObjectDragHandlers(
         // Auto-expand frame if child falls outside its bounds
         const targetFrameId = newParent ?? draggedObj.parentFrameId;
         if (targetFrameId && onObjectsUpdate) {
-          const frame = objectsById.get(targetFrameId);
+          const frame = getObj(objectsRecord, objectsById, targetFrameId);
           if (frame) {
             const PADDING = 20;
             const TITLE_HEIGHT = 32;
@@ -353,7 +370,7 @@ export function useObjectDragHandlers(
       spatialIndex.clearDragging();
       dragExemptionSetRef.current = false;
     },
-    [onObjectUpdate, onObjectsUpdate, snapToGridEnabled, selectedIds, objectsById, objects]
+    [onObjectUpdate, onObjectsUpdate, snapToGridEnabled, selectedIds, objectsById, objectsRecord]
   );
 
   // --- Selection drag handlers ---
@@ -366,7 +383,7 @@ export function useObjectDragHandlers(
       const dragIds = new Set<string>(selectedIds);
       const childIndex = useObjectsStore.getState().frameChildrenIndex;
       for (const sid of selectedIds) {
-        const obj = objectsById.get(sid);
+        const obj = getObj(objectsRecord, objectsById, sid);
         if (obj?.type === 'frame') {
           const children = childIndex.get(sid);
           if (children) for (const cid of children) dragIds.add(cid);
@@ -375,7 +392,7 @@ export function useObjectDragHandlers(
 
       spatialIndex.setDragging(dragIds);
     },
-    [selectedIds, objectsById]
+    [selectedIds, objectsById, objectsRecord]
   );
 
   const handleSelectionDragMove = useCallback(
@@ -407,12 +424,12 @@ export function useObjectDragHandlers(
 
     const updates = perfTime(
       'handleSelectionDragEnd',
-      { selected: selectedIds.size, objects: objects.length },
+      { selected: selectedIds.size, objects: Object.keys(objectsRecord).length },
       () => {
         const { dx, dy } = groupDragOffsetRef.current;
         const batch: Array<{ objectId: string; updates: Partial<IBoardObject> }> = [];
         const movedIds = new Set(selectedIds);
-        const frames = objects.filter((o) => o.type === 'frame');
+        const frames = framesRef.current;
         const childIndex = useObjectsStore.getState().frameChildrenIndex;
 
         const groupNewLeft = b.x1 + dx;
@@ -424,7 +441,7 @@ export function useObjectDragHandlers(
         const snapOffsetY = snappedGroup.y - groupNewTop;
 
         for (const id of selectedIds) {
-          const obj = objectsById.get(id);
+          const obj = getObj(objectsRecord, objectsById, id);
           if (!obj) continue;
 
           const newX = obj.x + dx + snapOffsetX;
@@ -438,7 +455,7 @@ export function useObjectDragHandlers(
               for (const childId of childIds) {
                 if (movedIds.has(childId)) continue;
 
-                const child = objectsById.get(childId);
+                const child = getObj(objectsRecord, objectsById, childId);
                 if (!child) continue;
 
                 const cx = child.x + dx + snapOffsetX;
@@ -477,7 +494,14 @@ export function useObjectDragHandlers(
     selectionDragBoundsRef.current = null;
     setGroupDragOffset(null);
     spatialIndex.clearDragging();
-  }, [onObjectsUpdate, selectedIds, objectsById, snapToGridEnabled, objects, setGroupDragOffset]);
+  }, [
+    onObjectsUpdate,
+    selectedIds,
+    objectsById,
+    objectsRecord,
+    snapToGridEnabled,
+    setGroupDragOffset,
+  ]);
 
   // --- Drag bound func (alignment guides + snap) ---
 
@@ -543,8 +567,7 @@ export function useObjectDragHandlers(
   // --- Text change (optimistic + queued write) ---
 
   const handleTextChange = useCallback((objectId: string, text: string) => {
-    useObjectsStore.getState().updateObject(objectId, { text });
-    queueWrite(objectId, { text });
+    queueObjectUpdate(objectId, { text });
   }, []);
 
   // --- Drag move (grid snap, spatial exemption, drop target detection) ---
@@ -565,7 +588,7 @@ export function useObjectDragHandlers(
             for (const sid of selectedIds) dragIds.add(sid);
             const childIndex = useObjectsStore.getState().frameChildrenIndex;
             for (const sid of selectedIds) {
-              const selObj = objectsById.get(sid);
+              const selObj = getObj(objectsRecord, objectsById, sid);
               if (selObj?.type === 'frame') {
                 const children = childIndex.get(sid);
                 if (children) for (const cid of children) dragIds.add(cid);
@@ -573,7 +596,7 @@ export function useObjectDragHandlers(
             }
           } else {
             dragIds.add(objectId);
-            const dragObj = objectsById.get(objectId);
+            const dragObj = getObj(objectsRecord, objectsById, objectId);
             if (dragObj?.type === 'frame') {
               const children = useObjectsStore.getState().frameChildrenIndex.get(objectId);
               if (children) for (const cid of children) dragIds.add(cid);
@@ -583,7 +606,7 @@ export function useObjectDragHandlers(
           spatialIndex.setDragging(dragIds);
         }
 
-        const obj = objectsById.get(objectId);
+        const obj = getObj(objectsRecord, objectsById, objectId);
         if (obj?.type === 'frame') {
           setFrameDragOffset({
             frameId: objectId,
@@ -608,7 +631,14 @@ export function useObjectDragHandlers(
         }
       }
     },
-    [objectsById, snapToGridEnabled, setFrameDragOffset, setDropTargetFrameId, selectedIds]
+    [
+      objectsRecord,
+      objectsById,
+      snapToGridEnabled,
+      setFrameDragOffset,
+      setDropTargetFrameId,
+      selectedIds,
+    ]
   );
 
   const onDragMoveProp = canEdit ? handleDragMove : undefined;
@@ -632,7 +662,7 @@ export function useObjectDragHandlers(
       let finalAttrs = attrs;
       if (snapToGridEnabled) {
         if ('width' in attrs && 'height' in attrs) {
-          const object = objectsById.get(objectId);
+          const object = getObj(objectsRecord, objectsById, objectId);
           if (object) {
             const snappedRect = snapResizeRectToGrid(
               { x: object.x, y: object.y, width: object.width, height: object.height },
@@ -669,7 +699,7 @@ export function useObjectDragHandlers(
 
       onObjectUpdate?.(objectId, finalAttrs as Partial<IBoardObject>);
     },
-    [onObjectUpdate, snapToGridEnabled, objectsById]
+    [onObjectUpdate, snapToGridEnabled, objectsById, objectsRecord]
   );
 
   // --- Handler maps (stable per-object callbacks) ---
@@ -726,7 +756,7 @@ export function useObjectDragHandlers(
 
   // Prune stale handler map entries when objects change
   useEffect(() => {
-    const liveIds = new Set(objects.map((o) => o.id));
+    const liveIds = new Set(Object.keys(objectsRecord));
     const prune = <T>(map: Map<string, T>) => {
       for (const id of map.keys()) {
         if (!liveIds.has(id)) map.delete(id);
@@ -737,7 +767,7 @@ export function useObjectDragHandlers(
     prune(dragEndHandlerMapRef.current);
     prune(textChangeHandlerMapRef.current);
     prune(dragBoundFuncCacheRef.current);
-  }, [objects, dragBoundFuncCacheRef]);
+  }, [objectsRecord, dragBoundFuncCacheRef]);
 
   return {
     handleObjectSelect,

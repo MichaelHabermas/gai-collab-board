@@ -1,15 +1,14 @@
 import { useCallback, useRef, useEffect } from 'react';
-import type { IBoardObject } from '@/types';
 import type { IUpdateObjectParams } from '@/modules/sync/objectService';
 import { useHistoryStore } from '@/stores/historyStore';
+import { useObjectsStore } from '@/stores/objectsStore';
 import { executeUndo, executeRedo } from '@/modules/history/historyService';
 import { useHistoryRefSync } from '@/hooks/useHistoryRefSync';
 
 interface IUseHistoryParams {
-  objects: IBoardObject[];
   createObject: (
     params: Omit<import('@/types').ICreateObjectParams, 'createdBy'>
-  ) => Promise<IBoardObject | null>;
+  ) => Promise<import('@/types').IBoardObject | null>;
   updateObject: (objectId: string, updates: IUpdateObjectParams) => Promise<void>;
   deleteObject: (objectId: string) => Promise<void>;
   boardId: string | null;
@@ -19,7 +18,7 @@ interface IUseHistoryReturn {
   /** Wrapped create that records history. */
   createObject: (
     params: Omit<import('@/types').ICreateObjectParams, 'createdBy'>
-  ) => Promise<IBoardObject | null>;
+  ) => Promise<import('@/types').IBoardObject | null>;
   /** Wrapped update that records history. */
   updateObject: (objectId: string, updates: IUpdateObjectParams) => Promise<void>;
   /** Wrapped delete that records history. */
@@ -37,7 +36,6 @@ interface IUseHistoryReturn {
  * History is cleared on board switch.
  */
 export const useHistory = ({
-  objects,
   createObject,
   updateObject,
   deleteObject,
@@ -50,17 +48,14 @@ export const useHistory = ({
   const canUndo = useHistoryStore((s) => s.canUndo);
   const canRedo = useHistoryStore((s) => s.canRedo);
 
-  const objectsRef = useRef<IBoardObject[]>(objects);
   const rawCreateRef = useRef(createObject);
   const rawUpdateRef = useRef(updateObject);
   const rawDeleteRef = useRef(deleteObject);
 
   useHistoryRefSync(
-    objects,
     createObject,
     updateObject,
     deleteObject,
-    objectsRef,
     rawCreateRef,
     rawUpdateRef,
     rawDeleteRef
@@ -73,7 +68,7 @@ export const useHistory = ({
   const wrappedCreate = useCallback(
     async (
       params: Omit<import('@/types').ICreateObjectParams, 'createdBy'>
-    ): Promise<IBoardObject | null> => {
+    ): Promise<import('@/types').IBoardObject | null> => {
       const result = await createObject(params);
       if (result) {
         push([{ type: 'create', objectId: result.id, after: result }]);
@@ -86,8 +81,7 @@ export const useHistory = ({
 
   const wrappedUpdate = useCallback(
     async (objectId: string, updates: IUpdateObjectParams): Promise<void> => {
-      // Snapshot before state.
-      const before = objectsRef.current.find((o) => o.id === objectId);
+      const before = useObjectsStore.getState().objects[objectId];
       await updateObject(objectId, updates);
       if (before) {
         push([{ type: 'update', objectId, before, after: { ...before, ...updates } }]);
@@ -98,7 +92,7 @@ export const useHistory = ({
 
   const wrappedDelete = useCallback(
     async (objectId: string): Promise<void> => {
-      const before = objectsRef.current.find((o) => o.id === objectId);
+      const before = useObjectsStore.getState().objects[objectId];
       await deleteObject(objectId);
       if (before) {
         push([{ type: 'delete', objectId, before }]);
@@ -106,6 +100,8 @@ export const useHistory = ({
     },
     [deleteObject, push]
   );
+
+  const getObjects = useCallback(() => Object.values(useObjectsStore.getState().objects), []);
 
   const undo = useCallback(() => {
     const entry = undoFromStore();
@@ -115,9 +111,9 @@ export const useHistory = ({
       createObject: (p) => rawCreateRef.current(p),
       updateObject: (id, u) => rawUpdateRef.current(id, u),
       deleteObject: (id) => rawDeleteRef.current(id),
-      getObjects: () => objectsRef.current,
+      getObjects,
     });
-  }, [undoFromStore]);
+  }, [undoFromStore, getObjects]);
 
   const redo = useCallback(() => {
     const entry = redoFromStore();
@@ -127,9 +123,9 @@ export const useHistory = ({
       createObject: (p) => rawCreateRef.current(p),
       updateObject: (id, u) => rawUpdateRef.current(id, u),
       deleteObject: (id) => rawDeleteRef.current(id),
-      getObjects: () => objectsRef.current,
+      getObjects,
     });
-  }, [redoFromStore]);
+  }, [redoFromStore, getObjects]);
 
   return {
     createObject: wrappedCreate,

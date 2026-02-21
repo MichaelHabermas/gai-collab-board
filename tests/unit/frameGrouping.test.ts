@@ -28,6 +28,9 @@ const makeObj = (overrides: Partial<IBoardObject>): IBoardObject => ({
   ...overrides,
 });
 
+const toRecord = (arr: IBoardObject[]): Record<string, IBoardObject> =>
+  Object.fromEntries(arr.map((o) => [o.id, o]));
+
 describe('frame grouping — useCanvasOperations', () => {
   let onObjectCreate: (params: Partial<IBoardObject>) => void;
   let onObjectUpdate: (objectId: string, updates: Partial<IBoardObject>) => void;
@@ -59,9 +62,8 @@ describe('frame grouping — useCanvasOperations', () => {
 
       const { result } = renderHook(() =>
         useCanvasOperations({
-          objects: [frame, child1, child2, unrelated],
+          objectsRecord: toRecord([frame, child1, child2, unrelated]),
           selectedIds: ['frame-1'],
-
           onObjectCreate,
           onObjectUpdate,
           onObjectsUpdate,
@@ -92,9 +94,8 @@ describe('frame grouping — useCanvasOperations', () => {
 
       const { result } = renderHook(() =>
         useCanvasOperations({
-          objects: [frame, child1, child2],
+          objectsRecord: toRecord([frame, child1, child2]),
           selectedIds: ['frame-1', 'child-1'], // child-1 is also being deleted
-
           onObjectCreate,
           onObjectUpdate,
           onObjectsUpdate,
@@ -119,9 +120,8 @@ describe('frame grouping — useCanvasOperations', () => {
 
       const { result } = renderHook(() =>
         useCanvasOperations({
-          objects: [frame],
+          objectsRecord: toRecord([frame]),
           selectedIds: ['frame-1'],
-
           onObjectCreate,
           onObjectUpdate,
           onObjectsUpdate,
@@ -146,9 +146,8 @@ describe('frame grouping — useCanvasOperations', () => {
 
       const { result } = renderHook(() =>
         useCanvasOperations({
-          objects: [frame, child],
+          objectsRecord: toRecord([frame, child]),
           selectedIds: ['frame-1'],
-
           onObjectCreate,
           onObjectUpdate,
           // no onObjectsUpdate
@@ -173,9 +172,8 @@ describe('frame grouping — useCanvasOperations', () => {
 
       const { result } = renderHook(() =>
         useCanvasOperations({
-          objects: [child],
+          objectsRecord: toRecord([child]),
           selectedIds: ['child-1'],
-
           onObjectCreate,
           onObjectDelete,
           clearSelection,
@@ -202,9 +200,8 @@ describe('frame grouping — useCanvasOperations', () => {
 
       const { result } = renderHook(() =>
         useCanvasOperations({
-          objects: [child],
+          objectsRecord: toRecord([child]),
           selectedIds: ['child-1'],
-
           onObjectCreate,
           onObjectDelete,
           clearSelection,

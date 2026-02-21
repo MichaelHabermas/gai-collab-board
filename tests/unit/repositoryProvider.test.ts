@@ -15,6 +15,9 @@ function createStubBoardRepo(): IBoardRepository {
     deleteObject: async () => {},
     deleteObjectsBatch: async () => {},
     subscribeToObjects: () => () => {},
+    fetchObjectsBatch: async () => [],
+    fetchObjectsPaginated: async () => [],
+    subscribeToDeltaUpdates: () => () => {},
   };
 }
 

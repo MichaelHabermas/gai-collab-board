@@ -12,6 +12,13 @@ interface IObjectsStoreState {
   connectorsByEndpoint: Map<string, Set<string>>;
 }
 
+/** Changeset for applyChanges: add, update, delete in one store update (Article XV). */
+export interface IApplyChangesChangeset {
+  add: IBoardObject[];
+  update: Array<{ id: string; updates: Partial<IBoardObject> }>;
+  delete: string[];
+}
+
 interface IObjectsStoreActions {
   /** Replace all objects (initial snapshot or full reset). */
   setAll: (objects: IBoardObject[]) => void;
@@ -25,6 +32,8 @@ interface IObjectsStoreActions {
   deleteObject: (id: string) => void;
   /** Remove multiple objects. */
   deleteObjects: (ids: string[]) => void;
+  /** Apply add/update/delete in one set() call (Article XV). */
+  applyChanges: (changeset: IApplyChangesChangeset) => void;
   /** Clear entire store (board switch / unmount). */
   clear: () => void;
 }
@@ -217,6 +226,38 @@ export const useObjectsStore = create<IObjectsStore>()((set) => ({
     });
   },
 
+  applyChanges: (changeset) => {
+    const { add, update, delete: toDelete } = changeset;
+    for (const id of toDelete) {
+      spatialIndex.remove(id);
+    }
+    set((state) => {
+      const next = { ...state.objects };
+      for (const obj of add) {
+        next[obj.id] = obj;
+      }
+      for (const { id, updates } of update) {
+        const existing = next[id];
+        if (existing) {
+          next[id] = { ...existing, ...updates };
+        }
+      }
+      for (const id of toDelete) {
+        delete next[id];
+      }
+      for (const obj of add) {
+        updateSpatialForObject(obj);
+      }
+      for (const { id } of update) {
+        const merged = next[id];
+        if (merged) {
+          updateSpatialForObject(merged);
+        }
+      }
+      return { objects: next, ...buildIndexes(next) };
+    });
+  },
+
   clear: () => {
     spatialIndex.clear();
     set({ objects: {}, frameChildrenIndex: EMPTY_INDEX, connectorsByEndpoint: EMPTY_INDEX });
@@ -243,6 +284,10 @@ export const selectAllObjects = (state: IObjectsStore): IBoardObject[] =>
 
 /** Select all object IDs. */
 export const selectObjectIds = (state: IObjectsStore): string[] => Object.keys(state.objects);
+
+/** Select object count (O(1) for UI display without passing full record). */
+export const selectObjectCount = (state: IObjectsStore): number =>
+  Object.keys(state.objects).length;
 
 /** Select all children of a frame via index (O(k) where k = children count). */
 export const selectFrameChildren =

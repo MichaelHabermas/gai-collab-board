@@ -4,6 +4,7 @@
  * Constitution Article III: all CRUD goes through IBoardRepository.
  */
 
+import { Timestamp } from 'firebase/firestore';
 import type { IBoardRepository } from '@/types';
 import {
   createObject,
@@ -13,6 +14,9 @@ import {
   deleteObject,
   deleteObjectsBatch,
   subscribeToObjectsWithChanges,
+  fetchObjectsBatch,
+  fetchObjectsPaginated,
+  subscribeToDeltaUpdates,
 } from './objectService';
 
 export function createFirestoreBoardRepo(): IBoardRepository {
@@ -24,5 +28,13 @@ export function createFirestoreBoardRepo(): IBoardRepository {
     deleteObject,
     deleteObjectsBatch,
     subscribeToObjects: subscribeToObjectsWithChanges,
+    fetchObjectsBatch,
+    fetchObjectsPaginated,
+    subscribeToDeltaUpdates: (boardId, afterTimestamp, callback) => {
+      // Convert provider-agnostic IDeltaCursor to Firestore Timestamp
+      const ts = new Timestamp(afterTimestamp.seconds, afterTimestamp.nanoseconds);
+
+      return subscribeToDeltaUpdates(boardId, ts, callback);
+    },
   };
 }

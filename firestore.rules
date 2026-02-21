@@ -33,7 +33,19 @@ service cloud.firestore {
         && newMembers.diff(oldMembers).removedKeys().size() == 0;
     }
     
-    // Board rules
+    // Guest board: unauthenticated read/create/update; delete never allowed
+    match /boards/guest {
+      allow read, create, update: if true;
+      allow delete: if false;
+      match /objects/{objectId} {
+        allow read, write: if true;
+      }
+      match /comments/{commentId} {
+        allow read, write: if true;
+      }
+    }
+
+    // Board rules (all other boards)
     match /boards/{boardId} {
       // Any authenticated user can read a board (by ID/link) so they can join and then edit
       allow read: if isAuthenticated();

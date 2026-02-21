@@ -37,7 +37,8 @@
       "Bash(node -e:*)",
       "Bash(bunx tsx:*)",
       "Bash(Select-Object Name)",
-      "Bash(sort:*)"
+      "Bash(sort:*)",
+      "Bash(git clean:*)"
     ]
   },
   "hooks": {

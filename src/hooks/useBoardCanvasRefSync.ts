@@ -3,18 +3,18 @@ import type { IBoardObject } from '@/types';
 import type { ToolMode } from '@/types';
 
 /**
- * Keeps objectsRef and activeToolRef in sync with React state.
+ * Keeps objectsRecordRef and activeToolRef in sync with React state.
  * Ref assignment during render is disallowed, so we use effects.
  */
 export function useBoardCanvasRefSync(
-  objects: IBoardObject[],
+  objectsRecord: Record<string, IBoardObject>,
   activeTool: ToolMode,
-  objectsRef: MutableRefObject<IBoardObject[]>,
+  objectsRecordRef: MutableRefObject<Record<string, IBoardObject>>,
   activeToolRef: MutableRefObject<ToolMode>
 ): void {
   useEffect(() => {
-    objectsRef.current = objects;
-  }, [objects, objectsRef]);
+    objectsRecordRef.current = objectsRecord;
+  }, [objectsRecord, objectsRecordRef]);
 
   useEffect(() => {
     activeToolRef.current = activeTool;
