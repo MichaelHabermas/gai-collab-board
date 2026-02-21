@@ -120,4 +120,30 @@ describe('AIChatPanel AI Commands', () => {
     render(<AIChatPanel {...defaultProps} loading={true} />);
     expect(screen.getByTestId('ai-summarize-selection')).toBeDisabled();
   });
+
+  // Enter = submit, Shift+Enter = new line
+
+  it('submits when Enter is pressed in the chat input', () => {
+    const onSend = vi.fn().mockResolvedValue(undefined);
+    render(<AIChatPanel {...defaultProps} onSend={onSend} />);
+    const input = screen.getByTestId('ai-chat-input');
+
+    fireEvent.change(input, { target: { value: 'Make a circle' } });
+    fireEvent.keyDown(input, { key: 'Enter', shiftKey: false });
+
+    expect(onSend).toHaveBeenCalledTimes(1);
+    expect(onSend.mock.calls[0]?.[0]).toBe('Make a circle');
+  });
+
+  it('does not submit when Shift+Enter is pressed in the chat input', () => {
+    const onSend = vi.fn().mockResolvedValue(undefined);
+    render(<AIChatPanel {...defaultProps} onSend={onSend} />);
+    const input = screen.getByTestId('ai-chat-input');
+
+    fireEvent.change(input, { target: { value: 'Make a circle' } });
+    fireEvent.keyDown(input, { key: 'Enter', shiftKey: true });
+
+    expect(onSend).not.toHaveBeenCalled();
+    expect(input).toHaveValue('Make a circle');
+  });
 });

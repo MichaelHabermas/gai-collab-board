@@ -1,6 +1,6 @@
 /** Single source for board object default dimensions, colors, and options. Constants only. */
 
-import { IDimensions, IPosition } from "@/types";
+import { IDimensions, IPosition } from '@/types';
 
 export const DEFAULT_WIDTH = 200;
 export const DEFAULT_HEIGHT = 200;

@@ -31,6 +31,7 @@ export const AIChatPanel = ({
   const [inputValue, setInputValue] = useState<string>('');
   const [voiceError, setVoiceError] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const selectedIds = useSelectionStore((s) => s.selectedIds);
   const hasBoardObjects = useObjectsStore((s) => Object.keys(s.objects).length > 0);
 
@@ -236,17 +237,24 @@ export const AIChatPanel = ({
             {voiceError}
           </p>
         )}
-        <form onSubmit={handleSubmit} className='flex gap-2 mt-2 shrink-0 items-end'>
+        <form ref={formRef} onSubmit={handleSubmit} className='flex gap-2 mt-2 shrink-0 items-end'>
           <Textarea
             value={inputValue}
             onChange={(e) => {
               setInputValue(e.target.value);
               setVoiceError('');
             }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                formRef.current?.requestSubmit();
+              }
+            }}
             placeholder='Ask to create or edit board items...'
             disabled={loading}
             rows={2}
             className='flex-1 min-h-[2.5rem] max-h-[200px] resize-y border-slate-600 bg-slate-700/50 text-slate-100 placeholder:text-slate-500'
+            data-testid='ai-chat-input'
           />
           {supportsSpeechRecognition && (
             <Button
