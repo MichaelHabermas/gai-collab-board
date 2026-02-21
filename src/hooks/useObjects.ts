@@ -11,7 +11,11 @@ import { mergeObjectUpdates } from '@/modules/sync/objectService';
 import { getBoardRepository } from '@/lib/repositoryProvider';
 import { useObjectsStore } from '@/stores/objectsStore';
 import { consumePrefetchedObjects } from '@/lib/boardPrefetch';
-import { setWriteQueueBoard, queueWrite, flush as flushWriteQueue } from '@/lib/writeQueue';
+import {
+  setWriteQueueBoard,
+  queueObjectUpdate as canonicalQueueObjectUpdate,
+  flush as flushWriteQueue,
+} from '@/lib/writeQueue';
 
 interface IUseObjectsParams {
   boardId: string | null;
@@ -522,13 +526,14 @@ export const useObjects = ({ boardId, user }: IUseObjectsParams): IUseObjectsRet
     (objectId: string, updates: IUpdateObjectParams): void => {
       if (!boardId) return;
 
-      // Optimistic update (immediate UI feedback)
-      setObjects((prev) => prev.map((obj) => (obj.id === objectId ? { ...obj, ...updates } : obj)));
-
-      // Queue the Firestore write (debounced)
-      queueWrite(objectId, updates);
+      // Canonical path: Zustand update + write queue (Constitution Article X)
+      canonicalQueueObjectUpdate(objectId, updates);
+      // Backward compat: keep React state in sync until S5 migrates all consumers to Zustand
+      setObjectsRaw((prev) =>
+        prev.map((obj) => (obj.id === objectId ? { ...obj, ...updates } : obj))
+      );
     },
-    [boardId, setObjects]
+    [boardId]
   );
 
   return {

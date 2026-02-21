@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { User } from 'firebase/auth';
 import type { IBoardObject } from '@/types';
 import { useObjects } from '@/hooks/useObjects';
+import { useObjectsStore } from '@/stores/objectsStore';
 
 const mockCreateObject = vi.fn();
 const mockUpdateObject = vi.fn();
@@ -1111,7 +1112,7 @@ describe('useObjects – additional branch coverage', () => {
     expect(result.current.objects).toEqual([]);
   });
 
-  it('queueObjectUpdate applies optimistic update', () => {
+  it('queueObjectUpdate applies optimistic update to React state and Zustand store', async () => {
     const objA = createBoardObject({ id: 'a', x: 10, y: 20 });
 
     const { result } = renderHook(() =>
@@ -1126,11 +1127,17 @@ describe('useObjects – additional branch coverage', () => {
       });
     });
 
+    // Flush microtask that syncs React state → Zustand store (setObjects uses queueMicrotask)
+    await act(async () => {});
+
     act(() => {
       result.current.queueObjectUpdate('a', { x: 999 });
     });
 
+    // React state updated (backward compat)
     expect(result.current.objects.find((o) => o.id === 'a')?.x).toBe(999);
+    // Zustand store also updated (canonical path, Article X)
+    expect(useObjectsStore.getState().objects['a']?.x).toBe(999);
   });
 
   it('handles removed objects in incremental changes', () => {

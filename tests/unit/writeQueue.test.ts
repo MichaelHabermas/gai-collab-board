@@ -8,10 +8,14 @@ import {
   initWriteQueue,
   setWriteQueueBoard,
   queueWrite,
+  queueObjectUpdate,
   flush,
   pendingCount,
   getWriteQueueStats,
 } from '@/lib/writeQueue';
+import { useObjectsStore } from '@/stores/objectsStore';
+import type { IBoardObject } from '@/types';
+import { Timestamp } from 'firebase/firestore';
 
 function createMockRepo(): IBoardRepository {
   return {
@@ -147,6 +151,84 @@ describe('writeQueue', () => {
 
     expect(mockRepo.updateObjectsBatch).toHaveBeenCalledWith('board-1', [
       { objectId: 'obj-1', updates: { x: 100 } },
+    ]);
+  });
+});
+
+function createBoardObject(overrides: Partial<IBoardObject> & { id: string }): IBoardObject {
+  return {
+    type: 'rectangle',
+    x: 0,
+    y: 0,
+    width: 100,
+    height: 80,
+    rotation: 0,
+    fill: '#000',
+    createdBy: 'u1',
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+    ...overrides,
+  };
+}
+
+describe('queueObjectUpdate', () => {
+  let mockRepo: IBoardRepository;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    mockRepo = createMockRepo();
+    initWriteQueue(mockRepo);
+    setWriteQueueBoard('board-1');
+    useObjectsStore.getState().clear();
+  });
+
+  afterEach(() => {
+    flush();
+    setWriteQueueBoard(null);
+    useObjectsStore.getState().clear();
+    vi.useRealTimers();
+    vi.clearAllMocks();
+  });
+
+  it('atomically updates Zustand store and enqueues write', () => {
+    useObjectsStore.getState().setAll([createBoardObject({ id: 'obj-1' })]);
+
+    queueObjectUpdate('obj-1', { x: 42 });
+
+    // (a) Zustand updated synchronously
+    expect(useObjectsStore.getState().objects['obj-1']?.x).toBe(42);
+    // (b) Write queued
+    expect(pendingCount()).toBe(1);
+  });
+
+  it('queued write flushes to repo after debounce', async () => {
+    useObjectsStore.getState().setAll([createBoardObject({ id: 'obj-1' })]);
+
+    queueObjectUpdate('obj-1', { fill: '#ff0000' });
+
+    vi.advanceTimersByTime(500);
+    await vi.runAllTimersAsync();
+
+    expect(mockRepo.updateObjectsBatch).toHaveBeenCalledWith('board-1', [
+      { objectId: 'obj-1', updates: { fill: '#ff0000' } },
+    ]);
+  });
+
+  it('coalesces multiple queueObjectUpdate calls', async () => {
+    useObjectsStore.getState().setAll([createBoardObject({ id: 'obj-1' })]);
+
+    queueObjectUpdate('obj-1', { x: 10 });
+    queueObjectUpdate('obj-1', { y: 20 });
+
+    expect(useObjectsStore.getState().objects['obj-1']?.x).toBe(10);
+    expect(useObjectsStore.getState().objects['obj-1']?.y).toBe(20);
+    expect(pendingCount()).toBe(1);
+
+    vi.advanceTimersByTime(500);
+    await vi.runAllTimersAsync();
+
+    expect(mockRepo.updateObjectsBatch).toHaveBeenCalledWith('board-1', [
+      { objectId: 'obj-1', updates: { x: 10, y: 20 } },
     ]);
   });
 });
