@@ -19,6 +19,7 @@ const {
   mockExecute,
   mockProcessCommand,
   mockUpdateBoardState,
+  mockClearContext,
   mockAIServiceConstructor,
 } = vi.hoisted(() => ({
   mockCreateObject: vi.fn(),
@@ -31,6 +32,7 @@ const {
   mockExecute: vi.fn(),
   mockProcessCommand: vi.fn(),
   mockUpdateBoardState: vi.fn(),
+  mockClearContext: vi.fn(),
   mockAIServiceConstructor: vi.fn(),
 }));
 
@@ -112,6 +114,7 @@ describe('useAI', () => {
         return {
           processCommand: mockProcessCommand,
           updateBoardState: mockUpdateBoardState,
+          clearContext: mockClearContext,
         };
       }
     );

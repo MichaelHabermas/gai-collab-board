@@ -117,7 +117,10 @@ export const useAI = ({ boardId, user }: IUseAIParams): IUseAIReturn => {
   }, []);
 
   const clearError = () => setError('');
-  const clearMessages = () => setMessages([]);
+  const clearMessages = () => {
+    aiServiceRef.current?.clearContext();
+    setMessages([]);
+  };
 
   return {
     processCommand,
