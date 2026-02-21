@@ -211,7 +211,7 @@ export function mergeWithTemplate<T extends object>(template: T, userProvided: P
     }
 
     const value = userProvided[key];
-    if (value) {
+    if (value !== undefined) {
       result[key] = value;
     }
   }
