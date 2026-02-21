@@ -1,4 +1,10 @@
 import type { IBoardObject, ICreateObjectParams } from '@/types';
+import {
+  DEFAULT_FILL,
+  DEFAULT_STICKY_WIDTH,
+  DEFAULT_STICKY_HEIGHT,
+  DEFAULT_FRAME_PADDING,
+} from '../defaults';
 
 /** Sticky note color palette — matches canvas STICKY_COLORS. */
 const STICKY_COLORS: Record<string, string> = {
@@ -10,11 +16,6 @@ const STICKY_COLORS: Record<string, string> = {
   orange: '#fed7aa',
   red: '#fca5a5',
 };
-
-const DEFAULT_FILL = '#fef08a';
-const DEFAULT_STICKY_WIDTH = 200;
-const DEFAULT_STICKY_HEIGHT = 120;
-const DEFAULT_FRAME_PADDING = 30;
 
 /** Sentinel ID for frames in layout results. Replaced with real Firestore ID by compoundExecutor. */
 const FRAME_PLACEHOLDER_ID = '__frame__';

@@ -11,13 +11,16 @@ import { computeAlignUpdates, computeDistributeUpdates } from '@/lib/alignDistri
 import { STICKY_COLORS } from '@/components/canvas/shapes';
 import { createCompoundExecutor, COMPOUND_TOOL_NAMES } from './compoundExecutor';
 import { createBoardStateManager, type IBoardStateProvider } from '@/lib/boardStateManager';
-
-const DEFAULT_STICKY_WIDTH = 200;
-const DEFAULT_STICKY_HEIGHT = 120;
-const DEFAULT_FRAME_WIDTH = 300;
-const DEFAULT_FRAME_HEIGHT = 200;
-const DEFAULT_FILL = '#fef08a';
-const DEFAULT_FONT_COLOR = '#1e293b';
+import {
+  mergeWithTemplate,
+  STICKY_TEMPLATE,
+  FRAME_TEMPLATE,
+  TEXT_TEMPLATE,
+  CONNECTOR_TEMPLATE,
+  getShapeTemplate,
+  DEFAULT_FILL,
+  DEFAULT_FONT_COLOR,
+} from './defaults';
 
 /** Resolves a color name or hex string to a sticky-note fill hex. */
 function resolveStickyColor(input: string): string {
@@ -113,7 +116,7 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           text,
           x,
           y,
-          color = DEFAULT_FILL,
+          color,
           fontSize: rawFontSize,
           fontColor,
           opacity: rawOpacity,
@@ -132,47 +135,54 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           ? Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, rawFontSize))
           : undefined;
         const clampedOpacity = rawOpacity ? Math.min(1, Math.max(0, rawOpacity)) : undefined;
+        const userProvided = {
+          ...(color !== undefined && { fill: resolveStickyColor(color) }),
+          ...(fontColor !== undefined && { textFill: resolveTextColor(fontColor) }),
+          ...(clampedFontSize !== undefined && { fontSize: clampedFontSize }),
+          ...(clampedOpacity !== undefined && { opacity: clampedOpacity }),
+        };
+        const merged = mergeWithTemplate(STICKY_TEMPLATE, userProvided);
         const obj = await ctx.createObject(boardId, {
           type: 'sticky',
           x,
           y,
-          width: DEFAULT_STICKY_WIDTH,
-          height: DEFAULT_STICKY_HEIGHT,
-          fill: resolveStickyColor(color),
+          width: merged.width,
+          height: merged.height,
+          fill: merged.fill,
           text,
           createdBy,
-          ...(fontColor !== undefined && { textFill: resolveTextColor(fontColor) }),
-          ...(clampedFontSize !== undefined && { fontSize: clampedFontSize }),
-          ...(clampedOpacity !== undefined && { opacity: clampedOpacity }),
+          ...(userProvided.textFill !== undefined && { textFill: merged.textFill }),
+          ...(userProvided.fontSize !== undefined && { fontSize: merged.fontSize }),
+          ...(userProvided.opacity !== undefined && { opacity: merged.opacity }),
         });
         return { id: obj.id, success: true, message: `Created sticky note: '${text}'` };
       }
 
       case 'createShape': {
-        const {
-          type,
-          x,
-          y,
-          width,
-          height,
-          color = '#93c5fd',
-        } = tool.arguments as {
+        const { type, x, y, width, height, color } = tool.arguments as {
           type: 'rectangle' | 'circle' | 'line';
           x: number;
           y: number;
-          width: number;
-          height: number;
+          width?: number;
+          height?: number;
           color?: string;
         };
         const shapeType: ShapeType = type;
-        const points = type === 'line' ? [0, 0, width, height] : undefined;
+        const template = getShapeTemplate(type);
+        const userProvided = {
+          ...(width !== undefined && { width }),
+          ...(height !== undefined && { height }),
+          ...(color !== undefined && { fill: color }),
+        };
+        const merged = mergeWithTemplate(template, userProvided);
+        const points = type === 'line' ? [0, 0, merged.width, merged.height] : undefined;
         const obj = await ctx.createObject(boardId, {
           type: shapeType,
           x,
           y,
-          width,
-          height,
-          fill: color,
+          width: merged.width,
+          height: merged.height,
+          fill: merged.fill,
           points,
           createdBy,
         });
@@ -180,26 +190,25 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
       }
 
       case 'createFrame': {
-        const {
-          title,
-          x,
-          y,
-          width = DEFAULT_FRAME_WIDTH,
-          height = DEFAULT_FRAME_HEIGHT,
-        } = tool.arguments as {
+        const { title, x, y, width, height } = tool.arguments as {
           title: string;
           x: number;
           y: number;
           width?: number;
           height?: number;
         };
+        const userProvided = {
+          ...(width !== undefined && { width }),
+          ...(height !== undefined && { height }),
+        };
+        const merged = mergeWithTemplate(FRAME_TEMPLATE, userProvided);
         const obj = await ctx.createObject(boardId, {
           type: 'frame',
           x,
           y,
-          width,
-          height,
-          fill: 'rgba(255,255,255,0.15)',
+          width: merged.width,
+          height: merged.height,
+          fill: merged.fill,
           text: title,
           createdBy,
         });
@@ -210,7 +219,7 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
         const {
           fromId,
           toId,
-          style = 'line',
+          style: _style = 'line',
           fromAnchor: rawFromAnchor,
           toAnchor: rawToAnchor,
         } = tool.arguments as {
@@ -231,11 +240,11 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
         const fromAnchor: ConnectorAnchor =
           rawFromAnchor && VALID_ANCHORS.includes(rawFromAnchor as ConnectorAnchor)
             ? (rawFromAnchor as ConnectorAnchor)
-            : 'right';
+            : CONNECTOR_TEMPLATE.fromAnchor;
         const toAnchor: ConnectorAnchor =
           rawToAnchor && VALID_ANCHORS.includes(rawToAnchor as ConnectorAnchor)
             ? (rawToAnchor as ConnectorAnchor)
-            : 'left';
+            : CONNECTOR_TEMPLATE.toAnchor;
         const fromPos = getAnchorPosition(fromObj, fromAnchor);
         const toPos = getAnchorPosition(toObj, toAnchor);
         const { x } = fromPos;
@@ -246,16 +255,15 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           toPos.x - fromPos.x,
           toPos.y - fromPos.y,
         ];
-        const stroke = style === 'arrow' || style === 'dashed' ? '#64748b' : '#64748b';
         const obj = await ctx.createObject(boardId, {
           type: 'connector',
           x,
           y,
           width: Math.abs(points[2] - points[0]),
           height: Math.abs(points[3] - points[1]),
-          fill: stroke,
-          stroke,
-          strokeWidth: 2,
+          fill: CONNECTOR_TEMPLATE.stroke,
+          stroke: CONNECTOR_TEMPLATE.stroke,
+          strokeWidth: CONNECTOR_TEMPLATE.strokeWidth,
           points,
           fromObjectId: fromId,
           toObjectId: toId,
@@ -267,30 +275,29 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
       }
 
       case 'createText': {
-        const {
-          text,
-          x,
-          y,
-          fontSize = 16,
-          color = '#1e293b',
-        } = tool.arguments as {
+        const { text, x, y, fontSize, color } = tool.arguments as {
           text: string;
           x: number;
           y: number;
           fontSize?: number;
           color?: string;
         };
-        const width = Math.max(50, text.length * fontSize * 0.6);
-        const height = fontSize * 1.5;
+        const userProvided = {
+          ...(fontSize !== undefined && { fontSize }),
+          ...(color !== undefined && { fill: color }),
+        };
+        const merged = mergeWithTemplate(TEXT_TEMPLATE, userProvided);
+        const width = Math.max(50, text.length * merged.fontSize * 0.6);
+        const height = merged.fontSize * 1.5;
         const obj = await ctx.createObject(boardId, {
           type: 'text',
           x,
           y,
           width,
           height,
-          fill: color,
+          fill: merged.fill,
           text,
-          fontSize,
+          fontSize: merged.fontSize,
           createdBy,
         });
         return { id: obj.id, success: true, message: `Created text: '${text}'` };

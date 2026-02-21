@@ -9,6 +9,7 @@ import type { IQuadrantConfig } from './layouts/quadrantLayout';
 import type { IColumnConfig } from './layouts/columnLayout';
 import type { IFlowchartConfig } from './layouts/flowchartLayout';
 import type { IMindMapConfig } from './layouts/mindmapLayout';
+import { getDefaultWidthForType, getDefaultHeightForType } from './defaults';
 
 // ---------------------------------------------------------------------------
 // Type guards (no `as` casts — use Set<string>.has)
@@ -52,26 +53,6 @@ function isConnectorAnchor(value: unknown): value is ConnectorAnchor {
 
 const BATCH_CAP = 50;
 
-const DEFAULT_WIDTHS: Record<string, number> = {
-  sticky: 200,
-  rectangle: 150,
-  circle: 100,
-  line: 200,
-  text: 200,
-  frame: 300,
-  connector: 0,
-};
-
-const DEFAULT_HEIGHTS: Record<string, number> = {
-  sticky: 120,
-  rectangle: 100,
-  circle: 100,
-  line: 0,
-  text: 30,
-  frame: 200,
-  connector: 0,
-};
-
 function resolveShapeType(input: string): ShapeType {
   const lower = input.toLowerCase().trim();
 
@@ -83,11 +64,11 @@ function resolveShapeType(input: string): ShapeType {
 }
 
 function defaultWidthForType(type: string): number {
-  return DEFAULT_WIDTHS[type.toLowerCase()] ?? 200;
+  return getDefaultWidthForType(type);
 }
 
 function defaultHeightForType(type: string): number {
-  return DEFAULT_HEIGHTS[type.toLowerCase()] ?? 120;
+  return getDefaultHeightForType(type);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
