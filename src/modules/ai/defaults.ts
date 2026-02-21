@@ -1,18 +1,35 @@
 import type { ConnectorAnchor } from '@/types';
+import {
+  DEFAULT_STICKY_WIDTH,
+  DEFAULT_STICKY_HEIGHT,
+  DEFAULT_FRAME_WIDTH,
+  DEFAULT_FRAME_HEIGHT,
+  DEFAULT_FRAME_PADDING,
+  DEFAULT_FILL,
+  DEFAULT_FONT_COLOR,
+  DEFAULT_SHAPE_FILL,
+  DEFAULT_CONNECTOR_STROKE,
+  DEFAULT_TEXT_WIDTH,
+  DEFAULT_TEXT_HEIGHT,
+  DEFAULT_TEXT_FONT_SIZE,
+} from '@/lib/boardObjectDefaults';
 
-// ---------------------------------------------------------------------------
-// Shared constants (single source of truth for executors and layouts)
-// ---------------------------------------------------------------------------
-
-export const DEFAULT_STICKY_WIDTH = 200;
-export const DEFAULT_STICKY_HEIGHT = 120;
-export const DEFAULT_FRAME_WIDTH = 300;
-export const DEFAULT_FRAME_HEIGHT = 200;
-export const DEFAULT_FRAME_PADDING = 30;
-export const DEFAULT_FILL = '#fef08a';
-export const DEFAULT_FONT_COLOR = '#1e293b';
-export const DEFAULT_SHAPE_FILL = '#93c5fd';
-export const DEFAULT_CONNECTOR_STROKE = '#64748b';
+export type { StickyColor } from '@/lib/boardObjectDefaults';
+export {
+  DEFAULT_STICKY_WIDTH,
+  DEFAULT_STICKY_HEIGHT,
+  DEFAULT_FRAME_WIDTH,
+  DEFAULT_FRAME_HEIGHT,
+  DEFAULT_FRAME_PADDING,
+  DEFAULT_FILL,
+  DEFAULT_FONT_COLOR,
+  DEFAULT_SHAPE_FILL,
+  DEFAULT_CONNECTOR_STROKE,
+  DEFAULT_TEXT_WIDTH,
+  DEFAULT_TEXT_HEIGHT,
+  DEFAULT_TEXT_FONT_SIZE,
+  STICKY_COLORS,
+} from '@/lib/boardObjectDefaults';
 
 // ---------------------------------------------------------------------------
 // Typed default objects per intent
@@ -115,7 +132,7 @@ export const FRAME_TEMPLATE: IFrameDefaults = {
 };
 
 export const TEXT_TEMPLATE: ITextDefaults = {
-  fontSize: 16,
+  fontSize: DEFAULT_TEXT_FONT_SIZE,
   fill: DEFAULT_FONT_COLOR,
 };
 
@@ -163,7 +180,7 @@ const DEFAULT_WIDTHS: Record<string, number> = {
   rectangle: SHAPE_RECTANGLE_TEMPLATE.width,
   circle: SHAPE_CIRCLE_TEMPLATE.width,
   line: 200,
-  text: 200,
+  text: DEFAULT_TEXT_WIDTH,
   frame: DEFAULT_FRAME_WIDTH,
   connector: 0,
 };
@@ -173,7 +190,7 @@ const DEFAULT_HEIGHTS: Record<string, number> = {
   rectangle: SHAPE_RECTANGLE_TEMPLATE.height,
   circle: SHAPE_CIRCLE_TEMPLATE.height,
   line: 0,
-  text: 30,
+  text: DEFAULT_TEXT_HEIGHT,
   frame: DEFAULT_FRAME_HEIGHT,
   connector: 0,
 };

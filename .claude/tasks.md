@@ -48,6 +48,22 @@ Base branch: `spike/ai-chat-improvements`. Source: docs/AI-CHAT-IMPROVEMENT-PLAN
 
 ---
 
+## T5 — AI defaults.ts import from lib and re-export
+
+- **Status:** review
+- **Tier:** sonnet
+- **Role:** architect
+- **Worktree name:** board-defaults-ai
+- **Description:** In src/modules/ai/defaults.ts: import all constants and STICKY_COLORS from @/lib/boardObjectDefaults; remove local DEFAULT_* definitions; keep templates, interfaces, getDefaultWidthForType, getDefaultHeightForType, mergeWithTemplate, getShapeTemplate; re-export from lib so imports from ./defaults or ../defaults still work.
+- **Acceptance criteria:**
+  1. defaults.ts imports and re-exports constants and STICKY_COLORS from @/lib/boardObjectDefaults.
+  2. No local DEFAULT_* constant definitions in defaults.ts.
+  3. Templates, interfaces, and helper functions unchanged in behavior.
+  4. `bun run validate` passes.
+- **Dependencies:** T1 (boardObjectDefaults.ts)
+
+---
+
 ## T4 — Full-height AI panel and resizable input
 
 - **Status:** done

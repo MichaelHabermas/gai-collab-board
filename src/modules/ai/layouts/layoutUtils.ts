@@ -4,18 +4,8 @@ import {
   DEFAULT_STICKY_WIDTH,
   DEFAULT_STICKY_HEIGHT,
   DEFAULT_FRAME_PADDING,
+  STICKY_COLORS,
 } from '../defaults';
-
-/** Sticky note color palette — matches canvas STICKY_COLORS. */
-const STICKY_COLORS: Record<string, string> = {
-  yellow: '#fef08a',
-  pink: '#fda4af',
-  blue: '#93c5fd',
-  green: '#86efac',
-  purple: '#d8b4fe',
-  orange: '#fed7aa',
-  red: '#fca5a5',
-};
 
 /** Sentinel ID for frames in layout results. Replaced with real Firestore ID by compoundExecutor. */
 const FRAME_PLACEHOLDER_ID = '__frame__';
@@ -29,6 +19,10 @@ interface ILayoutResult {
   frameId: string;
 }
 
+function isStickyColorName(s: string): s is keyof typeof STICKY_COLORS {
+  return s in STICKY_COLORS;
+}
+
 /** Resolves a named color or hex string to a hex color. Falls back to yellow. */
 function resolveStickyColor(input?: string): string {
   if (!input) {
@@ -36,10 +30,9 @@ function resolveStickyColor(input?: string): string {
   }
 
   const lower = input.toLowerCase();
-  const named = STICKY_COLORS[lower];
 
-  if (named) {
-    return named;
+  if (isStickyColorName(lower)) {
+    return STICKY_COLORS[lower];
   }
 
   if (input.startsWith('#')) {
