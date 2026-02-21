@@ -6,7 +6,7 @@ export const boardTools: ChatCompletionTool[] = [
     function: {
       name: 'createStickyNote',
       description:
-        'Creates a new sticky note on the board. Omitted parameters use built-in defaults; do not ask the user for them.',
+        'Creates a new sticky note on the board. Never ask what the note should say—omit any unspecified parameter for default.',
       parameters: {
         type: 'object',
         properties: {
@@ -49,7 +49,7 @@ export const boardTools: ChatCompletionTool[] = [
     function: {
       name: 'createShape',
       description:
-        'Creates a new shape (rectangle, circle, or line) on the board. Omitted parameters use built-in defaults; do not ask the user for them.',
+        'Creates a new shape (rectangle, circle, or line) on the board. Never ask for position or size—omit any unspecified parameter for default.',
       parameters: {
         type: 'object',
         properties: {
@@ -82,13 +82,13 @@ export const boardTools: ChatCompletionTool[] = [
     function: {
       name: 'createFrame',
       description:
-        'Creates a frame to group and organize content areas. Omitted parameters use built-in defaults; do not ask the user for them.',
+        'Creates a frame to group and organize content areas. Never ask for title or position—omit any unspecified parameter for default.',
       parameters: {
         type: 'object',
         properties: {
           title: {
             type: 'string',
-            description: 'Title of the frame',
+            description: 'Title of the frame. Omit for default.',
           },
           x: { type: 'number', description: 'X coordinate. Omit for auto-placement.' },
           y: { type: 'number', description: 'Y coordinate. Omit for auto-placement.' },
@@ -101,7 +101,7 @@ export const boardTools: ChatCompletionTool[] = [
             description: 'Height. Omit for default.',
           },
         },
-        required: ['title'],
+        required: [],
       },
     },
   },
@@ -146,11 +146,11 @@ export const boardTools: ChatCompletionTool[] = [
     function: {
       name: 'createText',
       description:
-        'Creates a standalone text element on the board. Omitted parameters use built-in defaults; do not ask the user for them.',
+        'Creates a standalone text element on the board. Never ask what the text should say—omit any unspecified parameter for default.',
       parameters: {
         type: 'object',
         properties: {
-          text: { type: 'string', description: 'The text content' },
+          text: { type: 'string', description: 'The text content. Omit for default.' },
           x: { type: 'number', description: 'X coordinate. Omit for auto-placement.' },
           y: { type: 'number', description: 'Y coordinate. Omit for auto-placement.' },
           fontSize: {
@@ -159,7 +159,7 @@ export const boardTools: ChatCompletionTool[] = [
           },
           color: { type: 'string', description: 'Text color. Omit for default.' },
         },
-        required: ['text'],
+        required: [],
       },
     },
   },

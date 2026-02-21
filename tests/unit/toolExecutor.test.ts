@@ -646,6 +646,22 @@ describe('toolExecutor', () => {
         createdBy: mockUserId,
       });
     });
+
+    it('uses default title when title is omitted (e.g. "add a frame")', async () => {
+      const { execute } = createToolExecutor(createContext());
+      await execute({
+        name: 'createFrame',
+        arguments: {},
+      });
+      expect(mockCreateObject).toHaveBeenCalledWith(
+        mockBoardId,
+        expect.objectContaining({
+          type: 'frame',
+          text: 'Frame',
+          createdBy: mockUserId,
+        })
+      );
+    });
   });
 
   describe('createConnector', () => {
@@ -863,6 +879,22 @@ describe('toolExecutor', () => {
         fontSize: 24,
         createdBy: mockUserId,
       });
+    });
+
+    it('uses default text when text is omitted (e.g. "add text")', async () => {
+      const { execute } = createToolExecutor(createContext());
+      await execute({
+        name: 'createText',
+        arguments: {},
+      });
+      expect(mockCreateObject).toHaveBeenCalledWith(
+        mockBoardId,
+        expect.objectContaining({
+          type: 'text',
+          text: 'Text',
+          createdBy: mockUserId,
+        })
+      );
     });
   });
 

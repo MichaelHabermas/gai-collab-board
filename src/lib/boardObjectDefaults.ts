@@ -22,6 +22,8 @@ export const DEFAULT_FONT_COLOR = '#1e293b';
 export const DEFAULT_FRAME_WIDTH = 300;
 export const DEFAULT_FRAME_HEIGHT = 200;
 export const DEFAULT_FRAME_PADDING = 30;
+/** Default frame title when user does not specify one (e.g. "add a frame"). */
+export const DEFAULT_FRAME_TITLE = 'Frame';
 
 export const DEFAULT_SHAPE_FILL = '#93c5fd';
 export const DEFAULT_SHAPE_STROKE = '#1e293b';
@@ -32,6 +34,8 @@ export const DEFAULT_CONNECTOR_STROKE = '#64748b';
 export const DEFAULT_TEXT_WIDTH = 200;
 export const DEFAULT_TEXT_HEIGHT = 30;
 export const DEFAULT_TEXT_FONT_SIZE = 16;
+/** Default standalone text content when user does not specify (e.g. "add text"). */
+export const DEFAULT_TEXT_CONTENT = 'Text';
 
 export const STICKY_COLORS = {
   yellow: '#fef08a',

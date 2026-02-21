@@ -8,7 +8,12 @@ import {
 } from '@/modules/sync/userPreferencesService';
 import { getAnchorPosition } from '@/lib/connectorAnchors';
 import { computeAlignUpdates, computeDistributeUpdates } from '@/lib/alignDistribute';
-import { STICKY_COLORS, DEFAULT_STICKY_TEXT } from '@/lib/boardObjectDefaults';
+import {
+  STICKY_COLORS,
+  DEFAULT_STICKY_TEXT,
+  DEFAULT_FRAME_TITLE,
+  DEFAULT_TEXT_CONTENT,
+} from '@/lib/boardObjectDefaults';
 import { createCompoundExecutor, COMPOUND_TOOL_NAMES } from './compoundExecutor';
 import { createBoardStateManager, type IBoardStateProvider } from '@/lib/boardStateManager';
 import { findOpenSpace } from './layouts';
@@ -212,18 +217,20 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
 
       case 'createFrame': {
         const {
-          title,
+          title: rawTitle,
           x: rawX,
           y: rawY,
           width,
           height,
         } = tool.arguments as {
-          title: string;
+          title?: string;
           x?: number;
           y?: number;
           width?: number;
           height?: number;
         };
+        const frameTitle =
+          rawTitle && rawTitle !== '' ? rawTitle : DEFAULT_FRAME_TITLE;
         const userProvided = {
           ...(width !== undefined && { width }),
           ...(height !== undefined && { height }),
@@ -242,10 +249,10 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           width: merged.width,
           height: merged.height,
           fill: merged.fill,
-          text: title,
+          text: frameTitle,
           createdBy,
         });
-        return { id: obj.id, success: true, message: `Created frame: '${title}'` };
+        return { id: obj.id, success: true, message: `Created frame: '${frameTitle}'` };
       }
 
       case 'createConnector': {
@@ -309,24 +316,26 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
 
       case 'createText': {
         const {
-          text,
+          text: rawText,
           x: rawX,
           y: rawY,
           fontSize,
           color,
         } = tool.arguments as {
-          text: string;
+          text?: string;
           x?: number;
           y?: number;
           fontSize?: number;
           color?: string;
         };
+        const textContent =
+          rawText && rawText !== '' ? rawText : DEFAULT_TEXT_CONTENT;
         const userProvided = {
           ...(fontSize !== undefined && { fontSize }),
           ...(color !== undefined && { fill: color }),
         };
         const merged = mergeWithTemplate(TEXT_TEMPLATE, userProvided);
-        const textWidth = Math.max(50, text.length * merged.fontSize * 0.6);
+        const textWidth = Math.max(50, textContent.length * merged.fontSize * 0.6);
         const textHeight = merged.fontSize * 1.5;
 
         const needsPlacement = rawX === undefined || rawY === undefined;
@@ -341,11 +350,11 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           width: textWidth,
           height: textHeight,
           fill: merged.fill,
-          text,
+          text: textContent,
           fontSize: merged.fontSize,
           createdBy,
         });
-        return { id: obj.id, success: true, message: `Created text: '${text}'` };
+        return { id: obj.id, success: true, message: `Created text: '${textContent}'` };
       }
 
       case 'moveObject': {
