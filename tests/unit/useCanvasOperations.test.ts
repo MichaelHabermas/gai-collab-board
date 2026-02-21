@@ -41,8 +41,11 @@ describe('useCanvasOperations', () => {
     vi.clearAllMocks();
   });
 
+  const toRecord = (arr: IBoardObject[]): Record<string, IBoardObject> =>
+    Object.fromEntries(arr.map((o) => [o.id, o]));
+
   const getDefaultProps = () => ({
-    objects: [mockObject],
+    objectsRecord: toRecord([mockObject]),
     selectedIds: ['obj-1'],
     onObjectCreate,
     onObjectDelete,
@@ -64,6 +67,10 @@ describe('useCanvasOperations', () => {
         .mockResolvedValue(undefined);
       const props = {
         ...getDefaultProps(),
+        objectsRecord: toRecord([
+          { ...mockObject, id: 'id1' },
+          { ...mockObject, id: 'id2' },
+        ]),
         selectedIds: ['id1', 'id2'],
         onObjectsDeleteBatch,
       };
@@ -86,7 +93,7 @@ describe('useCanvasOperations', () => {
         id,
       }));
       const props = {
-        objects,
+        objectsRecord: toRecord(objects),
         selectedIds: ids,
         onObjectCreate,
         onObjectDelete,
@@ -107,6 +114,10 @@ describe('useCanvasOperations', () => {
     it('handleDelete with 2+ selected and no onObjectsDeleteBatch falls back to per-id onObjectDelete', () => {
       const props = {
         ...getDefaultProps(),
+        objectsRecord: toRecord([
+          { ...mockObject, id: 'id1' },
+          { ...mockObject, id: 'id2' },
+        ]),
         selectedIds: ['id1', 'id2'],
         onObjectsDeleteBatch: undefined,
       };
@@ -315,7 +326,7 @@ describe('useCanvasOperations', () => {
       const onObjectsUpdate = vi.fn();
 
       const props = {
-        objects: [frame, child1, child2],
+        objectsRecord: toRecord([frame, child1, child2]),
         selectedIds: ['frame-1'],
         onObjectCreate,
         onObjectDelete,
@@ -343,7 +354,7 @@ describe('useCanvasOperations', () => {
       const onObjectUpdate = vi.fn();
 
       const props = {
-        objects: [frame, child1],
+        objectsRecord: toRecord([frame, child1]),
         selectedIds: ['frame-1'],
         onObjectCreate,
         onObjectUpdate,
@@ -367,7 +378,7 @@ describe('useCanvasOperations', () => {
         .mockResolvedValue(undefined);
 
       const props = {
-        objects: [frame, child1],
+        objectsRecord: toRecord([frame, child1]),
         selectedIds: ['frame-1', 'child-1'],
         onObjectCreate,
         onObjectDelete,
@@ -431,7 +442,7 @@ describe('useCanvasOperations', () => {
         .mockResolvedValueOnce(null);     // second call creates the child
 
       const props = {
-        objects: [frame, child],
+        objectsRecord: toRecord([frame, child]),
         selectedIds: ['frame-1'],
         onObjectCreate: onObjectCreateMock,
         onObjectDelete,
@@ -474,7 +485,7 @@ describe('useCanvasOperations', () => {
         .mockResolvedValueOnce(newFrame); // frame-1 duplicate
 
       const props = {
-        objects: [frame, child],
+        objectsRecord: toRecord([frame, child]),
         selectedIds: ['frame-1', 'child-1'],
         onObjectCreate: onObjectCreateMock,
         onObjectDelete,
@@ -512,7 +523,7 @@ describe('useCanvasOperations', () => {
       const onObjectCreateMock = vi.fn().mockResolvedValueOnce(null);
 
       const props = {
-        objects: [frame, child],
+        objectsRecord: toRecord([frame, child]),
         selectedIds: ['frame-1'],
         onObjectCreate: onObjectCreateMock,
         onObjectDelete,
@@ -551,7 +562,7 @@ describe('useCanvasOperations', () => {
       };
 
       const props = {
-        objects: [frame, child],
+        objectsRecord: toRecord([frame, child]),
         selectedIds: ['frame-1'],
         onObjectCreate,
         onObjectDelete,
@@ -588,7 +599,7 @@ describe('useCanvasOperations', () => {
       };
 
       const props = {
-        objects: [frame, child],
+        objectsRecord: toRecord([frame, child]),
         selectedIds: ['frame-1', 'child-1'],
         onObjectCreate,
         onObjectDelete,
@@ -632,7 +643,7 @@ describe('useCanvasOperations', () => {
         .mockResolvedValueOnce(null);
 
       const props = {
-        objects: [frame, child],
+        objectsRecord: toRecord([frame, child]),
         selectedIds: ['frame-1'],
         onObjectCreate: onObjectCreateMock,
         onObjectDelete,
@@ -708,7 +719,7 @@ describe('useCanvasOperations', () => {
         .mockResolvedValueOnce(null);      // child
 
       const props = {
-        objects: [frame, child, standalone],
+        objectsRecord: toRecord([frame, child, standalone]),
         selectedIds: ['frame-1', 'standalone-1'],
         onObjectCreate: onObjectCreateMock,
         onObjectDelete,
@@ -749,7 +760,7 @@ describe('useCanvasOperations', () => {
       const onObjectCreateMock = vi.fn().mockResolvedValueOnce(null);
 
       const props = {
-        objects: [frame, child],
+        objectsRecord: toRecord([frame, child]),
         selectedIds: ['frame-1'],
         onObjectCreate: onObjectCreateMock,
         onObjectDelete,
@@ -801,7 +812,7 @@ describe('useCanvasOperations', () => {
 
       const props = {
         ...getDefaultProps(),
-        objects: [mockObject, obj2],
+        objectsRecord: toRecord([mockObject, obj2]),
         selectedIds: [] as string[],
       };
       renderHook(() => useCanvasOperations(props));
@@ -840,7 +851,7 @@ describe('useCanvasOperations', () => {
       useObjectsStore.getState().setAll([frame, child]);
 
       const props = {
-        objects: [frame, child],
+        objectsRecord: toRecord([frame, child]),
         selectedIds: ['frame-1'],
         onObjectCreate,
         onObjectDelete,
@@ -885,7 +896,7 @@ describe('useCanvasOperations', () => {
       useObjectsStore.getState().setAll([frame, child]);
 
       const props = {
-        objects: [frame, child],
+        objectsRecord: toRecord([frame, child]),
         selectedIds: ['frame-1'],
         onObjectCreate,
         onObjectDelete,
@@ -937,7 +948,7 @@ describe('useCanvasOperations', () => {
       useObjectsStore.getState().setAll([frame, child1, child2]);
 
       const props = {
-        objects: [frame, child1, child2],
+        objectsRecord: toRecord([frame, child1, child2]),
         selectedIds: ['child-1', 'child-2'],
         onObjectCreate,
         onObjectDelete,
@@ -969,7 +980,7 @@ describe('useCanvasOperations', () => {
       useObjectsStore.getState().setAll([obj1, obj2]);
 
       const props = {
-        objects: [obj1, obj2],
+        objectsRecord: toRecord([obj1, obj2]),
         selectedIds: ['obj-1', 'obj-2'],
         onObjectCreate,
         onObjectDelete,
@@ -1013,7 +1024,7 @@ describe('useCanvasOperations', () => {
       useObjectsStore.getState().setAll([frame, connector]);
 
       const props = {
-        objects: [frame, connector],
+        objectsRecord: toRecord([frame, connector]),
         selectedIds: ['frame-1', 'conn-1'],
         onObjectCreate,
         onObjectDelete,

@@ -2,7 +2,9 @@ import { describe, it, expect } from 'vitest';
 import {
   getObjectBounds,
   getSelectionBounds,
+  getSelectionBoundsFromRecord,
   getBoardBounds,
+  getBoardBoundsFromRecord,
   isPointInBounds,
   computeViewportToFitBounds,
 } from '@/lib/canvasBounds';
@@ -86,6 +88,47 @@ describe('canvasBounds', () => {
     });
   });
 
+  describe('getSelectionBoundsFromRecord', () => {
+    it('returns null when no selection', () => {
+      const record: Record<string, IBoardObject> = {
+        '1': makeSticky({ id: '1', x: 0, y: 0, width: 10, height: 10 }),
+      };
+      expect(getSelectionBoundsFromRecord(record, [])).toBeNull();
+      expect(getSelectionBoundsFromRecord(record, new Set())).toBeNull();
+    });
+
+    it('returns bounds of selected objects by id', () => {
+      const record: Record<string, IBoardObject> = {
+        '1': makeSticky({ id: '1', x: 0, y: 0, width: 10, height: 10 }),
+        '2': makeSticky({ id: '2', x: 100, y: 50, width: 20, height: 20 }),
+      };
+      expect(getSelectionBoundsFromRecord(record, ['1', '2'])).toEqual({
+        x1: 0,
+        y1: 0,
+        x2: 120,
+        y2: 70,
+      });
+      expect(getSelectionBoundsFromRecord(record, new Set(['1', '2']))).toEqual({
+        x1: 0,
+        y1: 0,
+        x2: 120,
+        y2: 70,
+      });
+    });
+
+    it('ignores missing ids in record', () => {
+      const record: Record<string, IBoardObject> = {
+        '1': makeSticky({ id: '1', x: 10, y: 10, width: 10, height: 10 }),
+      };
+      expect(getSelectionBoundsFromRecord(record, ['1', 'missing'])).toEqual({
+        x1: 10,
+        y1: 10,
+        x2: 20,
+        y2: 20,
+      });
+    });
+  });
+
   describe('isPointInBounds', () => {
     it('returns true when point is inside bounds', () => {
       const bounds = { x1: 10, y1: 20, x2: 100, y2: 80 };
@@ -114,6 +157,20 @@ describe('canvasBounds', () => {
         makeSticky({ id: '2', x: 100, y: 50, width: 20, height: 20 }),
       ];
       expect(getBoardBounds(objects)).toEqual({ x1: 5, y1: 5, x2: 120, y2: 70 });
+    });
+  });
+
+  describe('getBoardBoundsFromRecord', () => {
+    it('returns null when record empty', () => {
+      expect(getBoardBoundsFromRecord({})).toBeNull();
+    });
+
+    it('returns bounds of all objects in record', () => {
+      const record: Record<string, IBoardObject> = {
+        '1': makeSticky({ id: '1', x: 5, y: 5, width: 10, height: 10 }),
+        '2': makeSticky({ id: '2', x: 100, y: 50, width: 20, height: 20 }),
+      };
+      expect(getBoardBoundsFromRecord(record)).toEqual({ x1: 5, y1: 5, x2: 120, y2: 70 });
     });
   });
 

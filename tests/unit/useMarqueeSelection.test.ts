@@ -26,6 +26,9 @@ const makeObject = (id: string, x: number, y: number, w: number, h: number): IBo
     createdBy: 'u1',
   }) as IBoardObject;
 
+const toRecord = (arr: IBoardObject[]): Record<string, IBoardObject> =>
+  Object.fromEntries(arr.map((o) => [o.id, o]));
+
 /**
  * Build a minimal KonvaEventObject-like mock for onMarqueeEnd.
  * The hook reads: e.target.getStage(), stage.getPointerPosition(),
@@ -124,7 +127,7 @@ describe('useMarqueeSelection', () => {
 
       const event = makeMockEvent(200, 200);
       act(() => {
-        result.current.onMarqueeEnd(event, objects, identityGetCanvasCoords, setSelectedIds);
+        result.current.onMarqueeEnd(event, toRecord(objects), identityGetCanvasCoords, setSelectedIds);
       });
 
       expect(setSelectedIds).toHaveBeenCalledWith(['a', 'c']);
@@ -140,7 +143,7 @@ describe('useMarqueeSelection', () => {
 
       const event = makeMockEvent(200, 200);
       act(() => {
-        result.current.onMarqueeEnd(event, [], identityGetCanvasCoords, setSelectedIds);
+        result.current.onMarqueeEnd(event, {}, identityGetCanvasCoords, setSelectedIds);
       });
 
       expect(result.current.isSelecting).toBe(false);
@@ -162,7 +165,7 @@ describe('useMarqueeSelection', () => {
       // Only 3px rect — too small
       const event = makeMockEvent(3, 3);
       act(() => {
-        result.current.onMarqueeEnd(event, objects, identityGetCanvasCoords, setSelectedIds);
+        result.current.onMarqueeEnd(event, toRecord(objects), identityGetCanvasCoords, setSelectedIds);
       });
 
       expect(setSelectedIds).not.toHaveBeenCalled();
@@ -179,7 +182,7 @@ describe('useMarqueeSelection', () => {
       // 200px wide but only 3px tall
       const event = makeMockEvent(200, 3);
       act(() => {
-        result.current.onMarqueeEnd(event, [], identityGetCanvasCoords, setSelectedIds);
+        result.current.onMarqueeEnd(event, {}, identityGetCanvasCoords, setSelectedIds);
       });
 
       expect(setSelectedIds).not.toHaveBeenCalled();
@@ -198,7 +201,7 @@ describe('useMarqueeSelection', () => {
 
       const event = makeMockEvent(100, 100);
       act(() => {
-        result.current.onMarqueeEnd(event, objects, identityGetCanvasCoords, setSelectedIds);
+        result.current.onMarqueeEnd(event, toRecord(objects), identityGetCanvasCoords, setSelectedIds);
       });
 
       expect(setSelectedIds).toHaveBeenCalledWith([]);
@@ -228,7 +231,7 @@ describe('useMarqueeSelection', () => {
       } as unknown as Parameters<ReturnType<typeof useMarqueeSelection>['onMarqueeEnd']>[0];
 
       act(() => {
-        result.current.onMarqueeEnd(event, objects, identityGetCanvasCoords, setSelectedIds);
+        result.current.onMarqueeEnd(event, toRecord(objects), identityGetCanvasCoords, setSelectedIds);
       });
 
       expect(setSelectedIds).toHaveBeenCalledWith(['a']);
@@ -249,7 +252,7 @@ describe('useMarqueeSelection', () => {
 
       const event = makeMockEvent(200, 200);
       act(() => {
-        result.current.onMarqueeEnd(event, objects, identityGetCanvasCoords, setSelectedIds);
+        result.current.onMarqueeEnd(event, toRecord(objects), identityGetCanvasCoords, setSelectedIds);
       });
 
       expect(result.current.justDidMarqueeRef.current).toBe(true);
@@ -288,7 +291,7 @@ describe('useMarqueeSelection', () => {
 
       const event = makeMockEvent(0, 0);
       act(() => {
-        result.current.onMarqueeEnd(event, objects, identityGetCanvasCoords, setSelectedIds);
+        result.current.onMarqueeEnd(event, toRecord(objects), identityGetCanvasCoords, setSelectedIds);
       });
 
       // The hook uses Math.min/max to normalize, so reverse drag should work

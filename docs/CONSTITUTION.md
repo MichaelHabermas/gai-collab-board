@@ -52,7 +52,7 @@ This document is the **inviolable** rule set for the state improvement plan. Vio
 
 ## Article VI — Performance Budgets
 
-1. **Real-time sync:** Changes propagate to all clients in **&lt; 500 ms** (from the plan success metrics).
+1. **Real-time sync:** Changes propagate to all clients in **< 500 ms** (from the plan success metrics).
 2. **Scale:** Handle **1,000+ elements** without perceptible lag on standard hardware.
 3. **Write queue:** Coalescing window stays at **500 ms** unless a measured benchmark justifies change.
 4. **Rendering:** No O(n) work on every frame. **Spatial index for viewport culling is mandatory.**
@@ -63,7 +63,7 @@ This document is the **inviolable** rule set for the state improvement plan. Vio
 
 1. Every new module introduced by Epics 1–3 must have **unit tests** before merge.
 2. **Integration tests** against Firebase emulators are required for any persistence changes.
-3. **`bun run validate`** must pass. No exceptions, no `--skip` flags.
+3. `**bun run validate`** must pass. No exceptions, no `--skip` flags.
 
 ---
 
@@ -156,57 +156,13 @@ The following articles govern all work in `STATE-MANAGEMENT-PLAN-2.md`. They are
 
 ---
 
-## Article XVI — Ref Mirroring Policy
-
-1. A `useRef` mirroring React or Zustand state is permitted only when **all** of the following hold:
-   - (a) The consumer is a stable `useCallback` with an empty or minimal dependency array that needs fresh values without re-creating the closure.
-   - (b) The ref is updated synchronously in the same render/effect that produces the new value.
-   - (c) There is a code comment citing **Article XVI** and naming the specific callback that reads the ref.
-2. After S5, `objectsRef` patterns in `useHistory` and `useAI` must be replaced with direct `useObjectsStore.getState()` reads. Ref mirroring for objects is no longer justified once there is a single source.
-
-**Verification:** After S5, `useHistory.ts` has zero `useRef<IBoardObject[]>` declarations. `useAI.ts` reads objects via `useObjectsStore.getState()`, not `objectsRef.current`. Remaining refs cite Article XVI in a comment.
-
----
-
-## Article XVII — Wave Dependency Enforcement
-
-1. Hard merge order: **S2 before S5**, **S5 before S7**.
-2. Tasks within the same wave may merge in any order relative to each other.
-3. No task may be merged out of wave order.
-4. The task board (`.claude/tasks.md`) must encode these dependencies, and the reviewer must verify the dependency chain before approving merge.
-
-**Verification:** PR for S5 may not be opened until S2 is merged. PR for S7 may not be opened until S5 is merged. Reviewer checks `git log --oneline main..HEAD` to confirm prerequisites.
-
----
-
-## Article XVIII — Backward Compatibility of Update API Surface
-
-1. `IUseObjectsReturn` is a public API surface. No existing return field may be removed in a single PR — deprecation requires one release cycle.
-2. The `objects: IBoardObject[]` return field may be retained as a derived value (from Zustand store) even after S5, until all direct consumers are migrated.
-3. `queueObjectUpdate` must remain on the return interface with the signature `(objectId: string, updates: IUpdateObjectParams) => void`.
-4. New fields (e.g., `objectsRecord`) may be added but must not change existing field semantics.
-
-**Verification:** TypeScript compilation passes. `IUseObjectsReturn` interface changes reviewed for backward compatibility. Removed fields have a deprecation commit in a prior release.
-
----
-
-## Article XIX — E2E-First Mandate
-
-1. Tasks **S2**, **S3**, and **S5** must have Playwright E2E tests written and merged **before** the implementation PR is opened.
-2. E2E tests must pass against the current codebase to establish the baseline.
-3. The implementation PR must not alter E2E test assertions; if behavior changes are needed, the E2E test update requires reviewer approval with justification.
-
-**Verification:** Git log shows E2E test commits for S2, S3, S5 merged before their respective implementation PRs. E2E tests pass on the target branch before the implementation branch diverges.
-
----
-
 ## Invariants — Must Survive All Tasks (S1–S7)
 
 The following are immutable across the entire state management unification. No task may violate these regardless of wave or article.
 
-1. **`IBoardObject` field schema** — No existing field removed or renamed. New fields optional only.
+1. `**IBoardObject` field schema** — No existing field removed or renamed. New fields optional only.
 2. **Firestore document schema** — `boards/{boardId}/objects/{objectId}` structure unchanged. No field removals.
-3. **`IBoardRepository` interface** — Method signatures frozen. New methods additive only.
+3. `**IBoardRepository` interface** — Method signatures frozen. New methods additive only.
 4. **Write queue API** — `queueWrite`, `flush`, `setWriteQueueBoard`, `initWriteQueue` signatures unchanged.
 5. **Spatial index singleton** — `spatialIndex` remains module-level (outside Zustand state) to avoid subscriber churn.
 6. **Zustand store existence** — `objectsStore`, `selectionStore`, `viewportActionsStore`, `historyStore`, `dragOffsetStore` persist. None deleted or merged.
@@ -214,3 +170,4 @@ The following are immutable across the entire state management unification. No t
 8. **Subscription callback shape** — `IObjectsSnapshotUpdate` interface (`objects`, `changes`, `isInitialSnapshot`) unchanged.
 9. **Optimistic update + rollback** — `useObjects` continues to support optimistic create/update/delete with rollback on failure. Mechanism may change, behavior must not regress.
 10. **History command shape** — `IHistoryCommand` and `IHistoryEntry` types unchanged. `executeUndo`/`executeRedo` signatures unchanged.
+

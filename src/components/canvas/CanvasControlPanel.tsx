@@ -1,4 +1,4 @@
-import { memo, type ReactElement } from 'react';
+import { memo, useMemo, type ReactElement } from 'react';
 import { Grid3X3, Magnet, Download, Focus, Maximize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AlignToolbar } from './AlignToolbar';
@@ -14,20 +14,15 @@ interface ICanvasControlPanelProps {
   snapToGridEnabled: boolean;
   setSnapToGridEnabled: (v: boolean) => void;
   exportViewport: (format: 'png' | 'jpeg') => void;
-  exportFullBoard: (
-    objects: IBoardObject[],
-    zoomToFitBounds: (b: { x1: number; y1: number; x2: number; y2: number }) => void,
-    format: 'png' | 'jpeg'
-  ) => void;
-  objects: IBoardObject[];
-  zoomToFitBounds: (b: { x1: number; y1: number; x2: number; y2: number }) => void;
+  /** No-arg callback; parent supplies objects from store/ref when invoked. */
+  onExportFullBoard?: () => void;
+  objectsRecord: Record<string, IBoardObject>;
   handleZoomToSelection: () => void;
   handleZoomToFitAll: () => void;
   handleZoomPreset: (scale: number) => void;
   selectedIds: ReadonlySet<string>;
   selectedIdsArray: string[];
   visibleCount: number;
-  totalCount: number;
   zoomPercent: number;
   onObjectUpdate?: (objectId: string, updates: Partial<IBoardObject>) => void;
   canEdit: boolean;
@@ -39,20 +34,24 @@ export const CanvasControlPanel = memo(function CanvasControlPanel({
   snapToGridEnabled,
   setSnapToGridEnabled,
   exportViewport,
-  exportFullBoard,
-  objects,
-  zoomToFitBounds,
+  onExportFullBoard,
+  objectsRecord,
   handleZoomToSelection,
   handleZoomToFitAll,
   handleZoomPreset,
   selectedIds,
   selectedIdsArray,
   visibleCount,
-  totalCount,
   zoomPercent,
   onObjectUpdate,
   canEdit,
 }: ICanvasControlPanelProps): ReactElement {
+  const totalCount = Object.keys(objectsRecord).length;
+  const selectedObjects = useMemo(
+    () => selectedIdsArray.map((id) => objectsRecord[id]).filter(Boolean) as IBoardObject[],
+    [objectsRecord, selectedIdsArray]
+  );
+
   return (
     <div className='absolute bottom-4 right-4 flex gap-2 items-center'>
       {/* Grid and snap toggles */}
@@ -96,19 +95,21 @@ export const CanvasControlPanel = memo(function CanvasControlPanel({
       >
         <Download className='h-4 w-4' />
       </Button>
-      <Button
-        variant='ghost'
-        size='icon'
-        className='h-9 w-9 text-card-foreground hover:bg-accent bg-card/80 rounded-md'
-        onClick={() => exportFullBoard(objects, zoomToFitBounds, 'png')}
-        title='Export full board as PNG'
-        data-testid='export-full-board-png'
-      >
-        <Download className='h-4 w-4' />
-      </Button>
+      {onExportFullBoard != null && (
+        <Button
+          variant='ghost'
+          size='icon'
+          className='h-9 w-9 text-card-foreground hover:bg-accent bg-card/80 rounded-md'
+          onClick={onExportFullBoard}
+          title='Export full board as PNG'
+          data-testid='export-full-board-png'
+        >
+          <Download className='h-4 w-4' />
+        </Button>
+      )}
       {onObjectUpdate != null && (
         <AlignToolbar
-          objects={objects}
+          selectedObjects={selectedObjects}
           selectedIds={selectedIdsArray}
           onObjectUpdate={onObjectUpdate}
           canEdit={canEdit}

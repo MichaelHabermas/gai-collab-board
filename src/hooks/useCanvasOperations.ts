@@ -6,7 +6,7 @@ import { useSelectionStore } from '@/stores/selectionStore';
 import { useObjectsStore } from '@/stores/objectsStore';
 
 interface IUseCanvasOperationsProps {
-  objects: IBoardObject[];
+  objectsRecord: Record<string, IBoardObject>;
   selectedIds: string[];
   onObjectCreate: (params: Partial<IBoardObject>) => Promise<IBoardObject | null> | void;
   onObjectUpdate?: (objectId: string, updates: Partial<IBoardObject>) => void;
@@ -32,7 +32,7 @@ const PASTE_OFFSET = 30;
  * Also handles keyboard shortcuts for these operations.
  */
 export const useCanvasOperations = ({
-  objects,
+  objectsRecord,
   selectedIds,
   onObjectCreate,
   onObjectUpdate,
@@ -48,12 +48,13 @@ export const useCanvasOperations = ({
   const handleDelete = useCallback(async () => {
     if (selectedIds.length === 0) return;
 
+    const objects = Object.values(objectsRecord);
     const deletingIds = new Set(selectedIds);
 
     // Unparent children of frames being deleted (children NOT in the selection stay on canvas)
     const unparentUpdates: Array<{ objectId: string; updates: Partial<IBoardObject> }> = [];
     for (const id of selectedIds) {
-      const obj = objects.find((o) => o.id === id);
+      const obj = objectsRecord[id];
       if (obj?.type !== 'frame') continue;
 
       const children = getFrameChildren(id, objects);
@@ -84,7 +85,7 @@ export const useCanvasOperations = ({
     clearSelection();
   }, [
     selectedIds,
-    objects,
+    objectsRecord,
     onObjectUpdate,
     onObjectsUpdate,
     onObjectDelete,
@@ -95,6 +96,7 @@ export const useCanvasOperations = ({
   // Duplicate selected objects with offset.
   // Frame-aware: when duplicating a frame, also duplicate its children and reparent them.
   const handleDuplicate = useCallback(async () => {
+    const objects = Object.values(objectsRecord);
     const selectedObjects = objects.filter((obj) => selectedIds.includes(obj.id));
     const selectedIdSet = new Set(selectedIds);
 
@@ -169,10 +171,11 @@ export const useCanvasOperations = ({
         }
       }
     }
-  }, [selectedIds, objects, onObjectCreate]);
+  }, [selectedIds, objectsRecord, onObjectCreate]);
 
   // Copy selected objects to clipboard (includes frame children automatically)
   const handleCopy = useCallback(() => {
+    const objects = Object.values(objectsRecord);
     const selectedObjects = objects.filter((obj) => selectedIds.includes(obj.id));
     const selectedIdSet = new Set(selectedIds);
 
@@ -190,7 +193,7 @@ export const useCanvasOperations = ({
     }
 
     setClipboard([...selectedObjects, ...extras]);
-  }, [selectedIds, objects]);
+  }, [selectedIds, objectsRecord]);
 
   // Paste objects from clipboard.
   // Frame-aware: when pasting a frame, also paste its children with correct parentFrameId.

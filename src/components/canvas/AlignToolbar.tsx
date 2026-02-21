@@ -19,7 +19,7 @@ import {
 import type { IBoardObject, ILayoutRect } from '@/types';
 
 interface IAlignToolbarProps {
-  objects: IBoardObject[];
+  selectedObjects: IBoardObject[];
   selectedIds: string[];
   onObjectUpdate: (objectId: string, updates: Partial<IBoardObject>) => void;
   canEdit?: boolean;
@@ -30,11 +30,12 @@ function toRect(obj: IBoardObject): ILayoutRect {
 }
 
 export const AlignToolbar = memo(
-  ({ objects, selectedIds, onObjectUpdate, canEdit = true }: IAlignToolbarProps): ReactElement => {
-    const selectedObjects = useMemo(
-      () => objects.filter((o) => selectedIds.includes(o.id)),
-      [objects, selectedIds]
-    );
+  ({
+    selectedObjects,
+    selectedIds,
+    onObjectUpdate,
+    canEdit = true,
+  }: IAlignToolbarProps): ReactElement => {
     const rects = useMemo(() => selectedObjects.map(toRect), [selectedObjects]);
     const canDistribute = rects.length >= 3;
 

@@ -285,6 +285,10 @@ export const selectAllObjects = (state: IObjectsStore): IBoardObject[] =>
 /** Select all object IDs. */
 export const selectObjectIds = (state: IObjectsStore): string[] => Object.keys(state.objects);
 
+/** Select object count (O(1) for UI display without passing full record). */
+export const selectObjectCount = (state: IObjectsStore): number =>
+  Object.keys(state.objects).length;
+
 /** Select all children of a frame via index (O(k) where k = children count). */
 export const selectFrameChildren =
   (frameId: string) =>

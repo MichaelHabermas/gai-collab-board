@@ -46,7 +46,7 @@ vi.mock('@/stores/dragOffsetStore', () => ({
 
 // --- Mock libs ---
 vi.mock('@/lib/canvasBounds', () => ({
-  getSelectionBounds: vi.fn(() => null),
+  getSelectionBoundsFromRecord: vi.fn(() => null),
 }));
 
 vi.mock('@/lib/alignmentGuides', () => ({
@@ -78,9 +78,8 @@ vi.mock('@/hooks/useAlignmentGuideCache', () => ({
   }),
 }));
 
-vi.mock('@/hooks/useObjectDragHandlersRefSync', () => ({
-  useObjectDragHandlersRefSync: vi.fn(),
-}));
+// Do not mock useObjectDragHandlersRefSync — it populates framesRef from objectsRecord;
+// tests that depend on frame lookup (drop target, reparenting) need it to run.
 
 vi.mock('@/lib/perfTimer', () => ({
   perfTime: vi.fn((_label: string, _meta: unknown, fn: () => unknown) => fn()),
@@ -95,7 +94,7 @@ import { spatialIndex } from '@/stores/objectsStore';
 import { snapPositionToGrid, snapResizeRectToGrid, applySnapPositionToNode } from '@/lib/snapToGrid';
 import { getWidthHeightFromPoints } from '@/lib/lineTransform';
 import { resolveParentFrameIdFromFrames, findContainingFrame } from '@/hooks/useFrameContainment';
-import { getSelectionBounds } from '@/lib/canvasBounds';
+import { getSelectionBoundsFromRecord } from '@/lib/canvasBounds';
 import { computeAlignmentGuidesWithCandidates, computeSnappedPositionFromGuides } from '@/lib/alignmentGuides';
 
 // --- Helpers ---
@@ -127,10 +126,10 @@ const objC = makeObject('c', 400, 400, 80, 80);
 
 function makeConfig(overrides = {}) {
   const objects = [objA, objB, objC];
+  const objectsRecord = Object.fromEntries(objects.map((o) => [o.id, o]));
 
   return {
-    objects,
-    objectsById: new Map(objects.map((o) => [o.id, o])),
+    objectsRecord,
     selectedIds: new Set<string>(),
     setSelectedIds: vi.fn(),
     toggleSelectedId: vi.fn(),
@@ -291,11 +290,11 @@ describe('useObjectDragHandlers', () => {
       const frame = makeObject('frame1', 100, 100, 300, 300, 'frame');
       const child = makeObject('child1', 150, 150, 50, 50);
       const objects = [frame, child];
+      const objectsRecord = Object.fromEntries(objects.map((o) => [o.id, o]));
       mockFrameChildrenIndex.set('frame1', new Set(['child1']));
 
       const config = makeConfig({
-        objects,
-        objectsById: new Map(objects.map((o) => [o.id, o])),
+        objectsRecord,
         selectedIds: new Set(['frame1']),
         visibleShapeIds: ['frame1', 'child1'],
       });
@@ -627,8 +626,7 @@ describe('useObjectDragHandlers', () => {
       mockFrameChildrenIndex.set('frame1', new Set(['child1', 'child2']));
 
       const config = makeConfig({
-        objects,
-        objectsById: new Map(objects.map((o) => [o.id, o])),
+        objectsRecord: Object.fromEntries(objects.map((o) => [o.id, o])),
         selectedIds: new Set(['frame1', 'other']),
         visibleShapeIds: objects.map((o) => o.id),
       });
@@ -653,8 +651,7 @@ describe('useObjectDragHandlers', () => {
       mockFrameChildrenIndex.set('frame1', new Set(['child1']));
 
       const config = makeConfig({
-        objects,
-        objectsById: new Map(objects.map((o) => [o.id, o])),
+        objectsRecord: Object.fromEntries(objects.map((o) => [o.id, o])),
         selectedIds: new Set(['frame1', 'child1']),
         visibleShapeIds: objects.map((o) => o.id),
       });
@@ -681,8 +678,7 @@ describe('useObjectDragHandlers', () => {
       mockFrameChildrenIndex.set('f1', new Set(['c1']));
 
       const config = makeConfig({
-        objects,
-        objectsById: new Map(objects.map((o) => [o.id, o])),
+        objectsRecord: Object.fromEntries(objects.map((o) => [o.id, o])),
         selectedIds: new Set(['f1']),
         visibleShapeIds: objects.map((o) => o.id),
       });
@@ -705,8 +701,7 @@ describe('useObjectDragHandlers', () => {
       const objects = [frame];
 
       const config = makeConfig({
-        objects,
-        objectsById: new Map(objects.map((o) => [o.id, o])),
+        objectsRecord: Object.fromEntries(objects.map((o) => [o.id, o])),
         selectedIds: new Set(['f1']),
         visibleShapeIds: ['f1'],
       });
@@ -732,8 +727,7 @@ describe('useObjectDragHandlers', () => {
       mockFrameChildrenIndex.set('f1', new Set(['c1']));
 
       const config = makeConfig({
-        objects,
-        objectsById: new Map(objects.map((o) => [o.id, o])),
+        objectsRecord: Object.fromEntries(objects.map((o) => [o.id, o])),
         selectedIds: new Set(['f1']),
         snapToGridEnabled: true,
         visibleShapeIds: objects.map((o) => o.id),
@@ -759,8 +753,7 @@ describe('useObjectDragHandlers', () => {
       const objects = [rect, frame];
 
       const config = makeConfig({
-        objects,
-        objectsById: new Map(objects.map((o) => [o.id, o])),
+        objectsRecord: Object.fromEntries(objects.map((o) => [o.id, o])),
         selectedIds: new Set(['r1']),
         visibleShapeIds: objects.map((o) => o.id),
       });
@@ -784,8 +777,7 @@ describe('useObjectDragHandlers', () => {
       const objects = [frame, child];
 
       const config = makeConfig({
-        objects,
-        objectsById: new Map(objects.map((o) => [o.id, o])),
+        objectsRecord: Object.fromEntries(objects.map((o) => [o.id, o])),
         selectedIds: new Set(['c1']),
         visibleShapeIds: objects.map((o) => o.id),
       });
@@ -802,11 +794,11 @@ describe('useObjectDragHandlers', () => {
 
     it('skips reparenting for connector objects', () => {
       const connector = makeObject('conn1', 50, 50, 100, 100, 'connector');
-      const objects = [connector, ...makeConfig().objects];
+      const objects = [connector, objA, objB, objC];
+      const objectsRecord = Object.fromEntries(objects.map((o) => [o.id, o]));
 
       const config = makeConfig({
-        objects,
-        objectsById: new Map(objects.map((o) => [o.id, o])),
+        objectsRecord,
         selectedIds: new Set(['conn1']),
         visibleShapeIds: objects.map((o) => o.id),
       });
@@ -918,8 +910,7 @@ describe('useObjectDragHandlers', () => {
       const frame = makeObject('f1', 100, 100, 300, 300, 'frame');
       const objects = [frame];
       const config = makeConfig({
-        objects,
-        objectsById: new Map(objects.map((o) => [o.id, o])),
+        objectsRecord: Object.fromEntries(objects.map((o) => [o.id, o])),
         selectedIds: new Set(['f1']),
         visibleShapeIds: ['f1'],
       });
@@ -942,8 +933,7 @@ describe('useObjectDragHandlers', () => {
       const rect = makeObject('r1', 50, 50, 100, 100, 'rectangle');
       const objects = [rect];
       const config = makeConfig({
-        objects,
-        objectsById: new Map(objects.map((o) => [o.id, o])),
+        objectsRecord: Object.fromEntries(objects.map((o) => [o.id, o])),
         selectedIds: new Set(['r1']),
         visibleShapeIds: ['r1'],
       });
@@ -965,8 +955,7 @@ describe('useObjectDragHandlers', () => {
       mockFrameChildrenIndex.set('f1', new Set(['c1']));
 
       const config = makeConfig({
-        objects,
-        objectsById: new Map(objects.map((o) => [o.id, o])),
+        objectsRecord: Object.fromEntries(objects.map((o) => [o.id, o])),
         selectedIds: new Set(['f1', 'r1']),
         visibleShapeIds: objects.map((o) => o.id),
       });
@@ -991,8 +980,7 @@ describe('useObjectDragHandlers', () => {
       mockFrameChildrenIndex.set('f1', new Set(['c1']));
 
       const config = makeConfig({
-        objects,
-        objectsById: new Map(objects.map((o) => [o.id, o])),
+        objectsRecord: Object.fromEntries(objects.map((o) => [o.id, o])),
         selectedIds: new Set(['f1']),
         visibleShapeIds: objects.map((o) => o.id),
       });
@@ -1128,8 +1116,8 @@ describe('useObjectDragHandlers', () => {
   // --- Selection bounds with 2+ objects ---
 
   describe('selectionBounds with multiple selected', () => {
-    it('calls getSelectionBounds when 2+ objects selected', () => {
-      vi.mocked(getSelectionBounds).mockReturnValue({ x1: 0, y1: 0, x2: 250, y2: 250 });
+    it('calls getSelectionBoundsFromRecord when 2+ objects selected', () => {
+      vi.mocked(getSelectionBoundsFromRecord).mockReturnValue({ x1: 0, y1: 0, x2: 250, y2: 250 });
       const config = makeConfig({ selectedIds: new Set(['a', 'b']) });
       const { result } = renderHook(() => useObjectDragHandlers(config));
 
@@ -1152,7 +1140,7 @@ describe('useObjectDragHandlers', () => {
     });
 
     it('is true when selectionBounds exists and hovering', () => {
-      vi.mocked(getSelectionBounds).mockReturnValue({ x1: 0, y1: 0, x2: 250, y2: 250 });
+      vi.mocked(getSelectionBoundsFromRecord).mockReturnValue({ x1: 0, y1: 0, x2: 250, y2: 250 });
       const config = makeConfig({ selectedIds: new Set(['a', 'b']) });
       const { result } = renderHook(() => useObjectDragHandlers(config));
 
@@ -1164,7 +1152,7 @@ describe('useObjectDragHandlers', () => {
     });
 
     it('is false when selectionBounds exists but not hovering', () => {
-      vi.mocked(getSelectionBounds).mockReturnValue({ x1: 0, y1: 0, x2: 250, y2: 250 });
+      vi.mocked(getSelectionBoundsFromRecord).mockReturnValue({ x1: 0, y1: 0, x2: 250, y2: 250 });
       const config = makeConfig({ selectedIds: new Set(['a', 'b']) });
       const { result } = renderHook(() => useObjectDragHandlers(config));
 
@@ -1200,8 +1188,7 @@ describe('useObjectDragHandlers', () => {
       const objects = [frame, rectA, rectB];
 
       const config = makeConfig({
-        objects,
-        objectsById: new Map(objects.map((o) => [o.id, o])),
+        objectsRecord: Object.fromEntries(objects.map((o) => [o.id, o])),
         selectedIds: new Set(['r1', 'r2']),
         visibleShapeIds: objects.map((o) => o.id),
       });

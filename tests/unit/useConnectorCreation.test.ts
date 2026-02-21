@@ -48,8 +48,10 @@ describe('useConnectorCreation', () => {
   const mockSetActiveTool = vi.fn();
   const activeToolRef = { current: 'connector' as ToolMode };
 
+  const objectsRecord = Object.fromEntries(objects.map((o) => [o.id, o]));
+
   const defaultParams = () => ({
-    objects,
+    objectsRecord,
     activeColor: '#ff0000',
     onObjectCreate: mockOnCreate,
     setActiveTool: mockSetActiveTool,
@@ -179,7 +181,8 @@ describe('useConnectorCreation', () => {
 
   describe('missing objects — resets', () => {
     it('resets when from object not found', () => {
-      const { result } = setup({ objects: [objB] }); // objA missing
+      const recordBOnly = Object.fromEntries([objB].map((o) => [o.id, o]));
+      const { result } = setup({ objectsRecord: recordBOnly }); // objA missing
 
       act(() => {
         result.current.handleConnectorNodeClick('a', 'right');
@@ -194,7 +197,8 @@ describe('useConnectorCreation', () => {
     });
 
     it('resets when to object not found', () => {
-      const { result } = setup({ objects: [objA] }); // objB missing
+      const recordAOnly = Object.fromEntries([objA].map((o) => [o.id, o]));
+      const { result } = setup({ objectsRecord: recordAOnly }); // objB missing
 
       act(() => {
         result.current.handleConnectorNodeClick('a', 'right');

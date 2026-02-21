@@ -4,16 +4,19 @@ import { useViewportActions } from '@/hooks/useViewportActions';
 import { useViewportActionsStore } from '@/stores/viewportActionsStore';
 import type { IBoardObject, IBounds } from '@/types';
 
-// Mock canvasBounds — getSelectionBounds and getBoardBounds
+// Mock canvasBounds — record-based bounds helpers
 vi.mock('@/lib/canvasBounds', () => ({
-  getSelectionBounds: vi.fn(),
-  getBoardBounds: vi.fn(),
+  getSelectionBoundsFromRecord: vi.fn(),
+  getBoardBoundsFromRecord: vi.fn(),
 }));
 
-import { getSelectionBounds, getBoardBounds } from '@/lib/canvasBounds';
+import {
+  getSelectionBoundsFromRecord,
+  getBoardBoundsFromRecord,
+} from '@/lib/canvasBounds';
 
-const mockGetSelectionBounds = vi.mocked(getSelectionBounds);
-const mockGetBoardBounds = vi.mocked(getBoardBounds);
+const mockGetSelectionBoundsFromRecord = vi.mocked(getSelectionBoundsFromRecord);
+const mockGetBoardBoundsFromRecord = vi.mocked(getBoardBoundsFromRecord);
 
 const makeObject = (id: string, x: number, y: number, w: number, h: number): IBoardObject =>
   ({
@@ -35,17 +38,18 @@ describe('useViewportActions', () => {
   const mockExportViewport = vi.fn();
   const mockExportFullBoard = vi.fn();
   const objects = [makeObject('a', 0, 0, 100, 100), makeObject('b', 200, 200, 50, 50)];
-  const objectsRef = { current: objects };
+  const objectsRecord = Object.fromEntries(objects.map((o) => [o.id, o]));
+  const objectsRecordRef = { current: objectsRecord };
 
   const defaultParams = () => ({
-    objects,
+    objectsRecord,
     selectedIds: new Set<string>(['a']),
     zoomToFitBounds: mockZoomToFitBounds,
     resetViewport: mockResetViewport,
     zoomTo: mockZoomTo,
     exportViewport: mockExportViewport,
     exportFullBoard: mockExportFullBoard,
-    objectsRef: objectsRef as React.RefObject<IBoardObject[]>,
+    objectsRecordRef,
   });
 
   const setup = (overrides = {}) =>
@@ -60,19 +64,22 @@ describe('useViewportActions', () => {
   describe('handleZoomToSelection', () => {
     it('zooms to selection bounds when bounds exist', () => {
       const bounds: IBounds = { x1: 0, y1: 0, x2: 100, y2: 100 };
-      mockGetSelectionBounds.mockReturnValue(bounds);
+      mockGetSelectionBoundsFromRecord.mockReturnValue(bounds);
       const { result } = setup();
 
       act(() => {
         result.current.handleZoomToSelection();
       });
 
-      expect(mockGetSelectionBounds).toHaveBeenCalledWith(objects, new Set(['a']));
+      expect(mockGetSelectionBoundsFromRecord).toHaveBeenCalledWith(
+        objectsRecord,
+        new Set(['a'])
+      );
       expect(mockZoomToFitBounds).toHaveBeenCalledWith(bounds);
     });
 
     it('does nothing when no selection bounds', () => {
-      mockGetSelectionBounds.mockReturnValue(null);
+      mockGetSelectionBoundsFromRecord.mockReturnValue(null);
       const { result } = setup();
 
       act(() => {
@@ -86,19 +93,19 @@ describe('useViewportActions', () => {
   describe('handleZoomToFitAll', () => {
     it('zooms to board bounds when objects exist', () => {
       const bounds: IBounds = { x1: 0, y1: 0, x2: 250, y2: 250 };
-      mockGetBoardBounds.mockReturnValue(bounds);
+      mockGetBoardBoundsFromRecord.mockReturnValue(bounds);
       const { result } = setup();
 
       act(() => {
         result.current.handleZoomToFitAll();
       });
 
-      expect(mockGetBoardBounds).toHaveBeenCalledWith(objects);
+      expect(mockGetBoardBoundsFromRecord).toHaveBeenCalledWith(objectsRecord);
       expect(mockZoomToFitBounds).toHaveBeenCalledWith(bounds);
     });
 
     it('resets viewport when board is empty', () => {
-      mockGetBoardBounds.mockReturnValue(null);
+      mockGetBoardBoundsFromRecord.mockReturnValue(null);
       const { result } = setup();
 
       act(() => {
@@ -137,19 +144,19 @@ describe('useViewportActions', () => {
   describe('handleZoomToObjectIds', () => {
     it('zooms to bounds of specified object IDs', () => {
       const bounds: IBounds = { x1: 200, y1: 200, x2: 250, y2: 250 };
-      mockGetSelectionBounds.mockReturnValue(bounds);
+      mockGetSelectionBoundsFromRecord.mockReturnValue(bounds);
       const { result } = setup();
 
       act(() => {
         result.current.handleZoomToObjectIds(['b']);
       });
 
-      expect(mockGetSelectionBounds).toHaveBeenCalledWith(objects, ['b']);
+      expect(mockGetSelectionBoundsFromRecord).toHaveBeenCalledWith(objectsRecord, ['b']);
       expect(mockZoomToFitBounds).toHaveBeenCalledWith(bounds);
     });
 
     it('does nothing when no bounds for given IDs', () => {
-      mockGetSelectionBounds.mockReturnValue(null);
+      mockGetSelectionBoundsFromRecord.mockReturnValue(null);
       const { result } = setup();
 
       act(() => {

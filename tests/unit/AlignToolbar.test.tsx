@@ -36,9 +36,10 @@ describe('AlignToolbar', () => {
       createMockObject('a', 0, 0, 50, 40),
       createMockObject('b', 100, 50, 50, 40),
     ];
+    const selectedObjects = objects.filter((o) => ['a'].includes(o.id));
     const { container } = render(
       <AlignToolbar
-        objects={objects}
+        selectedObjects={selectedObjects}
         selectedIds={['a']}
         onObjectUpdate={mockOnObjectUpdate}
         canEdit={true}
@@ -53,9 +54,10 @@ describe('AlignToolbar', () => {
       createMockObject('a', 0, 0, 50, 40),
       createMockObject('b', 100, 50, 50, 40),
     ];
+    const selectedObjects = objects.filter((o) => ['a', 'b'].includes(o.id));
     render(
       <AlignToolbar
-        objects={objects}
+        selectedObjects={selectedObjects}
         selectedIds={['a', 'b']}
         onObjectUpdate={mockOnObjectUpdate}
         canEdit={true}
@@ -71,9 +73,10 @@ describe('AlignToolbar', () => {
       createMockObject('a', 0, 0, 50, 40),
       createMockObject('b', 100, 50, 50, 40),
     ];
+    const selectedObjects = objects.filter((o) => ['a', 'b'].includes(o.id));
     const { container } = render(
       <AlignToolbar
-        objects={objects}
+        selectedObjects={selectedObjects}
         selectedIds={['a', 'b']}
         onObjectUpdate={mockOnObjectUpdate}
         canEdit={false}
@@ -87,9 +90,10 @@ describe('AlignToolbar', () => {
       createMockObject('a', 50, 0, 50, 40),
       createMockObject('b', 200, 80, 60, 40),
     ];
+    const selectedObjects = objects.filter((o) => ['a', 'b'].includes(o.id));
     render(
       <AlignToolbar
-        objects={objects}
+        selectedObjects={selectedObjects}
         selectedIds={['a', 'b']}
         onObjectUpdate={mockOnObjectUpdate}
         canEdit={true}
@@ -106,9 +110,10 @@ describe('AlignToolbar', () => {
       createMockObject('a', 0, 100, 50, 40),
       createMockObject('b', 80, 20, 50, 40),
     ];
+    const selectedObjects = objects.filter((o) => ['a', 'b'].includes(o.id));
     render(
       <AlignToolbar
-        objects={objects}
+        selectedObjects={selectedObjects}
         selectedIds={['a', 'b']}
         onObjectUpdate={mockOnObjectUpdate}
         canEdit={true}
@@ -125,9 +130,10 @@ describe('AlignToolbar', () => {
       createMockObject('a', 0, 0, 50, 40),
       createMockObject('b', 100, 50, 50, 40),
     ];
+    const selectedObjects = objects.filter((o) => ['a', 'b'].includes(o.id));
     render(
       <AlignToolbar
-        objects={objects}
+        selectedObjects={selectedObjects}
         selectedIds={['a', 'b']}
         onObjectUpdate={mockOnObjectUpdate}
         canEdit={true}
@@ -143,9 +149,10 @@ describe('AlignToolbar', () => {
       createMockObject('b', 100, 0, 50, 40),
       createMockObject('c', 200, 0, 50, 40),
     ];
+    const selectedObjects = objects.filter((o) => ['a', 'b', 'c'].includes(o.id));
     render(
       <AlignToolbar
-        objects={objects}
+        selectedObjects={selectedObjects}
         selectedIds={['a', 'b', 'c']}
         onObjectUpdate={mockOnObjectUpdate}
         canEdit={true}

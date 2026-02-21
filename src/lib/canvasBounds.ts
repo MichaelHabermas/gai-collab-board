@@ -100,6 +100,55 @@ export function isPointInBounds(px: number, py: number, bounds: IBounds): boolea
 }
 
 /**
+ * Returns the axis-aligned bounding box of selected objects by ID from a record.
+ * O(selected) — no full-array conversion. Use when only selected bounds are needed.
+ */
+export function getSelectionBoundsFromRecord(
+  record: Record<string, IBoardObject>,
+  selectedIds: ReadonlySet<string> | string[]
+): IBounds | null {
+  const idSet = selectedIds instanceof Set ? selectedIds : new Set(selectedIds);
+  if (idSet.size === 0) {
+    return null;
+  }
+
+  let minX = Number.POSITIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+  let found = 0;
+
+  for (const id of idSet) {
+    const obj = record[id];
+    if (!obj) {
+      continue;
+    }
+
+    const b = getObjectBounds(obj);
+    minX = Math.min(minX, b.x1);
+    minY = Math.min(minY, b.y1);
+    maxX = Math.max(maxX, b.x2);
+    maxY = Math.max(maxY, b.y2);
+    found += 1;
+  }
+
+  if (found === 0) {
+    return null;
+  }
+
+  return { x1: minX, y1: minY, x2: maxX, y2: maxY };
+}
+
+/**
+ * Returns the axis-aligned bounding box of all board objects in a record, or null if empty.
+ * Does Object.values inside — use only when user triggers zoom-to-fit or export (not on every render).
+ */
+export function getBoardBoundsFromRecord(record: Record<string, IBoardObject>): IBounds | null {
+  const objects = Object.values(record);
+  return getBoardBounds(objects);
+}
+
+/**
  * Returns the axis-aligned bounding box of all board objects, or null if board is empty.
  */
 export function getBoardBounds(objects: IBoardObject[]): IBounds | null {
