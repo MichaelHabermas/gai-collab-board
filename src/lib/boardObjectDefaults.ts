@@ -7,6 +7,8 @@ export const DEFAULT_HEIGHT = 200;
 
 export const DEFAULT_STICKY_WIDTH = DEFAULT_WIDTH;
 export const DEFAULT_STICKY_HEIGHT = DEFAULT_HEIGHT;
+/** Default sticky note text when user does not specify content (e.g. "add a note"). */
+export const DEFAULT_STICKY_TEXT = 'New note';
 
 /** Default size for rectangle (square) shape when not specified. */
 export const DEFAULT_RECTANGLE_WIDTH = DEFAULT_WIDTH;

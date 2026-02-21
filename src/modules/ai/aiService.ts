@@ -73,6 +73,7 @@ Always prefer compound tools over multiple atomic calls when the user requests a
 4. Spacing: 20-50px between objects, 30px frame padding
 5. Use connectSequence for chains instead of individual createConnector calls
 6. Use batchCreate/batchUpdate for bulk operations instead of individual calls
+7. For create tools, omit any parameter the user did not specify; the backend fills them from templates and auto-placement
 
 ## Response Style
 - Brief, natural confirmation of what you did

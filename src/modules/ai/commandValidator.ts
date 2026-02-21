@@ -60,25 +60,27 @@ function collectCreateErrors(payload: Record<string, unknown>): string[] {
     errors.push(`CREATE payload.type must be one of: ${[...VALID_SHAPE_TYPES].join(', ')}`);
   }
 
-  if (!isNumber(payload.x)) {
-    errors.push('CREATE payload.x must be a number');
+  /* eslint-disable local/prefer-falsy-over-explicit-nullish -- 0 and NaN are meaningful here */
+  if (payload.x !== undefined && !isNumber(payload.x)) {
+    errors.push('CREATE payload.x must be a number when provided');
   }
 
-  if (!isNumber(payload.y)) {
-    errors.push('CREATE payload.y must be a number');
+  if (payload.y !== undefined && !isNumber(payload.y)) {
+    errors.push('CREATE payload.y must be a number when provided');
   }
 
-  if (!isNumber(payload.width)) {
-    errors.push('CREATE payload.width must be a number');
+  if (payload.width !== undefined && !isNumber(payload.width)) {
+    errors.push('CREATE payload.width must be a number when provided');
   }
 
-  if (!isNumber(payload.height)) {
-    errors.push('CREATE payload.height must be a number');
+  if (payload.height !== undefined && !isNumber(payload.height)) {
+    errors.push('CREATE payload.height must be a number when provided');
   }
 
-  if (!isString(payload.fill)) {
-    errors.push('CREATE payload.fill must be a string');
+  if (payload.fill !== undefined && !isString(payload.fill)) {
+    errors.push('CREATE payload.fill must be a string when provided');
   }
+  /* eslint-enable local/prefer-falsy-over-explicit-nullish */
 
   return errors;
 }

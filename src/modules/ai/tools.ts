@@ -6,42 +6,41 @@ export const boardTools: ChatCompletionTool[] = [
     function: {
       name: 'createStickyNote',
       description:
-        'Creates a new sticky note on the board with specified text, position, and color. Optionally set font size, font color, and opacity.',
+        'Creates a new sticky note on the board. Omitted parameters use built-in defaults; do not ask the user for them.',
       parameters: {
         type: 'object',
         properties: {
           text: {
             type: 'string',
-            description: 'The text content of the sticky note',
+            description: 'The text content of the sticky note. Omit for default.',
           },
           x: {
             type: 'number',
-            description: 'X coordinate position on the board',
+            description: 'X coordinate. Omit for auto-placement.',
           },
           y: {
             type: 'number',
-            description: 'Y coordinate position on the board',
+            description: 'Y coordinate. Omit for auto-placement.',
           },
           color: {
             type: 'string',
             description:
-              'Background color: use a color name (yellow, pink, blue, green, purple, orange, red) or a hex code (e.g. #fef08a).',
+              'Background color: use a color name (yellow, pink, blue, green, purple, orange, red) or a hex code (e.g. #fef08a). Omit for default.',
           },
           fontSize: {
             type: 'number',
-            description: 'Font size in pixels (e.g. 14–72). Omit for default (14).',
+            description: 'Font size in pixels (e.g. 14–72). Omit for default.',
           },
           fontColor: {
             type: 'string',
-            description: 'Font color as hex (e.g. #1e293b) or named color.',
+            description: 'Font color as hex (e.g. #1e293b) or named color. Omit for default.',
           },
           opacity: {
             type: 'number',
-            description:
-              'Opacity of the sticky note from 0 to 1 (e.g. 0.75 for 75%). Omit for fully opaque (1).',
+            description: 'Opacity 0–1. Omit for default (1).',
           },
         },
-        required: ['text', 'x', 'y'],
+        required: [],
       },
     },
   },
@@ -49,7 +48,8 @@ export const boardTools: ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'createShape',
-      description: 'Creates a new shape (rectangle, circle, or line) on the board',
+      description:
+        'Creates a new shape (rectangle, circle, or line) on the board. Omitted parameters use built-in defaults; do not ask the user for them.',
       parameters: {
         type: 'object',
         properties: {
@@ -58,22 +58,22 @@ export const boardTools: ChatCompletionTool[] = [
             enum: ['rectangle', 'circle', 'line'],
             description: 'The type of shape to create',
           },
-          x: { type: 'number', description: 'X coordinate position' },
-          y: { type: 'number', description: 'Y coordinate position' },
+          x: { type: 'number', description: 'X coordinate. Omit for auto-placement.' },
+          y: { type: 'number', description: 'Y coordinate. Omit for auto-placement.' },
           width: {
             type: 'number',
-            description: 'Width of the shape (for rectangle/line)',
+            description: 'Width of the shape. Omit for default.',
           },
           height: {
             type: 'number',
-            description: 'Height of the shape (for rectangle/circle)',
+            description: 'Height of the shape. Omit for default.',
           },
           color: {
             type: 'string',
-            description: 'Fill color of the shape',
+            description: 'Fill color. Omit for default.',
           },
         },
-        required: ['type', 'x', 'y', 'width', 'height'],
+        required: ['type'],
       },
     },
   },
@@ -81,7 +81,8 @@ export const boardTools: ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'createFrame',
-      description: 'Creates a frame to group and organize content areas',
+      description:
+        'Creates a frame to group and organize content areas. Omitted parameters use built-in defaults; do not ask the user for them.',
       parameters: {
         type: 'object',
         properties: {
@@ -89,18 +90,18 @@ export const boardTools: ChatCompletionTool[] = [
             type: 'string',
             description: 'Title of the frame',
           },
-          x: { type: 'number', description: 'X coordinate position' },
-          y: { type: 'number', description: 'Y coordinate position' },
+          x: { type: 'number', description: 'X coordinate. Omit for auto-placement.' },
+          y: { type: 'number', description: 'Y coordinate. Omit for auto-placement.' },
           width: {
             type: 'number',
-            description: 'Width of the frame. Optional; default 300 if omitted.',
+            description: 'Width. Omit for default.',
           },
           height: {
             type: 'number',
-            description: 'Height of the frame. Optional; default 200 if omitted.',
+            description: 'Height. Omit for default.',
           },
         },
-        required: ['title', 'x', 'y'],
+        required: ['title'],
       },
     },
   },
@@ -144,20 +145,21 @@ export const boardTools: ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'createText',
-      description: 'Creates a standalone text element on the board',
+      description:
+        'Creates a standalone text element on the board. Omitted parameters use built-in defaults; do not ask the user for them.',
       parameters: {
         type: 'object',
         properties: {
           text: { type: 'string', description: 'The text content' },
-          x: { type: 'number', description: 'X coordinate position' },
-          y: { type: 'number', description: 'Y coordinate position' },
+          x: { type: 'number', description: 'X coordinate. Omit for auto-placement.' },
+          y: { type: 'number', description: 'Y coordinate. Omit for auto-placement.' },
           fontSize: {
             type: 'number',
-            description: 'Font size in pixels',
+            description: 'Font size in pixels. Omit for default.',
           },
-          color: { type: 'string', description: 'Text color' },
+          color: { type: 'string', description: 'Text color. Omit for default.' },
         },
-        required: ['text', 'x', 'y'],
+        required: ['text'],
       },
     },
   },

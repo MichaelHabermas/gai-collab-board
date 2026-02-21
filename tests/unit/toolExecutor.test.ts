@@ -160,6 +160,22 @@ describe('toolExecutor', () => {
       });
     });
 
+    it('uses default text when text is omitted (e.g. "add a note")', async () => {
+      const { execute } = createToolExecutor(createContext());
+      await execute({
+        name: 'createStickyNote',
+        arguments: {},
+      });
+      expect(mockCreateObject).toHaveBeenCalledWith(
+        mockBoardId,
+        expect.objectContaining({
+          type: 'sticky',
+          text: 'New note',
+          createdBy: mockUserId,
+        })
+      );
+    });
+
     it('resolves color names (e.g. red, blue) to hex', async () => {
       const { execute } = createToolExecutor(createContext());
       await execute({

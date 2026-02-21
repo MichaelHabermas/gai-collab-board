@@ -8,9 +8,10 @@ import {
 } from '@/modules/sync/userPreferencesService';
 import { getAnchorPosition } from '@/lib/connectorAnchors';
 import { computeAlignUpdates, computeDistributeUpdates } from '@/lib/alignDistribute';
-import { STICKY_COLORS } from '@/lib/boardObjectDefaults';
+import { STICKY_COLORS, DEFAULT_STICKY_TEXT } from '@/lib/boardObjectDefaults';
 import { createCompoundExecutor, COMPOUND_TOOL_NAMES } from './compoundExecutor';
 import { createBoardStateManager, type IBoardStateProvider } from '@/lib/boardStateManager';
+import { findOpenSpace } from './layouts';
 import {
   mergeWithTemplate,
   STICKY_TEMPLATE,
@@ -114,21 +115,22 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
       case 'createStickyNote': {
         const {
           text,
-          x,
-          y,
+          x: rawX,
+          y: rawY,
           color,
           fontSize: rawFontSize,
           fontColor,
           opacity: rawOpacity,
         } = tool.arguments as {
-          text: string;
-          x: number;
-          y: number;
+          text?: string;
+          x?: number;
+          y?: number;
           color?: string;
           fontSize?: number;
           fontColor?: string;
           opacity?: number;
         };
+        const stickyText = text && text !== '' ? text : DEFAULT_STICKY_TEXT;
         const MIN_FONT_SIZE = 8;
         const MAX_FONT_SIZE = 72;
         const clampedFontSize = rawFontSize
@@ -142,27 +144,40 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           ...(clampedOpacity !== undefined && { opacity: clampedOpacity }),
         };
         const merged = mergeWithTemplate(STICKY_TEMPLATE, userProvided);
+
+        const needsPlacement = rawX === undefined || rawY === undefined;
+        const pos = needsPlacement
+          ? findOpenSpace(getObjects(), merged.width, merged.height)
+          : { x: rawX, y: rawY };
+
         const obj = await ctx.createObject(boardId, {
           type: 'sticky',
-          x,
-          y,
+          x: pos.x,
+          y: pos.y,
           width: merged.width,
           height: merged.height,
           fill: merged.fill,
-          text,
+          text: stickyText,
           createdBy,
           ...(userProvided.textFill !== undefined && { textFill: merged.textFill }),
           ...(userProvided.fontSize !== undefined && { fontSize: merged.fontSize }),
           ...(userProvided.opacity !== undefined && { opacity: merged.opacity }),
         });
-        return { id: obj.id, success: true, message: `Created sticky note: '${text}'` };
+        return { id: obj.id, success: true, message: `Created sticky note: '${stickyText}'` };
       }
 
       case 'createShape': {
-        const { type, x, y, width, height, color } = tool.arguments as {
+        const {
+          type,
+          x: rawX,
+          y: rawY,
+          width,
+          height,
+          color,
+        } = tool.arguments as {
           type: 'rectangle' | 'circle' | 'line';
-          x: number;
-          y: number;
+          x?: number;
+          y?: number;
           width?: number;
           height?: number;
           color?: string;
@@ -175,11 +190,17 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           ...(color !== undefined && { fill: color }),
         };
         const merged = mergeWithTemplate(template, userProvided);
+
+        const needsPlacement = rawX === undefined || rawY === undefined;
+        const pos = needsPlacement
+          ? findOpenSpace(getObjects(), merged.width, merged.height)
+          : { x: rawX, y: rawY };
+
         const points = type === 'line' ? [0, 0, merged.width, merged.height] : undefined;
         const obj = await ctx.createObject(boardId, {
           type: shapeType,
-          x,
-          y,
+          x: pos.x,
+          y: pos.y,
           width: merged.width,
           height: merged.height,
           fill: merged.fill,
@@ -190,10 +211,16 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
       }
 
       case 'createFrame': {
-        const { title, x, y, width, height } = tool.arguments as {
+        const {
+          title,
+          x: rawX,
+          y: rawY,
+          width,
+          height,
+        } = tool.arguments as {
           title: string;
-          x: number;
-          y: number;
+          x?: number;
+          y?: number;
           width?: number;
           height?: number;
         };
@@ -202,10 +229,16 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           ...(height !== undefined && { height }),
         };
         const merged = mergeWithTemplate(FRAME_TEMPLATE, userProvided);
+
+        const needsPlacement = rawX === undefined || rawY === undefined;
+        const pos = needsPlacement
+          ? findOpenSpace(getObjects(), merged.width, merged.height)
+          : { x: rawX, y: rawY };
+
         const obj = await ctx.createObject(boardId, {
           type: 'frame',
-          x,
-          y,
+          x: pos.x,
+          y: pos.y,
           width: merged.width,
           height: merged.height,
           fill: merged.fill,
@@ -275,10 +308,16 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
       }
 
       case 'createText': {
-        const { text, x, y, fontSize, color } = tool.arguments as {
+        const {
+          text,
+          x: rawX,
+          y: rawY,
+          fontSize,
+          color,
+        } = tool.arguments as {
           text: string;
-          x: number;
-          y: number;
+          x?: number;
+          y?: number;
           fontSize?: number;
           color?: string;
         };
@@ -287,14 +326,20 @@ export const createToolExecutor = (ctx: IToolExecutorContext) => {
           ...(color !== undefined && { fill: color }),
         };
         const merged = mergeWithTemplate(TEXT_TEMPLATE, userProvided);
-        const width = Math.max(50, text.length * merged.fontSize * 0.6);
-        const height = merged.fontSize * 1.5;
+        const textWidth = Math.max(50, text.length * merged.fontSize * 0.6);
+        const textHeight = merged.fontSize * 1.5;
+
+        const needsPlacement = rawX === undefined || rawY === undefined;
+        const pos = needsPlacement
+          ? findOpenSpace(getObjects(), textWidth, textHeight)
+          : { x: rawX, y: rawY };
+
         const obj = await ctx.createObject(boardId, {
           type: 'text',
-          x,
-          y,
-          width,
-          height,
+          x: pos.x,
+          y: pos.y,
+          width: textWidth,
+          height: textHeight,
           fill: merged.fill,
           text,
           fontSize: merged.fontSize,

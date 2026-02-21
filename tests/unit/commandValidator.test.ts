@@ -106,14 +106,11 @@ describe('validateCommand', () => {
       }
     });
 
-    it('rejects missing x', () => {
-      const { x: _, ...payloadWithoutX } = validCreate.payload;
-      const result = validateCommand({ action: 'CREATE', payload: payloadWithoutX });
+    it('accepts CREATE without x/y (optional, filled by executor)', () => {
+      const { x: _, y: _y, ...payloadWithoutXY } = validCreate.payload;
+      const result = validateCommand({ action: 'CREATE', payload: payloadWithoutXY });
 
-      expect(result.valid).toBe(false);
-      if (!result.valid) {
-        expect(result.errors).toEqual(expect.arrayContaining([expect.stringMatching(/x must be/)]));
-      }
+      expect(result.valid).toBe(true);
     });
 
     it('rejects non-numeric width', () => {
@@ -130,16 +127,11 @@ describe('validateCommand', () => {
       }
     });
 
-    it('rejects missing fill', () => {
+    it('accepts CREATE without fill (optional, filled by executor)', () => {
       const { fill: _, ...payloadWithoutFill } = validCreate.payload;
       const result = validateCommand({ action: 'CREATE', payload: payloadWithoutFill });
 
-      expect(result.valid).toBe(false);
-      if (!result.valid) {
-        expect(result.errors).toEqual(
-          expect.arrayContaining([expect.stringMatching(/fill must be/)])
-        );
-      }
+      expect(result.valid).toBe(true);
     });
 
     it('collects multiple errors at once', () => {

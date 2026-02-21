@@ -251,11 +251,11 @@ describe('createCommandDispatcher', () => {
       expect(repo.createObject).not.toHaveBeenCalled();
     });
 
-    it('returns validation error for missing fields', async () => {
+    it('returns validation error for invalid type', async () => {
       const dispatcher = makeDispatcher();
       const result = await dispatcher.applyRaw({
         action: 'CREATE',
-        payload: { type: 'sticky' },
+        payload: { type: 'invalid_type' },
       });
 
       expect(result.success).toBe(false);
