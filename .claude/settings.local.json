@@ -35,7 +35,9 @@
       "Bash(gh pr list:*)",
       "Bash(xargs:*)",
       "Bash(node -e:*)",
-      "Bash(bunx tsx:*)"
+      "Bash(bunx tsx:*)",
+      "Bash(Select-Object Name)",
+      "Bash(sort:*)"
     ]
   },
   "hooks": {

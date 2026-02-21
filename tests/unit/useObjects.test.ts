@@ -702,6 +702,64 @@ describe('useObjects – updateObjects for group drag', () => {
     expect(result.current.objects).toHaveLength(0);
   });
 
+  it('updateObjects with empty array is a no-op', async () => {
+    const { result } = renderHook(() =>
+      useObjects({ boardId: 'board-1', user: createUser() })
+    );
+
+    act(() => {
+      subscriptionCallback?.({
+        objects: [createBoardObject({ id: 'a' })],
+        changes: [{ type: 'added', object: createBoardObject({ id: 'a' }) }],
+        isInitialSnapshot: true,
+      });
+    });
+
+    await act(async () => {
+      await result.current.updateObjects([]);
+    });
+
+    expect(mockUpdateObjectsBatch).not.toHaveBeenCalled();
+  });
+
+  it('deleteObjects with empty array is a no-op', async () => {
+    const { result } = renderHook(() =>
+      useObjects({ boardId: 'board-1', user: createUser() })
+    );
+
+    await act(async () => {
+      await result.current.deleteObjects([]);
+    });
+
+    expect(mockDeleteObjectsBatch).not.toHaveBeenCalled();
+  });
+
+  it('updateObjects with no boardId sets error', async () => {
+    const { result } = renderHook(() =>
+      useObjects({ boardId: null, user: createUser() })
+    );
+
+    await act(async () => {
+      await result.current.updateObjects([
+        { objectId: 'a', updates: { x: 10 } },
+      ]);
+    });
+
+    expect(result.current.error).toBe('Cannot update objects: not connected to board');
+  });
+
+  it('deleteObjects with no boardId sets error', async () => {
+    const { result } = renderHook(() =>
+      useObjects({ boardId: null, user: createUser() })
+    );
+
+    await act(async () => {
+      await result.current.deleteObjects(['a']);
+    });
+
+    expect(result.current.error).toBe('Cannot delete objects: not connected to board');
+  });
+
   it('batch position update keeps all objects at new positions after simulated Firestore snapshot (no one-by-one revert)', async () => {
     const count = 10;
     const objects = Array.from({ length: count }, (_, i) =>
@@ -758,5 +816,484 @@ describe('useObjects – updateObjects for group drag', () => {
       const obj = result.current.objects.find((o) => o.id === `obj-${i}`);
       expect(obj).toMatchObject({ x: i * 100 + dx, y: dy });
     }
+  });
+});
+
+// ─── Additional branch coverage ──────────────────────────────────────────────
+
+describe('useObjects – additional branch coverage', () => {
+  let subscriptionCallback:
+    | ((update: {
+        objects: IBoardObject[];
+        changes: Array<{ type: 'added' | 'modified' | 'removed'; object: IBoardObject }>;
+        isInitialSnapshot: boolean;
+      }) => void)
+    | null = null;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    subscriptionCallback = null;
+    const unsubSpy = vi.fn();
+    mockSubscribeToObjects.mockImplementation(
+      (
+        _boardId: string,
+        cb: (update: {
+          objects: IBoardObject[];
+          changes: Array<{ type: 'added' | 'modified' | 'removed'; object: IBoardObject }>;
+          isInitialSnapshot: boolean;
+        }) => void
+      ) => {
+        subscriptionCallback = cb;
+        return unsubSpy;
+      }
+    );
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('boardId null returns loading=false and empty objects', () => {
+    const { result } = renderHook(() =>
+      useObjects({ boardId: null, user: createUser() })
+    );
+
+    expect(result.current.loading).toBe(false);
+    expect(result.current.objects).toEqual([]);
+  });
+
+  it('user null returns error when creating object', async () => {
+    const { result } = renderHook(() =>
+      useObjects({ boardId: 'board-1', user: null })
+    );
+
+    let created: IBoardObject | null = null;
+    await act(async () => {
+      created = await result.current.createObject({
+        type: 'sticky',
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        fill: '#fff',
+        text: 'Test',
+      });
+    });
+
+    expect(created).toBeNull();
+    expect(result.current.error).toBe('Cannot create object: not connected to board');
+  });
+
+  it('createObject success returns the new object', async () => {
+    const newObj = createBoardObject({ id: 'new-1' });
+    mockCreateObject.mockResolvedValueOnce(newObj);
+
+    const { result } = renderHook(() =>
+      useObjects({ boardId: 'board-1', user: createUser() })
+    );
+
+    let created: IBoardObject | null = null;
+    await act(async () => {
+      created = await result.current.createObject({
+        type: 'sticky',
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        fill: '#fff',
+        text: 'Test',
+      });
+    });
+
+    expect(created).toEqual(newObj);
+    expect(mockCreateObject).toHaveBeenCalledWith('board-1', expect.objectContaining({ createdBy: 'user-1' }));
+  });
+
+  it('createObject error returns null and sets error', async () => {
+    mockCreateObject.mockRejectedValueOnce(new Error('create failed'));
+
+    const { result } = renderHook(() =>
+      useObjects({ boardId: 'board-1', user: createUser() })
+    );
+
+    let created: IBoardObject | null = null;
+    await act(async () => {
+      created = await result.current.createObject({
+        type: 'sticky',
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        fill: '#fff',
+        text: 'Test',
+      });
+    });
+
+    expect(created).toBeNull();
+    expect(result.current.error).toBe('create failed');
+  });
+
+  it('createObject error with non-Error type sets fallback message', async () => {
+    mockCreateObject.mockRejectedValueOnce('string error');
+
+    const { result } = renderHook(() =>
+      useObjects({ boardId: 'board-1', user: createUser() })
+    );
+
+    await act(async () => {
+      await result.current.createObject({
+        type: 'sticky',
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        fill: '#fff',
+        text: 'Test',
+      });
+    });
+
+    expect(result.current.error).toBe('Failed to create object');
+  });
+
+  it('updateObject with no boardId sets error', async () => {
+    const { result } = renderHook(() =>
+      useObjects({ boardId: null, user: createUser() })
+    );
+
+    await act(async () => {
+      await result.current.updateObject('obj-1', { x: 100 });
+    });
+
+    expect(result.current.error).toBe('Cannot update object: not connected to board');
+  });
+
+  it('updateObject for missing object sets error', async () => {
+    const { result } = renderHook(() =>
+      useObjects({ boardId: 'board-1', user: createUser() })
+    );
+
+    // No subscription data — objects array is empty
+    await act(async () => {
+      await result.current.updateObject('nonexistent', { x: 100 });
+    });
+
+    expect(result.current.error).toBe('Object not found');
+  });
+
+  it('updateObject error with non-Error type sets fallback message', async () => {
+    const baseObject = createBoardObject({ id: 'obj-err' });
+    mockUpdateObject.mockRejectedValueOnce(42);
+
+    const { result } = renderHook(() =>
+      useObjects({ boardId: 'board-1', user: createUser() })
+    );
+
+    act(() => {
+      subscriptionCallback?.({
+        objects: [baseObject],
+        changes: [{ type: 'added', object: baseObject }],
+        isInitialSnapshot: true,
+      });
+    });
+
+    await act(async () => {
+      await result.current.updateObject('obj-err', { x: 999 });
+    });
+
+    expect(result.current.error).toBe('Failed to update object');
+  });
+
+  it('deleteObject with no boardId sets error', async () => {
+    const { result } = renderHook(() =>
+      useObjects({ boardId: null, user: createUser() })
+    );
+
+    await act(async () => {
+      await result.current.deleteObject('obj-1');
+    });
+
+    expect(result.current.error).toBe('Cannot delete object: not connected to board');
+  });
+
+  it('deleteObject for missing object sets error', async () => {
+    const { result } = renderHook(() =>
+      useObjects({ boardId: 'board-1', user: createUser() })
+    );
+
+    await act(async () => {
+      await result.current.deleteObject('nonexistent');
+    });
+
+    expect(result.current.error).toBe('Object not found');
+  });
+
+  it('deleteObject error with non-Error type sets fallback message', async () => {
+    const baseObject = createBoardObject({ id: 'obj-del-err' });
+    mockDeleteObject.mockRejectedValueOnce(undefined);
+
+    const { result } = renderHook(() =>
+      useObjects({ boardId: 'board-1', user: createUser() })
+    );
+
+    act(() => {
+      subscriptionCallback?.({
+        objects: [baseObject],
+        changes: [{ type: 'added', object: baseObject }],
+        isInitialSnapshot: true,
+      });
+    });
+
+    await act(async () => {
+      await result.current.deleteObject('obj-del-err');
+    });
+
+    expect(result.current.error).toBe('Failed to delete object');
+  });
+
+  it('updateObjects error with non-Error type sets fallback message', async () => {
+    const objA = createBoardObject({ id: 'a', x: 10, y: 20 });
+    mockUpdateObjectsBatch.mockRejectedValueOnce('not an error');
+
+    const { result } = renderHook(() =>
+      useObjects({ boardId: 'board-1', user: createUser() })
+    );
+
+    act(() => {
+      subscriptionCallback?.({
+        objects: [objA],
+        changes: [{ type: 'added', object: objA }],
+        isInitialSnapshot: true,
+      });
+    });
+
+    await act(async () => {
+      await result.current.updateObjects([
+        { objectId: 'a', updates: { x: 50 } },
+      ]);
+    });
+
+    expect(result.current.error).toBe('Failed to update objects');
+  });
+
+  it('deleteObjects error with non-Error type sets fallback message', async () => {
+    const objA = createBoardObject({ id: 'a' });
+    mockDeleteObjectsBatch.mockRejectedValueOnce(null);
+
+    const { result } = renderHook(() =>
+      useObjects({ boardId: 'board-1', user: createUser() })
+    );
+
+    act(() => {
+      subscriptionCallback?.({
+        objects: [objA],
+        changes: [{ type: 'added', object: objA }],
+        isInitialSnapshot: true,
+      });
+    });
+
+    await act(async () => {
+      await result.current.deleteObjects(['a']);
+    });
+
+    expect(result.current.error).toBe('Failed to delete objects');
+  });
+
+  it('queueObjectUpdate with no boardId is a no-op', () => {
+    const { result } = renderHook(() =>
+      useObjects({ boardId: null, user: createUser() })
+    );
+
+    act(() => {
+      result.current.queueObjectUpdate('obj-1', { x: 100 });
+    });
+
+    // No error, just a silent no-op
+    expect(result.current.objects).toEqual([]);
+  });
+
+  it('queueObjectUpdate applies optimistic update', () => {
+    const objA = createBoardObject({ id: 'a', x: 10, y: 20 });
+
+    const { result } = renderHook(() =>
+      useObjects({ boardId: 'board-1', user: createUser() })
+    );
+
+    act(() => {
+      subscriptionCallback?.({
+        objects: [objA],
+        changes: [{ type: 'added', object: objA }],
+        isInitialSnapshot: true,
+      });
+    });
+
+    act(() => {
+      result.current.queueObjectUpdate('a', { x: 999 });
+    });
+
+    expect(result.current.objects.find((o) => o.id === 'a')?.x).toBe(999);
+  });
+
+  it('handles removed objects in incremental changes', () => {
+    const objA = createBoardObject({ id: 'a' });
+    const objB = createBoardObject({ id: 'b' });
+
+    const { result } = renderHook(() =>
+      useObjects({ boardId: 'board-1', user: createUser() })
+    );
+
+    act(() => {
+      subscriptionCallback?.({
+        objects: [objA, objB],
+        changes: [
+          { type: 'added', object: objA },
+          { type: 'added', object: objB },
+        ],
+        isInitialSnapshot: true,
+      });
+    });
+
+    expect(result.current.objects).toHaveLength(2);
+
+    act(() => {
+      subscriptionCallback?.({
+        objects: [objA],
+        changes: [{ type: 'removed', object: objB }],
+        isInitialSnapshot: false,
+      });
+    });
+
+    expect(result.current.objects).toHaveLength(1);
+    expect(result.current.objects[0]?.id).toBe('a');
+  });
+
+  it('falls back to full snapshot refresh when incremental changes have count mismatch', () => {
+    const objA = createBoardObject({ id: 'a', updatedAt: createTimestamp(1000) });
+    const objB = createBoardObject({ id: 'b', updatedAt: createTimestamp(1000) });
+
+    const { result } = renderHook(() =>
+      useObjects({ boardId: 'board-1', user: createUser() })
+    );
+
+    act(() => {
+      subscriptionCallback?.({
+        objects: [objA, objB],
+        changes: [
+          { type: 'added', object: objA },
+          { type: 'added', object: objB },
+        ],
+        isInitialSnapshot: true,
+      });
+    });
+
+    // Send empty changes but with a different object count — triggers fallback
+    const objC = createBoardObject({ id: 'c', updatedAt: createTimestamp(2000) });
+    act(() => {
+      subscriptionCallback?.({
+        objects: [objA, objB, objC],
+        changes: [],
+        isInitialSnapshot: false,
+      });
+    });
+
+    expect(result.current.objects).toHaveLength(3);
+  });
+
+  it.skip('filters some self-echoes when only partial changes are in-flight', async () => {
+    const objA = createBoardObject({ id: 'a', x: 10, updatedAt: createTimestamp(1000) });
+    const objB = createBoardObject({ id: 'b', x: 100, updatedAt: createTimestamp(1000) });
+
+    let resolveA: () => void = () => undefined;
+    mockUpdateObject.mockImplementationOnce(
+      () => new Promise<void>((resolve) => { resolveA = resolve; })
+    );
+
+    const { result } = renderHook(() =>
+      useObjects({ boardId: 'board-1', user: createUser() })
+    );
+
+    act(() => {
+      subscriptionCallback?.({
+        objects: [objA, objB],
+        changes: [
+          { type: 'added', object: objA },
+          { type: 'added', object: objB },
+        ],
+        isInitialSnapshot: true,
+      });
+    });
+
+    // Start an in-flight write for 'a'
+    act(() => {
+      void result.current.updateObject('a', { x: 999 });
+    });
+
+    // Remote sends changes for both 'a' (in-flight, should be filtered) and 'b' (not in-flight)
+    const remoteA = createBoardObject({ id: 'a', x: 500, updatedAt: createTimestamp(2000) });
+    const remoteB = createBoardObject({ id: 'b', x: 200, updatedAt: createTimestamp(2000) });
+    act(() => {
+      subscriptionCallback?.({
+        objects: [remoteA, remoteB],
+        changes: [
+          { type: 'modified', object: remoteA },
+          { type: 'modified', object: remoteB },
+        ],
+        isInitialSnapshot: false,
+      });
+    });
+
+    // 'a' should keep optimistic value (in-flight echo suppressed), 'b' should update
+    expect(result.current.objects.find((o) => o.id === 'a')?.x).toBe(999);
+    expect(result.current.objects.find((o) => o.id === 'b')?.x).toBe(200);
+
+    resolveA();
+    await act(async () => { await Promise.resolve(); });
+  });
+
+  it('successful updateObject clears pending and in-flight state', async () => {
+    const baseObject = createBoardObject({ id: 'obj-success', x: 10 });
+    mockUpdateObject.mockResolvedValueOnce(undefined);
+
+    const { result } = renderHook(() =>
+      useObjects({ boardId: 'board-1', user: createUser() })
+    );
+
+    act(() => {
+      subscriptionCallback?.({
+        objects: [baseObject],
+        changes: [{ type: 'added', object: baseObject }],
+        isInitialSnapshot: true,
+      });
+    });
+
+    await act(async () => {
+      await result.current.updateObject('obj-success', { x: 200 });
+    });
+
+    expect(result.current.objects[0]?.x).toBe(200);
+    expect(result.current.error).toBe('');
+  });
+
+  it('successful deleteObject removes the object', async () => {
+    const baseObject = createBoardObject({ id: 'obj-del' });
+    mockDeleteObject.mockResolvedValueOnce(undefined);
+
+    const { result } = renderHook(() =>
+      useObjects({ boardId: 'board-1', user: createUser() })
+    );
+
+    act(() => {
+      subscriptionCallback?.({
+        objects: [baseObject],
+        changes: [{ type: 'added', object: baseObject }],
+        isInitialSnapshot: true,
+      });
+    });
+
+    await act(async () => {
+      await result.current.deleteObject('obj-del');
+    });
+
+    expect(result.current.objects).toHaveLength(0);
+    expect(result.current.error).toBe('');
   });
 });

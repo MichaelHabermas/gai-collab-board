@@ -248,5 +248,140 @@ describe('realtimeService', () => {
 
       expect(color).toMatch(/^#[0-9a-f]{6}$/i);
     });
+
+    it('should produce well-distributed colors across many UIDs', () => {
+      const colors = new Set<string>();
+      // Test with 20 very different UIDs to check distribution
+      for (let i = 0; i < 20; i++) {
+        colors.add(getUserColor(`uid-${String(i)}-${String(i * 17)}`));
+      }
+
+      // With 20 UIDs and 10 colors, we should hit at least 4 distinct colors
+      expect(colors.size).toBeGreaterThanOrEqual(4);
+    });
+
+    it('returns consistent color for empty string UID', () => {
+      const color = getUserColor('');
+      expect(color).toMatch(/^#[0-9a-f]{6}$/i);
+
+      // Same empty string always gives same color
+      expect(getUserColor('')).toBe(color);
+    });
+  });
+
+  // ====================================================================
+  // subscribeToCursors — snapshot.val() paths
+  // ====================================================================
+
+  describe('subscribeToCursors — snapshot handling', () => {
+    it('passes empty object when snapshot value is null', () => {
+      const callback = vi.fn();
+      subscribeToCursors('board-1', callback);
+
+      const onValueCallback = mockOnValue.mock.calls[0]?.[1] as
+        | ((snapshot: { val: () => unknown }) => void)
+        | undefined;
+
+      // Simulate null snapshot (no cursors yet)
+      onValueCallback?.({ val: () => null });
+
+      expect(callback).toHaveBeenCalledWith({});
+    });
+
+    it('passes cursor data when snapshot value has data', () => {
+      const callback = vi.fn();
+      subscribeToCursors('board-1', callback);
+
+      const onValueCallback = mockOnValue.mock.calls[0]?.[1] as
+        | ((snapshot: { val: () => unknown }) => void)
+        | undefined;
+
+      const cursorData = {
+        'user-1': { uid: 'user-1', x: 10, y: 20, displayName: 'Alice', color: '#ff0000' },
+      };
+      onValueCallback?.({ val: () => cursorData });
+
+      expect(callback).toHaveBeenCalledWith(cursorData);
+    });
+  });
+
+  // ====================================================================
+  // subscribeToPresence — snapshot.val() paths
+  // ====================================================================
+
+  describe('subscribeToPresence — snapshot handling', () => {
+    it('passes empty object when snapshot value is null', () => {
+      const callback = vi.fn();
+      subscribeToPresence('board-1', callback);
+
+      const onValueCallback = mockOnValue.mock.calls[0]?.[1] as
+        | ((snapshot: { val: () => unknown }) => void)
+        | undefined;
+
+      onValueCallback?.({ val: () => null });
+
+      expect(callback).toHaveBeenCalledWith({});
+    });
+
+    it('passes presence data when snapshot value has data', () => {
+      const callback = vi.fn();
+      subscribeToPresence('board-1', callback);
+
+      const onValueCallback = mockOnValue.mock.calls[0]?.[1] as
+        | ((snapshot: { val: () => unknown }) => void)
+        | undefined;
+
+      const presenceData = {
+        'user-1': { uid: 'user-1', displayName: 'Alice', online: true },
+      };
+      onValueCallback?.({ val: () => presenceData });
+
+      expect(callback).toHaveBeenCalledWith(presenceData);
+    });
+  });
+
+  // ====================================================================
+  // subscribeToConnectionStatus — val() paths
+  // ====================================================================
+
+  describe('subscribeToConnectionStatus — snapshot handling', () => {
+    it('reports connected when snapshot value is true', () => {
+      const callback = vi.fn();
+      subscribeToConnectionStatus(callback);
+
+      const onValueCallback = mockOnValue.mock.calls[0]?.[1] as
+        | ((snapshot: { val: () => unknown }) => void)
+        | undefined;
+
+      onValueCallback?.({ val: () => true });
+
+      expect(callback).toHaveBeenCalledWith(true);
+    });
+
+    it('reports disconnected when snapshot value is false', () => {
+      const callback = vi.fn();
+      subscribeToConnectionStatus(callback);
+
+      const onValueCallback = mockOnValue.mock.calls[0]?.[1] as
+        | ((snapshot: { val: () => unknown }) => void)
+        | undefined;
+
+      onValueCallback?.({ val: () => false });
+
+      expect(callback).toHaveBeenCalledWith(false);
+    });
+
+    it('reports disconnected when snapshot value is null', () => {
+      const callback = vi.fn();
+      subscribeToConnectionStatus(callback);
+
+      const onValueCallback = mockOnValue.mock.calls[0]?.[1] as
+        | ((snapshot: { val: () => unknown }) => void)
+        | undefined;
+
+      onValueCallback?.({ val: () => null });
+
+      expect(callback).toHaveBeenCalledWith(false);
+    });
   });
 });

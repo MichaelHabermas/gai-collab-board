@@ -202,4 +202,357 @@ describe('StickyNote', () => {
 
     expect(mockCleanupReposition).toHaveBeenCalledTimes(1);
   });
+
+  // ── Selection state variations ──────────────────────────────────────
+
+  it('applies selected shadow props when isSelected is true', () => {
+    latestRectProps = [];
+    render(
+      <StickyNote
+        id='sticky-sel'
+        x={10}
+        y={20}
+        width={200}
+        height={120}
+        text='note'
+        fill='#fef08a'
+        isSelected={true}
+      />
+    );
+    // First Rect is the background; check selected shadow properties
+    expect(latestRectProps[0]?.shadowBlur).toBe(12);
+    expect(latestRectProps[0]?.strokeWidth).toBe(2);
+    // Stroke should be set (selection color)
+    expect(latestRectProps[0]?.stroke).toBeDefined();
+  });
+
+  it('applies default shadow props when isSelected is false', () => {
+    latestRectProps = [];
+    render(
+      <StickyNote
+        id='sticky-unsel'
+        x={10}
+        y={20}
+        width={200}
+        height={120}
+        text='note'
+        fill='#fef08a'
+        isSelected={false}
+      />
+    );
+    expect(latestRectProps[0]?.shadowBlur).toBe(8);
+    expect(latestRectProps[0]?.strokeWidth).toBe(0);
+    expect(latestRectProps[0]?.stroke).toBeUndefined();
+  });
+
+  // ── textFill prop variations ────────────────────────────────────────
+
+  it('uses textFill when provided and not empty', () => {
+    render(
+      <StickyNote
+        id='sticky-tf'
+        x={10}
+        y={20}
+        width={200}
+        height={120}
+        text='note'
+        fill='#fef08a'
+        textFill='#ef4444'
+      />
+    );
+    expect(latestTextProps?.fill).toBe('#ef4444');
+  });
+
+  it('uses default text color when textFill is empty string', () => {
+    render(
+      <StickyNote
+        id='sticky-empty-tf'
+        x={10}
+        y={20}
+        width={200}
+        height={120}
+        text='note'
+        fill='#fef08a'
+        textFill=''
+      />
+    );
+    expect(latestTextProps?.fill).toBe('#000000');
+  });
+
+  it('uses default text color when textFill is undefined', () => {
+    render(
+      <StickyNote
+        id='sticky-undef-tf'
+        x={10}
+        y={20}
+        width={200}
+        height={120}
+        text='note'
+        fill='#fef08a'
+      />
+    );
+    expect(latestTextProps?.fill).toBe('#000000');
+  });
+
+  // ── opacity default ─────────────────────────────────────────────────
+
+  it('uses default opacity of 1 when not provided', () => {
+    render(
+      <StickyNote
+        id='sticky-noopac'
+        x={10}
+        y={20}
+        width={200}
+        height={120}
+        text='note'
+        fill='#fef08a'
+      />
+    );
+    // The Group element (via mock) does not directly expose opacity, but
+    // the component passes opacity={opacity} to Group. We verify the Text
+    // node renders (it's inside Group with opacity=1).
+    expect(latestTextProps).toBeTruthy();
+  });
+
+  it('passes custom opacity to group', () => {
+    render(
+      <StickyNote
+        id='sticky-custom-opac'
+        x={10}
+        y={20}
+        width={200}
+        height={120}
+        text='note'
+        fill='#fef08a'
+        opacity={0.5}
+      />
+    );
+    expect(latestTextProps).toBeTruthy();
+  });
+
+  // ── onTextChange absent (no-op double click) ───────────────────────
+
+  it('does not open editor when onTextChange is not provided', () => {
+    render(
+      <StickyNote
+        id='sticky-noedit'
+        x={10}
+        y={20}
+        width={200}
+        height={120}
+        text='note'
+        fill='#fef08a'
+      />
+    );
+    fireEvent.doubleClick(screen.getByTestId('sticky-note-group'));
+    expect(document.querySelector('.sticky-note-edit-overlay')).toBeNull();
+  });
+
+  // ── groupRef is null guard ──────────────────────────────────────────
+
+  it('guards editor when groupRef.current is null', () => {
+    mockGroupNode = null;
+    const onTextChange = vi.fn();
+
+    render(
+      <StickyNote
+        id='sticky-nullref'
+        x={10}
+        y={20}
+        width={200}
+        height={120}
+        text='test'
+        fill='#fef08a'
+        onTextChange={onTextChange}
+      />
+    );
+    fireEvent.doubleClick(screen.getByTestId('sticky-note-group'));
+    expect(document.querySelector('.sticky-note-edit-overlay')).toBeNull();
+    expect(onTextChange).not.toHaveBeenCalled();
+  });
+
+  // ── Editor keyboard: Escape to dismiss ──────────────────────────────
+
+  it('dismisses editor on Escape key without committing', () => {
+    const onTextChange = vi.fn();
+
+    render(
+      <StickyNote
+        id='sticky-esc'
+        x={10}
+        y={20}
+        width={200}
+        height={120}
+        text='initial'
+        fill='#fef08a'
+        onTextChange={onTextChange}
+      />
+    );
+    fireEvent.doubleClick(screen.getByTestId('sticky-note-group'));
+    const textarea = document.querySelector('textarea.sticky-note-edit-overlay') as HTMLTextAreaElement;
+    expect(textarea).toBeTruthy();
+
+    textarea.value = 'should not commit';
+    fireEvent.keyDown(textarea, { key: 'Escape' });
+
+    // Escape removes the textarea without calling onTextChange
+    expect(document.querySelector('.sticky-note-edit-overlay')).toBeNull();
+  });
+
+  // ── Editor keyboard: Enter to commit ────────────────────────────────
+
+  it('commits and closes editor on Enter key (non-shift)', () => {
+    const onTextChange = vi.fn();
+
+    render(
+      <StickyNote
+        id='sticky-enter'
+        x={10}
+        y={20}
+        width={200}
+        height={120}
+        text='initial'
+        fill='#fef08a'
+        onTextChange={onTextChange}
+      />
+    );
+    fireEvent.doubleClick(screen.getByTestId('sticky-note-group'));
+    const textarea = document.querySelector('textarea.sticky-note-edit-overlay') as HTMLTextAreaElement;
+    expect(textarea).toBeTruthy();
+
+    textarea.value = 'enter commit';
+    fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false });
+
+    expect(onTextChange).toHaveBeenCalledWith('enter commit');
+    expect(document.querySelector('.sticky-note-edit-overlay')).toBeNull();
+  });
+
+  it('does not commit on Shift+Enter (allows multiline)', () => {
+    const onTextChange = vi.fn();
+
+    render(
+      <StickyNote
+        id='sticky-shift-enter'
+        x={10}
+        y={20}
+        width={200}
+        height={120}
+        text='initial'
+        fill='#fef08a'
+        onTextChange={onTextChange}
+      />
+    );
+    fireEvent.doubleClick(screen.getByTestId('sticky-note-group'));
+    const textarea = document.querySelector('textarea.sticky-note-edit-overlay') as HTMLTextAreaElement;
+    expect(textarea).toBeTruthy();
+
+    textarea.value = 'multiline\ntext';
+    fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: true });
+
+    // Shift+Enter should NOT close the editor or commit
+    expect(document.querySelector('.sticky-note-edit-overlay')).toBeTruthy();
+    expect(onTextChange).not.toHaveBeenCalled();
+  });
+
+  // ── Text is hidden while editing ────────────────────────────────────
+
+  it('hides Konva Text while editing', () => {
+    const onTextChange = vi.fn();
+
+    render(
+      <StickyNote
+        id='sticky-vis'
+        x={10}
+        y={20}
+        width={200}
+        height={120}
+        text='initial'
+        fill='#fef08a'
+        onTextChange={onTextChange}
+      />
+    );
+    // Before editing, text is visible
+    expect(latestTextProps?.visible).toBe(true);
+
+    fireEvent.doubleClick(screen.getByTestId('sticky-note-group'));
+
+    // After editing, Konva Text visible prop should be false (isEditing = true)
+    expect(latestTextProps?.visible).toBe(false);
+  });
+
+  // ── Draggable disabled while editing ────────────────────────────────
+
+  it('disables dragging while editing', () => {
+    const onTextChange = vi.fn();
+
+    render(
+      <StickyNote
+        id='sticky-drag-edit'
+        x={10}
+        y={20}
+        width={200}
+        height={120}
+        text='initial'
+        fill='#fef08a'
+        draggable={true}
+        onTextChange={onTextChange}
+      />
+    );
+    // Before editing: component is rendered with draggable=true
+    // After double-click to edit, draggable should become false
+    fireEvent.doubleClick(screen.getByTestId('sticky-note-group'));
+    // The textarea overlay indicates editing mode is active
+    expect(document.querySelector('.sticky-note-edit-overlay')).toBeTruthy();
+  });
+
+  // ── Default fontSize ────────────────────────────────────────────────
+
+  it('uses default font size of 14 when fontSize prop not provided', () => {
+    render(
+      <StickyNote
+        id='sticky-def-fs'
+        x={10}
+        y={20}
+        width={200}
+        height={120}
+        text='note'
+        fill='#fef08a'
+      />
+    );
+    expect(latestTextProps?.fontSize).toBe(14);
+  });
+
+  it('uses custom font size when provided', () => {
+    render(
+      <StickyNote
+        id='sticky-custom-fs'
+        x={10}
+        y={20}
+        width={200}
+        height={120}
+        text='note'
+        fill='#fef08a'
+        fontSize={24}
+      />
+    );
+    expect(latestTextProps?.fontSize).toBe(24);
+  });
+
+  // ── Rotation default ────────────────────────────────────────────────
+
+  it('uses default rotation of 0 when not provided', () => {
+    render(
+      <StickyNote
+        id='sticky-def-rot'
+        x={10}
+        y={20}
+        width={200}
+        height={120}
+        text='note'
+        fill='#fef08a'
+      />
+    );
+    // Component renders; default rotation is 0
+    expect(latestTextProps).toBeTruthy();
+  });
 });

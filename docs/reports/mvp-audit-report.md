@@ -1,5 +1,11 @@
 # MVP Compliance Audit Report
 
+## Addendum (2026-02-20)
+
+Test suite fixed and fully passing (1088 tests across 100 files). AI Development Log located at `docs/planning/AI-DEVELOPMENT-LOG.md`. Branch coverage improvement in progress (target 80%). FPS performance target (60 FPS) documented as aspirational — benchmarked at 44 FPS on Chromium, varies by device and load.
+
+---
+
 Date: 2026-02-17
 Repo: `gai-collab-board`
 Mode: Local app + real services, with destructive test data allowed

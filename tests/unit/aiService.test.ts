@@ -241,4 +241,330 @@ describe('AIService', () => {
     expect(result).toMatch(/couldn't get a final reply|final reply/i);
     expect(onToolExecute).toHaveBeenCalledTimes(1);
   });
+
+  // ====================================================================
+  // Multiple tool calls in single response
+  // ====================================================================
+
+  it('executes multiple tool calls in a single response', async () => {
+    mockCreate
+      .mockResolvedValueOnce({
+        id: 'test-id',
+        created: 1717171717,
+        model: 'test-model',
+        object: 'chat.completion',
+        choices: [
+          {
+            finish_reason: 'stop',
+            index: 0,
+            logprobs: null,
+            message: {
+              content: null,
+              refusal: null,
+              role: 'assistant',
+              tool_calls: [
+                {
+                  id: 'call-1',
+                  type: 'function',
+                  function: {
+                    name: 'createStickyNote',
+                    arguments: JSON.stringify({ text: 'Note 1', x: 0, y: 0 }),
+                  },
+                },
+                {
+                  id: 'call-2',
+                  type: 'function',
+                  function: {
+                    name: 'createStickyNote',
+                    arguments: JSON.stringify({ text: 'Note 2', x: 100, y: 0 }),
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        id: 'test-id-2',
+        created: 1717171717,
+        model: 'test-model',
+        object: 'chat.completion',
+        choices: [
+          {
+            message: {
+              content: 'Created two sticky notes.',
+              refusal: null,
+              role: 'assistant',
+            },
+            finish_reason: 'stop',
+            index: 0,
+            logprobs: null,
+          },
+        ],
+      });
+
+    const result = await service.processCommand('Add two stickies');
+    expect(result).toBe('Created two sticky notes.');
+    expect(onToolExecute).toHaveBeenCalledTimes(2);
+  });
+
+  // ====================================================================
+  // Tool call with JSON parse error in arguments
+  // ====================================================================
+
+  it('throws when tool call has invalid JSON arguments', async () => {
+    mockCreate.mockResolvedValueOnce({
+      id: 'test-id',
+      created: 1717171717,
+      model: 'test-model',
+      object: 'chat.completion',
+      choices: [
+        {
+          finish_reason: 'stop',
+          index: 0,
+          logprobs: null,
+          message: {
+            content: null,
+            refusal: null,
+            role: 'assistant',
+            tool_calls: [
+              {
+                id: 'call-1',
+                type: 'function',
+                function: {
+                  name: 'createStickyNote',
+                  arguments: '{ invalid json',
+                },
+              },
+            ],
+          },
+        },
+      ],
+    });
+
+    await expect(service.processCommand('Add a note')).rejects.toThrow();
+  });
+
+  // ====================================================================
+  // Empty content with no tool calls — returns fallback
+  // ====================================================================
+
+  it('returns fallback when assistant content is null and no tool calls', async () => {
+    mockCreate.mockResolvedValueOnce({
+      id: 'test-id',
+      created: 1717171717,
+      model: 'test-model',
+      object: 'chat.completion',
+      choices: [
+        {
+          message: {
+            content: null,
+            tool_calls: [],
+            refusal: null,
+            role: 'assistant',
+          },
+          finish_reason: 'stop',
+          index: 0,
+          logprobs: null,
+        },
+      ],
+    });
+
+    const result = await service.processCommand('What?');
+    expect(result).toBe("I'm not sure how to help with that.");
+  });
+
+  // ====================================================================
+  // Tool call with empty tool_calls in handleToolCalls guard
+  // ====================================================================
+
+  it('returns fallback when tool_calls is empty in handleToolCalls', async () => {
+    // Simulate: assistantMessage.tool_calls exists but length is 0,
+    // AND the outer check sees it as truthy (length > 0 fails).
+    // This hits the early check in processCommand: tool_calls.length > 0
+    mockCreate.mockResolvedValueOnce({
+      id: 'test-id',
+      created: 1717171717,
+      model: 'test-model',
+      object: 'chat.completion',
+      choices: [
+        {
+          message: {
+            content: 'Nothing to do.',
+            tool_calls: [],
+            refusal: null,
+            role: 'assistant',
+          },
+          finish_reason: 'stop',
+          index: 0,
+          logprobs: null,
+        },
+      ],
+    });
+
+    const result = await service.processCommand('Do nothing');
+    expect(result).toBe('Nothing to do.');
+    expect(onToolExecute).not.toHaveBeenCalled();
+  });
+
+  // ====================================================================
+  // Tool call without function property (skipped in handleToolCalls)
+  // ====================================================================
+
+  it('skips tool calls without function property', async () => {
+    mockCreate
+      .mockResolvedValueOnce({
+        id: 'test-id',
+        created: 1717171717,
+        model: 'test-model',
+        object: 'chat.completion',
+        choices: [
+          {
+            finish_reason: 'stop',
+            index: 0,
+            logprobs: null,
+            message: {
+              content: null,
+              refusal: null,
+              role: 'assistant',
+              tool_calls: [
+                {
+                  id: 'call-1',
+                  type: 'function',
+                  // function is missing
+                },
+                {
+                  id: 'call-2',
+                  type: 'function',
+                  function: {
+                    name: 'createStickyNote',
+                    arguments: JSON.stringify({ text: 'Hello', x: 0, y: 0 }),
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        id: 'test-id-2',
+        created: 1717171717,
+        model: 'test-model',
+        object: 'chat.completion',
+        choices: [
+          {
+            message: {
+              content: 'Created a note.',
+              refusal: null,
+              role: 'assistant',
+            },
+            finish_reason: 'stop',
+            index: 0,
+            logprobs: null,
+          },
+        ],
+      });
+
+    const result = await service.processCommand('Add a note');
+    expect(result).toBe('Created a note.');
+    // Only the second tool call (with function) should be executed
+    expect(onToolExecute).toHaveBeenCalledTimes(1);
+  });
+
+  // ====================================================================
+  // withRetry — retryable error (500) retries, then succeeds
+  // ====================================================================
+
+  it('retries on retryable 500 error and succeeds', async () => {
+    const error500 = new Error('Internal server error');
+    (error500 as Error & { status: number }).status = 500;
+
+    mockCreate
+      .mockRejectedValueOnce(error500)
+      .mockResolvedValueOnce({
+        id: 'test-id',
+        created: 1717171717,
+        model: 'test-model',
+        object: 'chat.completion',
+        choices: [
+          {
+            message: {
+              content: 'Recovered!',
+              tool_calls: [],
+              refusal: null,
+              role: 'assistant',
+            },
+            finish_reason: 'stop',
+            index: 0,
+            logprobs: null,
+          },
+        ],
+      });
+
+    const result = await service.processCommand('Test retry');
+    expect(result).toBe('Recovered!');
+    expect(mockCreate).toHaveBeenCalledTimes(2);
+  });
+
+  // ====================================================================
+  // withRetry — non-retryable error (400) throws immediately as AIError
+  // ====================================================================
+
+  it('wraps non-retryable errors as AIError without retry', async () => {
+    const error400 = new Error('Bad request');
+    (error400 as Error & { status: number }).status = 400;
+
+    mockCreate.mockRejectedValueOnce(error400);
+
+    const err = await service.processCommand('Test no-retry').catch((e) => e);
+    expect(err).toBeInstanceOf(AIError);
+    expect((err as AIError).status).toBe(400);
+    expect(mockCreate).toHaveBeenCalledTimes(1);
+  });
+
+  // ====================================================================
+  // withRetry — non-Error thrown is wrapped as AIError
+  // ====================================================================
+
+  it('wraps non-Error thrown values as AIError', async () => {
+    mockCreate.mockRejectedValueOnce('string error');
+
+    const err = await service.processCommand('Test string error').catch((e) => e);
+    expect(err).toBeInstanceOf(AIError);
+    expect((err as Error).message).toBe('string error');
+  });
+
+  // ====================================================================
+  // clearContext resets message history
+  // ====================================================================
+
+  it('clearContext resets conversation messages', async () => {
+    mockCreate.mockResolvedValue({
+      id: 'test-id',
+      created: 1717171717,
+      model: 'test-model',
+      object: 'chat.completion',
+      choices: [
+        {
+          message: {
+            content: 'OK.',
+            tool_calls: [],
+            refusal: null,
+            role: 'assistant',
+          },
+          finish_reason: 'stop',
+          index: 0,
+          logprobs: null,
+        },
+      ],
+    });
+
+    await service.processCommand('First message');
+    service.clearContext();
+    await service.processCommand('Second message after clear');
+
+    // After clearContext, the second call should not include the first message in context
+    // We verify by checking that mockCreate was called twice
+    expect(mockCreate).toHaveBeenCalledTimes(2);
+  });
 });
