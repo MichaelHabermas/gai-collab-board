@@ -194,4 +194,45 @@ describe('computeFlowchartLayout', () => {
       expect(conn.arrowheads).toBe('end');
     }
   });
+
+  it('uses circle type and CIRCLE_SIZE dimensions for circle nodes', async () => {
+    const config = makeConfig({
+      nodes: [{ id: 'c', label: 'Circle Node', shape: 'circle' }],
+      edges: [],
+    });
+    const { objects } = await computeFlowchartLayout(config, [], CREATED_BY);
+    const circles = objects.filter((o) => o.type === 'circle');
+
+    expect(circles).toHaveLength(1);
+
+    const circle = circles[0];
+    if (!circle) throw new Error('No circle');
+
+    expect(circle.width).toBe(100);
+    expect(circle.height).toBe(100);
+  });
+
+  it('does not set parentFrameId on objects when no frame', async () => {
+    const { objects } = await computeFlowchartLayout(
+      makeConfig({ title: undefined }),
+      [],
+      CREATED_BY,
+    );
+
+    for (const obj of objects) {
+      expect(obj.parentFrameId).toBeUndefined();
+    }
+  });
+
+  it('handles single node with no edges', async () => {
+    const config = makeConfig({
+      nodes: [{ id: 'solo', label: 'Alone', shape: 'rectangle' }],
+      edges: [],
+      title: undefined,
+    });
+    const { objects } = await computeFlowchartLayout(config, [], CREATED_BY);
+
+    expect(objects).toHaveLength(1);
+    expect(objects[0]?.type).toBe('rectangle');
+  });
 });

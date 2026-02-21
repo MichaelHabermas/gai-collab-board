@@ -154,4 +154,75 @@ describe('computeMindMapLayout', () => {
       expect(s.fill).toMatch(/^#[0-9a-f]{6}$/i);
     }
   });
+
+  it('sets arrowheads to none on all connectors', () => {
+    const { objects } = computeMindMapLayout(makeConfig(), [], CREATED_BY);
+    const connectors = objects.filter((o) => o.type === 'connector');
+
+    expect(connectors.length).toBeGreaterThan(0);
+
+    for (const conn of connectors) {
+      expect(conn.arrowheads).toBe('none');
+    }
+  });
+
+  it('places children further from center than their parent branch', () => {
+    const config = makeConfig({
+      branches: [{ label: 'Branch', color: 'blue', children: ['Child A'] }],
+    });
+    const { objects } = computeMindMapLayout(config, [], CREATED_BY);
+
+    // center is index 1, branch is index 2, child is index 3
+    const center = objects[1];
+    const branch = objects[2];
+    const child = objects[3];
+    if (!center || !branch || !child) throw new Error('Missing objects');
+
+    const centerCx = center.x + center.width / 2;
+    const centerCy = center.y + center.height / 2;
+
+    const branchDist = Math.hypot(
+      branch.x + branch.width / 2 - centerCx,
+      branch.y + branch.height / 2 - centerCy,
+    );
+    const childDist = Math.hypot(
+      child.x + child.width / 2 - centerCx,
+      child.y + child.height / 2 - centerCy,
+    );
+
+    expect(childDist).toBeGreaterThan(branchDist);
+  });
+
+  it('center-to-branch connectors use center ID as fromObjectId', () => {
+    const config = makeConfig({
+      branches: [{ label: 'B', color: 'green', children: [] }],
+    });
+    const { objects } = computeMindMapLayout(config, [], CREATED_BY);
+    const connectors = objects.filter((o) => o.type === 'connector');
+
+    expect(connectors).toHaveLength(1);
+
+    const conn = connectors[0];
+    if (!conn) throw new Error('No connector');
+
+    expect(conn.fromObjectId).toBe('__center__');
+    expect(conn.toObjectId).toMatch(/^__branch_\d+__$/);
+  });
+
+  it('branch-to-child connectors reference branch and child placeholder IDs', () => {
+    const config = makeConfig({
+      branches: [{ label: 'B', color: 'green', children: ['Kid'] }],
+    });
+    const { objects } = computeMindMapLayout(config, [], CREATED_BY);
+    const connectors = objects.filter((o) => o.type === 'connector');
+
+    // 1 center→branch + 1 branch→child
+    expect(connectors).toHaveLength(2);
+
+    const branchToChild = connectors[1];
+    if (!branchToChild) throw new Error('Missing branch-to-child connector');
+
+    expect(branchToChild.fromObjectId).toMatch(/^__branch_\d+__$/);
+    expect(branchToChild.toObjectId).toMatch(/^__branch_\d+_child_\d+__$/);
+  });
 });
