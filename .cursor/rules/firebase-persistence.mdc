@@ -1,0 +1,31 @@
+---
+description: Persistence layer rules — Firestore vs RTDB split, write queue, optimistic updates, self-echo filtering, throttling, offline support
+globs:
+  - src/modules/sync/**/*
+  - src/lib/writeQueue.ts
+  - src/hooks/useObjects.ts
+alwaysApply: false
+---
+
+# Firebase Persistence Rules
+
+This rule applies when working with sync modules, the write queue, or the useObjects hook. It implements principles from `docs/CONSTITUTION.md` (Articles III, V, VI).
+
+## Firestore vs RTDB
+
+- **Firestore:** Persistent structured data (board objects, board metadata).
+- **RTDB:** Ephemeral, high-frequency data only (cursors, presence, live drags). Do not store canonical board state in RTDB.
+
+## Writes
+
+- All Firestore writes for **board objects** go through the **write queue** or **batch operations**. No raw `setDoc`/`updateDoc` calls scattered in components.
+- **Optimistic update** pattern is mandatory: update Zustand first, then persist. Rollback on failure.
+- **Self-echo filtering** must be maintained: remote updates must skip objects that have pending local writes (e.g. in-flight or recently written).
+
+## Throttling
+
+- Throttle RTDB writes to at most **20 updates per second per client** (50 ms minimum interval between writes) to avoid cost and contention.
+
+## Offline
+
+- **Offline support** via Firestore persistent cache must not be disabled. Do not turn off persistence or bypass cache for board data.

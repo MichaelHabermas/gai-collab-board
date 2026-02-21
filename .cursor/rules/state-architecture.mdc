@@ -1,0 +1,33 @@
+---
+description: State layer rules for stores and board types — JSON-serializability, IBoardObject as single shape type, pure store actions, spatial index for culling
+globs:
+  - src/stores/**/*
+  - src/types/board.ts
+  - src/types/geometry.ts
+  - src/types/viewport.ts
+alwaysApply: false
+---
+
+# State Architecture Rules
+
+This rule applies when working with state stores or board/geometry/viewport types. It implements principles from `docs/CONSTITUTION.md` (Articles I, II, V, VI).
+
+## JSON-serializable state
+
+- State interfaces for **persisted** data must be JSON-serializable.
+- No `Date`, `Map`, `Set`, or `Function` in persisted types. Exception: Firestore `Timestamp` for `createdAt`/`updatedAt` is allowed.
+- Use plain objects and arrays (or document the serialization format) for anything that is stored or sent to AI/Firebase.
+
+## Single shape type
+
+- **`IBoardObject`** is the single shape type. Do not create parallel or competing shape interfaces.
+- New shape kinds are added via the **`ShapeType`** union, with optional properties on `IBoardObject` — not via separate subtype interfaces.
+
+## Pure store actions
+
+- Zustand store actions must be **pure** in the sense: `(currentState, payload) => newState`. No side effects inside store actions.
+- Persistence (Firebase, write queue) belongs in hooks or services that call the store, not inside the store itself.
+
+## Viewport culling
+
+- The **spatial index** is the only sanctioned mechanism for viewport culling. Do not add alternative culling paths (e.g. brute-force AABB over all objects every frame).

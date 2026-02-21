@@ -1,0 +1,29 @@
+---
+description: AI integration rules — board state as JSON, command validation, sandboxed tool execution, tool manifest, env-driven config
+globs:
+  - src/modules/ai/**/*
+  - src/hooks/useAI.ts
+alwaysApply: false
+---
+
+# AI Interface Rules
+
+This rule applies when working with AI modules or the useAI hook. It implements principles from `docs/CONSTITUTION.md` (Articles III, IV, VIII).
+
+## Board state to AI
+
+- AI receives board state as a **plain JSON** representation (e.g. array of `IBoardObject`-like records). Strip internal-only metadata (e.g. `createdBy`) when not needed for the task.
+- Do not send Konva-specific, Firebase-specific, or implementation-detail fields to the model.
+
+## Command validation
+
+- AI commands must be **validated** against a schema before execution. Invalid commands are logged and skipped; they must **never** crash the app.
+
+## Tool execution
+
+- Tool execution is **sandboxed**: AI tools operate through the same CRUD interface as user actions (repository or store actions). No backdoor writes or direct Firebase/DB access from tool implementations.
+- New AI tools must be **registered** in the tool manifest (`tools.ts`). Ad-hoc or unregistered function calls from the AI are prohibited.
+
+## Configuration
+
+- AI provider configuration remains **env-driven** (`VITE_AI_PROVIDER`, `VITE_AI_API_KEY`, etc.). No hardcoded API keys or provider-specific branching in shared modules.
