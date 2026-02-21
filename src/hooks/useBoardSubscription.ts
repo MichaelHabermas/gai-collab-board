@@ -7,20 +7,31 @@ export function useBoardSubscription(boardId: string): {
   setBoard: (board: IBoard | null) => void;
   boardLoading: boolean;
   setBoardLoading: (loading: boolean) => void;
+  boardError: Error | null;
 } {
   const [board, setBoard] = useState<IBoard | null>(null);
   const [boardLoading, setBoardLoading] = useState(true);
+  const [boardError, setBoardError] = useState<Error | null>(null);
 
   useEffect(() => {
     if (!boardId) return;
 
-    const unsubscribe = subscribeToBoard(boardId, (boardData) => {
-      setBoard(boardData);
-      setBoardLoading(false);
-    });
+    const unsubscribe = subscribeToBoard(
+      boardId,
+      (boardData) => {
+        setBoard(boardData);
+        setBoardLoading(false);
+        setBoardError(null);
+      },
+      (error) => {
+        console.error('Board subscription error:', error);
+        setBoardError(error);
+        setBoardLoading(false);
+      }
+    );
 
     return () => unsubscribe();
   }, [boardId]);
 
-  return { board, setBoard, boardLoading, setBoardLoading };
+  return { board, setBoard, boardLoading, setBoardLoading, boardError };
 }

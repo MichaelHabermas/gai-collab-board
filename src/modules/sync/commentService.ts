@@ -74,16 +74,23 @@ export const deleteComment = async (boardId: string, commentId: string): Promise
  */
 export const subscribeToComments = (
   boardId: string,
-  callback: (comments: IComment[]) => void
+  callback: (comments: IComment[]) => void,
+  onError?: (error: Error) => void
 ): Unsubscribe => {
   const commentsRef = getCommentsCollection(boardId);
   const commentsQuery = query(commentsRef, orderBy('createdAt', 'asc'));
 
-  return onSnapshot(commentsQuery, (snapshot) => {
-    const comments: IComment[] = [];
-    snapshot.forEach((snapshotDoc) => {
-      comments.push(snapshotDoc.data() as IComment);
-    });
-    callback(comments);
-  });
+  return onSnapshot(
+    commentsQuery,
+    (snapshot) => {
+      const comments: IComment[] = [];
+      snapshot.forEach((snapshotDoc) => {
+        comments.push(snapshotDoc.data() as IComment);
+      });
+      callback(comments);
+    },
+    (error) => {
+      if (onError) onError(error);
+    }
+  );
 };

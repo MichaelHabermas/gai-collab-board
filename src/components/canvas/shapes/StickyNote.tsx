@@ -77,6 +77,7 @@ export const StickyNote = memo(
       const [isEditing, setIsEditing] = useState(false);
       const textRef = useRef<Konva.Text>(null);
       const groupRef = useRef<Konva.Group>(null);
+      const removeOverlayRef = useRef<(() => void) | null>(null);
       const { theme } = useTheme();
       const selectionColor = useMemo(
         () =>
@@ -172,7 +173,9 @@ export const StickyNote = memo(
             }
 
             setIsEditing(false);
+            removeOverlayRef.current = null;
           };
+          removeOverlayRef.current = removeTextarea;
 
           const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
@@ -195,6 +198,15 @@ export const StickyNote = memo(
           textarea.addEventListener('blur', handleBlur);
         });
       }, [text, width, height, fontSize, onTextChange, textFillColor]);
+
+      // Clean up overlay on unmount
+      useEffect(() => {
+        return () => {
+          if (removeOverlayRef.current) {
+            removeOverlayRef.current();
+          }
+        };
+      }, []);
 
       const handleDragEnd = useShapeDragHandler(onDragEnd);
 

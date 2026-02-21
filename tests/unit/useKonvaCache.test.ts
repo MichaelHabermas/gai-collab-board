@@ -6,7 +6,6 @@ import { useKonvaCache } from '@/hooks/useKonvaCache';
 let rafCallback: (() => void) | null = null;
 vi.stubGlobal('requestAnimationFrame', (cb: () => void) => {
   rafCallback = cb;
-
   return 1;
 });
 vi.stubGlobal('cancelAnimationFrame', vi.fn());
@@ -81,41 +80,32 @@ describe('useKonvaCache', () => {
   describe('caching behavior', () => {
     it('calls clearCache when shouldCache is false', () => {
       const node = makeMockNode();
-      const { result } = renderHook(() =>
-        useKonvaCache(null, false, ['dep1'])
+      const { result, rerender } = renderHook(
+        ({ shouldCache }) => useKonvaCache(null, shouldCache, ['dep1']),
+        { initialProps: { shouldCache: true } }
       );
 
       // Set the node
       result.current[0](node as never);
 
-      // Re-render to trigger effect
-      renderHook(() => useKonvaCache(null, false, ['dep1']));
+      // Re-render with shouldCache = false to trigger effect
+      rerender({ shouldCache: false });
 
-      // The effect for shouldCache=false calls clearCache
-      // Since our hook is rendered fresh, set up the node before the effect runs
-      const { result: result2 } = renderHook(() => {
-        const hookResult = useKonvaCache(null, false, ['dep1']);
-
-        return hookResult;
-      });
-      const node2 = makeMockNode();
-      result2.current[0](node2 as never);
-
-      // Force effect by re-rendering with shouldCache=false
-      // The node's clearCache should eventually be called
-      expect(node2.clearCache).not.toHaveBeenCalled(); // Not called until effect runs
+      expect(node.clearCache).toHaveBeenCalled();
     });
 
-    it.skip('caches node when shouldCache is true and node fits within budget', () => {
+    it('caches node when shouldCache is true and node fits within budget', () => {
       const node = makeMockNode(100, 100);
 
-      const { result } = renderHook(() => {
-        const hookResult = useKonvaCache(null, true, ['fill']);
-
-        return hookResult;
-      });
+      const { result, rerender } = renderHook(
+        ({ shouldCache }) => useKonvaCache(null, shouldCache, ['fill']),
+        { initialProps: { shouldCache: false } }
+      );
 
       result.current[0](node as never);
+      
+      // Re-render to trigger effect with shouldCache = true
+      rerender({ shouldCache: true });
 
       // Trigger the rAF callback that was scheduled by the effect
       if (rafCallback) {
@@ -125,16 +115,17 @@ describe('useKonvaCache', () => {
       expect(node.cache).toHaveBeenCalledWith({ pixelRatio: 2 });
     });
 
-    it.skip('skips caching when node is too large', () => {
-      const node = makeMockNode(3000, 3000);
+    it('skips caching when node is too large (width > 2000)', () => {
+      const node = makeMockNode(2001, 100);
 
-      const { result } = renderHook(() => {
-        const hookResult = useKonvaCache(null, true, ['fill']);
-
-        return hookResult;
-      });
+      const { result, rerender } = renderHook(
+        ({ shouldCache }) => useKonvaCache(null, shouldCache, ['fill']),
+        { initialProps: { shouldCache: false } }
+      );
 
       result.current[0](node as never);
+      
+      rerender({ shouldCache: true });
 
       // Even if rAF fires, cache should not have been called because the
       // effect returned early due to oversized dimensions
@@ -142,9 +133,28 @@ describe('useKonvaCache', () => {
         rafCallback();
       }
 
-      // The cache() call in the rAF comes from a fresh check, so let's verify
-      // that getClientRect was called (the oversized check happened)
       expect(node.getClientRect).toHaveBeenCalledWith({ skipTransform: true });
+      expect(node.cache).not.toHaveBeenCalled();
+    });
+    
+    it('skips caching when node is too large (height > 2000)', () => {
+      const node = makeMockNode(100, 2001);
+
+      const { result, rerender } = renderHook(
+        ({ shouldCache }) => useKonvaCache(null, shouldCache, ['fill']),
+        { initialProps: { shouldCache: false } }
+      );
+
+      result.current[0](node as never);
+      
+      rerender({ shouldCache: true });
+
+      if (rafCallback) {
+        rafCallback();
+      }
+
+      expect(node.getClientRect).toHaveBeenCalledWith({ skipTransform: true });
+      expect(node.cache).not.toHaveBeenCalled();
     });
 
     it('handles node with no cache function gracefully', () => {
@@ -154,11 +164,13 @@ describe('useKonvaCache', () => {
         // No cache function
       };
 
-      const { result } = renderHook(() =>
-        useKonvaCache(null, true, ['fill'])
+      const { result, rerender } = renderHook(
+        ({ shouldCache }) => useKonvaCache(null, shouldCache, ['fill']),
+        { initialProps: { shouldCache: false } }
       );
 
       result.current[0](node as never);
+      rerender({ shouldCache: true });
 
       // Should not throw
       if (rafCallback) {

@@ -96,11 +96,17 @@ export const AIChatPanel = ({
         onend: (() => void) | null;
       };
     }
-    const Win = window as unknown as {
+    
+    // Type guard for window with SpeechRecognition
+    const isSpeechRecognitionSupported = (w: unknown): w is {
       SpeechRecognition?: ISpeechRecognitionCtor;
       webkitSpeechRecognition?: ISpeechRecognitionCtor;
+    } => {
+      return typeof w === 'object' && w !== null && ('SpeechRecognition' in w || 'webkitSpeechRecognition' in w);
     };
-    const Ctor = Win.SpeechRecognition ?? Win.webkitSpeechRecognition;
+
+    if (!isSpeechRecognitionSupported(window)) return;
+    const Ctor = window.SpeechRecognition ?? window.webkitSpeechRecognition;
     if (!Ctor) return;
 
     const recognition = new Ctor();

@@ -3,6 +3,7 @@ import { useRef, useEffect, memo } from 'react';
 import type { ReactElement, RefObject } from 'react';
 import Konva from 'konva';
 import type { ITransformEndAttrs } from '@/types';
+import { isKonvaGroup, isKonvaRect, isKonvaEllipse, isKonvaLine } from '@/types/guards';
 import { getPointsCenter, scaleLinePointsLengthOnly } from '@/lib/lineTransform';
 export type { ITransformEndRectAttrs, ITransformEndLineAttrs, ITransformEndAttrs } from '@/types';
 
@@ -61,18 +62,18 @@ export const TransformHandler = memo(
 
         let attrs: ITransformEndAttrs;
 
-        if (className === 'Group') {
+        if (isKonvaGroup(node)) {
           // StickyNote: use first Rect (note body) so shadow/fold don't inflate size. Frame/others: use getClientRect.
           const name = node.name() ?? '';
           const isSticky = name.includes('sticky');
-          const groupNode = node as Konva.Group;
+          const groupNode = node;
           const contentRect = node.getClientRect({ skipTransform: true });
           let width: number;
           let height: number;
           if (isSticky) {
             const firstRect = groupNode.findOne('Rect');
-            if (firstRect && firstRect.getClassName() === 'Rect') {
-              const r = firstRect as Konva.Rect;
+            if (firstRect && isKonvaRect(firstRect)) {
+              const r = firstRect;
               width = Math.max(MIN_SIZE, r.width() * scaleX);
               height = Math.max(MIN_SIZE, r.height() * scaleY);
             } else {
@@ -93,9 +94,9 @@ export const TransformHandler = memo(
             height,
             rotation: node.rotation(),
           };
-        } else if (className === 'Ellipse') {
+        } else if (isKonvaEllipse(node)) {
           // Oval: store top-left and size; node uses center and radii
-          const ellipse = node as Konva.Ellipse;
+          const ellipse = node;
           const rx = Math.max(MIN_SIZE / 2, ellipse.radiusX() * scaleX);
           const ry = Math.max(MIN_SIZE / 2, ellipse.radiusY() * scaleY);
           node.scaleX(1);
@@ -107,9 +108,9 @@ export const TransformHandler = memo(
             height: ry * 2,
             rotation: node.rotation(),
           };
-        } else if (className === 'Line' || className === 'Arrow') {
+        } else if (isKonvaLine(node)) {
           // Line / Connector: length-only scaling so only length changes, not width
-          const lineNode = node as Konva.Line;
+          const lineNode = node;
           const currentPoints = lineNode.points();
           const { points } = scaleLinePointsLengthOnly(currentPoints, scaleX, scaleY);
           node.scaleX(1);

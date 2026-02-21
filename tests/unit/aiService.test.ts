@@ -312,37 +312,58 @@ describe('AIService', () => {
   // Tool call with JSON parse error in arguments
   // ====================================================================
 
-  it('throws when tool call has invalid JSON arguments', async () => {
-    mockCreate.mockResolvedValueOnce({
-      id: 'test-id',
-      created: 1717171717,
-      model: 'test-model',
-      object: 'chat.completion',
-      choices: [
-        {
-          finish_reason: 'stop',
-          index: 0,
-          logprobs: null,
-          message: {
-            content: null,
-            refusal: null,
-            role: 'assistant',
-            tool_calls: [
-              {
-                id: 'call-1',
-                type: 'function',
-                function: {
-                  name: 'createStickyNote',
-                  arguments: '{ invalid json',
+  it('pushes JSON parse errors as tool results instead of throwing', async () => {
+    mockCreate
+      .mockResolvedValueOnce({
+        id: 'test-id',
+        created: 1717171717,
+        model: 'test-model',
+        object: 'chat.completion',
+        choices: [
+          {
+            finish_reason: 'stop',
+            index: 0,
+            logprobs: null,
+            message: {
+              content: null,
+              refusal: null,
+              role: 'assistant',
+              tool_calls: [
+                {
+                  id: 'call-1',
+                  type: 'function',
+                  function: {
+                    name: 'createStickyNote',
+                    arguments: '{ invalid json',
+                  },
                 },
-              },
-            ],
+              ],
+            },
           },
-        },
-      ],
-    });
+        ],
+      })
+      .mockResolvedValueOnce({
+        id: 'test-id-2',
+        created: 1717171717,
+        model: 'test-model',
+        object: 'chat.completion',
+        choices: [
+          {
+            message: {
+              content: 'I encountered an error parsing the arguments.',
+              refusal: null,
+              role: 'assistant',
+            },
+            finish_reason: 'stop',
+            index: 0,
+            logprobs: null,
+          },
+        ],
+      });
 
-    await expect(service.processCommand('Add a note')).rejects.toThrow();
+    const result = await service.processCommand('Add a note');
+    expect(result).toBe('I encountered an error parsing the arguments.');
+    expect(mockCreate).toHaveBeenCalledTimes(2);
   });
 
   // ====================================================================

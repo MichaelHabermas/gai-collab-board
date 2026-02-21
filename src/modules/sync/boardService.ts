@@ -13,6 +13,7 @@ import {
 import { firestore } from '@/lib/firebase';
 import { isGuestBoard } from '@/lib/constants';
 import { IBoard, UserRole } from '@/types';
+import { isBoard } from '@/types/guards';
 
 export { GUEST_BOARD_ID, isGuestBoard } from '@/lib/constants';
 
@@ -58,21 +59,33 @@ export const getBoard = async (boardId: string): Promise<IBoard | null> => {
     return null;
   }
 
-  return boardSnap.data() as IBoard;
+  const data = boardSnap.data();
+  if (isBoard(data)) {
+    return data;
+  }
+  return null;
 };
 
 export const subscribeToBoard = (
   boardId: string,
-  callback: (board: IBoard | null) => void
+  callback: (board: IBoard | null) => void,
+  onError?: (error: Error) => void
 ): Unsubscribe => {
   const boardRef = doc(firestore, BOARDS_COLLECTION, boardId);
-  return onSnapshot(boardRef, (snapshot) => {
-    if (snapshot.exists()) {
-      callback(snapshot.data() as IBoard);
-    } else {
-      callback(null);
+  return onSnapshot(
+    boardRef,
+    (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        callback(isBoard(data) ? data : null);
+      } else {
+        callback(null);
+      }
+    },
+    (error) => {
+      if (onError) onError(error);
     }
-  });
+  );
 };
 
 /**
@@ -90,7 +103,10 @@ export const subscribeToUserBoards = (
     const byId = new Map<string, IBoard>();
     for (const d of snapshot.docs) {
       if (!byId.has(d.id)) {
-        byId.set(d.id, { id: d.id, ...d.data() } as IBoard);
+        const data = { id: d.id, ...d.data() };
+        if (isBoard(data)) {
+          byId.set(d.id, data);
+        }
       }
     }
     callback(Array.from(byId.values()));
@@ -107,7 +123,9 @@ export const updateBoardName = async (
     const snap = await tx.get(boardRef);
     if (!snap.exists()) throw new Error('Board not found');
 
-    const board = snap.data() as IBoard;
+    const data = snap.data();
+    if (!isBoard(data)) throw new Error('Invalid board data');
+    const board = data;
     if (!canUserManage(board, userId)) {
       throw new Error('Only the board owner can rename the board');
     }
@@ -126,7 +144,9 @@ export const addBoardMember = async (
     const snap = await tx.get(boardRef);
     if (!snap.exists()) throw new Error('Board not found');
 
-    const board = snap.data() as IBoard;
+    const data = snap.data();
+    if (!isBoard(data)) throw new Error('Invalid board data');
+    const board = data;
     const updatedMembers = { ...board.members, [userId]: role };
     tx.update(boardRef, { members: updatedMembers, updatedAt: Timestamp.now() });
   });
@@ -138,7 +158,9 @@ export const removeBoardMember = async (boardId: string, userId: string): Promis
     const snap = await tx.get(boardRef);
     if (!snap.exists()) throw new Error('Board not found');
 
-    const board = snap.data() as IBoard;
+    const data = snap.data();
+    if (!isBoard(data)) throw new Error('Invalid board data');
+    const board = data;
     if (board.ownerId === userId) {
       throw new Error('Cannot remove the owner from the board');
     }
@@ -159,7 +181,9 @@ export const updateMemberRole = async (
     const snap = await tx.get(boardRef);
     if (!snap.exists()) throw new Error('Board not found');
 
-    const board = snap.data() as IBoard;
+    const data = snap.data();
+    if (!isBoard(data)) throw new Error('Invalid board data');
+    const board = data;
     if (board.ownerId === userId && role !== 'owner') {
       throw new Error("Cannot change the owner's role");
     }
@@ -179,7 +203,9 @@ export const deleteBoard = async (boardId: string, userId: string): Promise<void
     const snap = await tx.get(boardRef);
     if (!snap.exists()) throw new Error('Board not found');
 
-    const board = snap.data() as IBoard;
+    const data = snap.data();
+    if (!isBoard(data)) throw new Error('Invalid board data');
+    const board = data;
     if (!canUserManage(board, userId)) {
       throw new Error('Only the board owner can delete the board');
     }

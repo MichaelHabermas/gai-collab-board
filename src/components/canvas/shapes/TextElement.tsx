@@ -42,6 +42,7 @@ export const TextElement = memo(
     ): ReactElement => {
       const [isEditing, setIsEditing] = useState(false);
       const textRef = useRef<Konva.Text>(null);
+      const removeOverlayRef = useRef<(() => void) | null>(null);
 
       // Handle double-click to start editing. Position overlay from node's transformed rect
       // so it stays aligned for any rotation/zoom.
@@ -118,7 +119,9 @@ export const TextElement = memo(
             }
 
             setIsEditing(false);
+            removeOverlayRef.current = null;
           };
+          removeOverlayRef.current = removeTextarea;
 
           const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
@@ -141,6 +144,15 @@ export const TextElement = memo(
           textarea.addEventListener('blur', handleBlur);
         });
       }, [text, width, fontSize, onTextChange]);
+
+      // Clean up overlay on unmount
+      useEffect(() => {
+        return () => {
+          if (removeOverlayRef.current) {
+            removeOverlayRef.current();
+          }
+        };
+      }, []);
 
       const handleDragEnd = useShapeDragHandler(onDragEnd);
 

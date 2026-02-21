@@ -81,6 +81,7 @@ export const Frame = memo(
       const [isHovered, setIsHovered] = useState(false);
       const groupRef = useRef<Konva.Group>(null);
       const textRef = useRef<Konva.Text>(null);
+      const removeOverlayRef = useRef<(() => void) | null>(null);
       const { theme } = useTheme();
 
       // Subscribe to child count from store — only re-renders when count changes.
@@ -238,7 +239,9 @@ export const Frame = memo(
             }
 
             setIsEditing(false);
+            removeOverlayRef.current = null;
           };
+          removeOverlayRef.current = removeInput;
 
           const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
@@ -261,6 +264,15 @@ export const Frame = memo(
           input.addEventListener('blur', handleBlur);
         });
       }, [text, width, onTextChange, titleTextFill]);
+
+      // Clean up overlay on unmount
+      useEffect(() => {
+        return () => {
+          if (removeOverlayRef.current) {
+            removeOverlayRef.current();
+          }
+        };
+      }, []);
 
       // ── Double-click body to enter frame ────────────────────────
       const handleBodyDblClick = useCallback(() => {

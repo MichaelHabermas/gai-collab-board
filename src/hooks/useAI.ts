@@ -92,10 +92,14 @@ export const useAI = ({ boardId, user }: IUseAIParams): IUseAIReturn => {
   }, [executor]);
 
   useEffect(() => {
-    const service = aiServiceRef.current;
-    if (service) {
-      service.updateBoardState(objects);
-    }
+    const timeoutId = setTimeout(() => {
+      const service = aiServiceRef.current;
+      if (service) {
+        service.updateBoardState(objects);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
   }, [objects]);
 
   const processCommand = useCallback(async (userMessage: string) => {

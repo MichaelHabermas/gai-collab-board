@@ -182,9 +182,9 @@ export class AIService {
       }
 
       const functionName = toolCall.function.name;
-      const functionArgs = JSON.parse(toolCall.function.arguments ?? '{}');
 
       try {
+        const functionArgs = JSON.parse(toolCall.function.arguments ?? '{}');
         const result = await this.onToolExecute({
           name: functionName as IToolCall['name'],
           arguments: functionArgs,

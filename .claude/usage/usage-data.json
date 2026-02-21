@@ -937,14 +937,41 @@
       },
       "mcp_tool_calls": 28,
       "mcp_estimated_cost": 0.014
+    },
+    {
+      "session_id": "2e6aace7-e213-4c68-a564-cdfe581a40fd",
+      "timestamp": "2026-02-21T20:44:24.185Z",
+      "source": "claude",
+      "input_tokens": 49,
+      "output_tokens": 231,
+      "cache_read": 1702561,
+      "cache_create": 530937,
+      "total_tokens": 2233778,
+      "estimated_cost": 12.526970250000002,
+      "by_model": {
+        "claude-opus-4-6": {
+          "input_tokens": 49,
+          "output_tokens": 231,
+          "cache_read_input_tokens": 1702561,
+          "cache_creation_input_tokens": 530937
+        },
+        "<synthetic>": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        }
+      },
+      "mcp_tool_calls": 14,
+      "mcp_estimated_cost": 0.007
     }
   ],
   "totals": {
-    "input_tokens": 219030,
-    "output_tokens": 75791,
-    "cache_read_input_tokens": 573151674,
-    "cache_creation_input_tokens": 21124162,
-    "estimated_cost": 1221.0624099099998,
-    "session_count": 42
+    "input_tokens": 219079,
+    "output_tokens": 76022,
+    "cache_read_input_tokens": 574854235,
+    "cache_creation_input_tokens": 21655099,
+    "estimated_cost": 1233.5893801599998,
+    "session_count": 43
   }
 }

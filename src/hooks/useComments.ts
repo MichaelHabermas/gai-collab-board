@@ -21,6 +21,8 @@ interface UseCommentsResult {
   createComment: (params: ICreateCommentParams) => Promise<IComment | null>;
   /** Delete a comment by ID (only author should call this). */
   deleteComment: (commentId: string) => Promise<void>;
+  /** Error from the subscription, if any. */
+  commentsError: Error | null;
 }
 
 /**
@@ -33,13 +35,22 @@ export const useComments = ({ boardId }: UseCommentsParams): UseCommentsResult =
     boardId: string;
     comments: IComment[];
   } | null>(null);
+  const [commentsError, setCommentsError] = useState<Error | null>(null);
 
   useEffect(() => {
     if (!boardId) return;
 
-    const unsubscribe = subscribeToComments(boardId, (nextComments) => {
-      setSubscriptionData({ boardId, comments: nextComments });
-    });
+    const unsubscribe = subscribeToComments(
+      boardId,
+      (nextComments) => {
+        setSubscriptionData({ boardId, comments: nextComments });
+        setCommentsError(null);
+      },
+      (error) => {
+        console.error('Comments subscription error:', error);
+        setCommentsError(error);
+      }
+    );
 
     return () => unsubscribe();
   }, [boardId]);
@@ -91,5 +102,6 @@ export const useComments = ({ boardId }: UseCommentsParams): UseCommentsResult =
     loading: effectiveLoading,
     createComment,
     deleteComment,
+    commentsError,
   };
 };
