@@ -6,6 +6,7 @@ import { useShapeDragHandler } from '@/hooks/useShapeDragHandler';
 import { useShapeTransformHandler } from '@/hooks/useShapeTransformHandler';
 import { useKonvaCache } from '@/hooks/useKonvaCache';
 import { getShapeShadowProps } from '@/lib/shapeShadowProps';
+import { DEFAULT_SHAPE_STROKE, DEFAULT_SHAPE_STROKE_WIDTH } from '@/lib/boardObjectDefaults';
 import type { IRectLikeShapeProps, ITransformEndAttrsUnion } from '@/types';
 
 type IRectangleShapeProps = IRectLikeShapeProps;
@@ -23,8 +24,8 @@ export const RectangleShape = memo(
         width,
         height,
         fill,
-        stroke = '#1e293b',
-        strokeWidth = 2,
+        stroke = DEFAULT_SHAPE_STROKE,
+        strokeWidth = DEFAULT_SHAPE_STROKE_WIDTH,
         opacity = 1,
         rotation = 0,
         isSelected = false,

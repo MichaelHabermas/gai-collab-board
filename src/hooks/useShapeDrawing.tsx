@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, type ReactElement } from 'react';
 import { Rect, Line } from 'react-konva';
 import type { ToolMode, IBoardObject, IPosition } from '@/types';
 import type { ICreateObjectParams } from '@/modules/sync/objectService';
+import { DEFAULT_SHAPE_STROKE, DEFAULT_SHAPE_STROKE_WIDTH } from '@/lib/boardObjectDefaults';
 
 interface IDrawingState {
   isDrawing: boolean;
@@ -105,8 +106,8 @@ export function useShapeDrawing(): IUseShapeDrawingReturn {
             width: Math.max(width, 20),
             height: Math.max(height, 20),
             fill: color,
-            stroke: '#1e293b',
-            strokeWidth: 2,
+            stroke: DEFAULT_SHAPE_STROKE,
+            strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH,
             rotation: 0,
           });
         } else if (tool === 'circle') {
@@ -117,8 +118,8 @@ export function useShapeDrawing(): IUseShapeDrawingReturn {
             width: Math.max(width, 20),
             height: Math.max(height, 20),
             fill: color,
-            stroke: '#1e293b',
-            strokeWidth: 2,
+            stroke: DEFAULT_SHAPE_STROKE,
+            strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH,
             rotation: 0,
           });
         } else if (tool === 'line') {
@@ -180,7 +181,7 @@ export function useShapeDrawing(): IUseShapeDrawingReturn {
             height={height}
             fill={color}
             stroke={selectionColor}
-            strokeWidth={2}
+            strokeWidth={DEFAULT_SHAPE_STROKE_WIDTH}
             dash={[5, 5]}
             listening={false}
           />
@@ -196,7 +197,7 @@ export function useShapeDrawing(): IUseShapeDrawingReturn {
             height={height}
             fill={color}
             stroke={selectionColor}
-            strokeWidth={2}
+            strokeWidth={DEFAULT_SHAPE_STROKE_WIDTH}
             dash={[5, 5]}
             cornerRadius={Math.min(width, height) / 2}
             listening={false}
@@ -225,7 +226,7 @@ export function useShapeDrawing(): IUseShapeDrawingReturn {
             height={height}
             fill='rgba(241, 245, 249, 0.3)'
             stroke={selectionColor}
-            strokeWidth={2}
+            strokeWidth={DEFAULT_SHAPE_STROKE_WIDTH}
             dash={[5, 5]}
             cornerRadius={6}
             listening={false}

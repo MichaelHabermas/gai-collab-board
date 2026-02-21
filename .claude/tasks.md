@@ -48,15 +48,15 @@ Base branch: `spike/ai-chat-improvements`. Source: docs/AI-CHAT-IMPROVEMENT-PLAN
 
 ---
 
-## T4 — Full-height AI panel and resizable input
+## T4 — Canvas creation use shared defaults
 
-- **Status:** done
-- **Tier:** sonnet
-- **Role:** architect
-- **Worktree name:** ai-panel-layout
-- **Description:** (1) Make the AI panel fill the tab content height: remove max-h-[320px] on the messages area in AIChatPanel.tsx, use flex so the conversation region grows. (2) Make the user input resizable (e.g. textarea) with a reasonable max height (e.g. 4–6 lines or ~200px).
+- **Status:** review
+- **Tier:** architect
+- **Worktree name:** board-defaults-canvas
+- **Description:** Use shared defaults from @/lib/boardObjectDefaults for canvas-created objects: BoardCanvas sticky/text click-to-create sizes and colors; useShapeDrawing stroke/strokeWidth; RectangleShape and CircleShape default props.
 - **Acceptance criteria:**
-  1. Messages area has no max-height; card/panel fills the AI tab content (flex-1 min-h-0 chain).
-  2. Input is a resizable textarea with a capped max height.
-  3. No layout regressions; `bun run validate` passes.
-- **Dependencies:** None
+  1. BoardCanvas uses DEFAULT_STICKY_*, DEFAULT_TEXT_*, STICKY_COLORS from lib; no local DEFAULT_STICKY_SIZE.
+  2. useShapeDrawing uses DEFAULT_SHAPE_STROKE and DEFAULT_SHAPE_STROKE_WIDTH for rectangle/circle create and preview.
+  3. RectangleShape and CircleShape use lib defaults for stroke/strokeWidth default props.
+  4. `bun run validate` passes.
+- **Dependencies:** T1 (boardObjectDefaults.ts)
