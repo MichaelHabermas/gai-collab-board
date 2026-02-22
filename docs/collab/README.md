@@ -17,10 +17,10 @@ This folder stores reusable markdown artifacts produced by collaborator commands
 
 For each initiative, create:
 
-- `docs/collab/runs/<YYYY-MM-DD>/<slug>/research.md`
-- `docs/collab/runs/<YYYY-MM-DD>/<slug>/prd.md`
-- `docs/collab/runs/<YYYY-MM-DD>/<slug>/implementation-log.md`
-- `docs/collab/runs/<YYYY-MM-DD>/<slug>/review.md`
+- `docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/<slug>/research.md`
+- `docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/<slug>/prd.md`
+- `docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/<slug>/implementation-log.md`
+- `docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/<slug>/review.md`
 
 Use lowercase kebab-case for `<slug>`.
 

@@ -19,7 +19,7 @@ Outcome: <what success looks like>
 Scope: <in scope / out of scope>
 Constraints: <technical/process constraints>
 Done Criteria: <binary checks>
-Output Doc: docs/collab/runs/<YYYY-MM-DD>/<slug>/prd.md
+Output Doc: docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/<slug>/prd.md
 ```
 
 ## Skill Mapping

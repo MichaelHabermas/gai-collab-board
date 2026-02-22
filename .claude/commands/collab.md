@@ -37,7 +37,7 @@ Done Criteria: <binary checks>
 Depth: <quick|standard|deep>
 Strict: <true|false>
 Timebox: <minutes>
-Output Dir: docs/collab/runs/<YYYY-MM-DD>/<slug>/
+Output Dir: docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/<slug>/
 ```
 
 ## Skill Mapping

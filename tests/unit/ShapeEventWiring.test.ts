@@ -42,12 +42,15 @@ class MockNode {
   }
 }
 
+const identityDragBound: (pos: Konva.Vector2d) => Konva.Vector2d = (pos) => pos;
+
 function createDragMock(): IDragCoordinator {
   return {
     selectObject: vi.fn(),
     onDragMove: vi.fn(),
     commitDragEnd: vi.fn(),
-    createDragBoundFunc: vi.fn((_objectId: string) => (pos: Konva.Vector2d) => pos),
+    createDragBoundFunc: vi.fn((_objectId: string): (pos: Konva.Vector2d) => Konva.Vector2d =>
+      identityDragBound),
     handleSelectionDragStart: vi.fn(),
     handleSelectionDragMove: vi.fn(),
     handleSelectionDragEnd: vi.fn(),

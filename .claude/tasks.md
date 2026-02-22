@@ -372,13 +372,13 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ## IK17 — Controllers (Drawing, Marquee, Connector)
 
-- **Status:** reject
+- **Status:** in-progress
 - **Tier:** sonnet
 - **Role:** architect
 - **Worktree name:** epic3-controllers
 - **Description:** Task T17: Create DrawingController.ts, MarqueeController.ts, ConnectorController.ts.
 - **Dependencies:** IK6
-- **Notes:** Files/folder missing. DrawingController.ts, MarqueeController.ts, ConnectorController.ts not present in repo.
+- **Notes:** MarqueeController.ts + tests/unit/MarqueeController.test.ts present (untracked). DrawingController.ts, ConnectorController.ts not present in repo.
 
 ---
 

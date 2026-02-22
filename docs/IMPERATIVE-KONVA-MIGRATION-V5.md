@@ -40,7 +40,7 @@
 | **E0** | Constitution, baselines, 13 E2E done | **Done** — Constitution (Articles XX–XXVII) in CONSTITUTION.md; `docs/perf-baselines/pre-migration.json` with automated capture; 13 E2E specs present; connectorCreation and undoRedoDrag pass (chromium+firefox). RL0–RL3 complete on spike/react-konva-1. |
 | **E1** | Done | Done — all 7 factories, types, registry, unit tests present. |
 | **E2** | Done | Done — LayerManager, KonvaNodeManager, SelectionSyncController + unit tests. |
-| **E3** | 9/11 sub-tasks done | **9/11** — drag modules + DragCoordinator + StageEventRouter + ShapeEventWiring exist; DragCoordinator unit test added. **Missing:** DrawingController, MarqueeController, ConnectorController, TextEditController (unit tests for StageEventRouter/ShapeEventWiring present). |
+| **E3** | 9/11 sub-tasks done | **9/11** — drag modules + DragCoordinator + StageEventRouter + ShapeEventWiring + MarqueeController + DrawingController exist; unit tests present. **Missing:** ConnectorController, TextEditController. |
 | **E4** | Not started | **Partial** — TransformerManager, GridRenderer, SelectionDragHandle + unit tests present. Missing: OverlayManager. |
 | **E5** | Not started | Not started — App still uses BoardCanvas. |
 | **E6** | Not started | Not started. |
@@ -960,8 +960,8 @@ function createTextEditController(
 - [x] 5. **`drag/frameDragReparenting.ts`** (~120 LOC) — Frame containment logic.
 - [x] 6. **`events/StageEventRouter.ts`** (~120 LOC) — Stage-level event dispatch.
 - [x] 7. **`events/ShapeEventWiring.ts`** (~150 LOC) — Per-node event wiring.
-- [ ] 8. **`events/DrawingController.ts`** (~100 LOC) — Drawing state machine.
-- [ ] 9. **`events/MarqueeController.ts`** (~80 LOC) — Marquee state machine.
+- [x] 8. **`events/DrawingController.ts`** (~100 LOC) — Drawing state machine.
+- [x] 9. **`events/MarqueeController.ts`** (~80 LOC) — Marquee state machine.
 - [ ] 10. **`events/ConnectorController.ts`** (~70 LOC) — Two-click connector flow.
 - [ ] 11. **`events/TextEditController.ts`** (~80 LOC) — Text editing via DOM overlay.
 - [x] 12. **Unit tests** (~300 LOC):
@@ -973,7 +973,7 @@ function createTextEditController(
 
 ### Epic 3 Definition of Done
 
-- [ ] All 11 event/drag files created and passing unit tests (9/11: drag modules + DragCoordinator + StageEventRouter + ShapeEventWiring done; pending: DrawingController, MarqueeController, ConnectorController, TextEditController)
+- [ ] All 11 event/drag files created and passing unit tests (9/11: drag modules + DragCoordinator + StageEventRouter + ShapeEventWiring + MarqueeController + DrawingController done; pending: ConnectorController, TextEditController)
 - [x] **Every drag sub-module stays under 200 LOC**
 - [x] DragCoordinator is a thin dispatcher, not a monolith
 - [ ] MarqueeController uses no React state (plain object)

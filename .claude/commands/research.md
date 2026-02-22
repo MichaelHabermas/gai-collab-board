@@ -18,7 +18,7 @@ Scope: <files/modules/systems included and excluded>
 Constraints: <policies, constraints, non-negotiables>
 Done Criteria: <binary checks>
 Depth: <quick|standard|deep>
-Output Doc: docs/collab/runs/<YYYY-MM-DD>/<slug>/research.md
+Output Doc: docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/<slug>/research.md
 ```
 
 ## Skill Mapping

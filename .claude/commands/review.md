@@ -17,7 +17,7 @@ Scope: <files/diff/plan being reviewed>
 Constraints: <must-not-break invariants>
 Done Criteria: <binary checks to validate>
 Review Strictness: <standard|harsh>
-Output Doc: docs/collab/runs/<YYYY-MM-DD>/<slug>/review.md
+Output Doc: docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/<slug>/review.md
 ```
 
 ## Skill Mapping

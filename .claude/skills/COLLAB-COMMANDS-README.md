@@ -6,6 +6,7 @@ Reusable command pack for research, PRD, implementation, and review workflows.
 
 - Atomic commands: `/research`, `/prd`, `/implement`, `/review`
 - Router command: `/collab`
+- Meta-advisor command: `/Tarpey`
 - Shared execution contract and stop conditions
 - Compatible surfaces:
   - `.claude/commands/*`
@@ -19,10 +20,12 @@ Reusable command pack for research, PRD, implementation, and review workflows.
 - `/implement` -> `.claude/skills/collab-implement/SKILL.md`
 - `/review` -> `.claude/skills/collab-review/SKILL.md`
 - `/collab` -> `.claude/skills/collab-router/SKILL.md`
+- `/Tarpey` -> `.claude/skills/tarpey-advisor/SKILL.md`
 
 Shared rules:
 
 - `.claude/skills/COLLAB-CONTRACT.md`
+- `.claude/skills/TARPEY-CONTRACT.md`
 
 ## Documentation Output Structure
 
@@ -34,10 +37,10 @@ Use this structure for command outputs so artifacts are easy to find and extend:
 
 Recommended run layout:
 
-- `docs/collab/runs/<YYYY-MM-DD>/<slug>/research.md`
-- `docs/collab/runs/<YYYY-MM-DD>/<slug>/prd.md`
-- `docs/collab/runs/<YYYY-MM-DD>/<slug>/implementation-log.md`
-- `docs/collab/runs/<YYYY-MM-DD>/<slug>/review.md`
+- `docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/<slug>/research.md`
+- `docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/<slug>/prd.md`
+- `docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/<slug>/implementation-log.md`
+- `docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/<slug>/review.md`
 
 ## Quick Invocation Examples
 
@@ -78,6 +81,29 @@ Strict: true
 Timebox: 60
 ```
 
+### Meta advisor
+
+```text
+/Tarpey
+Mode: audit
+Preset: strict
+Objective: Verify claimed progress against code and docs, and identify drift.
+Scope: source-of-truth docs, task ledger, and touched modules.
+Constraints: Findings first; block closeout if evidence is missing.
+Done Criteria: Every claimed completed item is verified or explicitly marked partial/unverified with corrective action.
+Evidence Targets: file paths, test outputs, and merge commits.
+Depth: standard
+Strict: true
+Output Dir: docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/<slug>/
+```
+
+Quick shorthand:
+
+```text
+/Tarpey strict audit scope="source docs + touched code"
+/Tarpey light retro scope="last 3 sessions"
+```
+
 ## Fresh Context / Reconciliation-First (recommended for new chat)
 
 When starting in a new context window, run reconciliation before any chain that includes PRD or implement. Use this prompt so tasks and docs are coordinated before proceeding:
@@ -93,7 +119,7 @@ Done Criteria: ReconciliationCheck shows proceed_decision clear; then research o
 Depth: standard
 Strict: true
 Timebox: 45
-Output Dir: docs/collab/runs/<YYYY-MM-DD>/continue-<slug>/
+Output Dir: docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/continue-<slug>/
 ```
 
 Reconciliation mini-step: when blocked, apply the listed resolution_actions (e.g. update `.claude/tasks.md` status/notes to match docs and code), then re-run the same chain or run research only to confirm clear. Record the check using `docs/collab/templates/reconciliation-check-template.md` when saving run artifacts.

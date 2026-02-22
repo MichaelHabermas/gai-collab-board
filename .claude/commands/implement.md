@@ -18,7 +18,7 @@ Scope Cap: <max files/areas>
 Constraints: <rules and non-negotiables>
 Done Criteria: <binary checks>
 Verification: <tests/commands/manual checks>
-Output Doc: docs/collab/runs/<YYYY-MM-DD>/<slug>/implementation-log.md
+Output Doc: docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/<slug>/implementation-log.md
 ```
 
 ## Skill Mapping
