@@ -10,6 +10,11 @@ import type { IDragConfig } from './dragBounds';
 
 const GRID_SIZE = 20;
 
+export interface IDragCommitConfig extends IDragConfig {
+  onObjectUpdate: (id: string, updates: Partial<IBoardObject>) => void;
+  onObjectsUpdate: (updates: Array<{ objectId: string; updates: Partial<IBoardObject> }>) => void;
+}
+
 export function selectObject(objectId: string, metaKey: boolean): void {
   const { selectedIds, setSelectedIds, toggleSelectedId } = useSelectionStore.getState();
   if (metaKey) {
@@ -23,7 +28,7 @@ export function commitDragEnd(
   objectId: string,
   x: number,
   y: number,
-  config: IDragConfig,
+  config: IDragCommitConfig,
   objectsRecord: Record<string, IBoardObject>,
   frames: IBoardObject[],
   childIndex: Map<string, Set<string>>
@@ -39,6 +44,7 @@ export function commitDragEnd(
     const dx = x - draggedObj.x;
     const dy = y - draggedObj.y;
     const movedIds = new Set<string>(selectedIds);
+    const batch: Array<{ objectId: string; updates: Partial<IBoardObject> }> = [];
 
     for (const id of selectedIds) {
       const obj = objectsRecord[id];
@@ -71,6 +77,7 @@ export function commitDragEnd(
               cy = snapped.y;
             }
 
+            batch.push({ objectId: childId, updates: { x: cx, y: cy } });
             queueObjectUpdate(childId, { x: cx, y: cy });
             movedIds.add(childId);
           }
@@ -90,9 +97,11 @@ export function commitDragEnd(
         }
       }
 
+      batch.push({ objectId: id, updates: objUpdates });
       queueObjectUpdate(id, objUpdates);
     }
 
+    config.onObjectsUpdate(batch);
     spatialIndex.clearDragging();
     return;
   }
@@ -113,6 +122,9 @@ export function commitDragEnd(
     const dy = finalY - draggedObj.y;
     const childIds = childIndex.get(draggedObj.id);
     if (childIds && childIds.size > 0) {
+      const batch: Array<{ objectId: string; updates: Partial<IBoardObject> }> = [
+        { objectId, updates: singleUpdates },
+      ];
       for (const childId of childIds) {
         const child = objectsRecord[childId];
         if (!child) continue;
@@ -125,10 +137,16 @@ export function commitDragEnd(
           cy = snapped.y;
         }
 
+        batch.push({ objectId: childId, updates: { x: cx, y: cy } });
         queueObjectUpdate(childId, { x: cx, y: cy });
       }
+
+      config.onObjectsUpdate(batch);
+      spatialIndex.clearDragging();
+      return;
     }
 
+    config.onObjectUpdate(objectId, singleUpdates);
     queueObjectUpdate(objectId, singleUpdates);
     spatialIndex.clearDragging();
     return;
@@ -171,13 +189,19 @@ export function commitDragEnd(
           const newFrameRight = Math.max(frameRight, childRight);
           const newFrameBottom = Math.max(frameBottom, childBottom);
 
-          queueObjectUpdate(objectId, singleUpdates);
-          queueObjectUpdate(targetFrameId, {
+          const frameUpdates = {
             x: newFrameX,
             y: newFrameY,
             width: newFrameRight - newFrameX,
             height: newFrameBottom - newFrameY,
-          });
+          };
+
+          config.onObjectsUpdate([
+            { objectId, updates: singleUpdates },
+            { objectId: targetFrameId, updates: frameUpdates },
+          ]);
+          queueObjectUpdate(objectId, singleUpdates);
+          queueObjectUpdate(targetFrameId, frameUpdates);
           spatialIndex.clearDragging();
           return;
         }
@@ -185,6 +209,7 @@ export function commitDragEnd(
     }
   }
 
+  config.onObjectUpdate(objectId, singleUpdates);
   queueObjectUpdate(objectId, singleUpdates);
   spatialIndex.clearDragging();
 }
@@ -225,7 +250,7 @@ export function handleSelectionDragMove(
 
 export function handleSelectionDragEnd(
   initialBounds: { x1: number; y1: number; x2: number; y2: number },
-  config: IDragConfig,
+  config: IDragCommitConfig,
   objectsRecord: Record<string, IBoardObject>,
   frames: IBoardObject[],
   childIndex: Map<string, Set<string>>
@@ -241,6 +266,7 @@ export function handleSelectionDragEnd(
   const { dx, dy } = groupDragOffset;
   const movedIds = new Set(selectedIds);
   const snapToGridEnabled = config.snapToGridEnabled();
+  const batch: Array<{ objectId: string; updates: Partial<IBoardObject> }> = [];
 
   const groupNewLeft = initialBounds.x1 + dx;
   const groupNewTop = initialBounds.y1 + dy;
@@ -271,6 +297,7 @@ export function handleSelectionDragEnd(
           const cx = child.x + dx + snapOffsetX;
           const cy = child.y + dy + snapOffsetY;
 
+          batch.push({ objectId: childId, updates: { x: cx, y: cy } });
           queueObjectUpdate(childId, { x: cx, y: cy });
           movedIds.add(childId);
         }
@@ -290,9 +317,11 @@ export function handleSelectionDragEnd(
       }
     }
 
+    batch.push({ objectId: id, updates: objUpdates });
     queueObjectUpdate(id, objUpdates);
   }
 
+  config.onObjectsUpdate(batch);
   useDragOffsetStore.getState().setGroupDragOffset(null);
   spatialIndex.clearDragging();
 }

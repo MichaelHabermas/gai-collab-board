@@ -1309,6 +1309,93 @@ Minimum artifacts:
 
 **Only when all Epic 5.1 checks are `[x]` may Epic 5 be marked fully done and Epic 6 begin.**
 
+### Epic 5.2: CanvasHost Store-Decoupling Plan (execution follow-up)
+
+**Purpose:** Close the remaining decoupling gap discovered after cutover: imperative Konva is active, but `CanvasHost` still subscribes to `objects` and `selectedIds`, causing shape-coupled React churn.
+
+**Position in program:** Execute this as a focused follow-up between Epic 5.1 stabilization work and Epic 6 cleanup. This is still readiness/stabilization work, not cleanup/deletion.
+
+**Non-goals:**
+
+- No new canvas features.
+- No dead-file deletions (Epic 6 only).
+- No dependency removals (Epic 6 only).
+
+#### Epic 5.2 Desired Architecture
+
+```mermaid
+flowchart LR
+  objectsStore[objectsStore]
+  selectionStore[selectionStore]
+  canvasHost[CanvasHost]
+  canvasSetup[useCanvasSetup]
+  nodeManager[KonvaNodeManager]
+  controlPanel[CanvasControlPanelContainer]
+  canvasContainer[CanvasContainerSelectionAttr]
+
+  objectsStore -->|"subscribe"| nodeManager
+  selectionStore -->|"subscribe"| nodeManager
+  canvasHost -->|"mount setup"| canvasSetup
+  canvasSetup --> nodeManager
+  canvasHost -->|"stable callbacks getters"| controlPanel
+  controlPanel -->|"selector subscribe"| objectsStore
+  controlPanel -->|"selector subscribe"| selectionStore
+  canvasContainer -->|"selector subscribe"| selectionStore
+```
+
+#### Epic 5.2 Execution Sequence
+
+```mermaid
+flowchart TD
+  startNode[StartEpic5_2]
+  baselineNode[CaptureBaselineEvidence]
+  hostNode[DecoupleCanvasHostSelectors]
+  opsNode[RefactorUseCanvasOperationsToGetters]
+  uiNode[MoveUiSubscriptionsToIslands]
+  fastVerifyNode[RunValidateAndTargetedChecks]
+  e2eNode[RunFullE2EAtEndOnly]
+  reconcileNode[WriteArtifactsAndReconcile]
+  reviewNode[W6_2_ReviewGate]
+
+  startNode --> baselineNode
+  baselineNode --> hostNode
+  hostNode --> opsNode
+  opsNode --> uiNode
+  uiNode --> fastVerifyNode
+  fastVerifyNode --> e2eNode
+  e2eNode --> reconcileNode
+  reconcileNode --> reviewNode
+```
+
+#### Epic 5.2 Work Packages
+
+1. **WP1 — Baseline evidence**
+   - Capture pre-change React Profiler evidence for drag/selection churn.
+   - Create run folder: `docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/epic5-2-decoupling/`.
+2. **WP2 — Decouple `CanvasHost`**
+   - Remove direct selector subscriptions to `objects` and `selectedIds` from `CanvasHost`.
+   - Keep state that is truly shell-level (`activeTool`, viewport, theme/UI wiring).
+3. **WP3 — Getter-driven canvas operations**
+   - Update `useCanvasOperations` to read object/selection state at action time via getters/store access, not render-time snapshots.
+4. **WP4 — UI subscription islands**
+   - Move subscriptions to minimal UI surfaces that actually render object/selection-derived information (control panel and selection attribute container).
+5. **WP5 — Verification order**
+   - Run fast checks first (`bun run validate`, targeted module tests, manual smoke matrix).
+   - Run full `bun run test:e2e` only after WP2-WP4 are complete.
+6. **WP6 — Reconciliation**
+   - Update this doc, orchestration doc, and `.claude/tasks.md` with 1:1 evidence links.
+   - Produce `reconciliation-check.md` with `proceed_decision=clear|blocked|escalate`.
+
+#### Epic 5.2 Acceptance Criteria
+
+- [ ] `CanvasHost` no longer subscribes directly to `objects` or `selectedIds`.
+- [ ] Drag/selection updates no longer cause shape-coupled React re-renders in the host shell.
+- [ ] Imperative Konva behavior remains functionally equivalent for create/update/delete/select workflows.
+- [ ] UI behavior remains correct for control panel actions and selected-id diagnostics.
+- [ ] `bun run validate` passes after decoupling changes.
+- [ ] Full `bun run test:e2e` is executed after implementation completion and results are recorded.
+- [ ] Epic 5.1 gates are updated with Epic 5.2 evidence where relevant.
+
 ---
 
 ## 12. Epic 6: Cleanup & Performance Verification
@@ -1410,9 +1497,12 @@ Epic 2: KonvaNodeManager    Epic 3: Event System (parallel with E2)
 Epic 4: Overlays ─────────────────┘
   │
   ▼
-Epic 5: CanvasHost (CUT-OVER) ← All E2E must pass
+Epic 5: CanvasHost (CUT-OVER)
   │
-  ▼ (separate PR, blocks on E5 stability)
+  ▼
+Epic 5.2: CanvasHost Store Decoupling + Readiness Evidence
+  │
+  ▼ (separate PR, blocks on E5/E5.2 stability)
 Epic 6: Cleanup + Perf Verification
 ```
 
@@ -1427,7 +1517,7 @@ Epic 6: Cleanup + Perf Verification
 - Epic 0 → Epic 1 (baselines + rules + E2E)
 - Epic 1 → Epic 2 (factories are inputs to manager)
 - Epics 2 + 3 + 4 → Epic 5 (all modules required)
-- Epic 5 stable → Epic 6 (cleanup gated on stability)
+- Epic 5 stable + Epic 5.2 completed → Epic 6 (cleanup gated on stability)
 
 ---
 

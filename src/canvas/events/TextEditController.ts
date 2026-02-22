@@ -31,6 +31,7 @@ export interface ITextEditNodeManager {
 export interface ITextEditControllerConfig {
   nodeManager: ITextEditNodeManager;
   getStage: () => Konva.Stage | null;
+  onObjectUpdate: (objectId: string, updates: IUpdateObjectParams) => void;
   queueObjectUpdate: (objectId: string, updates: IUpdateObjectParams) => void;
 }
 
@@ -130,7 +131,7 @@ function applyTextareaStyle(
 }
 
 export function createTextEditController(config: ITextEditControllerConfig): ITextEditController {
-  const { nodeManager, getStage, queueObjectUpdate } = config;
+  const { nodeManager, getStage, onObjectUpdate, queueObjectUpdate } = config;
   let currentObjectId: string | null = null;
   let cleanupReposition: (() => void) | null = null;
   let overlayElement: HTMLTextAreaElement | HTMLInputElement | null = null;
@@ -218,6 +219,7 @@ export function createTextEditController(config: ITextEditControllerConfig): ITe
       function commitAndClose(): void {
         const { value } = el;
         removeOverlay();
+        onObjectUpdate(objectId, { text: value });
         queueObjectUpdate(objectId, { text: value });
       }
 

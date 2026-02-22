@@ -284,6 +284,64 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 
 ---
 
+## WAVE 6.2: Epic 5.2 — CanvasHost Decoupling Follow-up (sequential, 1 architect + 1 reviewer)
+
+**Status:** Planned. Purpose is to remove remaining shape-coupled React churn in `CanvasHost` while preserving imperative Konva behavior. This wave updates readiness evidence and is completed before Epic 6 cleanup starts.
+
+| Task | Title | Tier | Role | Deps | Branch | Est LOC |
+| ------ | ------ | ------ | ------ | ------ | ------ | ------ |
+| T24A | Baseline evidence + decoupling design lock | sonnet | architect | W6-R | epic5-2-decoupling | 40 |
+| T24B | CanvasHost/useCanvasOperations decoupling implementation | opus | architect | T24A | epic5-2-decoupling | 180 |
+| T24C | UI subscription-island wiring + fast verification | sonnet | architect | T24B | epic5-2-decoupling | 120 |
+| T24D | Full E2E + reconciliation artifacts + closeout | sonnet | architect | T24C | epic5-2-decoupling | 40 |
+
+**Scheduling:** `T24A → T24B → T24C → T24D` strictly sequential.
+
+**Review gate W6.2-R (required):**
+
+- `CanvasHost` does not subscribe directly to `objects`/`selectedIds`.
+- React re-renders during drag are limited to UI chrome.
+- `bun run validate` passes.
+- Full `bun run test:e2e` is run after implementation (T24D), with outcomes documented.
+
+### T24A — Baseline and design lock
+
+- **Description:** Capture pre-change profiler evidence for drag/selection churn; create `docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/epic5-2-decoupling/`; lock scope and acceptance checks against V5 Epic 5.1 gates.
+- **AC:** Baseline artifacts exist; scope/constraints documented; evidence targets clear.
+
+### T24B — Host and operations decoupling
+
+- **Description:** Remove `CanvasHost` selector subscriptions to `objects`/`selectedIds`. Refactor `useCanvasOperations` to use getter/store reads at action time rather than render-time snapshots.
+- **AC:** Host no longer re-renders for object/selection churn. Behavior parity maintained for delete/copy/duplicate/paste/keyboard flows.
+
+### T24C — UI subscription islands + fast checks
+
+- **Description:** Move object/selection subscriptions to minimal UI surfaces (control panel and selection-attribute container). Run `bun run validate`, targeted tests, and manual smoke checks.
+- **AC:** UI remains correct; fast checks pass; profiler evidence shows expected re-render reduction.
+
+### T24D — Full E2E at end + reconciliation
+
+- **Description:** Run full `bun run test:e2e` only after T24B/T24C are complete. Record results and classify any residual failures. Update reconciliation artifacts and readiness closeout.
+- **AC:** Full E2E executed and documented; artifacts map 1:1 to migration/orchestration/tasks status.
+
+### Wave 6.2 Flow
+
+```mermaid
+flowchart TD
+  t24aNode[T24A_BaselineAndScope]
+  t24bNode[T24B_DecoupleHostAndOps]
+  t24cNode[T24C_MoveUiSubscriptionsAndFastChecks]
+  t24dNode[T24D_RunE2EAndReconcile]
+  w62GateNode[W6_2_R_Gate]
+
+  t24aNode --> t24bNode
+  t24bNode --> t24cNode
+  t24cNode --> t24dNode
+  t24dNode --> w62GateNode
+```
+
+---
+
 ## WAVE 7: Epic 6 — Cleanup (sequential, separate PR)
 
 **Blocked until Epic 5.1 Readiness Gate is closed with `proceed_decision=clear`. If Epic 5 regresses, Epic 6 blocked and Epic 5 reverted (Article XXVII.3).**
@@ -342,11 +400,11 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 
 | Metric | Value |
 | ------ | ------ |
-| Total tasks | 28 (+ 7 review gates) |
+| Total tasks | 32 (+ 8 review gates) |
 | Total new code | ~3,290 LOC |
 | Total new tests | ~850 LOC |
 | Total deleted code | ~4,907 LOC |
-| Execution waves | 8 |
+| Execution waves | 9 |
 | Max concurrent agents | 3 |
 | Epics | 7 (E0–E6) |
 
@@ -363,6 +421,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 | W4 | MarqueeController leaks React patterns | Review gate: no useState/useRef in any controller |
 | W5 | TransformerManager config drift | Diff comparison in review |
 | W6 | Cutover breaks features | All 13 E2E + existing + manual checklist |
+| W6.2 | Decoupling change introduces behavior drift | Fast checks before E2E; full E2E only after implementation; reconcile before closeout |
 | W7 | Perf target not met | Investigate before merging; do not merge without ≥50% |
 
 ---
@@ -395,12 +454,17 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 6. Manual integration checklist (27 items from V5 §11) verified
 7. Post-migration baselines captured
 
+**After Epic 5.2 decoupling follow-up (W6.2-R):**
+8. Host shell no longer subscribes to object/selection store snapshots
+9. Drag profiling shows shape-coupled React churn removed from host path
+10. Full E2E run completed at end of the wave and documented
+
 **After Epic 6 cleanup (W7-R):**
-8. ≥50% drag frame time reduction vs pre-migration
-9. 0 shape-related React re-renders during drag
-10. Bundle size reduced ~45KB (react-konva removed)
-11. `bun run release:gate` passes
+11. ≥50% drag frame time reduction vs pre-migration
+12. 0 shape-related React re-renders during drag
+13. Bundle size reduced ~45KB (react-konva removed)
+14. `bun run release:gate` passes
 
 **Before T28 merge to `development`:**
-12. Full E2E suite pass + two consecutive passes for flaky-prone specs on chromium + firefox (`connectorCreation`, `undoRedoDrag`, `frameReparenting`)
-13. Post-migration baseline file exists and comparison is documented in merge/PR notes
+15. Full E2E suite pass + two consecutive passes for flaky-prone specs on chromium + firefox (`connectorCreation`, `undoRedoDrag`, `frameReparenting`)
+16. Post-migration baseline file exists and comparison is documented in merge/PR notes

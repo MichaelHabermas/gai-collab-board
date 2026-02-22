@@ -12,6 +12,8 @@ describe('DragCoordinator', () => {
   const config: IDragCoordinatorConfig = {
     overlayManager: mockOverlayManager,
     snapToGridEnabled: () => true,
+    onObjectUpdate: vi.fn(),
+    onObjectsUpdate: vi.fn(),
   };
 
   beforeEach(() => {

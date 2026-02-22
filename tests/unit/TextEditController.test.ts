@@ -71,6 +71,7 @@ function createConfig(
   return {
     nodeManager,
     getStage: vi.fn(() => stage),
+    onObjectUpdate: vi.fn(),
     queueObjectUpdate: vi.fn(),
     ...overrides,
   };

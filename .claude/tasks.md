@@ -500,6 +500,70 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md Wave
 
 ---
 
+## Epic 5.2 decoupling follow-up checkpoint (Wave 6.2, required before Epic 6)
+
+- **Status:** in-progress
+- **Purpose:** Remove remaining shape-coupled React churn in `CanvasHost` while preserving imperative Konva behavior and closing readiness evidence gaps.
+- **Evidence directory:** `docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/epic5-2-decoupling/`
+- **Binary checks (all required):**
+  1. `CanvasHost` no longer subscribes directly to `objects`/`selectedIds`.
+  2. Drag profiling confirms React re-renders are limited to UI chrome (no shape-coupled host churn).
+  3. `bun run validate` passes after decoupling changes.
+  4. Full `bun run test:e2e` is run after implementation is complete (final step) and results are recorded.
+  5. Reconciliation artifacts map 1:1 across V5 doc + orchestration doc + tasks ledger.
+- **Exit rule:** Epic 6 remains blocked until Wave 6.2 review gate is green and reconciliation records `proceed_decision=clear`.
+
+---
+
+## IK24A — Epic 5.2 baseline evidence + design lock
+
+- **Status:** in-progress
+- **Tier:** sonnet
+- **Role:** architect
+- **Worktree name:** epic5-2-decoupling
+- **Description:** Capture pre-change profiler evidence for drag/selection churn; create Epic 5.2 evidence directory; lock scope/acceptance checks to V5 Epic 5.2 + Orchestration Wave 6.2.
+- **Dependencies:** W6-R
+- **Acceptance criteria:** Baseline artifacts exist and implementation scope is locked with explicit evidence targets.
+- **Notes:** Planning/docs updated in V5 + Orchestration. No implementation changes are part of this task.
+
+---
+
+## IK24B — CanvasHost/useCanvasOperations decoupling implementation
+
+- **Status:** blocked
+- **Tier:** opus
+- **Role:** architect
+- **Worktree name:** epic5-2-decoupling
+- **Description:** Remove direct `CanvasHost` subscriptions to `objects`/`selectedIds`; refactor `useCanvasOperations` to getter/store reads at action time instead of render-time snapshots.
+- **Dependencies:** IK24A
+- **Acceptance criteria:** Host shell no longer re-renders due to object/selection churn; behavior parity maintained for delete/copy/duplicate/paste/keyboard flows.
+
+---
+
+## IK24C — UI subscription islands + fast verification
+
+- **Status:** blocked
+- **Tier:** sonnet
+- **Role:** architect
+- **Worktree name:** epic5-2-decoupling
+- **Description:** Move object/selection subscriptions to minimal UI surfaces (control panel and selected-id attribute container). Run fast checks first.
+- **Dependencies:** IK24B
+- **Acceptance criteria:** UI behavior remains correct; `bun run validate` and targeted checks pass; profiler evidence shows reduced host churn.
+
+---
+
+## IK24D — Full E2E at end + reconciliation closeout
+
+- **Status:** blocked
+- **Tier:** sonnet
+- **Role:** architect
+- **Worktree name:** epic5-2-decoupling
+- **Description:** Run full `bun run test:e2e` only after IK24B/IK24C are complete. Record outcomes, classify residual failures, and finalize reconciliation artifacts.
+- **Dependencies:** IK24C
+- **Acceptance criteria:** Full E2E is executed and documented; readiness artifacts are complete with explicit `proceed_decision`.
+
+---
+
 # Ralph Loop — Epics 0-3 (Strict Gate)
 
 Base branch: spike/react-konva-1. Strict Epic 0→1→2→3 ralph-loop. All gates must pass before advancing.

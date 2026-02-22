@@ -4,10 +4,10 @@ import type { IAlignmentCandidate } from '@/types';
 import * as dragCommit from './dragCommit';
 import * as alignmentEngine from './alignmentEngine';
 import * as dragBounds from './dragBounds';
-import type { IDragConfig } from './dragBounds';
+import type { IDragCommitConfig } from './dragCommit';
 import type { IOverlayManagerGuides } from './alignmentEngine';
 
-export interface IDragCoordinatorConfig extends IDragConfig {
+export interface IDragCoordinatorConfig extends IDragCommitConfig {
   overlayManager: IOverlayManagerGuides;
 }
 

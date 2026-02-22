@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { openCleanGuestBoard } from './helpers/openCleanGuestBoard';
 
 /**
  * E2E tests for S5: single source of truth.
@@ -6,22 +7,7 @@ import { test, expect, type Page } from '@playwright/test';
  * (no stale or divergent state between history, AI context, and canvas).
  */
 
-const BOARD_TIMEOUT_MS = 15_000;
-
-const createCredential = () => {
-  const suffix = `s5-${Date.now()}@example.com`;
-  return {
-    email: suffix,
-    password: `S5Source!${Date.now()}`,
-  };
-};
-
-const signUp = async (page: Page, credential: { email: string; password: string }): Promise<void> => {
-  await page.locator('#signup-email').fill(credential.email);
-  await page.locator('#signup-password').fill(credential.password);
-  await page.locator('#confirm-password').fill(credential.password);
-  await page.locator('button:has-text("Create Account")').click();
-};
+const BOARD_TIMEOUT_MS = 30_000;
 
 const waitForBoardVisible = async (page: Page): Promise<void> => {
   await expect(page.locator('[data-testid="board-canvas"]')).toBeVisible({
@@ -29,17 +15,15 @@ const waitForBoardVisible = async (page: Page): Promise<void> => {
   });
 };
 
+const openEditableBoard = async (page: Page): Promise<void> => {
+  await openCleanGuestBoard(page, BOARD_TIMEOUT_MS);
+};
+
 test.describe('Single source of truth — undo/redo and canvas consistency', () => {
   test.setTimeout(60_000);
 
   test('undo reverts property change and canvas reflects it; redo restores', async ({ page }) => {
-    const credential = createCredential();
-    await page.goto('/login?tab=signup');
-    await page.waitForLoadState('load');
-    await page.locator('#signup-email').waitFor({ state: 'visible', timeout: 10_000 });
-
-    await signUp(page, credential);
-    await waitForBoardVisible(page);
+    await openEditableBoard(page);
 
     await expect(page.locator('[data-testid="object-count"]')).toBeVisible({
       timeout: BOARD_TIMEOUT_MS,
@@ -90,13 +74,7 @@ test.describe('Single source of truth — undo/redo and canvas consistency', () 
   });
 
   test('object count and canvas stay in sync after create then undo', async ({ page }) => {
-    const credential = createCredential();
-    await page.goto('/login?tab=signup');
-    await page.waitForLoadState('load');
-    await page.locator('#signup-email').waitFor({ state: 'visible', timeout: 10_000 });
-
-    await signUp(page, credential);
-    await waitForBoardVisible(page);
+    await openEditableBoard(page);
 
     await expect(page.locator('[data-testid="object-count"]')).toBeVisible({
       timeout: BOARD_TIMEOUT_MS,

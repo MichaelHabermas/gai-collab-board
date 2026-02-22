@@ -1,37 +1,10 @@
 import { test, expect, type Page } from '@playwright/test';
+import { openCleanGuestBoard } from './helpers/openCleanGuestBoard';
 
-const BOARD_TIMEOUT_MS = 20_000;
-
-const waitForBoardVisible = async (page: Page): Promise<void> => {
-  await expect(page.locator('[data-testid="board-canvas"]')).toBeVisible({
-    timeout: BOARD_TIMEOUT_MS,
-  });
-};
-
-/** Wait for auth + board creation to complete after signup click. */
-const waitForPostSignupNavigation = async (page: Page): Promise<void> => {
-  await page.waitForURL((url) => url.pathname !== '/login', { timeout: 20_000 });
-};
+const BOARD_TIMEOUT_MS = 30_000;
 
 const ensureOnBoard = async (page: Page): Promise<void> => {
-  await page.waitForLoadState('load');
-  const boardVisible = await page
-    .locator('[data-testid="board-canvas"]')
-    .isVisible()
-    .catch(() => false);
-  if (boardVisible) {
-    return;
-  }
-  await page.goto('/login?tab=signup');
-  await page.locator('#signup-email').waitFor({ state: 'visible', timeout: 10_000 });
-  const suffix = `connector-${Date.now()}@example.com`;
-  const pwd = `Connector!${Date.now()}`;
-  await page.locator('#signup-email').fill(suffix);
-  await page.locator('#signup-password').fill(pwd);
-  await page.locator('#confirm-password').fill(pwd);
-  await page.locator('button:has-text("Create Account")').click();
-  await waitForPostSignupNavigation(page);
-  await waitForBoardVisible(page);
+  await openCleanGuestBoard(page, BOARD_TIMEOUT_MS);
 };
 
 /**

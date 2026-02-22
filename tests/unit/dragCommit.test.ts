@@ -74,7 +74,11 @@ describe('dragCommit', () => {
 
   describe('commitDragEnd', () => {
     it('queues updates for single object drag', () => {
-      const config = { snapToGridEnabled: () => false };
+      const config = { 
+        snapToGridEnabled: () => false,
+        onObjectUpdate: vi.fn(),
+        onObjectsUpdate: vi.fn(),
+      };
       commitDragEnd('obj1', 20, 20, config, objectsRecord, frames, childIndex);
 
       expect(writeQueue.queueObjectUpdate).toHaveBeenCalledWith('obj1', {
@@ -87,7 +91,11 @@ describe('dragCommit', () => {
 
     it('queues updates for multi object drag', () => {
       useSelectionStore.getState().setSelectedIds(['obj1', 'obj2']);
-      const config = { snapToGridEnabled: () => false };
+      const config = { 
+        snapToGridEnabled: () => false,
+        onObjectUpdate: vi.fn(),
+        onObjectsUpdate: vi.fn(),
+      };
       
       // obj1 dragged to (20, 20), dx=10, dy=10
       commitDragEnd('obj1', 20, 20, config, objectsRecord, frames, childIndex);
@@ -123,7 +131,11 @@ describe('dragCommit', () => {
       expect(useDragOffsetStore.getState().groupDragOffset).toEqual({ dx: 10, dy: 20 });
 
       // End
-      const config = { snapToGridEnabled: () => false };
+      const config = { 
+        snapToGridEnabled: () => false,
+        onObjectUpdate: vi.fn(),
+        onObjectsUpdate: vi.fn(),
+      };
       handleSelectionDragEnd(bounds, config, objectsRecord, frames, childIndex);
 
       expect(writeQueue.queueObjectUpdate).toHaveBeenCalledWith('obj1', {

@@ -1,31 +1,16 @@
 import { test, expect, type Page } from '@playwright/test';
+import { openCleanGuestBoard } from './helpers/openCleanGuestBoard';
 
-const BOARD_TIMEOUT_MS = 15_000;
-
-interface ICredential {
-  email: string;
-  password: string;
-}
-
-const createCredential = (): ICredential => {
-  const suffix = `overlay-${Date.now()}@example.com`;
-  return {
-    email: suffix,
-    password: `Overlay!${Date.now()}`,
-  };
-};
-
-const signUp = async (page: Page, credential: ICredential): Promise<void> => {
-  await page.locator('#signup-email').fill(credential.email);
-  await page.locator('#signup-password').fill(credential.password);
-  await page.locator('#confirm-password').fill(credential.password);
-  await page.locator('button:has-text("Create Account")').click();
-};
+const BOARD_TIMEOUT_MS = 30_000;
 
 const waitForBoardVisible = async (page: Page): Promise<void> => {
   await expect(page.locator('[data-testid="board-canvas"]')).toBeVisible({
     timeout: BOARD_TIMEOUT_MS,
   });
+};
+
+const openEditableBoard = async (page: Page): Promise<void> => {
+  await openCleanGuestBoard(page, BOARD_TIMEOUT_MS);
 };
 
 const getOverlayBox = async (page: Page): Promise<{ x: number; y: number; width: number; height: number }> => {
@@ -44,13 +29,7 @@ test.describe('Text overlay stability (Task 7)', () => {
   test('sticky note overlay remains visible and usable after pan while editing', async ({
     page,
   }) => {
-    const credential = createCredential();
-    await page.goto('/login?tab=signup');
-    await page.waitForLoadState('load');
-    await page.locator('#signup-email').waitFor({ state: 'visible', timeout: 10_000 });
-
-    await signUp(page, credential);
-    await waitForBoardVisible(page);
+    await openEditableBoard(page);
 
     await expect(page.locator('[data-testid="object-count"]')).toBeVisible({
       timeout: BOARD_TIMEOUT_MS,
@@ -108,13 +87,7 @@ test.describe('Text overlay stability (Task 7)', () => {
   test('sticky note overlay remains visible after zoom while editing', async ({
     page,
   }) => {
-    const credential = createCredential();
-    await page.goto('/login?tab=signup');
-    await page.waitForLoadState('load');
-    await page.locator('#signup-email').waitFor({ state: 'visible', timeout: 10_000 });
-
-    await signUp(page, credential);
-    await waitForBoardVisible(page);
+    await openEditableBoard(page);
 
     await page.click('[data-testid="tool-sticky"]');
     const canvas = page.locator('canvas').first();
