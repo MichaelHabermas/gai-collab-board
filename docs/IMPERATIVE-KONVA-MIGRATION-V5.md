@@ -1,6 +1,6 @@
 # Imperative Konva Migration Plan (V5)
 
-**Supersedes:** IMPERATIVE-KONVA-MIGRATION-V4. Key rules: merge to `development`; E2E path `tests/e2e/`; Zustand vanilla `subscribe(listener)` receives full store state; drag split into five modules (DragCoordinator, dragCommit, alignmentEngine, dragBounds, frameDragReparenting); explicit S-plan dependency contract (§4).
+**Supersedes:** IMPERATIVE-KONVA-MIGRATION-V4. Key rules: Epic/wave completion merges to `spike/react-konva-1` with final promotion to `development`; E2E path `tests/e2e/`; Zustand vanilla `subscribe(listener)` receives full store state; drag split into five modules (DragCoordinator, dragCommit, alignmentEngine, dragBounds, frameDragReparenting); explicit S-plan dependency contract (§4).
 
 **Task tracking:** Check off each task and sub-task below as you complete it (change `- [ ]` to `- [x]`). This keeps progress visible and avoids duplicate work.
 
@@ -40,10 +40,21 @@
 | **E0** | Constitution, baselines, 13 E2E done | **Done** — Constitution (Articles XX–XXVII) in CONSTITUTION.md; `docs/perf-baselines/pre-migration.json` with automated capture; 13 E2E specs present; connectorCreation and undoRedoDrag pass (chromium+firefox). RL0–RL3 complete on spike/react-konva-1. |
 | **E1** | Done | Done — all 7 factories, types, registry, unit tests present. |
 | **E2** | Done | Done — LayerManager, KonvaNodeManager, SelectionSyncController + unit tests. |
-| **E3** | 9/11 sub-tasks done | **6/11** — drag modules (dragCommit, alignmentEngine, dragBounds, frameDragReparenting) + their tests exist. **Missing:** DragCoordinator, entire `events/` folder (StageEventRouter, ShapeEventWiring, DrawingController, MarqueeController, ConnectorController, TextEditController). |
+| **E3** | 9/11 sub-tasks done | **9/11** — drag modules + DragCoordinator + StageEventRouter + ShapeEventWiring exist; DragCoordinator unit test added. **Missing:** DrawingController, MarqueeController, ConnectorController, TextEditController (unit tests for StageEventRouter/ShapeEventWiring pending). |
 | **E4** | Not started | **Partial** — TransformerManager, GridRenderer, SelectionDragHandle + unit tests present. Missing: OverlayManager. |
 | **E5** | Not started | Not started — App still uses BoardCanvas. |
 | **E6** | Not started | Not started. |
+
+---
+
+## 0.1 Canonical Merge and Epic Completion Rule
+
+This section is the single source of truth for migration merge targets and Epic completion checkpoints.
+
+1. **Epic/wave complete:** the Epic review gate passes and the Epic branch is merged into `spike/react-konva-1`.
+2. **Program complete:** after all migration waves pass, merge `spike/react-konva-1` into `development`.
+3. **Validation required at completion checkpoint:** `bun run validate` passes and the Epic-specific gate criteria in this document are satisfied.
+4. **Recording location:** completion is recorded in `.claude/tasks.md` review notes for the wave gate and in the merge/PR record for the target branch.
 
 ---
 
@@ -406,7 +417,7 @@ Deferred to [IMPERATIVE-KONVA-MIGRATION-V5-FOLLOW-UP.md](IMPERATIVE-KONVA-MIGRAT
 - [ ] All 13 new E2E tests written and passing against current codebase (only 4 of 13 exist: connectorCreation, connectorEndpointDrag, shapeResize, shapeRotate)
 - [x] All existing E2E tests still pass
 - [x] `bun run validate` passes
-- [ ] **PR merged to `development`**
+- [ ] Completion checkpoint recorded per [§0.1 Canonical Merge and Epic Completion Rule](#01-canonical-merge-and-epic-completion-rule)
 
 *Check off each item above as completed.*
 
@@ -539,7 +550,7 @@ Only compound shapes (StickyNote: Group, Frame: Group) set `cacheable: true`. Si
 - [x] Registry returns correct factory for each shape type
 - [x] `bun run validate` passes
 - [x] No existing files modified
-- [ ] PR merged to `development` before Epic 2 begins
+- [ ] Completion checkpoint recorded per [§0.1 Canonical Merge and Epic Completion Rule](#01-canonical-merge-and-epic-completion-rule) before Epic 2 begins
 
 ---
 
@@ -685,7 +696,7 @@ function createSelectionSyncController(
 - [x] Bitmap caching enabled/disabled on selection change
 - [x] `bun run validate` passes
 - [x] No existing files modified
-- [ ] PR merged to `development` before Epic 3 begins
+- [ ] Completion checkpoint recorded per [§0.1 Canonical Merge and Epic Completion Rule](#01-canonical-merge-and-epic-completion-rule) before Epic 3 begins
 
 ---
 
@@ -968,7 +979,7 @@ function createTextEditController(
 - [ ] **All items in [Appendix D: Drag Behavior Checklist](#appendix-d-drag-behavior-checklist) verified** (each row marked as covered by unit test, integration test, or manual verification in PR)
 - [x] `bun run validate` passes
 - [x] No existing files modified
-- [ ] PR merged to `development` before Epic 5 begins (may merge in parallel with Epic 4)
+- [ ] Completion checkpoint recorded per [§0.1 Canonical Merge and Epic Completion Rule](#01-canonical-merge-and-epic-completion-rule) before Epic 5 begins (may merge in parallel with Epic 4)
 
 ---
 
@@ -1071,7 +1082,7 @@ Imperative replacement for the `SelectionDragHandle` component in BoardCanvas.
 - [x] Grid renders correctly at different zoom levels
 - [x] `bun run validate` passes
 - [ ] No existing files modified
-- [ ] PR merged to `development` before Epic 5 begins (may merge in parallel with Epic 3)
+- [ ] Completion checkpoint recorded per [§0.1 Canonical Merge and Epic Completion Rule](#01-canonical-merge-and-epic-completion-rule) before Epic 5 begins (may merge in parallel with Epic 3)
 
 ---
 
@@ -1079,7 +1090,7 @@ Imperative replacement for the `SelectionDragHandle` component in BoardCanvas.
 
 **Goal:** Build `CanvasHost.tsx` + `useCanvasSetup.ts` and swap in for `BoardCanvas.tsx`. This is the cut-over — the first moment existing files change.
 
-**Prerequisite:** Epics 2, 3, and 4 must be merged to `development` before opening the Epic 5 PR.
+**Prerequisite:** Epics 2, 3, and 4 must satisfy the [§0.1 Canonical Merge and Epic Completion Rule](#01-canonical-merge-and-epic-completion-rule) before opening the Epic 5 PR.
 
 **Estimated LOC:** ~250 for CanvasHost + ~200 for useCanvasSetup + ~50 for import change = ~500 total.
 
@@ -1259,7 +1270,7 @@ export function CanvasHost({ boardId, ... }: ICanvasHostProps): ReactElement {
 - [ ] All items in integration checklist verified
 - [ ] Performance baselines captured (post-migration)
 - [ ] `bun run validate` passes
-- [ ] **PR merged to `development`**
+- [ ] Completion checkpoint recorded per [§0.1 Canonical Merge and Epic Completion Rule](#01-canonical-merge-and-epic-completion-rule)
 
 ---
 
@@ -1318,7 +1329,30 @@ Compare against Epic 0 baselines in `docs/perf-baselines/pre-migration.json`. If
 - [ ] `bun run validate` passes
 - [ ] `bun run release:gate` passes
 - [ ] CLAUDE.md updated
-- [ ] **PR merged to `development`**
+- [ ] Completion checkpoint recorded per [§0.1 Canonical Merge and Epic Completion Rule](#01-canonical-merge-and-epic-completion-rule)
+
+### Development Merge Safety Gate (for `spike/react-konva-1` -> `development`)
+
+**Likely safe merge point:** only after **Epic 6 DoD is fully complete** and **W7-R** passes. In this plan, that corresponds to **Wave 8 / T28**.
+
+**Not safe to merge to `development` yet if any are true:**
+
+- Any Epic 3 or Epic 4 required module is still pending (especially event controllers or OverlayManager).
+- Epic 5 cutover is not complete and stable (BoardCanvas still active in production path).
+- Epic 6 cleanup/perf verification is incomplete.
+
+**Rigorous pre-T28 checks (must all pass):**
+
+1. `bun run validate`
+2. `bun run release:gate`
+3. Full E2E suite pass (`13 new Epic 0 specs + existing specs`)
+4. Repeat flaky-prone E2E specs twice consecutively on chromium + firefox (minimum): `connectorCreation`, `undoRedoDrag`, `frameReparenting`
+5. Post-migration performance baseline captured at `docs/perf-baselines/post-migration.json`
+6. Pre vs post comparison confirms:
+   - `>=50%` drag p95 frame-time reduction
+   - `0` shape-related React re-renders during drag
+   - expected bundle reduction from removing `react-konva`
+7. Rollback readiness documented (Epic 5 revert path still valid; Epic 6 remains separate)
 
 ---
 

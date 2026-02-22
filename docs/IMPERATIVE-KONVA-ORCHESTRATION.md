@@ -8,6 +8,7 @@ React-Konva puts React reconciliation in the canvas hot path. Every shape = Reac
 **Feature branches:** `spike/react-konva-1/<epic>-<name>`, merged back into `spike/react-konva-1`
 **Governance:** CONSTITUTION.md (Articles I–XIX existing + XX–XXV, XXVII added in Epic 0)
 **Source of truth:** `docs/IMPERATIVE-KONVA-MIGRATION-V5.md`
+**Merge/completion rule:** Canonical policy reference: Merge targets and Epic/program completion semantics for this migration are defined in docs/IMPERATIVE-KONVA-MIGRATION-V5.md §0.1 (single source of truth).
 
 ---
 
@@ -315,6 +316,22 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 | ------ | ------ | ------ | ------ | ------ |
 | T28 | Merge `spike/react-konva-1` → `development` | sonnet | architect | W7-R |
 
+### T28 Safety Gate (when merge to `development` is likely safe)
+
+`development` merge is considered likely safe only after **W7-R is fully green** and the following are true:
+
+1. Epic 5 cutover completed and stable (`CanvasHost` active, no cutover regressions)
+2. Epic 6 cleanup complete (dead-file deletion + `react-konva` removal)
+3. `bun run validate` passes
+4. `bun run release:gate` passes
+5. Full E2E suite passes, plus two consecutive passes for flaky-prone specs on chromium + firefox:
+   - `connectorCreation`
+   - `undoRedoDrag`
+   - `frameReparenting`
+6. Post-migration performance baseline captured and compared with pre-migration:
+   - `>=50%` drag p95 frame-time improvement
+   - `0` shape-related React re-renders during drag
+
 ---
 
 ## Summary
@@ -379,3 +396,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 9. 0 shape-related React re-renders during drag
 10. Bundle size reduced ~45KB (react-konva removed)
 11. `bun run release:gate` passes
+
+**Before T28 merge to `development`:**
+12. Full E2E suite pass + two consecutive passes for flaky-prone specs on chromium + firefox (`connectorCreation`, `undoRedoDrag`, `frameReparenting`)
+13. Post-migration baseline file exists and comparison is documented in merge/PR notes

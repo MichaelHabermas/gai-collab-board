@@ -3,7 +3,7 @@
 > Quick-reference guide for AI agents and LLMs. Use this to locate relevant documentation without loading everything into context. Always check this index FIRST before searching the codebase.
 
 **Last Updated:** 2026-02-22
-**Total Documents:** 48
+**Total Documents:** 55
 
 ## How to Use This Index
 
@@ -15,6 +15,18 @@
 ---
 
 ## 🗂️ Categories
+
+### Collaboration
+
+| File | Summary | Key Topics | Last Modified |
+| --- | ----- | ------ | ----- |
+| `collab/README.md` | Structure and conventions for collaborator-generated markdown outputs and run artifacts | `collaboration`, `commands`, `artifacts`, `workflow` | 2026-02-22 |
+| `collab/runs/README.md` | Run artifact conventions: dated folders, metadata fields, and status lifecycle | `collaboration`, `runs`, `metadata`, `status` | 2026-02-22 |
+| `collab/templates/implementation-log-template.md` | Template for step-by-step implementation logs with PASS/FAIL verification evidence | `implementation`, `log`, `template`, `verification` | 2026-02-22 |
+| `collab/templates/merge-go-no-go-template.md` | Template for final merge safety decisions with required checks, severity findings, and explicit GO/NO-GO | `merge`, `go-no-go`, `template`, `risk`, `collaboration` | 2026-02-22 |
+| `collab/templates/prd-template.md` | Template for implementation-ready PRDs with binary acceptance criteria and test plan | `PRD`, `template`, `acceptance criteria`, `collaboration` | 2026-02-22 |
+| `collab/templates/research-result-template.md` | Template for research briefs with findings by confidence, options, recommendation, and evidence | `research`, `template`, `collaboration`, `evidence` | 2026-02-22 |
+| `collab/templates/review-report-template.md` | Template for severity-first review reports including residual risks and test gaps | `review`, `template`, `risk`, `collaboration` | 2026-02-22 |
 
 ### Guides
 
@@ -131,6 +143,7 @@
 | `audit` | `reports/mvp-audit-report.md`, `reports/mvp-audit-matrix.md`, `reports/refactor-audit/REFACTOR_AUDIT_REPORT.md` |
 | `benchmarks` | `optimization/OPTIMIZATION-PLAN.md`, `reports/mvp-audit-matrix.md`, `operations/RELEASE-AUTOMATION.md` |
 | `canvas` | `guides/KONVA-REACT-GUIDE.md`, `product/PRD.md` |
+| `collaboration` | `collab/README.md`, `collab/runs/README.md`, `collab/templates/implementation-log-template.md`, `collab/templates/merge-go-no-go-template.md`, `collab/templates/prd-template.md`, `collab/templates/research-result-template.md`, `collab/templates/review-report-template.md` |
 | `constitution` | `CONSTITUTION.md` |
 | `Cursor` | `agent-transcript-report.md`, `planning/AI-DEVELOPMENT-LOG.md` |
 | `deployment` | `operations/DEPLOYMENT.md`, `operations/RELEASE-AUTOMATION.md` |
