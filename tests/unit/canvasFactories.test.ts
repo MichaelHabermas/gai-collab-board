@@ -32,18 +32,6 @@ describe('canvas/factories', () => {
     );
   });
 
-  it('stub create throws when called', () => {
-    const entry = getFactory('rectangle');
-    expect(() => entry.create({} as never)).toThrow('Factory not implemented');
-  });
-
-  it('stub update throws when called', () => {
-    const entry = getFactory('rectangle');
-    expect(() => entry.update({} as never, {} as never, {} as never)).toThrow(
-      'Factory not implemented'
-    );
-  });
-
   it('FACTORY_REGISTRY has all 7 shape types', () => {
     expect(FACTORY_REGISTRY.size).toBe(7);
     for (const type of SHAPE_TYPES) {

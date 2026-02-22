@@ -221,7 +221,7 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ## IK7 — Simple Factories
 
-- **Status:** done
+- **Status:** pending
 - **Tier:** sonnet
 - **Role:** architect
 - **Worktree name:** epic1-simple-factories
@@ -232,7 +232,7 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ## IK8 — Complex Factories
 
-- **Status:** done
+- **Status:** pending
 - **Tier:** opus
 - **Role:** architect
 - **Worktree name:** epic1-complex-factories
@@ -244,9 +244,65 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ## IK9 — Connector + TextElement Factories
 
-- **Status:** done
+- **Status:** pending
 - **Tier:** sonnet
 - **Role:** architect
 - **Worktree name:** epic1-connector-text
 - **Description:** createConnector.ts (4 modes) and createTextElement.ts with tests.
+- **Dependencies:** IK6
+
+---
+
+## IK10 — LayerManager
+
+- **Status:** pending
+- **Tier:** sonnet
+- **Role:** architect
+- **Worktree name:** epic2-layer-manager
+- **Description:** Task B1: Create LayerManager.ts (4 layers, RAF batchDraw).
+- **Dependencies:** IK6
+
+---
+
+## IK11 — KonvaNodeManager
+
+- **Status:** done
+- **Tier:** opus
+- **Role:** architect
+- **Worktree name:** epic2-node-manager
+- **Description:** Task B2: Create KonvaNodeManager.ts (O(changed) diff, connector dedup).
+- **Dependencies:** IK10, IK7, IK8, IK9
+
+---
+
+## IK12 — SelectionSyncController
+
+- **Status:** done
+- **Tier:** sonnet
+- **Role:** architect
+- **Worktree name:** epic2-selection-sync
+- **Description:** Task B3: Create SelectionSyncController.ts (layer moves, cache lifecycle).
+- **Dependencies:** IK11
+- **Notes:** Implemented in-repo. Subscribes to selectionStore + dragOffsetStore; moves nodes static↔active; applies groupDragOffset; cache clear on select, restore on deselect (Article XXIII). Unit tests in tests/unit/SelectionSyncController.test.ts.
+
+---
+
+## IK13 — Drag Sub-Modules
+
+- **Status:** pending
+- **Tier:** opus
+- **Role:** architect
+- **Worktree name:** epic3-drag-modules
+- **Description:** Task C1: Create dragCommit.ts, dragBounds.ts, frameDragReparenting.ts.
+- **Dependencies:** IK6
+
+---
+
+## IK14 — Alignment Engine
+
+- **Status:** pending
+- **Tier:** sonnet
+- **Role:** architect
+- **Worktree name:** epic3-alignment
+- **Description:** Task C2: Create alignmentEngine.ts wrapping alignmentGuides.ts.
 - **Dependencies:** IK6

@@ -4,26 +4,23 @@
  */
 
 import type { ShapeType } from '@/types';
-import type { IShapeFactoryEntry, ShapeFactory, ShapeUpdater } from './types';
+import type { IShapeFactoryEntry } from './types';
+import { createRectangle, updateRectangle } from './createRectangle';
+import { createCircle, updateCircle } from './createCircle';
+import { createLine, updateLine } from './createLine';
 import { createConnector, updateConnector } from './createConnector';
 import { createTextElement, updateTextElement } from './createTextElement';
-
-const stubCreate: ShapeFactory = () => {
-  throw new Error('Factory not implemented');
-};
-const stubUpdate: ShapeUpdater = () => {
-  throw new Error('Factory not implemented');
-};
-const stubEntry: IShapeFactoryEntry = { create: stubCreate, update: stubUpdate };
+import { createStickyNote, updateStickyNote } from './createStickyNote';
+import { createFrame, updateFrame } from './createFrame';
 
 const FACTORY_REGISTRY = new Map<ShapeType, IShapeFactoryEntry>([
-  ['rectangle', stubEntry],
-  ['circle', stubEntry],
-  ['line', stubEntry],
+  ['rectangle', { create: createRectangle, update: updateRectangle }],
+  ['circle', { create: createCircle, update: updateCircle }],
+  ['line', { create: createLine, update: updateLine }],
   ['connector', { create: createConnector, update: updateConnector }],
   ['text', { create: createTextElement, update: updateTextElement }],
-  ['sticky', stubEntry],
-  ['frame', stubEntry],
+  ['sticky', { create: createStickyNote, update: updateStickyNote }],
+  ['frame', { create: createFrame, update: updateFrame }],
 ]);
 
 export function getFactory(type: ShapeType): IShapeFactoryEntry {
