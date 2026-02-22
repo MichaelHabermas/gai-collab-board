@@ -79,6 +79,9 @@ async function readRunFile(
 ): Promise<string | null> {
   const runPath = join(runsPath, parent, slug);
   const candidates = ARTIFACT_TYPES[typeKey];
+  if (!candidates) {
+    return null;
+  }
   for (const f of candidates) {
     try {
       const content = await readFile(join(runPath, f), "utf-8");

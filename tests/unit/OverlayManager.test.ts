@@ -7,6 +7,8 @@ const mockBatchDraw = vi.fn();
 
 vi.mock('konva', () => {
   class MockLine {
+    setAttrs = vi.fn();
+    destroy = vi.fn();
     constructor(attrs: { points: number[] }) {
       expect(attrs.points).toBeDefined();
     }
@@ -169,6 +171,69 @@ describe('OverlayManager', () => {
     if (rect && typeof rect.destroy === 'function') {
       expect(rect.destroy).toHaveBeenCalled();
     }
+  });
+
+  it('showDrawingPreview adds a preview node to the layer', () => {
+    const mockLayer = new Konva.Layer();
+    const manager = new OverlayManager(mockLayer);
+
+    manager.showDrawingPreview('rectangle', '#f00');
+
+    expect(mockAdd).toHaveBeenCalledTimes(1);
+    const added = mockAdd.mock.calls[0]?.[0];
+    expect(added).toBeDefined();
+    expect(added?.setAttrs).toBeDefined();
+    expect(added?.destroy).toBeDefined();
+  });
+
+  it('updateDrawingPreview updates rect geometry via setAttrs', () => {
+    const mockLayer = new Konva.Layer();
+    const manager = new OverlayManager(mockLayer);
+
+    manager.showDrawingPreview('rectangle', '#f00');
+    const rect = mockAdd.mock.calls[0]?.[0];
+    expect(rect).toBeDefined();
+
+    manager.updateDrawingPreview(
+      { startX: 10, startY: 20, currentX: 50, currentY: 60 },
+      'rectangle',
+      '#f00'
+    );
+
+    expect(rect?.setAttrs).toHaveBeenCalledWith(
+      expect.objectContaining({
+        x: 10,
+        y: 20,
+        width: 40,
+        height: 40,
+      })
+    );
+  });
+
+  it('hideDrawingPreview destroys preview node', () => {
+    const mockLayer = new Konva.Layer();
+    const manager = new OverlayManager(mockLayer);
+
+    manager.showDrawingPreview('rectangle', '#f00');
+    const rect = mockAdd.mock.calls[0]?.[0];
+    expect(rect).toBeDefined();
+
+    manager.hideDrawingPreview();
+
+    expect(rect?.destroy).toHaveBeenCalled();
+  });
+
+  it('destroy clears drawing preview node', () => {
+    const mockLayer = new Konva.Layer();
+    const manager = new OverlayManager(mockLayer);
+
+    manager.showDrawingPreview('rectangle', '#f00');
+    const rect = mockAdd.mock.calls[0]?.[0];
+    expect(rect).toBeDefined();
+
+    manager.destroy();
+
+    expect(rect?.destroy).toHaveBeenCalled();
   });
 
   it('all public methods are callable without throwing (stub contract)', () => {

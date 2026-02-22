@@ -15,6 +15,7 @@ import type {
   Cursors,
 } from '@/types';
 import type { IDrawingState } from '@/canvas/events/DrawingController';
+import { DEFAULT_SHAPE_STROKE_WIDTH } from '@/lib/boardObjectDefaults';
 
 const GUIDE_EXTENT = 50000;
 const GUIDE_STROKE_WIDTH = 1;
@@ -26,10 +27,18 @@ const MARQUEE_STROKE = '#3b82f6';
 const MARQUEE_STROKE_WIDTH = 1;
 const MARQUEE_DASH = [4, 4];
 
+const PREVIEW_DASH = [5, 5];
+const PREVIEW_STROKE = GUIDE_COLOR;
+const PREVIEW_LINE_STROKE_WIDTH = 3;
+const FRAME_PREVIEW_FILL = 'rgba(241, 245, 249, 0.3)';
+const FRAME_PREVIEW_CORNER_RADIUS = 6;
+
 export class OverlayManager {
   private overlayLayer: Konva.Layer | null;
   private guidesGroup: Konva.Group | null = null;
   private marqueeRect: Konva.Rect | null = null;
+  private drawingPreviewNode: Konva.Rect | Konva.Line | null = null;
+  private drawingPreviewTool: ToolMode | null = null;
 
   constructor(layer: Konva.Layer) {
     this.overlayLayer = layer;
@@ -152,16 +161,157 @@ export class OverlayManager {
   }
 
   // ── Drawing Preview (replaces useShapeDrawing renderDrawingPreview) ──
-  showDrawingPreview(_tool: ToolMode, _color: string): void {
-    // Stub.
+  showDrawingPreview(tool: ToolMode, color: string): void {
+    const layer = this.overlayLayer;
+    if (!layer) {
+      return;
+    }
+
+    this.removeDrawingPreviewNode();
+    this.drawingPreviewTool = tool;
+    const node = this.createDrawingPreviewNode(tool, color, {
+      startX: 0,
+      startY: 0,
+      currentX: 0,
+      currentY: 0,
+    });
+    if (node) {
+      layer.add(node);
+      this.drawingPreviewNode = node;
+    }
+
+    layer.batchDraw();
   }
 
-  updateDrawingPreview(_state: IDrawingState, _tool: ToolMode, _color: string): void {
-    // Stub.
+  updateDrawingPreview(state: IDrawingState, tool: ToolMode, color: string): void {
+    const layer = this.overlayLayer;
+    if (!layer) {
+      return;
+    }
+
+    const toolChanged = this.drawingPreviewTool !== tool;
+    if (toolChanged || !this.drawingPreviewNode) {
+      this.removeDrawingPreviewNode();
+      this.drawingPreviewTool = tool;
+      const node = this.createDrawingPreviewNode(tool, color, state);
+      if (node) {
+        layer.add(node);
+        this.drawingPreviewNode = node;
+      }
+    } else if (this.drawingPreviewNode) {
+      this.applyDrawingPreviewGeometry(this.drawingPreviewNode, tool, state, color);
+    }
+
+    layer.batchDraw();
   }
 
   hideDrawingPreview(): void {
-    // Stub.
+    this.removeDrawingPreviewNode();
+    this.drawingPreviewTool = null;
+    if (this.overlayLayer) {
+      this.overlayLayer.batchDraw();
+    }
+  }
+
+  private removeDrawingPreviewNode(): void {
+    if (this.drawingPreviewNode) {
+      this.drawingPreviewNode.destroy();
+      this.drawingPreviewNode = null;
+    }
+  }
+
+  private createDrawingPreviewNode(
+    tool: ToolMode,
+    color: string,
+    state: IDrawingState
+  ): Konva.Rect | Konva.Line | null {
+    const { startX, startY, currentX, currentY } = state;
+    const x = Math.min(startX, currentX);
+    const y = Math.min(startY, currentY);
+    const width = Math.abs(currentX - startX);
+    const height = Math.abs(currentY - startY);
+    const baseRectAttrs = {
+      fill: color,
+      stroke: PREVIEW_STROKE,
+      strokeWidth: DEFAULT_SHAPE_STROKE_WIDTH,
+      dash: PREVIEW_DASH,
+      listening: false,
+      name: 'drawing-preview',
+    };
+
+    if (tool === 'rectangle') {
+      return new Konva.Rect({ ...baseRectAttrs, x, y, width, height });
+    }
+
+    if (tool === 'circle') {
+      return new Konva.Rect({
+        ...baseRectAttrs,
+        x,
+        y,
+        width,
+        height,
+        cornerRadius: Math.min(width, height) / 2,
+      });
+    }
+
+    if (tool === 'line') {
+      return new Konva.Line({
+        points: [startX, startY, currentX, currentY],
+        stroke: color,
+        strokeWidth: PREVIEW_LINE_STROKE_WIDTH,
+        dash: PREVIEW_DASH,
+        listening: false,
+        name: 'drawing-preview',
+      });
+    }
+
+    if (tool === 'frame') {
+      return new Konva.Rect({
+        ...baseRectAttrs,
+        fill: FRAME_PREVIEW_FILL,
+        x,
+        y,
+        width,
+        height,
+        cornerRadius: FRAME_PREVIEW_CORNER_RADIUS,
+      });
+    }
+
+    return null;
+  }
+
+  private applyDrawingPreviewGeometry(
+    node: Konva.Rect | Konva.Line,
+    tool: ToolMode,
+    state: IDrawingState,
+    _color: string
+  ): void {
+    const { startX, startY, currentX, currentY } = state;
+    const x = Math.min(startX, currentX);
+    const y = Math.min(startY, currentY);
+    const width = Math.abs(currentX - startX);
+    const height = Math.abs(currentY - startY);
+
+    if (tool === 'line' && node instanceof Konva.Line) {
+      node.setAttrs({ points: [startX, startY, currentX, currentY] });
+    } else if (node instanceof Konva.Rect) {
+      const attrs: { x: number; y: number; width: number; height: number; cornerRadius?: number } =
+        {
+          x,
+          y,
+          width,
+          height,
+        };
+      if (tool === 'circle') {
+        attrs.cornerRadius = Math.min(width, height) / 2;
+      }
+
+      if (tool === 'frame') {
+        attrs.cornerRadius = FRAME_PREVIEW_CORNER_RADIUS;
+      }
+
+      node.setAttrs(attrs);
+    }
   }
 
   // ── Remote Cursors (replaces CursorLayer.tsx) ──
@@ -196,6 +346,9 @@ export class OverlayManager {
       this.guidesGroup.destroy();
       this.guidesGroup = null;
     }
+
+    this.removeDrawingPreviewNode();
+    this.drawingPreviewTool = null;
 
     this.overlayLayer = null;
   }
