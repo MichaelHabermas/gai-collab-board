@@ -18,7 +18,7 @@
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e": "cross-env FORCE_COLOR=0 playwright install && playwright test",
+    "test:e2e": "bunx cross-env NODE_OPTIONS=--no-warnings FORCE_COLOR=0 playwright install && bunx cross-env NODE_OPTIONS=--no-warnings FORCE_COLOR=0 playwright test",
     "test:ai-connection": "bun run scripts/test-ai-connection.ts",
     "perf:check": "bun run scripts/run-performance-check.ts",
     "perf:baseline": "bun run scripts/capture-perf-baseline.ts",

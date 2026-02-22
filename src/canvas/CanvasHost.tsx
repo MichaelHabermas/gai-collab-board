@@ -3,7 +3,16 @@
  * See docs/IMPERATIVE-KONVA-MIGRATION-V5.md Epic 5.
  */
 
-import { useRef, useState, useEffect, useCallback, useMemo, memo, type ReactElement } from 'react';
+import {
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  memo,
+  forwardRef,
+  type ReactElement,
+} from 'react';
 import type { User } from 'firebase/auth';
 import type { IBoardObject, ToolMode } from '@/types';
 import type { ICreateObjectParams } from '@/modules/sync/objectService';
@@ -29,6 +38,25 @@ import { setupCanvas } from './useCanvasSetup';
 import { BOARD_CANVAS_CONTAINER_CLASS } from '@/components/canvas/boardCanvasTheme';
 import { getObjectBounds } from '@/lib/canvasBounds';
 import Konva from 'konva';
+
+/** Subscription island: only this div re-renders when selection changes (for data-selected-ids). */
+const CanvasContainerWithSelectionAttr = memo(
+  forwardRef<HTMLDivElement, { viewport: { width: number; height: number } }>(
+    function CanvasContainerWithSelectionAttr({ viewport }, ref): ReactElement {
+      const selectedIds = useSelectionStore((s) => s.selectedIds);
+      const selectedIdsStr = useMemo(() => [...selectedIds].join(','), [selectedIds]);
+
+      return (
+        <div
+          ref={ref}
+          className={BOARD_CANVAS_CONTAINER_CLASS}
+          style={{ width: viewport.width, height: viewport.height }}
+          data-selected-ids={selectedIdsStr}
+        />
+      );
+    }
+  )
+);
 
 export interface ICanvasHostProps {
   boardId: string;
@@ -92,9 +120,6 @@ export const CanvasHost = memo(function CanvasHost({
 
   const visibleShapeIds = useVisibleShapeIds(viewport);
   const visibleShapeIdsRef = useRef<string[]>(visibleShapeIds);
-  const objectsRecord = useObjectsStore((s) => s.objects);
-  const selectedIds = useSelectionStore((s) => s.selectedIds);
-  const selectedIdsArray = useMemo(() => [...selectedIds], [selectedIds]);
   const canUndoHistory = useHistoryStore((s) => s.canUndo);
   const canRedoHistory = useHistoryStore((s) => s.canRedo);
   const setSelectedIds = useSelectionStore((s) => s.setSelectedIds);
@@ -123,8 +148,6 @@ export const CanvasHost = memo(function CanvasHost({
   );
 
   useCanvasOperations({
-    objectsRecord,
-    selectedIds: selectedIdsArray,
     onObjectCreate:
       (onObjectCreate as (params: Partial<IBoardObject>) => Promise<IBoardObject | null>) ??
       (() => Promise.resolve(null)),
@@ -139,9 +162,10 @@ export const CanvasHost = memo(function CanvasHost({
 
   const { exportViewport, exportFullBoard } = useExportAsImage({ stageRef, boardName });
   const handleExportFullBoard = useCallback(() => {
+    const objectsRecord = useObjectsStore.getState().objects;
     const objs = Object.values(objectsRecord);
     exportFullBoard(objs, zoomToFitBounds);
-  }, [objectsRecord, exportFullBoard, zoomToFitBounds]);
+  }, [exportFullBoard, zoomToFitBounds]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -219,6 +243,7 @@ export const CanvasHost = memo(function CanvasHost({
     }
 
     if (activeTool === 'connector' && s.getConnectorController) {
+      const objectsRecord = useObjectsStore.getState().objects;
       s.overlayManager.updateConnectionNodes(
         visibleShapeIds,
         objectsRecord,
@@ -234,16 +259,18 @@ export const CanvasHost = memo(function CanvasHost({
     cursors,
     user?.uid,
     visibleShapeIds,
-    objectsRecord,
     viewport,
     showGridSetting,
     theme,
   ]);
 
   const handleZoomToSelection = useCallback(() => {
+    const { selectedIds } = useSelectionStore.getState();
     if (selectedIds.size === 0) return;
 
-    const objs = selectedIdsArray
+    const objectsRecord = useObjectsStore.getState().objects;
+    const selectedArr = [...selectedIds];
+    const objs = selectedArr
       .map((id: string) => objectsRecord[id])
       .filter(Boolean) as IBoardObject[];
     if (objs.length === 0) return;
@@ -261,9 +288,10 @@ export const CanvasHost = memo(function CanvasHost({
       { x1: Infinity, y1: Infinity, x2: -Infinity, y2: -Infinity }
     );
     if (bounds.x1 !== Infinity) zoomToFitBounds(bounds, 40);
-  }, [selectedIds, selectedIdsArray, objectsRecord, zoomToFitBounds]);
+  }, [zoomToFitBounds]);
 
   const handleZoomToFitAll = useCallback(() => {
+    const objectsRecord = useObjectsStore.getState().objects;
     const objs = Object.values(objectsRecord);
     if (objs.length === 0) return;
 
@@ -280,7 +308,7 @@ export const CanvasHost = memo(function CanvasHost({
       { x1: Infinity, y1: Infinity, x2: -Infinity, y2: -Infinity }
     );
     if (bounds.x1 !== Infinity) zoomToFitBounds(bounds, 60);
-  }, [objectsRecord, zoomToFitBounds]);
+  }, [zoomToFitBounds]);
 
   const handleZoomPreset = useCallback((scale: number) => zoomTo(scale), [zoomTo]);
 
@@ -304,12 +332,7 @@ export const CanvasHost = memo(function CanvasHost({
         canUndo={canUndoHistory}
         canRedo={canRedoHistory}
       />
-      <div
-        ref={containerRef}
-        className={BOARD_CANVAS_CONTAINER_CLASS}
-        style={{ width: viewport.width, height: viewport.height }}
-        data-selected-ids={selectedIdsArray.join(',')}
-      />
+      <CanvasContainerWithSelectionAttr ref={containerRef} viewport={viewport} />
       <CanvasControlPanel
         showGrid={showGridSetting}
         setShowGrid={setShowGrid}
@@ -317,12 +340,9 @@ export const CanvasHost = memo(function CanvasHost({
         setSnapToGridEnabled={setSnapToGridEnabled}
         exportViewport={exportViewport}
         onExportFullBoard={handleExportFullBoard}
-        objectsRecord={objectsRecord}
         handleZoomToSelection={handleZoomToSelection}
         handleZoomToFitAll={handleZoomToFitAll}
         handleZoomPreset={handleZoomPreset}
-        selectedIds={selectedIds}
-        selectedIdsArray={selectedIdsArray}
         visibleCount={visibleShapeIds.length}
         zoomPercent={Math.round(viewport.scale.x * 100)}
         onObjectUpdate={onObjectUpdate}

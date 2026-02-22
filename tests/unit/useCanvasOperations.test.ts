@@ -32,9 +32,10 @@ describe('useCanvasOperations', () => {
     onObjectDelete = vi.fn<(objectId: string) => void>();
     onObjectsDeleteBatch = vi.fn<(objectIds: string[]) => void>();
     clearSelection = vi.fn<() => void>();
-    // Reset stores to clean state
     useSelectionStore.getState().clearSelection();
     useObjectsStore.getState().clear();
+    useObjectsStore.getState().setAll([mockObject]);
+    useSelectionStore.getState().setSelectedIds(['obj-1']);
   });
 
   afterEach(() => {
@@ -45,8 +46,6 @@ describe('useCanvasOperations', () => {
     Object.fromEntries(arr.map((o) => [o.id, o]));
 
   const getDefaultProps = () => ({
-    objectsRecord: toRecord([mockObject]),
-    selectedIds: ['obj-1'],
     onObjectCreate,
     onObjectDelete,
     clearSelection,
@@ -65,15 +64,14 @@ describe('useCanvasOperations', () => {
     it('handleDelete with 2+ selected and onObjectsDeleteBatch calls batch once and not onObjectDelete', async () => {
       (onObjectsDeleteBatch as unknown as { mockResolvedValue: (v: undefined) => void })
         .mockResolvedValue(undefined);
-      const props = {
-        ...getDefaultProps(),
-        objectsRecord: toRecord([
+      useObjectsStore.setState({
+        objects: toRecord([
           { ...mockObject, id: 'id1' },
           { ...mockObject, id: 'id2' },
         ]),
-        selectedIds: ['id1', 'id2'],
-        onObjectsDeleteBatch,
-      };
+      });
+      useSelectionStore.getState().setSelectedIds(['id1', 'id2']);
+      const props = { ...getDefaultProps(), onObjectsDeleteBatch };
       const { result } = renderHook(() => useCanvasOperations(props));
       await act(async () => {
         await result.current.handleDelete();
@@ -92,9 +90,9 @@ describe('useCanvasOperations', () => {
         ...mockObject,
         id,
       }));
+      useObjectsStore.getState().setAll(objects);
+      useSelectionStore.getState().setSelectedIds(ids);
       const props = {
-        objectsRecord: toRecord(objects),
-        selectedIds: ids,
         onObjectCreate,
         onObjectDelete,
         onObjectsDeleteBatch,
@@ -112,15 +110,14 @@ describe('useCanvasOperations', () => {
     });
 
     it('handleDelete with 2+ selected and no onObjectsDeleteBatch falls back to per-id onObjectDelete', () => {
-      const props = {
-        ...getDefaultProps(),
-        objectsRecord: toRecord([
+      useObjectsStore.setState({
+        objects: toRecord([
           { ...mockObject, id: 'id1' },
           { ...mockObject, id: 'id2' },
         ]),
-        selectedIds: ['id1', 'id2'],
-        onObjectsDeleteBatch: undefined,
-      };
+      });
+      useSelectionStore.getState().setSelectedIds(['id1', 'id2']);
+      const props = { ...getDefaultProps() };
       const { result } = renderHook(() => useCanvasOperations(props));
       act(() => {
         result.current.handleDelete();
@@ -221,9 +218,8 @@ describe('useCanvasOperations', () => {
     });
 
     it('handlePaste with empty clipboard does not throw', () => {
-      const { result } = renderHook(() =>
-        useCanvasOperations({ ...getDefaultProps(), selectedIds: [] })
-      );
+      useSelectionStore.getState().clearSelection();
+      const { result } = renderHook(() => useCanvasOperations(getDefaultProps()));
       act(() => {
         result.current.handlePaste();
       });
@@ -283,9 +279,8 @@ describe('useCanvasOperations', () => {
     });
 
     it('window keydown Ctrl+C with no selection does not change clipboard', () => {
-      // Store has empty selection — keyboard handler should skip
-      const props = { ...getDefaultProps(), selectedIds: [] as string[] };
-      const { result } = renderHook(() => useCanvasOperations(props));
+      useSelectionStore.getState().clearSelection();
+      const { result } = renderHook(() => useCanvasOperations(getDefaultProps()));
       document.body.focus();
       act(() => {
         window.dispatchEvent(
@@ -325,9 +320,9 @@ describe('useCanvasOperations', () => {
       const child2 = makeChild('child-2', 'frame-1');
       const onObjectsUpdate = vi.fn();
 
+      useObjectsStore.setState({ objects: toRecord([frame, child1, child2]) });
+      useSelectionStore.getState().setSelectedIds(['frame-1']);
       const props = {
-        objectsRecord: toRecord([frame, child1, child2]),
-        selectedIds: ['frame-1'],
         onObjectCreate,
         onObjectDelete,
         onObjectsUpdate,
@@ -353,9 +348,9 @@ describe('useCanvasOperations', () => {
       const child1 = makeChild('child-1', 'frame-1');
       const onObjectUpdate = vi.fn();
 
+      useObjectsStore.setState({ objects: toRecord([frame, child1]) });
+      useSelectionStore.getState().setSelectedIds(['frame-1']);
       const props = {
-        objectsRecord: toRecord([frame, child1]),
-        selectedIds: ['frame-1'],
         onObjectCreate,
         onObjectUpdate,
         onObjectDelete,
@@ -377,9 +372,9 @@ describe('useCanvasOperations', () => {
       (onObjectsDeleteBatch as unknown as { mockResolvedValue: (v: undefined) => void })
         .mockResolvedValue(undefined);
 
+      useObjectsStore.setState({ objects: toRecord([frame, child1]) });
+      useSelectionStore.getState().setSelectedIds(['frame-1', 'child-1']);
       const props = {
-        objectsRecord: toRecord([frame, child1]),
-        selectedIds: ['frame-1', 'child-1'],
         onObjectCreate,
         onObjectDelete,
         onObjectsDeleteBatch,
@@ -397,11 +392,8 @@ describe('useCanvasOperations', () => {
     });
 
     it('handleDelete with empty selection does nothing', async () => {
-      const props = {
-        ...getDefaultProps(),
-        selectedIds: [] as string[],
-      };
-      const { result } = renderHook(() => useCanvasOperations(props));
+      useSelectionStore.getState().clearSelection();
+      const { result } = renderHook(() => useCanvasOperations(getDefaultProps()));
 
       await act(async () => {
         await result.current.handleDelete();
@@ -441,9 +433,9 @@ describe('useCanvasOperations', () => {
         .mockResolvedValueOnce(newFrame)  // first call creates the frame
         .mockResolvedValueOnce(null);     // second call creates the child
 
+      useObjectsStore.getState().setAll([frame, child]);
+      useSelectionStore.getState().setSelectedIds(['frame-1']);
       const props = {
-        objectsRecord: toRecord([frame, child]),
-        selectedIds: ['frame-1'],
         onObjectCreate: onObjectCreateMock,
         onObjectDelete,
         clearSelection,
@@ -484,9 +476,9 @@ describe('useCanvasOperations', () => {
         .mockResolvedValueOnce(null)   // child-1 duplicate (independently selected non-frame)
         .mockResolvedValueOnce(newFrame); // frame-1 duplicate
 
+      useObjectsStore.getState().setAll([frame, child]);
+      useSelectionStore.getState().setSelectedIds(['frame-1', 'child-1']);
       const props = {
-        objectsRecord: toRecord([frame, child]),
-        selectedIds: ['frame-1', 'child-1'],
         onObjectCreate: onObjectCreateMock,
         onObjectDelete,
         clearSelection,
@@ -522,9 +514,9 @@ describe('useCanvasOperations', () => {
 
       const onObjectCreateMock = vi.fn().mockResolvedValueOnce(null);
 
+      useObjectsStore.getState().setAll([frame, child]);
+      useSelectionStore.getState().setSelectedIds(['frame-1']);
       const props = {
-        objectsRecord: toRecord([frame, child]),
-        selectedIds: ['frame-1'],
         onObjectCreate: onObjectCreateMock,
         onObjectDelete,
         clearSelection,
@@ -561,13 +553,9 @@ describe('useCanvasOperations', () => {
         y: 50,
       };
 
-      const props = {
-        objectsRecord: toRecord([frame, child]),
-        selectedIds: ['frame-1'],
-        onObjectCreate,
-        onObjectDelete,
-        clearSelection,
-      };
+      useObjectsStore.getState().setAll([frame, child]);
+      useSelectionStore.getState().setSelectedIds(['frame-1']);
+      const props = { onObjectCreate, onObjectDelete, clearSelection };
       const { result } = renderHook(() => useCanvasOperations(props));
 
       act(() => {
@@ -598,13 +586,9 @@ describe('useCanvasOperations', () => {
         y: 50,
       };
 
-      const props = {
-        objectsRecord: toRecord([frame, child]),
-        selectedIds: ['frame-1', 'child-1'],
-        onObjectCreate,
-        onObjectDelete,
-        clearSelection,
-      };
+      useObjectsStore.getState().setAll([frame, child]);
+      useSelectionStore.getState().setSelectedIds(['frame-1', 'child-1']);
+      const props = { onObjectCreate, onObjectDelete, clearSelection };
       const { result } = renderHook(() => useCanvasOperations(props));
 
       act(() => {
@@ -642,9 +626,9 @@ describe('useCanvasOperations', () => {
         .mockResolvedValueOnce(newFrame)
         .mockResolvedValueOnce(null);
 
+      useObjectsStore.getState().setAll([frame, child]);
+      useSelectionStore.getState().setSelectedIds(['frame-1']);
       const props = {
-        objectsRecord: toRecord([frame, child]),
-        selectedIds: ['frame-1'],
         onObjectCreate: onObjectCreateMock,
         onObjectDelete,
         clearSelection,
@@ -718,9 +702,9 @@ describe('useCanvasOperations', () => {
         .mockResolvedValueOnce(newFrame)   // frame
         .mockResolvedValueOnce(null);      // child
 
+      useObjectsStore.getState().setAll([frame, child, standalone]);
+      useSelectionStore.getState().setSelectedIds(['frame-1', 'standalone-1']);
       const props = {
-        objectsRecord: toRecord([frame, child, standalone]),
-        selectedIds: ['frame-1', 'standalone-1'],
         onObjectCreate: onObjectCreateMock,
         onObjectDelete,
         clearSelection,
@@ -759,9 +743,9 @@ describe('useCanvasOperations', () => {
 
       const onObjectCreateMock = vi.fn().mockResolvedValueOnce(null);
 
+      useObjectsStore.getState().setAll([frame, child]);
+      useSelectionStore.getState().setSelectedIds(['frame-1']);
       const props = {
-        objectsRecord: toRecord([frame, child]),
-        selectedIds: ['frame-1'],
         onObjectCreate: onObjectCreateMock,
         onObjectDelete,
         clearSelection,
@@ -810,12 +794,7 @@ describe('useCanvasOperations', () => {
       useSelectionStore.getState().setSelectedIds([]);
       useObjectsStore.getState().setAll([mockObject, obj2]);
 
-      const props = {
-        ...getDefaultProps(),
-        objectsRecord: toRecord([mockObject, obj2]),
-        selectedIds: [] as string[],
-      };
-      renderHook(() => useCanvasOperations(props));
+      renderHook(() => useCanvasOperations(getDefaultProps()));
       document.body.focus();
 
       act(() => {
@@ -850,14 +829,7 @@ describe('useCanvasOperations', () => {
       useSelectionStore.getState().setSelectedIds(['frame-1']);
       useObjectsStore.getState().setAll([frame, child]);
 
-      const props = {
-        objectsRecord: toRecord([frame, child]),
-        selectedIds: ['frame-1'],
-        onObjectCreate,
-        onObjectDelete,
-        clearSelection,
-      };
-      renderHook(() => useCanvasOperations(props));
+      renderHook(() => useCanvasOperations(getDefaultProps()));
       document.body.focus();
 
       act(() => {
@@ -895,14 +867,7 @@ describe('useCanvasOperations', () => {
       useSelectionStore.getState().setSelectedIds(['frame-1']);
       useObjectsStore.getState().setAll([frame, child]);
 
-      const props = {
-        objectsRecord: toRecord([frame, child]),
-        selectedIds: ['frame-1'],
-        onObjectCreate,
-        onObjectDelete,
-        clearSelection,
-      };
-      renderHook(() => useCanvasOperations(props));
+      renderHook(() => useCanvasOperations(getDefaultProps()));
       document.body.focus();
 
       act(() => {
@@ -947,14 +912,7 @@ describe('useCanvasOperations', () => {
       useSelectionStore.getState().setSelectedIds(['child-1', 'child-2']);
       useObjectsStore.getState().setAll([frame, child1, child2]);
 
-      const props = {
-        objectsRecord: toRecord([frame, child1, child2]),
-        selectedIds: ['child-1', 'child-2'],
-        onObjectCreate,
-        onObjectDelete,
-        clearSelection,
-      };
-      renderHook(() => useCanvasOperations(props));
+      renderHook(() => useCanvasOperations(getDefaultProps()));
       document.body.focus();
 
       act(() => {
@@ -979,14 +937,7 @@ describe('useCanvasOperations', () => {
       useSelectionStore.getState().setSelectedIds(['obj-1', 'obj-2']);
       useObjectsStore.getState().setAll([obj1, obj2]);
 
-      const props = {
-        objectsRecord: toRecord([obj1, obj2]),
-        selectedIds: ['obj-1', 'obj-2'],
-        onObjectCreate,
-        onObjectDelete,
-        clearSelection,
-      };
-      renderHook(() => useCanvasOperations(props));
+      renderHook(() => useCanvasOperations(getDefaultProps()));
       document.body.focus();
 
       act(() => {
@@ -1023,14 +974,9 @@ describe('useCanvasOperations', () => {
       useSelectionStore.getState().setSelectedIds(['frame-1', 'conn-1']);
       useObjectsStore.getState().setAll([frame, connector]);
 
-      const props = {
-        objectsRecord: toRecord([frame, connector]),
-        selectedIds: ['frame-1', 'conn-1'],
-        onObjectCreate,
-        onObjectDelete,
-        clearSelection,
-      };
-      renderHook(() => useCanvasOperations(props));
+      useObjectsStore.getState().setAll([frame, connector]);
+      useSelectionStore.getState().setSelectedIds(['frame-1', 'conn-1']);
+      renderHook(() => useCanvasOperations(getDefaultProps()));
       document.body.focus();
 
       act(() => {

@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { AlignToolbar } from './AlignToolbar';
 import { cn } from '@/lib/utils';
 import type { IBoardObject } from '@/types';
+import { useObjectsStore } from '@/stores/objectsStore';
+import { useSelectionStore } from '@/stores/selectionStore';
 
 // Zoom preset scales (1 = 100%)
 const ZOOM_PRESETS = [0.5, 1, 2] as const;
@@ -16,12 +18,9 @@ interface ICanvasControlPanelProps {
   exportViewport: (format: 'png' | 'jpeg') => void;
   /** No-arg callback; parent supplies objects from store/ref when invoked. */
   onExportFullBoard?: () => void;
-  objectsRecord: Record<string, IBoardObject>;
   handleZoomToSelection: () => void;
   handleZoomToFitAll: () => void;
   handleZoomPreset: (scale: number) => void;
-  selectedIds: ReadonlySet<string>;
-  selectedIdsArray: string[];
   visibleCount: number;
   zoomPercent: number;
   onObjectUpdate?: (objectId: string, updates: Partial<IBoardObject>) => void;
@@ -35,17 +34,17 @@ export const CanvasControlPanel = memo(function CanvasControlPanel({
   setSnapToGridEnabled,
   exportViewport,
   onExportFullBoard,
-  objectsRecord,
   handleZoomToSelection,
   handleZoomToFitAll,
   handleZoomPreset,
-  selectedIds,
-  selectedIdsArray,
   visibleCount,
   zoomPercent,
   onObjectUpdate,
   canEdit,
 }: ICanvasControlPanelProps): ReactElement {
+  const objectsRecord = useObjectsStore((s) => s.objects);
+  const selectedIds = useSelectionStore((s) => s.selectedIds);
+  const selectedIdsArray = useMemo(() => [...selectedIds], [selectedIds]);
   const totalCount = Object.keys(objectsRecord).length;
   const selectedObjects = useMemo(
     () => selectedIdsArray.map((id) => objectsRecord[id]).filter(Boolean) as IBoardObject[],

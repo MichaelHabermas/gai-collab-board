@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { Timestamp } from 'firebase/firestore';
 import { useCanvasOperations } from '@/hooks/useCanvasOperations';
+import { useObjectsStore } from '@/stores/objectsStore';
+import { useSelectionStore } from '@/stores/selectionStore';
 import type { IBoardObject } from '@/types';
 
 /**
@@ -60,10 +62,11 @@ describe('frame grouping — useCanvasOperations', () => {
       const child2 = makeObj({ id: 'child-2', parentFrameId: 'frame-1', x: 100, y: 100 });
       const unrelated = makeObj({ id: 'other', x: 500, y: 500 });
 
+      useObjectsStore.setState({ objects: toRecord([frame, child1, child2, unrelated]) });
+      useSelectionStore.getState().setSelectedIds(['frame-1']);
+
       const { result } = renderHook(() =>
         useCanvasOperations({
-          objectsRecord: toRecord([frame, child1, child2, unrelated]),
-          selectedIds: ['frame-1'],
           onObjectCreate,
           onObjectUpdate,
           onObjectsUpdate,
@@ -92,10 +95,11 @@ describe('frame grouping — useCanvasOperations', () => {
       const child1 = makeObj({ id: 'child-1', parentFrameId: 'frame-1', x: 50, y: 50 });
       const child2 = makeObj({ id: 'child-2', parentFrameId: 'frame-1', x: 100, y: 100 });
 
+      useObjectsStore.setState({ objects: toRecord([frame, child1, child2]) });
+      useSelectionStore.getState().setSelectedIds(['frame-1', 'child-1']);
+
       const { result } = renderHook(() =>
         useCanvasOperations({
-          objectsRecord: toRecord([frame, child1, child2]),
-          selectedIds: ['frame-1', 'child-1'], // child-1 is also being deleted
           onObjectCreate,
           onObjectUpdate,
           onObjectsUpdate,
@@ -118,10 +122,11 @@ describe('frame grouping — useCanvasOperations', () => {
     it('deleting a frame with no children does not call onObjectsUpdate', async () => {
       const frame = makeObj({ id: 'frame-1', type: 'frame', width: 300, height: 300 });
 
+      useObjectsStore.setState({ objects: toRecord([frame]) });
+      useSelectionStore.getState().setSelectedIds(['frame-1']);
+
       const { result } = renderHook(() =>
         useCanvasOperations({
-          objectsRecord: toRecord([frame]),
-          selectedIds: ['frame-1'],
           onObjectCreate,
           onObjectUpdate,
           onObjectsUpdate,
@@ -144,10 +149,11 @@ describe('frame grouping — useCanvasOperations', () => {
       const frame = makeObj({ id: 'frame-1', type: 'frame', width: 300, height: 300 });
       const child = makeObj({ id: 'child-1', parentFrameId: 'frame-1', x: 50, y: 50 });
 
+      useObjectsStore.setState({ objects: toRecord([frame, child]) });
+      useSelectionStore.getState().setSelectedIds(['frame-1']);
+
       const { result } = renderHook(() =>
         useCanvasOperations({
-          objectsRecord: toRecord([frame, child]),
-          selectedIds: ['frame-1'],
           onObjectCreate,
           onObjectUpdate,
           // no onObjectsUpdate
@@ -170,10 +176,11 @@ describe('frame grouping — useCanvasOperations', () => {
     it('duplicated objects do not carry parentFrameId', () => {
       const child = makeObj({ id: 'child-1', parentFrameId: 'frame-1', x: 50, y: 50 });
 
+      useObjectsStore.setState({ objects: toRecord([child]) });
+      useSelectionStore.getState().setSelectedIds(['child-1']);
+
       const { result } = renderHook(() =>
         useCanvasOperations({
-          objectsRecord: toRecord([child]),
-          selectedIds: ['child-1'],
           onObjectCreate,
           onObjectDelete,
           clearSelection,
@@ -198,10 +205,11 @@ describe('frame grouping — useCanvasOperations', () => {
     it('pasted objects do not carry parentFrameId', () => {
       const child = makeObj({ id: 'child-1', parentFrameId: 'frame-1', x: 50, y: 50 });
 
+      useObjectsStore.setState({ objects: toRecord([child]) });
+      useSelectionStore.getState().setSelectedIds(['child-1']);
+
       const { result } = renderHook(() =>
         useCanvasOperations({
-          objectsRecord: toRecord([child]),
-          selectedIds: ['child-1'],
           onObjectCreate,
           onObjectDelete,
           clearSelection,

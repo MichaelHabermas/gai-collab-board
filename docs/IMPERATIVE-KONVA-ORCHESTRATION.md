@@ -286,7 +286,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 
 ## WAVE 6.2: Epic 5.2 — CanvasHost Decoupling Follow-up (sequential, 1 architect + 1 reviewer)
 
-**Status:** Planned. Purpose is to remove remaining shape-coupled React churn in `CanvasHost` while preserving imperative Konva behavior. This wave updates readiness evidence and is completed before Epic 6 cleanup starts.
+**Status:** Implementation complete (2026-02-22). CanvasHost no longer subscribes to `objects` or `selectedIds`; `useCanvasOperations` reads store at action time; `CanvasControlPanel` and `CanvasContainerWithSelectionAttr` are subscription islands. `bun run validate` passes. Full E2E run recorded (78 passed, 50 failed); Epic 5.1 gate remains blocked until E2E pass. Evidence: `docs/collab/runs/2026-02-22_epic5-1-readiness/`.
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC |
 | ------ | ------ | ------ | ------ | ------ | ------ | ------ |

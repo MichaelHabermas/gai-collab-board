@@ -9,12 +9,6 @@ import { openCleanGuestBoard } from './helpers/openCleanGuestBoard';
 
 const BOARD_TIMEOUT_MS = 30_000;
 
-const waitForBoardVisible = async (page: Page): Promise<void> => {
-  await expect(page.locator('[data-testid="board-canvas"]')).toBeVisible({
-    timeout: BOARD_TIMEOUT_MS,
-  });
-};
-
 const openEditableBoard = async (page: Page): Promise<void> => {
   await openCleanGuestBoard(page, BOARD_TIMEOUT_MS);
 };

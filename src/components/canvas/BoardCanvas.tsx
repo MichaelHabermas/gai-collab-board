@@ -328,8 +328,6 @@ export const BoardCanvas = memo(
     // Type assertion needed because useCanvasOperations uses a more permissive type
     const selectedIdsArray = useMemo(() => [...selectedIds], [selectedIds]);
     useCanvasOperations({
-      objectsRecord,
-      selectedIds: selectedIdsArray,
       onObjectCreate:
         (onObjectCreate as (params: Partial<IBoardObject>) => Promise<IBoardObject | null>) ||
         (() => Promise.resolve(null)),
@@ -963,12 +961,9 @@ export const BoardCanvas = memo(
           setSnapToGridEnabled={setSnapToGridEnabled}
           exportViewport={exportViewport}
           onExportFullBoard={handleExportFullBoard}
-          objectsRecord={objectsRecord}
           handleZoomToSelection={handleZoomToSelection}
           handleZoomToFitAll={handleZoomToFitAll}
           handleZoomPreset={handleZoomPreset}
-          selectedIds={selectedIds}
-          selectedIdsArray={selectedIdsArray}
           visibleCount={visibleShapeIds.length}
           zoomPercent={Math.round(viewport.scale.x * 100)}
           onObjectUpdate={onObjectUpdate}

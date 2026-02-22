@@ -6,8 +6,6 @@ import { useSelectionStore } from '@/stores/selectionStore';
 import { useObjectsStore } from '@/stores/objectsStore';
 
 interface IUseCanvasOperationsProps {
-  objectsRecord: Record<string, IBoardObject>;
-  selectedIds: string[];
   onObjectCreate: (params: Partial<IBoardObject>) => Promise<IBoardObject | null> | void;
   onObjectUpdate?: (objectId: string, updates: Partial<IBoardObject>) => void;
   onObjectsUpdate?: (updates: Array<{ objectId: string; updates: Partial<IBoardObject> }>) => void;
@@ -32,8 +30,6 @@ const PASTE_OFFSET = 30;
  * Also handles keyboard shortcuts for these operations.
  */
 export const useCanvasOperations = ({
-  objectsRecord,
-  selectedIds,
   onObjectCreate,
   onObjectUpdate,
   onObjectsUpdate,
@@ -46,8 +42,11 @@ export const useCanvasOperations = ({
   // Delete selected objects (batch when multiple and batch callback provided).
   // When deleting a frame, unparent its children that are NOT also being deleted.
   const handleDelete = useCallback(async () => {
-    if (selectedIds.length === 0) return;
+    const { selectedIds } = useSelectionStore.getState();
+    const selectedArr = [...selectedIds];
+    if (selectedArr.length === 0) return;
 
+    const objectsRecord = useObjectsStore.getState().objects;
     const objects = Object.values(objectsRecord);
     const deletingIds = new Set(selectedIds);
 
@@ -74,8 +73,8 @@ export const useCanvasOperations = ({
     }
 
     // Delete the selected objects
-    if (selectedIds.length > 1 && onObjectsDeleteBatch) {
-      await Promise.resolve(onObjectsDeleteBatch(selectedIds));
+    if (selectedArr.length > 1 && onObjectsDeleteBatch) {
+      await Promise.resolve(onObjectsDeleteBatch(selectedArr));
     } else {
       selectedIds.forEach((id) => {
         onObjectDelete(id);
@@ -83,21 +82,15 @@ export const useCanvasOperations = ({
     }
 
     clearSelection();
-  }, [
-    selectedIds,
-    objectsRecord,
-    onObjectUpdate,
-    onObjectsUpdate,
-    onObjectDelete,
-    onObjectsDeleteBatch,
-    clearSelection,
-  ]);
+  }, [onObjectUpdate, onObjectsUpdate, onObjectDelete, onObjectsDeleteBatch, clearSelection]);
 
   // Duplicate selected objects with offset.
   // Frame-aware: when duplicating a frame, also duplicate its children and reparent them.
   const handleDuplicate = useCallback(async () => {
+    const { selectedIds } = useSelectionStore.getState();
+    const objectsRecord = useObjectsStore.getState().objects;
     const objects = Object.values(objectsRecord);
-    const selectedObjects = objects.filter((obj) => selectedIds.includes(obj.id));
+    const selectedObjects = objects.filter((obj) => selectedIds.has(obj.id));
     const selectedIdSet = new Set(selectedIds);
 
     // Separate frames from non-frames to handle frame children
@@ -171,12 +164,14 @@ export const useCanvasOperations = ({
         }
       }
     }
-  }, [selectedIds, objectsRecord, onObjectCreate]);
+  }, [onObjectCreate]);
 
   // Copy selected objects to clipboard (includes frame children automatically)
   const handleCopy = useCallback(() => {
+    const { selectedIds } = useSelectionStore.getState();
+    const objectsRecord = useObjectsStore.getState().objects;
     const objects = Object.values(objectsRecord);
-    const selectedObjects = objects.filter((obj) => selectedIds.includes(obj.id));
+    const selectedObjects = objects.filter((obj) => selectedIds.has(obj.id));
     const selectedIdSet = new Set(selectedIds);
 
     // Include children of selected frames that aren't independently selected
@@ -193,7 +188,7 @@ export const useCanvasOperations = ({
     }
 
     setClipboard([...selectedObjects, ...extras]);
-  }, [selectedIds, objectsRecord]);
+  }, []);
 
   // Paste objects from clipboard.
   // Frame-aware: when pasting a frame, also paste its children with correct parentFrameId.
