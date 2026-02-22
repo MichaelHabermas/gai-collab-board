@@ -59,7 +59,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 
 ## WAVE 1: Epic 0 — Foundation (3 parallel agents)
 
-**Status:** Not done. Constitution (Articles XX–XXVII) missing from CONSTITUTION.md. `docs/perf-baselines/` and pre-migration.json missing. Only 4 of 13 E2E specs exist (connectorCreation, connectorEndpointDrag, shapeResize, shapeRotate). T1, T2, T3, T5 pending; T4 (connector/transform E2E) done.
+**Status:** Done. Constitution (Articles XX–XXVII) in CONSTITUTION.md. `docs/perf-baselines/pre-migration.json` with automated capture. All 13 E2E specs present; connectorCreation and undoRedoDrag pass on chromium and firefox. Ralph-loop RL0–RL3 complete; merged on spike/react-konva-1.
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC |
 | ------ | ------ | ------ | ------ | ------ | ------ | ------ |

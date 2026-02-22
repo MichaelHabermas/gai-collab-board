@@ -37,7 +37,7 @@
 
 | Epic | Doc suggests | Reality |
 | ------ | ------ | ------ |
-| **E0** | Constitution, baselines, 13 E2E done | Constitution (Articles XX–XXVII) not in CONSTITUTION.md; `docs/perf-baselines/` missing; only 4 of 13 new E2E specs exist (connectorCreation, connectorEndpointDrag, shapeResize, shapeRotate). |
+| **E0** | Constitution, baselines, 13 E2E done | **Done** — Constitution (Articles XX–XXVII) in CONSTITUTION.md; `docs/perf-baselines/pre-migration.json` with automated capture; 13 E2E specs present; connectorCreation and undoRedoDrag pass (chromium+firefox). RL0–RL3 complete on spike/react-konva-1. |
 | **E1** | Done | Done — all 7 factories, types, registry, unit tests present. |
 | **E2** | Done | Done — LayerManager, KonvaNodeManager, SelectionSyncController + unit tests. |
 | **E3** | 9/11 sub-tasks done | **6/11** — drag modules (dragCommit, alignmentEngine, dragBounds, frameDragReparenting) + their tests exist. **Missing:** DragCoordinator, entire `events/` folder (StageEventRouter, ShapeEventWiring, DrawingController, MarqueeController, ConnectorController, TextEditController). |
