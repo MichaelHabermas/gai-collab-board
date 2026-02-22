@@ -1,6 +1,6 @@
 {
-  "capturedAt": "2026-02-22T19:07:00.308Z",
-  "capturedAtMs": 1771787220308,
+  "capturedAt": "2026-02-22T19:45:51.120Z",
+  "capturedAtMs": 1771789551120,
   "source": "sync.latency.test.ts",
   "metrics": [
     {
@@ -10,22 +10,22 @@
     },
     {
       "name": "object_update_latency",
-      "value": 24,
+      "value": 31,
       "unit": "ms"
     },
     {
       "name": "batch_500_objects",
-      "value": 49,
+      "value": 62,
       "unit": "ms"
     },
     {
       "name": "e2e_propagation",
-      "value": 33,
+      "value": 20,
       "unit": "ms"
     },
     {
       "name": "batch_1000_objects",
-      "value": 64,
+      "value": 60,
       "unit": "ms"
     }
   ]

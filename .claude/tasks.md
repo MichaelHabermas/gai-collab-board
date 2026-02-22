@@ -396,14 +396,14 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ## IK19 — OverlayManager
 
-- **Status:** reject
+- **Status:** in-progress
 - **Tier:** opus
 - **Role:** architect
 - **Worktree name:** epic4-overlay-manager
 - **Description:** Task T19: Create OverlayManager.ts handling 5 subsystems.
 - **Dependencies:** IK10, IK18
-- **Notes:** Branch `agent/epic4-overlay-manager` has no diff vs `spike/react-konva-1`; no OverlayManager files present in repo. Worktree path exists but is empty; `worktree-manager` create fails because the directory already exists.
-- **Review:** `bun run validate` failed in base repo at `tests/unit/TransformerManager.test.ts` (TS1005). `bun run validate` in the provided worktree path fails with `Script not found "validate"` due to missing repo files.
+- **Notes:** OverlayManager scaffold merged: `src/canvas/OverlayManager.ts` + `tests/unit/OverlayManager.test.ts`. Marquee + alignment guides implemented. Drawing preview, cursors, connection anchors still stubbed (showDrawingPreview/updateDrawingPreview/hideDrawingPreview, updateCursors, updateConnectionNodes/highlightAnchor/clearConnectionNodes). Complete these 3 subsystems to satisfy Epic 4 DoD.
+- **Review:** (previous reject was pre-scaffold; scaffold landed separately.)
 
 ---
 

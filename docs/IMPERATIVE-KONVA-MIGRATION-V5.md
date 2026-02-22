@@ -41,7 +41,7 @@
 | **E1** | Done | Done — all 7 factories, types, registry, unit tests present. |
 | **E2** | Done | Done — LayerManager, KonvaNodeManager, SelectionSyncController + unit tests. |
 | **E3** | 10/11 sub-tasks done | **11/11** — drag modules + DragCoordinator + StageEventRouter + ShapeEventWiring + MarqueeController + DrawingController + ConnectorController + **TextEditController** exist; unit tests present. |
-| **E4** | Not started | **Partial** — TransformerManager, GridRenderer, SelectionDragHandle + unit tests present. Missing: OverlayManager. |
+| **E4** | Not started | **Partial** — TransformerManager, GridRenderer, SelectionDragHandle + unit tests present. OverlayManager scaffold present; marquee + guides implemented; drawing preview, cursors, connection anchors stubbed. |
 | **E5** | Not started | Not started — App still uses BoardCanvas. |
 | **E6** | Not started | Not started. |
 
@@ -981,7 +981,7 @@ function createTextEditController(
 - [ ] **All items in [Appendix D: Drag Behavior Checklist](#appendix-d-drag-behavior-checklist) verified** (each row marked as covered by unit test, integration test, or manual verification in PR)
 - [x] `bun run validate` passes
 - [x] No existing files modified
-- [ ] Completion checkpoint recorded per [§0.1 Canonical Merge and Epic Completion Rule](#01-canonical-merge-and-epic-completion-rule) before Epic 5 begins (may merge in parallel with Epic 4)
+- [x] Completion checkpoint recorded per [§0.1 Canonical Merge and Epic Completion Rule](#01-canonical-merge-and-epic-completion-rule) before Epic 5 begins (may merge in parallel with Epic 4) — Recorded in `.claude/tasks.md` (IK16–IK18); continue-dblclick-wire-ik18 run; `bun run validate` passed.
 
 ---
 

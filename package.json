@@ -35,6 +35,7 @@
     "benchmark:strict": "bun run scripts/release-gate.ts --skip-proxy-smoke",
     "release:gate": "bun run scripts/release-gate.ts",
     "cleanup": "bun run lint:fix && bun run format",
+    "cleanup:daily-logs": "bun run scripts/cleanup-daily-logs.ts",
     "validate": "bun run format && bun run lint:fix && bun run typecheck",
     "test:full": "bun run validate && bun run test:coverage && bun run test:e2e && bun run test:e2e:ui && bun run perf:check && bun run test:ai-connection"
   },

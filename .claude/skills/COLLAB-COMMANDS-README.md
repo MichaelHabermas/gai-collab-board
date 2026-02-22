@@ -7,6 +7,7 @@ Reusable command pack for research, PRD, implementation, and review workflows.
 - Atomic commands: `/research`, `/prd`, `/implement`, `/review`
 - Router command: `/collab`
 - Meta-advisor command: `/Tarpey`
+- Cleanup command: `/cleanup-daily-logs`
 - Shared execution contract and stop conditions
 - Compatible surfaces:
   - `.claude/commands/*`
@@ -21,6 +22,7 @@ Reusable command pack for research, PRD, implementation, and review workflows.
 - `/review` -> `.claude/skills/collab-review/SKILL.md`
 - `/collab` -> `.claude/skills/collab-router/SKILL.md`
 - `/Tarpey` -> `.claude/skills/tarpey-advisor/SKILL.md`
+- `/cleanup-daily-logs` -> `.claude/skills/cleanup-daily-logs/SKILL.md` (run `bun run cleanup:daily-logs <YYYY-MM-DD> --dry-run` then `--confirm`)
 
 Shared rules:
 
@@ -103,6 +105,17 @@ Quick shorthand:
 /Tarpey strict audit scope="source docs + touched code"
 /Tarpey light retro scope="last 3 sessions"
 ```
+
+### Cleanup daily logs
+
+Consolidate one day's run dirs into a single set of markdown files per type; then delete the original run dirs. Always run `--dry-run` first, then `--confirm` after reviewing.
+
+```text
+bun run cleanup:daily-logs 2025-02-22 --dry-run
+bun run cleanup:daily-logs 2025-02-22 --confirm
+```
+
+Output: `docs/collab/runs/<YYYY-MM-DD>/research.md`, `prd.md`, `implementation-log.md`, `review.md`, `reconciliation-check.md`. Re-running for the same day appends new run dirs and deletes them.
 
 ## Fresh Context / Reconciliation-First (recommended for new chat)
 
