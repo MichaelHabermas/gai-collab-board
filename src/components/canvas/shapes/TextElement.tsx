@@ -133,12 +133,19 @@ export const TextElement = memo(
           };
 
           const handleBlur = (e: FocusEvent) => {
-            const rt = e.relatedTarget as HTMLElement;
-            if (rt && (rt.closest('.toolbar') || rt.closest('[data-testid^="tool-"]') || rt.closest('[data-testid^="zoom-"]'))) {
-              e.preventDefault();
+            const rt = e.relatedTarget as HTMLElement | null;
+            // Keep overlay open when focus goes to toolbar, zoom controls, or canvas (pan/zoom).
+            const keepOpen =
+              (rt &&
+                (rt.closest('.toolbar') ||
+                  rt.closest('[data-testid^="tool-"]') ||
+                  rt.closest('[data-testid^="zoom-"]'))) ||
+              (rt && rt.closest('[data-testid="board-canvas"]'));
+            if (keepOpen || !rt) {
               textarea.focus();
               return;
             }
+
             onTextChange(textarea.value);
             removeTextarea();
           };

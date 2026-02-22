@@ -4,12 +4,14 @@ import { useHistoryStore } from '@/stores/historyStore';
 import { useObjectsStore } from '@/stores/objectsStore';
 import { executeUndo, executeRedo } from '@/modules/history/historyService';
 import { useHistoryRefSync } from '@/hooks/useHistoryRefSync';
+import type { IObjectUpdateEntry } from '@/hooks/useObjects';
 
 interface IUseHistoryParams {
   createObject: (
     params: Omit<import('@/types').ICreateObjectParams, 'createdBy'>
   ) => Promise<import('@/types').IBoardObject | null>;
   updateObject: (objectId: string, updates: IUpdateObjectParams) => Promise<void>;
+  updateObjects: (updates: IObjectUpdateEntry[]) => Promise<void>;
   deleteObject: (objectId: string) => Promise<void>;
   boardId: string | null;
 }
@@ -21,6 +23,8 @@ interface IUseHistoryReturn {
   ) => Promise<import('@/types').IBoardObject | null>;
   /** Wrapped update that records history. */
   updateObject: (objectId: string, updates: IUpdateObjectParams) => Promise<void>;
+  /** Wrapped batch update that records history. */
+  updateObjects: (updates: IObjectUpdateEntry[]) => Promise<void>;
   /** Wrapped delete that records history. */
   deleteObject: (objectId: string) => Promise<void>;
   /** Execute undo. */
@@ -38,6 +42,7 @@ interface IUseHistoryReturn {
 export const useHistory = ({
   createObject,
   updateObject,
+  updateObjects,
   deleteObject,
   boardId,
 }: IUseHistoryParams): IUseHistoryReturn => {
@@ -101,6 +106,30 @@ export const useHistory = ({
     [deleteObject, push]
   );
 
+  const wrappedUpdateObjects = useCallback(
+    async (updates: IObjectUpdateEntry[]): Promise<void> => {
+      if (updates.length === 0) return;
+
+      const store = useObjectsStore.getState().objects;
+      const commands = updates
+        .map(({ objectId, updates: u }) => {
+          const before = store[objectId];
+          if (!before) return null;
+
+          return { type: 'update' as const, objectId, before, after: { ...before, ...u } };
+        })
+        .filter((c): c is NonNullable<typeof c> => c != null);
+
+      if (commands.length > 0) {
+        await updateObjects(updates);
+        push(commands);
+      } else {
+        await updateObjects(updates);
+      }
+    },
+    [updateObjects, push]
+  );
+
   const getObjects = useCallback(() => Object.values(useObjectsStore.getState().objects), []);
 
   const undo = useCallback(() => {
@@ -130,6 +159,7 @@ export const useHistory = ({
   return {
     createObject: wrappedCreate,
     updateObject: wrappedUpdate,
+    updateObjects: wrappedUpdateObjects,
     deleteObject: wrappedDelete,
     undo,
     redo,

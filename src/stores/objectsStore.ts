@@ -273,10 +273,24 @@ if (typeof window !== 'undefined' && import.meta.env.DEV) {
 // ── Selectors ──────────────────────────────────────────────────────────
 
 /** Select a single object by ID (per-shape subscription). */
-export const selectObject =
+const selectObjectBase =
   (id: string) =>
   (state: IObjectsStore): IBoardObject | undefined =>
     state.objects[id];
+
+/** Dev-only: counts selector evals when __PERF_MEASURING (E2E perf baseline). */
+export const selectObject =
+  (id: string) =>
+  (state: IObjectsStore): IBoardObject | undefined => {
+    if (typeof window !== 'undefined') {
+      const w = window as unknown as Record<string, unknown>;
+      if (w.__PERF_MEASURING) {
+        w.__perfSelectorEvalCount = ((w.__perfSelectorEvalCount as number) ?? 0) + 1;
+      }
+    }
+
+    return selectObjectBase(id)(state);
+  };
 
 /** Select all objects as an array (use sparingly — causes re-render on any change). */
 export const selectAllObjects = (state: IObjectsStore): IBoardObject[] =>

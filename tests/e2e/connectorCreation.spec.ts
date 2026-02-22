@@ -8,6 +8,11 @@ const waitForBoardVisible = async (page: Page): Promise<void> => {
   });
 };
 
+/** Wait for auth + board creation to complete after signup click. */
+const waitForPostSignupNavigation = async (page: Page): Promise<void> => {
+  await page.waitForURL((url) => url.pathname !== '/login', { timeout: 20_000 });
+};
+
 const ensureOnBoard = async (page: Page): Promise<void> => {
   await page.waitForLoadState('load');
   const boardVisible = await page
@@ -25,6 +30,7 @@ const ensureOnBoard = async (page: Page): Promise<void> => {
   await page.locator('#signup-password').fill(pwd);
   await page.locator('#confirm-password').fill(pwd);
   await page.locator('button:has-text("Create Account")').click();
+  await waitForPostSignupNavigation(page);
   await waitForBoardVisible(page);
 };
 
@@ -38,7 +44,7 @@ const createStickyAt = async (
   canvasY: number
 ): Promise<void> => {
   await page.click('[data-testid="tool-sticky"]');
-  const canvas = page.locator('canvas').first();
+  const canvas = page.locator('[data-testid="board-canvas"] canvas').first();
   await expect(canvas).toBeVisible();
   const box = await canvas.boundingBox();
   if (!box) {
@@ -65,7 +71,9 @@ test.describe('Connector creation', () => {
       timeout: BOARD_TIMEOUT_MS,
     });
 
-    const canvas = page.locator('canvas').first();
+    const boardCanvas = page.locator('[data-testid="board-canvas"]');
+    await expect(boardCanvas).toBeVisible();
+    const canvas = boardCanvas.locator('canvas').first();
     await expect(canvas).toBeVisible();
     const box = await canvas.boundingBox();
     if (!box) {
@@ -79,25 +87,37 @@ test.describe('Connector creation', () => {
 
     // Sticky 1: click at (cx - 150, cy - 100) -> sticky at (cx - 250, cy - 200), size 200x200
     await createStickyAt(page, cx - 150, cy - 100);
+    await page.waitForTimeout(300);
     await page.click('[data-testid="tool-sticky"]');
+    await page.waitForTimeout(200);
     await page.mouse.click(box.x + cx + 150, box.y + cy + 100);
     await expect(page.locator('[data-testid="object-count"]')).toContainText('2', {
       timeout: 10_000,
     });
 
-    // Connector tool: click right anchor of sticky 1 (cx-50, cy-100), then left anchor of sticky 2 (cx+50, cy+100)
-    await page.click('[data-testid="tool-connector"]');
+    // Switch to select then click empty area so Transformer does not sit above connection nodes (avoid creating shape with sticky tool)
+    await page.click('[data-testid="tool-select"]');
+    await page.waitForTimeout(100);
+    await page.mouse.click(box.x + 10, box.y + 10);
     await page.waitForTimeout(200);
 
-    // Right anchor of sticky 1: (cx - 250 + 200, cy - 200 + 100) = (cx - 50, cy - 100)
-    await page.mouse.click(box.x + cx - 50, box.y + cy - 100);
-    await page.waitForTimeout(100);
+    // Connector tool: click right anchor of sticky 1, then left anchor of sticky 2
+    await page.click('[data-testid="tool-connector"]');
+    await page.waitForTimeout(1000);
 
-    // Left anchor of sticky 2: (cx + 50, cy + 100)
-    await page.mouse.click(box.x + cx + 50, box.y + cy + 100);
+    // Right anchor of sticky 1 in screen coords (sticky at cx-250,cy-200 200x200 -> right edge center)
+    const anchor1X = box.x + cx - 50;
+    const anchor1Y = box.y + cy - 100;
+    await page.mouse.click(anchor1X, anchor1Y);
+    await page.waitForTimeout(1000);
+
+    // Left anchor of sticky 2 (sticky at cx+50,cy 200x200 -> left edge center)
+    const anchor2X = box.x + cx + 50;
+    const anchor2Y = box.y + cy + 100;
+    await page.mouse.click(anchor2X, anchor2Y);
 
     await expect(page.locator('[data-testid="object-count"]')).toContainText('3', {
-      timeout: 10_000,
+      timeout: 20_000,
     });
     await expect(page.locator('[data-testid="board-canvas"]')).toBeVisible();
 

@@ -120,6 +120,7 @@ const BoardView = memo(function BoardView({
   const history = useHistory({
     createObject,
     updateObject,
+    updateObjects,
     deleteObject,
     boardId,
   });
@@ -350,7 +351,7 @@ const BoardView = memo(function BoardView({
             user={user}
             canEdit={canEdit}
             onObjectUpdate={history.updateObject}
-            onObjectsUpdate={updateObjects}
+            onObjectsUpdate={history.updateObjects}
             onObjectCreate={history.createObject}
             onObjectDelete={history.deleteObject}
             onObjectsDeleteBatch={deleteObjects}

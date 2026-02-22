@@ -28,6 +28,9 @@ bun.lockb
 /test-results/
 /playwright-report/
 
+# Temp files (perf baseline E2E metrics, etc.)
+.tmp/
+
 # TypeScript cache
 *.tsbuildinfo
 

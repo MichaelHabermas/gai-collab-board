@@ -311,7 +311,7 @@ export const BoardCanvas = memo(
       onRedo,
     });
 
-    const { handleConnectorNodeClick, clearConnector } = useConnectorCreation({
+    const { connectorFrom, handleConnectorNodeClick, clearConnector } = useConnectorCreation({
       objectsRecord,
       activeColor,
       onObjectCreate,
@@ -423,6 +423,11 @@ export const BoardCanvas = memo(
 
       // Check if we clicked on a shape (including child elements)
       if (checkIfShape(e.target)) {
+        return false;
+      }
+
+      // Connector nodes are interactive, not empty area
+      if (targetName === 'connector-node') {
         return false;
       }
 
@@ -791,12 +796,16 @@ export const BoardCanvas = memo(
         data-testid='board-canvas'
         data-selected-count={selectedIds.size}
         data-selected-ids={[...selectedIds].join(',')}
+        data-connector-from={connectorFrom != null ? 'true' : undefined}
       >
         <CanvasToolbarWrapper
           activeTool={activeTool}
           onToolChange={(tool) => {
             setActiveTool(tool);
             activeToolRef.current = tool;
+            if (tool === 'connector') {
+              clearSelectionFromStore();
+            }
           }}
           activeColor={activeColor}
           onColorChange={setActiveColor}

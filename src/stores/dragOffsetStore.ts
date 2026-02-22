@@ -57,5 +57,17 @@ export const selectIsDropTarget =
     state.dropTargetFrameId === frameId;
 
 /** Returns group drag offset (multi-select drag). */
-export const selectGroupDragOffset = (state: IDragOffsetStore): IGroupDragOffset | null =>
+const selectGroupDragOffsetBase = (state: IDragOffsetStore): IGroupDragOffset | null =>
   state.groupDragOffset;
+
+/** Dev-only: counts selector evals when __PERF_MEASURING (E2E perf baseline). */
+export const selectGroupDragOffset = (state: IDragOffsetStore): IGroupDragOffset | null => {
+  if (typeof window !== 'undefined') {
+    const w = window as unknown as Record<string, unknown>;
+    if (w.__PERF_MEASURING) {
+      w.__perfSelectorEvalCount = ((w.__perfSelectorEvalCount as number) ?? 0) + 1;
+    }
+  }
+
+  return selectGroupDragOffsetBase(state);
+};

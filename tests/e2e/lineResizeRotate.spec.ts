@@ -72,7 +72,7 @@ test.describe('Line resize and rotation', () => {
     await expect(page.locator('[data-testid="object-count"]')).toContainText('1');
   });
 
-  test.fixme('line tool draws and selection persists after deselect', async ({ page }) => {
+  test('line tool draws and selection persists after deselect', async ({ page }) => {
     await page.goto('/');
     await ensureOnBoard(page);
 

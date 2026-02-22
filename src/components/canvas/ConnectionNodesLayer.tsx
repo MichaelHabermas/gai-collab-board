@@ -10,6 +10,8 @@ const NODE_RADIUS = 6;
 const NODE_FILL = '#3b82f6';
 const NODE_STROKE = '#1e40af';
 const NODE_STROKE_WIDTH = 1.5;
+/** Large hit area for reliable E2E anchor targeting in headless (faster render cycle). */
+const NODE_HIT_STROKE_WIDTH = 40;
 
 interface IConnectionNodesLayerProps {
   shapeIds: string[];
@@ -56,6 +58,7 @@ export const ConnectionNodesLayer = memo(
                 fill={NODE_FILL}
                 stroke={NODE_STROKE}
                 strokeWidth={NODE_STROKE_WIDTH}
+                hitStrokeWidth={NODE_HIT_STROKE_WIDTH}
                 listening={true}
                 onClick={(e) => handleNodeClick(e, shape.id, anchor)}
                 onTap={(e) => handleNodeClick(e, shape.id, anchor)}

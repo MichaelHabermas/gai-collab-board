@@ -41,7 +41,7 @@ const getOverlayBox = async (page: Page): Promise<{ x: number; y: number; width:
 test.describe('Text overlay stability (Task 7)', () => {
   test.setTimeout(60_000);
 
-  test.fixme('sticky note overlay remains visible and usable after pan while editing', async ({
+  test('sticky note overlay remains visible and usable after pan while editing', async ({
     page,
   }) => {
     const credential = createCredential();
@@ -105,7 +105,7 @@ test.describe('Text overlay stability (Task 7)', () => {
     await expect(page.locator('[data-testid="object-count"]')).toContainText('1');
   });
 
-  test.fixme('sticky note overlay remains visible after zoom while editing', async ({
+  test('sticky note overlay remains visible after zoom while editing', async ({
     page,
   }) => {
     const credential = createCredential();

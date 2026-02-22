@@ -35,6 +35,16 @@ interface IStoreShapeRendererProps {
  * each shape subscribes independently so only affected shapes re-render
  * during drag (not all visible shapes).
  */
+/** Dev-only: increment when __PERF_MEASURING is set (E2E perf baseline capture). */
+const maybeIncrementRenderCount = (): void => {
+  if (typeof window !== 'undefined') {
+    const w = window as unknown as Record<string, unknown>;
+    if (w.__PERF_MEASURING) {
+      w.__perfStoreShapeRenderCount = ((w.__perfStoreShapeRenderCount as number) ?? 0) + 1;
+    }
+  }
+};
+
 export const StoreShapeRenderer = memo(
   ({
     id,
@@ -49,6 +59,7 @@ export const StoreShapeRenderer = memo(
     handleObjectSelect,
     handleObjectDragEnd,
   }: IStoreShapeRendererProps): ReactElement | null => {
+    maybeIncrementRenderCount();
     // Per-shape subscription: only re-renders when THIS object changes.
     const object = useObjectsStore(selectObject(id));
     const isSelected = useSelectionStore((s) => s.selectedIds.has(id));

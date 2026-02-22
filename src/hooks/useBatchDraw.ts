@@ -21,6 +21,12 @@ export const useBatchDraw = (): IUseBatchDrawReturn => {
     });
     pendingDraws.current.clear();
     frameRequested.current = false;
+    // Dev-only: notify E2E perf baseline when first batchDraw completes (TTI measurement)
+    if (typeof window !== 'undefined') {
+      const cb = (window as unknown as Record<string, (() => void) | undefined>)
+        .__onBatchDrawComplete;
+      cb?.();
+    }
   }, []);
 
   const requestBatchDraw = useCallback(

@@ -9,25 +9,37 @@ bun run perf:baseline              # pre-migration.json
 bun run perf:baseline post-migration  # post-migration.json
 ```
 
-Captures: bundle size (gzip), sync latency metrics from `perf:check`.
+Captures:
 
-## Manual Metrics (fill before Epic 6 comparison)
+- **Bundle size** (gzip) from `bun run build`
+- **Sync latency** from `perf:check` (sync.latency.test.ts)
+- **E2E metrics** from `tests/e2e/perfBaseline.spec.ts`:
+  - `frameTime100Drag` (p50/p95/p99) — rAF frame deltas during 100-object drag
+  - `frameTime500Pan` (p50/p95/p99) — rAF frame deltas during 500-object pan
+  - `reactRendersDuringDrag` — StoreShapeRenderer render count (dev instrumentation)
+  - `selectorEvalsPerDragFrame` — selectObject/selectGroupDragOffset evals per frame (dev instrumentation)
+  - `tti1000ObjectsMs` — setAll to 2 rAFs (proxy for first paint; batchDraw not hooked)
 
-Metrics with value `0` require manual capture. Update the JSON directly or re-run the script after filling.
+The E2E spec runs on Chromium only. Requires dev-mode store exposure (`__objectsStore`).
 
-| Metric | How to Measure |
-| ------ | ------ |
-| **frameTime100Drag** (p50/p95/p99) | Chrome DevTools Performance tab. Create board with 100 objects, select one, drag for 3s. Record frame times from flame chart. |
-| **frameTime500Pan** (p50/p95/p99) | Same, but pan across a board with 500 objects. |
-| **reactRendersDuringDrag** | React DevTools Profiler. Record during single shape drag. Count StoreShapeRenderer re-renders. |
-| **selectorEvalsPerDragFrame** | Custom instrumentation in `selectObject` and `selectGroupDragOffset` selectors, or monkey-patch. |
-| **tti1000ObjectsMs** | From `setAll()` to first `batchDraw()` complete on 1000-object board. Manual or one-off script. |
+## Manual Fallback (if E2E fails)
+
+If E2E capture fails, the script preserves existing values from the JSON file. You can also run the E2E spec standalone and paste results:
+
+```bash
+CAPTURE_PERF_BASELINE=1 bun run test:e2e -- tests/e2e/perfBaseline.spec.ts --project=chromium
+```
 
 ## Schema
 
 ```json
 {
   "capturedAt": "ISO8601",
+  "metadata": {
+    "environment": "platform Node version",
+    "commandSet": ["bun run build", "bun run vitest run tests/integration/sync.latency.test.ts"],
+    "sampleSize": { "syncLatencyRuns": 1 }
+  },
   "frameTime100Drag": { "p50": 0, "p95": 0, "p99": 0 },
   "frameTime500Pan": { "p50": 0, "p95": 0, "p99": 0 },
   "reactRendersDuringDrag": 0,
