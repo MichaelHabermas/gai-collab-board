@@ -114,6 +114,11 @@ export class SpatialIndex {
     this.draggingIds = ids;
   }
 
+  /** Return the set of object IDs currently being dragged. */
+  getDragging(): Set<string> {
+    return this.draggingIds;
+  }
+
   /** Clear the dragging set (e.g. on drag end). */
   clearDragging(): void {
     this.draggingIds = new Set<string>();

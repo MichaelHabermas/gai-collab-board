@@ -80,13 +80,15 @@ export class OverlayManager {
     // No-op: callers use updateMarquee(rect) with visible true.
   }
 
-  updateMarquee(rect: ISelectionRect): void {
+  updateMarquee(
+    rect: ISelectionRect | { x1: number; y1: number; x2: number; y2: number; visible?: boolean }
+  ): void {
     const layer = this.overlayLayer;
     if (!layer) {
       return;
     }
 
-    if (!rect.visible) {
+    if (rect.visible === false) {
       if (this.marqueeRect) {
         this.marqueeRect.destroy();
         this.marqueeRect = null;
@@ -464,6 +466,17 @@ export class OverlayManager {
 
   highlightAnchor(shapeId: string, anchor: ConnectorAnchor): void {
     this.highlightedAnchor = { shapeId, anchor };
+    if (this.lastConnectionNodesArgs) {
+      this.updateConnectionNodes(
+        this.lastConnectionNodesArgs.shapeIds,
+        this.lastConnectionNodesArgs.objectsRecord,
+        this.lastConnectionNodesArgs.onNodeClick
+      );
+    }
+  }
+
+  clearHighlight(): void {
+    this.highlightedAnchor = null;
     if (this.lastConnectionNodesArgs) {
       this.updateConnectionNodes(
         this.lastConnectionNodesArgs.shapeIds,

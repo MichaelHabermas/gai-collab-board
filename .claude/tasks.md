@@ -431,6 +431,48 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ---
 
+# Epic 5 — CanvasHost & Integration (Wave 6)
+
+Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md Wave 6.
+
+---
+
+## IK22 — useCanvasSetup.ts (DI, subscriptions, cleanup)
+
+- **Status:** pending
+- **Tier:** opus
+- **Role:** architect
+- **Worktree name:** epic5-integration
+- **Description:** Task T22: Create src/canvas/useCanvasSetup.ts (~200 LOC). Manager instantiation in DI order. Wire Zustand vanilla subscriptions (objectsStore, selectionStore, dragOffsetStore) per Appendix C. Returns { stage, destroy }. Cleanup destroys all managers + unsubscribes.
+- **Dependencies:** IK19, IK20, IK21 (W5-R)
+- **Acceptance criteria:** All managers instantiated. Subscriptions per Appendix C. destroy() cleans everything. Under 300 LOC.
+
+---
+
+## IK23 — CanvasHost.tsx (React shell, surviving hooks)
+
+- **Status:** pending
+- **Tier:** opus
+- **Role:** architect
+- **Worktree name:** epic5-integration
+- **Description:** Task T23: Create src/canvas/CanvasHost.tsx (~250 LOC). React shell: tool/color state, surviving hooks (useCanvasViewport, useVisibleShapeIds, useBoardSubscription, useCursors, useCanvasKeyboardShortcuts, useCanvasOperations). Mount effect calls setupCanvas. Renders container div + toolbar + control panel.
+- **Dependencies:** IK22
+- **Acceptance criteria:** All surviving hooks wired. Mount/unmount lifecycle correct. Under 300 LOC.
+
+---
+
+## IK24 — Import swap BoardCanvas→CanvasHost + full E2E + manual matrix
+
+- **Status:** pending
+- **Tier:** opus
+- **Role:** architect
+- **Worktree name:** epic5-integration
+- **Description:** Task T24: Replace <BoardCanvas> import with <CanvasHost> in App.tsx. Run full E2E suite (13 new + existing). Verify manual integration checklist (27 items from V5 §11). Capture post-migration baselines.
+- **Dependencies:** IK23
+- **Acceptance criteria:** All E2E pass. Integration checklist verified. Baselines captured. Article XXVII (single atomic cutover).
+
+---
+
 # Ralph Loop — Epics 0-3 (Strict Gate)
 
 Base branch: spike/react-konva-1. Strict Epic 0→1→2→3 ralph-loop. All gates must pass before advancing.
