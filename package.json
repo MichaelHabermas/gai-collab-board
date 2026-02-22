@@ -29,6 +29,7 @@
     "smoke:ai-proxy": "bun run scripts/smoke-ai-proxy.ts",
     "usage:record-event": "bun run scripts/record-usage-event.ts",
     "usage:rebuild-report": "bun run scripts/rebuild-usage-report.ts",
+    "usage:debug-hook-payload": "bun run scripts/debug-hook-payload.ts",
     "report:agent-transcripts": "bun run scripts/agent-transcript-report.ts",
     "benchmark:strict": "bun run scripts/release-gate.ts --skip-proxy-smoke",
     "release:gate": "bun run scripts/release-gate.ts",

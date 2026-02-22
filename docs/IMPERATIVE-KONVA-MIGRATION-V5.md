@@ -8,6 +8,7 @@
 
 ## Table of Contents
 
+0. [Actual status (vs. checkboxes)](#actual-status-vs-checkboxes)
 1. [Context & Rationale](#1-context--rationale)
 2. [Architecture Overview](#2-architecture-overview)
 3. [What Survives, Dies, Transforms](#3-what-survives-dies-transforms)
@@ -27,6 +28,22 @@
 17. [Appendix B: Dying Code Manifest](#appendix-b-dying-code-manifest)
 18. [Appendix C: Zustand v5 Subscription Contract](#appendix-c-zustand-v5-subscription-contract)
 19. [Appendix D: Drag Behavior Checklist](#appendix-d-drag-behavior-checklist)
+
+---
+
+## Actual status (vs. checkboxes)
+
+*Last verified against codebase.* Checkboxes below can drift from repo state. This section reflects what actually exists.
+
+| Epic | Doc suggests | Reality |
+|------|--------------|---------|
+| **E0** | Constitution, baselines, 13 E2E done | Constitution (Articles XX–XXVII) not in CONSTITUTION.md; `docs/perf-baselines/` missing; only 4 of 13 new E2E specs exist (connectorCreation, connectorEndpointDrag, shapeResize, shapeRotate). |
+| **E1** | Done | Done — all 7 factories, types, registry, unit tests present. |
+| **E2** | Done | Done — LayerManager, KonvaNodeManager, SelectionSyncController + unit tests. |
+| **E3** | 9/11 sub-tasks done | **6/11** — drag modules (dragCommit, alignmentEngine, dragBounds, frameDragReparenting) + their tests exist. **Missing:** DragCoordinator, entire `events/` folder (StageEventRouter, ShapeEventWiring, DrawingController, MarqueeController, ConnectorController, TextEditController). |
+| **E4** | Not started | Not started. |
+| **E5** | Not started | Not started — App still uses BoardCanvas. |
+| **E6** | Not started | Not started. |
 
 ---
 
@@ -923,17 +940,17 @@ function createTextEditController(
 
 ### Sub-Tasks
 
-- [x] 1. **`drag/DragCoordinator.ts`** (~50 LOC) — Thin dispatcher.
+- [ ] 1. **`drag/DragCoordinator.ts`** (~50 LOC) — Thin dispatcher.
 - [x] 2. **`drag/dragCommit.ts`** (~200 LOC) — Store persistence on drag end.
 - [x] 3. **`drag/alignmentEngine.ts`** (~150 LOC) — Guide computation + snap.
 - [x] 4. **`drag/dragBounds.ts`** (~80 LOC) — Boundary constraint functions.
 - [x] 5. **`drag/frameDragReparenting.ts`** (~120 LOC) — Frame containment logic.
 - [ ] 6. **`events/StageEventRouter.ts`** (~120 LOC) — Stage-level event dispatch.
 - [ ] 7. **`events/ShapeEventWiring.ts`** (~150 LOC) — Per-node event wiring.
-- [x] 8. **`events/DrawingController.ts`** (~100 LOC) — Drawing state machine.
-- [x] 9. **`events/MarqueeController.ts`** (~80 LOC) — Marquee state machine.
-- [x] 10. **`events/ConnectorController.ts`** (~70 LOC) — Two-click connector flow.
-- [x] 11. **`events/TextEditController.ts`** (~80 LOC) — Text editing via DOM overlay.
+- [ ] 8. **`events/DrawingController.ts`** (~100 LOC) — Drawing state machine.
+- [ ] 9. **`events/MarqueeController.ts`** (~80 LOC) — Marquee state machine.
+- [ ] 10. **`events/ConnectorController.ts`** (~70 LOC) — Two-click connector flow.
+- [ ] 11. **`events/TextEditController.ts`** (~80 LOC) — Text editing via DOM overlay.
 - [x] 12. **Unit tests** (~300 LOC):
   - dragCommit: selectObject toggles selection, commitDragEnd calls queueObjectUpdate
   - alignmentEngine: guide computation returns correct snap positions
@@ -946,11 +963,11 @@ function createTextEditController(
 
 ### Epic 3 Definition of Done
 
-- [ ] All 11 event/drag files created and passing unit tests (9/11: StageEventRouter + ShapeEventWiring pending)
+- [ ] All 11 event/drag files created and passing unit tests (6/11: drag modules done; DragCoordinator + events/ folder pending)
 - [x] **Every drag sub-module stays under 200 LOC**
-- [x] DragCoordinator is a thin dispatcher, not a monolith
-- [x] MarqueeController uses no React state (plain object)
-- [x] TextEditController reuses canvasTextEditOverlay.ts unchanged
+- [ ] DragCoordinator is a thin dispatcher, not a monolith
+- [ ] MarqueeController uses no React state (plain object)
+- [ ] TextEditController reuses canvasTextEditOverlay.ts unchanged
 - [ ] **All items in [Appendix D: Drag Behavior Checklist](#appendix-d-drag-behavior-checklist) verified** (each row marked as covered by unit test, integration test, or manual verification in PR)
 - [x] `bun run validate` passes
 - [x] No existing files modified

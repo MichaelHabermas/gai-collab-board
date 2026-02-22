@@ -322,7 +322,7 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ## IK16 — StageEventRouter + ShapeEventWiring
 
-- **Status:** pending
+- **Status:** done
 - **Tier:** sonnet
 - **Role:** architect
 - **Worktree name:** epic3-event-wiring
@@ -355,9 +355,31 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ## IK19 — OverlayManager
 
-- **Status:** pending
+- **Status:** done
 - **Tier:** opus
 - **Role:** architect
 - **Worktree name:** epic4-overlay-manager
 - **Description:** Task T19: Create OverlayManager.ts handling 5 subsystems.
 - **Dependencies:** IK10, IK18
+
+---
+
+## IK20 — TransformerManager
+
+- **Status:** pending
+- **Tier:** sonnet
+- **Role:** architect
+- **Worktree name:** epic4-transformer
+- **Description:** Task T20: Create TransformerManager.ts matching TransformHandler config, add unit tests.
+- **Dependencies:** IK16, IK19 (W4-R)
+
+---
+
+## IK21 — GridRenderer + SelectionDragHandle
+
+- **Status:** pending
+- **Tier:** haiku
+- **Role:** quick-fixer
+- **Worktree name:** epic4-grid-handle
+- **Description:** Task T21: Create GridRenderer.ts and SelectionDragHandle.ts with unit tests.
+- **Dependencies:** IK16, IK19 (W4-R)

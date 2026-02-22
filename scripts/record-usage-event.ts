@@ -1,4 +1,9 @@
-import { recordDevUsageEvent, recordMcpUsageEvent } from '../server/ai-usage-tracker';
+import {
+  recordDevUsageEvent,
+  recordMcpUsageEvent,
+  recordUsageEventBatch,
+  type IRecordMcpPayload as ITrackerMcpPayload,
+} from '../server/ai-usage-tracker';
 import {
   AI_USAGE_SOURCE_CLAUDE,
   AI_USAGE_SOURCE_CURSOR,
@@ -125,6 +130,15 @@ async function readStdin(): Promise<string> {
   return Buffer.concat(chunks).toString('utf8');
 }
 
+function toTrackerMcpPayload(p: IRecordMcpPayload): ITrackerMcpPayload {
+  return {
+    source: p.source,
+    session_id: p.session_id,
+    tool_call_count: p.tool_call_count,
+    estimated_cost: p.estimated_cost,
+  };
+}
+
 async function main(): Promise<void> {
   const rawText = await readStdin();
   if (rawText.trim() === '') {
@@ -137,6 +151,30 @@ async function main(): Promise<void> {
     return;
   }
   if (!isRecord(parsed)) {
+    return;
+  }
+
+  if (Array.isArray(parsed.batch)) {
+    const items = parsed.batch as unknown[];
+    let devPayload: IRecordDevPayload | null = null;
+    let mcpPayload: IRecordMcpPayload | null = null;
+    for (const item of items) {
+      if (!isRecord(item)) {
+        continue;
+      }
+      const dev = parseDevPayload(item);
+      if (dev) {
+        devPayload = dev;
+        continue;
+      }
+      const mcp = parseMcpPayload(item);
+      if (mcp) {
+        mcpPayload = mcp;
+      }
+    }
+    if (devPayload || mcpPayload) {
+      recordUsageEventBatch(devPayload, mcpPayload ? toTrackerMcpPayload(mcpPayload) : null);
+    }
     return;
   }
 

@@ -50,6 +50,9 @@ vite.config.ts.timestamp-*
 .cursor/plans
 .lbi
 
+# Usage tracker diagnostic (contains session/conversation ids)
+.claude/usage/last-hook-payload.json
+
 # Windows reserved names (redirects like >nul can create these as files)
 nul
 con

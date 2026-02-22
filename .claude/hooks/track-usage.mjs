@@ -320,6 +320,14 @@ function detectUsageSource(raw) {
   if (raw?.session_id) {
     return "claude";
   }
+  // Cursor stop hook often sends workspace_roots but not cwd; Claude Code sends cwd
+  if (
+    Array.isArray(raw?.workspace_roots) &&
+    raw.workspace_roots.length > 0 &&
+    !raw.cwd
+  ) {
+    return "cursor";
+  }
   return "unknown";
 }
 
@@ -397,9 +405,29 @@ function normalizeInput(raw) {
   };
 }
 
+// ── Diagnostic: log raw payload for Cursor/Claude detection debugging ─
+function writeLastHookPayload(raw, projectDir) {
+  if (!raw || typeof raw !== "object") return;
+  try {
+    const dir = join(projectDir, ".claude", "usage");
+    mkdirSync(dir, { recursive: true });
+    const path = join(dir, "last-hook-payload.json");
+    writeFileSync(path, JSON.stringify(raw, null, 2), "utf8");
+  } catch {
+    // never break the hook
+  }
+}
+
 // ── Main ────────────────────────────────────────────────────────────
 function main() {
   const raw = readStdin();
+  const projectDirForLog =
+    raw?.cwd ??
+    (Array.isArray(raw?.workspace_roots) && raw.workspace_roots[0]
+      ? raw.workspace_roots[0]
+      : process.env.CLAUDE_PROJECT_DIR || process.cwd());
+  writeLastHookPayload(raw, projectDirForLog);
+
   const input = normalizeInput(raw);
   if (!input) process.exit(0);
 
@@ -475,7 +503,7 @@ function main() {
   // Write legacy data (kept for backwards compatibility)
   writeFileSync(dataPath, JSON.stringify(data, null, 2));
 
-  const devRecorded = recordUnifiedEvent(projectDir, {
+  const devPayload = {
     event_type: "dev",
     source: input.source,
     session_id: input.session_id,
@@ -493,21 +521,25 @@ function main() {
       hook_source: input.source,
       by_model_count: Object.keys(byModel).length,
     },
-  });
+  };
 
-  let mcpRecorded = true;
-  if (mcpUsage.tool_call_count > 0) {
-    mcpRecorded = recordUnifiedEvent(projectDir, {
-      event_type: "mcp",
-      source: input.source,
-      session_id: input.session_id,
-      tool_call_count: mcpUsage.tool_call_count,
-      estimated_cost: mcpUsage.estimated_cost,
-    });
-  }
+  const batch =
+    mcpUsage.tool_call_count > 0
+      ? [
+          devPayload,
+          {
+            event_type: "mcp",
+            source: input.source,
+            session_id: input.session_id,
+            tool_call_count: mcpUsage.tool_call_count,
+            estimated_cost: mcpUsage.estimated_cost,
+          },
+        ]
+      : [devPayload];
 
-  // If unified recording fails, keep legacy report generation as fallback.
-  if (!devRecorded || !mcpRecorded) {
+  const unifiedRecorded = recordUnifiedEvent(projectDir, { batch });
+
+  if (!unifiedRecorded) {
     writeFileSync(mdPath, generateMarkdown(data));
   }
 
