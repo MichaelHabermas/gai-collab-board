@@ -51,6 +51,16 @@ Before marking any item done:
 3. No blind reruns; each retry must declare what changed.
 4. Split environment instability from product defects.
 
+## Output Directory Timestamp (required)
+
+When creating run output dirs under `docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/<slug>/`:
+
+1. **Use the current time.** Do not hardcode or guess (e.g. do not use `20-00-00`).
+2. **Obtain the timestamp by running a shell command** so it reflects when the run started:
+   - **Windows (PowerShell):** `Get-Date -Format "yyyy-MM-dd_HH-mm-ss"`
+   - **Unix / macOS:** `date +%Y-%m-%d_%H-%M-%S`
+3. Use that value as the `<YYYY-MM-DD_HH-mm-ss>` segment of the path. Create the directory and write artifacts there.
+
 ## Default Output Sections
 
 1. Objective

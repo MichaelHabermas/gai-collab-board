@@ -44,6 +44,8 @@ Recommended run layout:
 - `docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/<slug>/implementation-log.md`
 - `docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/<slug>/review.md`
 
+**Timestamp:** Obtain `<YYYY-MM-DD_HH-mm-ss>` by running a shell command (e.g. PowerShell: `Get-Date -Format "yyyy-MM-dd_HH-mm-ss"`; Unix: `date +%Y-%m-%d_%H-%M-%S`). Do not hardcode the time.
+
 ## Quick Invocation Examples
 
 ### Research only

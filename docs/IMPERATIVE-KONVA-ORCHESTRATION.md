@@ -185,7 +185,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 
 ## WAVE 4: Epic 3 Remaining + Epic 4 Start (3 parallel)
 
-**Status:** Partial — T13–T16 merged. T17, T18 done (T18 dblclick wired in ShapeEventWiring). T19 OverlayManager: scaffold merged (marquee + guides); drawing preview, cursors, connection anchors stubbed.
+**Status:** Partial — T13–T16 merged. T17, T18 done (T18 dblclick wired in ShapeEventWiring). T19 OverlayManager: done — all 5 subsystems (marquee, guides, drawing preview, cursors, connection anchors) implemented and tested.
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC | SOLID |
 | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
@@ -231,7 +231,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 
 ## WAVE 5: Epic 4 Remaining (2 parallel)
 
-**Status:** Done — T20 (TransformerManager) and T21 (GridRenderer + SelectionDragHandle) implemented and merged; unit tests present (TransformerManager.test.ts, GridRenderer.test.ts, SelectionDragHandle.test.ts). T19 OverlayManager scaffold merged; 3 subsystems (drawing preview, cursors, connection anchors) pending.
+**Status:** Done — T20 (TransformerManager) and T21 (GridRenderer + SelectionDragHandle) implemented and merged; unit tests present. T19 OverlayManager complete — all 5 subsystems implemented (continue-overlay-cursors + connection anchors 2026-02-22); OverlayManager.test.ts 21 tests pass.
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC | SOLID |
 | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |

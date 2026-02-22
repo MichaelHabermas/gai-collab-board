@@ -72,10 +72,11 @@ If a conflict is found:
 ## Router Procedure
 
 1. Parse requested mode and depth (`quick`, `standard`, `deep`).
-2. If mode is `chain` and chain includes `prd` or `implement`, run Reconciliation Preflight. If proceed_decision is `blocked`, output conflict table and halt; do not proceed to PRD/implement.
-3. Run remaining preflight checks; stop on conflicts.
-4. Invoke the matching atomic skill or chain stages.
-5. Return consolidated evidence and next smallest action.
+2. When creating output dirs under `docs/collab/runs/`, obtain the current timestamp by running a shell command (PowerShell: `Get-Date -Format "yyyy-MM-dd_HH-mm-ss"`; Unix: `date +%Y-%m-%d_%H-%M-%S`) and use it for `<YYYY-MM-DD_HH-mm-ss>`. Do not hardcode the time (see COLLAB-CONTRACT).
+3. If mode is `chain` and chain includes `prd` or `implement`, run Reconciliation Preflight. If proceed_decision is `blocked`, output conflict table and halt; do not proceed to PRD/implement.
+4. Run remaining preflight checks; stop on conflicts.
+5. Invoke the matching atomic skill or chain stages.
+6. Return consolidated evidence and next smallest action.
 
 ## Output Format
 

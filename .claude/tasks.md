@@ -396,13 +396,13 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ## IK19 — OverlayManager
 
-- **Status:** in-progress
+- **Status:** done
 - **Tier:** opus
 - **Role:** architect
 - **Worktree name:** epic4-overlay-manager
 - **Description:** Task T19: Create OverlayManager.ts handling 5 subsystems.
 - **Dependencies:** IK10, IK18
-- **Notes:** OverlayManager scaffold merged: `src/canvas/OverlayManager.ts` + `tests/unit/OverlayManager.test.ts`. Marquee + alignment guides implemented. **Drawing preview implemented** (show/update/hide, rect/circle/line/frame; continue-overlay-drawing-preview 2026-02-22). Cursors and connection anchors still stubbed (updateCursors, updateConnectionNodes/highlightAnchor/clearConnectionNodes). Complete these 2 subsystems to satisfy Epic 4 DoD.
+- **Notes:** OverlayManager complete. All 5 subsystems implemented: marquee, guides, drawing preview (continue-overlay-drawing-preview), cursors (continue-overlay-cursors 2026-02-22_20-00-00), connection anchors (same run). `src/canvas/OverlayManager.ts` + `tests/unit/OverlayManager.test.ts` (21 tests). `bun run validate` passes. Epic 4 DoD satisfied; V5 and Orchestration docs updated 2026-02-22.
 - **Review:** (previous reject was pre-scaffold; scaffold landed separately.)
 
 ---

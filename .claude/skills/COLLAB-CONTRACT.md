@@ -26,6 +26,14 @@ When the tasks ledger (e.g. `.claude/tasks.md`) conflicts with project docs (e.g
 2. **Tasks ledger:** must be reconciled to match canonical sources before implementation proceeds. Update task statuses and notes as part of the run; do not treat the ledger as blocking truth.
 3. **Strict block:** do not proceed to PRD or implement until a reconciliation check has been run and either (a) no drift was found, or (b) drift was found and resolution actions were applied (e.g. tasks ledger updated). If drift remains unresolved, halt at research and output a conflict table plus required reconciliation mini-step.
 
+## Output Directory Timestamp (required)
+
+When creating run output dirs under `docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/<slug>/` (research, PRD, implement, review, or Tarpey):
+
+1. **Use the current time.** Do not hardcode or guess (e.g. do not use `20-00-00`).
+2. **Obtain the timestamp by running a shell command:** PowerShell: `Get-Date -Format "yyyy-MM-dd_HH-mm-ss"`; Unix: `date +%Y-%m-%d_%H-%M-%S`.
+3. Use that value for `<YYYY-MM-DD_HH-mm-ss>` and create the directory (and subdirs like `<slug>`) before writing artifacts.
+
 ## Default Output Sections
 
 Unless a command defines stricter formatting, return:

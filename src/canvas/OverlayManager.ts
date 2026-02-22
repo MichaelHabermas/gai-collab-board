@@ -13,9 +13,11 @@ import type {
   ConnectorAnchor,
   ToolMode,
   Cursors,
+  ICursorData,
 } from '@/types';
 import type { IDrawingState } from '@/canvas/events/DrawingController';
 import { DEFAULT_SHAPE_STROKE_WIDTH } from '@/lib/boardObjectDefaults';
+import { getAnchorPosition, isConnectableShapeType } from '@/lib/connectorAnchors';
 
 const GUIDE_EXTENT = 50000;
 const GUIDE_STROKE_WIDTH = 1;
@@ -33,12 +35,37 @@ const PREVIEW_LINE_STROKE_WIDTH = 3;
 const FRAME_PREVIEW_FILL = 'rgba(241, 245, 249, 0.3)';
 const FRAME_PREVIEW_CORNER_RADIUS = 6;
 
+const CURSOR_RADIUS = 6;
+const CURSOR_STROKE = '#ffffff';
+const CURSOR_STROKE_WIDTH = 2;
+const CURSOR_SHADOW_COLOR = 'rgba(0, 0, 0, 0.3)';
+const CURSOR_SHADOW_BLUR = 4;
+const CURSOR_LABEL_FONT = 'Inter, system-ui, sans-serif';
+const CURSOR_LABEL_FONT_SIZE = 12;
+const CURSOR_LABEL_PADDING = 4;
+
+const ANCHORS: ConnectorAnchor[] = ['top', 'right', 'bottom', 'left'];
+const NODE_RADIUS = 6;
+const NODE_FILL = '#3b82f6';
+const NODE_STROKE = '#1e40af';
+const NODE_STROKE_WIDTH = 1.5;
+const NODE_HIT_STROKE_WIDTH = 40;
+const NODE_HIGHLIGHT_STROKE = '#60a5fa';
+
 export class OverlayManager {
   private overlayLayer: Konva.Layer | null;
   private guidesGroup: Konva.Group | null = null;
   private marqueeRect: Konva.Rect | null = null;
   private drawingPreviewNode: Konva.Rect | Konva.Line | null = null;
   private drawingPreviewTool: ToolMode | null = null;
+  private cursorsGroup: Konva.Group | null = null;
+  private connectionNodesGroup: Konva.Group | null = null;
+  private highlightedAnchor: { shapeId: string; anchor: ConnectorAnchor } | null = null;
+  private lastConnectionNodesArgs: {
+    shapeIds: string[];
+    objectsRecord: Record<string, IBoardObject>;
+    onNodeClick: (shapeId: string, anchor: ConnectorAnchor) => void;
+  } | null = null;
 
   constructor(layer: Konva.Layer) {
     this.overlayLayer = layer;
@@ -315,25 +342,149 @@ export class OverlayManager {
   }
 
   // ── Remote Cursors (replaces CursorLayer.tsx) ──
-  updateCursors(_cursors: Cursors, _currentUid: string): void {
-    // Stub.
+  updateCursors(cursors: Cursors, currentUid: string): void {
+    const layer = this.overlayLayer;
+    if (!layer) {
+      return;
+    }
+
+    if (this.cursorsGroup) {
+      this.cursorsGroup.destroy();
+      this.cursorsGroup = null;
+    }
+
+    const otherCursors: ICursorData[] = Object.values(cursors).filter(
+      (cursor) => cursor.uid !== currentUid
+    );
+
+    if (otherCursors.length === 0) {
+      layer.batchDraw();
+      return;
+    }
+
+    const group = new Konva.Group({ listening: false, name: 'cursors' });
+    for (const cursor of otherCursors) {
+      const cursorGroup = new Konva.Group({ x: cursor.x, y: cursor.y, listening: false });
+      const circle = new Konva.Circle({
+        radius: CURSOR_RADIUS,
+        fill: cursor.color,
+        stroke: CURSOR_STROKE,
+        strokeWidth: CURSOR_STROKE_WIDTH,
+        shadowColor: CURSOR_SHADOW_COLOR,
+        shadowBlur: CURSOR_SHADOW_BLUR,
+        shadowOffsetX: 1,
+        shadowOffsetY: 1,
+        listening: false,
+      });
+      cursorGroup.add(circle);
+      const labelBg = new Konva.Text({
+        text: cursor.displayName,
+        x: 10,
+        y: -6,
+        fontSize: CURSOR_LABEL_FONT_SIZE,
+        fontFamily: CURSOR_LABEL_FONT,
+        fill: cursor.color,
+        padding: CURSOR_LABEL_PADDING,
+        listening: false,
+      });
+      cursorGroup.add(labelBg);
+      const labelFg = new Konva.Text({
+        text: cursor.displayName,
+        x: 12,
+        y: -4,
+        fontSize: CURSOR_LABEL_FONT_SIZE,
+        fontFamily: CURSOR_LABEL_FONT,
+        fill: CURSOR_STROKE,
+        padding: CURSOR_LABEL_PADDING,
+        cornerRadius: 4,
+        listening: false,
+      });
+      cursorGroup.add(labelFg);
+      group.add(cursorGroup);
+    }
+    layer.add(group);
+    this.cursorsGroup = group;
+    layer.batchDraw();
   }
 
   // ── Connection Anchors (replaces ConnectionNodesLayer.tsx) ──
   updateConnectionNodes(
-    _shapeIds: string[],
-    _objectsRecord: Record<string, IBoardObject>,
-    _onNodeClick: (shapeId: string, anchor: ConnectorAnchor) => void
+    shapeIds: string[],
+    objectsRecord: Record<string, IBoardObject>,
+    onNodeClick: (shapeId: string, anchor: ConnectorAnchor) => void
   ): void {
-    // Stub.
+    const layer = this.overlayLayer;
+    if (!layer) {
+      return;
+    }
+
+    this.lastConnectionNodesArgs = { shapeIds, objectsRecord, onNodeClick };
+
+    if (this.connectionNodesGroup) {
+      this.connectionNodesGroup.destroy();
+      this.connectionNodesGroup = null;
+    }
+
+    const connectableShapes = shapeIds
+      .map((id) => objectsRecord[id])
+      .filter((s): s is IBoardObject => s != null && isConnectableShapeType(s.type));
+
+    if (connectableShapes.length === 0) {
+      layer.batchDraw();
+      return;
+    }
+
+    const group = new Konva.Group({ listening: true, name: 'connection-nodes' });
+    for (const shape of connectableShapes) {
+      for (const anchor of ANCHORS) {
+        const pos = getAnchorPosition(shape, anchor);
+        const isHighlighted =
+          this.highlightedAnchor?.shapeId === shape.id && this.highlightedAnchor?.anchor === anchor;
+        const circle = new Konva.Circle({
+          x: pos.x,
+          y: pos.y,
+          radius: NODE_RADIUS,
+          fill: NODE_FILL,
+          stroke: isHighlighted ? NODE_HIGHLIGHT_STROKE : NODE_STROKE,
+          strokeWidth: NODE_STROKE_WIDTH,
+          hitStrokeWidth: NODE_HIT_STROKE_WIDTH,
+          listening: true,
+          name: 'connector-node',
+        });
+        circle.on('click tap', () => {
+          onNodeClick(shape.id, anchor);
+        });
+        group.add(circle);
+      }
+    }
+    layer.add(group);
+    this.connectionNodesGroup = group;
+    layer.batchDraw();
   }
 
-  highlightAnchor(_shapeId: string, _anchor: ConnectorAnchor): void {
-    // Stub.
+  highlightAnchor(shapeId: string, anchor: ConnectorAnchor): void {
+    this.highlightedAnchor = { shapeId, anchor };
+    if (this.lastConnectionNodesArgs) {
+      this.updateConnectionNodes(
+        this.lastConnectionNodesArgs.shapeIds,
+        this.lastConnectionNodesArgs.objectsRecord,
+        this.lastConnectionNodesArgs.onNodeClick
+      );
+    }
   }
 
   clearConnectionNodes(): void {
-    // Stub.
+    const layer = this.overlayLayer;
+    if (this.connectionNodesGroup) {
+      this.connectionNodesGroup.destroy();
+      this.connectionNodesGroup = null;
+    }
+
+    this.highlightedAnchor = null;
+    this.lastConnectionNodesArgs = null;
+    if (layer) {
+      layer.batchDraw();
+    }
   }
 
   destroy(): void {
@@ -349,6 +500,19 @@ export class OverlayManager {
 
     this.removeDrawingPreviewNode();
     this.drawingPreviewTool = null;
+
+    if (this.cursorsGroup) {
+      this.cursorsGroup.destroy();
+      this.cursorsGroup = null;
+    }
+
+    if (this.connectionNodesGroup) {
+      this.connectionNodesGroup.destroy();
+      this.connectionNodesGroup = null;
+    }
+
+    this.highlightedAnchor = null;
+    this.lastConnectionNodesArgs = null;
 
     this.overlayLayer = null;
   }

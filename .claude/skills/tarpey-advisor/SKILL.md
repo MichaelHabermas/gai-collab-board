@@ -73,7 +73,12 @@ Done Criteria: <binary checks>
 Evidence Targets: <files/tests/commits/logs>
 Depth: <quick|standard|deep>
 Strict: <true|false>
+Output Dir: docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/<slug>/
 ```
+
+## Output Dir Rule (TARPEY-CONTRACT)
+
+When creating the output directory, **obtain the current timestamp** by running a shell command (PowerShell: `Get-Date -Format "yyyy-MM-dd_HH-mm-ss"`; Unix: `date +%Y-%m-%d_%H-%M-%S`) and use it for `<YYYY-MM-DD_HH-mm-ss>`. Do not hardcode a placeholder time (e.g. 20-00-00).
 
 ## Preset Rules
 

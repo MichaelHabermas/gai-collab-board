@@ -41,7 +41,7 @@
 | **E1** | Done | Done — all 7 factories, types, registry, unit tests present. |
 | **E2** | Done | Done — LayerManager, KonvaNodeManager, SelectionSyncController + unit tests. |
 | **E3** | 10/11 sub-tasks done | **11/11** — drag modules + DragCoordinator + StageEventRouter + ShapeEventWiring + MarqueeController + DrawingController + ConnectorController + **TextEditController** exist; unit tests present. |
-| **E4** | Not started | **Partial** — TransformerManager, GridRenderer, SelectionDragHandle + unit tests present. OverlayManager scaffold present; marquee + guides implemented; drawing preview, cursors, connection anchors stubbed. |
+| **E4** | Not started | **Done** — TransformerManager, GridRenderer, SelectionDragHandle + unit tests present. OverlayManager: all 5 subsystems implemented (marquee, guides, drawing preview, cursors, connection anchors); unit tests in OverlayManager.test.ts. |
 | **E5** | Not started | Not started — App still uses BoardCanvas. |
 | **E6** | Not started | Not started. |
 
@@ -1071,20 +1071,20 @@ Imperative replacement for the `SelectionDragHandle` component in BoardCanvas.
 
 ### Sub-Tasks
 
-- [ ] 1. **`OverlayManager.ts`** (~250 LOC)
+- [x] 1. **`OverlayManager.ts`** (~250 LOC) — All 5 subsystems: marquee, guides, drawing preview, cursors, connection anchors.
 - [x] 2. **`TransformerManager.ts`** (~120 LOC)
 - [x] 3. **`GridRenderer.ts`** (~40 LOC)
 - [x] 4. **`SelectionDragHandle.ts`** (~40 LOC)
-- [x] 5. **Unit tests** (TransformerManager, GridRenderer, SelectionDragHandle)
+- [x] 5. **Unit tests** (TransformerManager, GridRenderer, SelectionDragHandle, OverlayManager)
 
 ### Epic 4 Definition of Done
 
-- [ ] OverlayManager handles all 5 overlay subsystems
+- [x] OverlayManager handles all 5 overlay subsystems
 - [x] TransformerManager config matches TransformHandler exactly
 - [x] Grid renders correctly at different zoom levels
 - [x] `bun run validate` passes
 - [x] No existing files modified
-- [ ] Completion checkpoint recorded per [§0.1 Canonical Merge and Epic Completion Rule](#01-canonical-merge-and-epic-completion-rule) before Epic 5 begins (may merge in parallel with Epic 3)
+- [x] Completion checkpoint recorded per [§0.1 Canonical Merge and Epic Completion Rule](#01-canonical-merge-and-epic-completion-rule) before Epic 5 begins (may merge in parallel with Epic 3) — Recorded 2026-02-22: docs/collab/runs/2026-02-22_20-00-00 (reconcile + cursors + anchors); IK19 done in .claude/tasks.md; OverlayManager.test.ts 21 tests pass; `bun run validate` passes.
 
 ---
 
