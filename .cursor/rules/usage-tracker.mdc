@@ -23,6 +23,7 @@ The skill installs a stop hook that logs every session's token usage and estimat
 Both write to the same outputs (no double counting — sessions are deduplicated by session/conversation ID):
 
 - `USAGE.md` at project root — human-readable report
-- `.claude/usage/usage-data.json` — structured JSON
+- `.claude/usage/usage-data.json` — legacy per-session JSON
+- `.claude/usage/unified-usage-data.json` — when the project has the unified pipeline (e.g. `scripts/record-usage-event.ts`), the hook updates this ledger
 
-Follow the install procedure in `.claude/skills/usage-tracker/usage-tracker/SKILL.md`: create `.claude/hooks`, copy `assets/track-usage.mjs` into `.claude/hooks/track-usage.mjs`, configure `.claude/settings.local.json` for Claude and `.cursor/hooks.json` for Cursor if not already present. Suggest adding `.claude/usage/` to `.gitignore`.
+Follow the install procedure in `.claude/skills/usage-tracker/usage-tracker/SKILL.md`: create `.claude/hooks`, copy `assets/track-usage.mjs` into `.claude/hooks/track-usage.mjs`, configure `.claude/settings.local.json` for Claude and `.cursor/hooks.json` for Cursor if not already present. Suggest adding `.claude/usage/` to `.gitignore` (or specific files there) as needed.

@@ -59,7 +59,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 
 ## WAVE 1: Epic 0 — Foundation (3 parallel agents)
 
-**Status:** Done — constitution, baselines, 13 E2E tests merged to `spike/react-konva-1`. `bun run validate` passes.
+**Status:** Not done. Constitution (Articles XX–XXVII) missing from CONSTITUTION.md. `docs/perf-baselines/` and pre-migration.json missing. Only 4 of 13 E2E specs exist (connectorCreation, connectorEndpointDrag, shapeResize, shapeRotate). T1, T2, T3, T5 pending; T4 (connector/transform E2E) done.
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC |
 |------|-------|------|------|------|--------|---------|
@@ -183,7 +183,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 
 ## WAVE 4: Epic 3 Remaining + Epic 4 Start (3 parallel)
 
-**Status:** Partial — T15 (DragCoordinator), T17 (DrawingController, MarqueeController, ConnectorController), T18 (TextEditController) done and merged to `spike/react-konva-1`. T16 (StageEventRouter + ShapeEventWiring) and T19 (OverlayManager) pending.
+**Status:** Partial — only drag sub-modules (T13, T14) merged. T15 (DragCoordinator), T16 (StageEventRouter + ShapeEventWiring), T17 (Drawing, Marquee, Connector controllers), T18 (TextEditController), and T19 (OverlayManager) pending. `events/` folder and DragCoordinator do not exist yet.
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC | SOLID |
 |------|-------|------|------|------|--------|---------|-------|
@@ -228,6 +228,8 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 ---
 
 ## WAVE 5: Epic 4 Remaining (2 parallel)
+
+**Status:** Done — T20 (TransformerManager) and T21 (GridRenderer + SelectionDragHandle) implemented and merged; unit tests present (TransformerManager.test.ts, GridRenderer.test.ts, SelectionDragHandle.test.ts). OverlayManager (T19) still pending.
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC | SOLID |
 |------|-------|------|------|------|--------|---------|-------|

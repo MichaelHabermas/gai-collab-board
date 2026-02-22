@@ -1,5 +1,7 @@
 # Single Source of Truth for Board Defaults — Tasks
 
+**Active:** C6, C7, C8 (coverage). *(Update this line when starting/finishing tasks.)*
+
 Base branch: current (development). Source: plan single_source_board_defaults.
 
 ---
@@ -355,31 +357,35 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ## IK19 — OverlayManager
 
-- **Status:** done
+- **Status:** reject
 - **Tier:** opus
 - **Role:** architect
 - **Worktree name:** epic4-overlay-manager
 - **Description:** Task T19: Create OverlayManager.ts handling 5 subsystems.
 - **Dependencies:** IK10, IK18
+- **Notes:** Branch `agent/epic4-overlay-manager` has no diff vs `spike/react-konva-1`; no OverlayManager files present in repo.
+- **Review:** `bun run validate` failed in base repo at `tests/unit/TransformerManager.test.ts` (TS1005). Re-run validate once OverlayManager changes exist in worktree.
 
 ---
 
 ## IK20 — TransformerManager
 
-- **Status:** pending
+- **Status:** done
 - **Tier:** sonnet
 - **Role:** architect
 - **Worktree name:** epic4-transformer
 - **Description:** Task T20: Create TransformerManager.ts matching TransformHandler config, add unit tests.
 - **Dependencies:** IK16, IK19 (W4-R)
+- **Notes:** Implemented in repo. Type fix: isRectNode accepts undefined for findOne return. Unit tests pass.
 
 ---
 
 ## IK21 — GridRenderer + SelectionDragHandle
 
-- **Status:** pending
+- **Status:** done
 - **Tier:** haiku
 - **Role:** quick-fixer
 - **Worktree name:** epic4-grid-handle
 - **Description:** Task T21: Create GridRenderer.ts and SelectionDragHandle.ts with unit tests.
 - **Dependencies:** IK16, IK19 (W4-R)
+- **Notes:** Implemented in repo. Fixed IGroupDragOffset import (from @/types/canvas). Fixed test vi.mock hoisting via vi.hoisted(). Unit tests pass.

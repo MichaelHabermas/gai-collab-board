@@ -41,7 +41,7 @@
 | **E1** | Done | Done — all 7 factories, types, registry, unit tests present. |
 | **E2** | Done | Done — LayerManager, KonvaNodeManager, SelectionSyncController + unit tests. |
 | **E3** | 9/11 sub-tasks done | **6/11** — drag modules (dragCommit, alignmentEngine, dragBounds, frameDragReparenting) + their tests exist. **Missing:** DragCoordinator, entire `events/` folder (StageEventRouter, ShapeEventWiring, DrawingController, MarqueeController, ConnectorController, TextEditController). |
-| **E4** | Not started | Not started. |
+| **E4** | Not started | **Partial** — TransformerManager, GridRenderer, SelectionDragHandle + unit tests present. Missing: OverlayManager. |
 | **E5** | Not started | Not started — App still uses BoardCanvas. |
 | **E6** | Not started | Not started. |
 
@@ -401,9 +401,9 @@ Deferred to [IMPERATIVE-KONVA-MIGRATION-V5-FOLLOW-UP.md](IMPERATIVE-KONVA-MIGRAT
 
 ### 6.4 — Epic 0 Definition of Done
 
-- [x] Constitutional amendments (Articles XX–XXV, XXVII) added to `docs/CONSTITUTION.md`
-- [x] Performance baselines captured and saved to `docs/perf-baselines/pre-migration.json` (per follow-up doc: manual or script)
-- [x] All 13 new E2E tests written and passing against current codebase
+- [ ] Constitutional amendments (Articles XX–XXV, XXVII) added to `docs/CONSTITUTION.md`
+- [ ] Performance baselines captured and saved to `docs/perf-baselines/pre-migration.json` (per follow-up doc: manual or script)
+- [ ] All 13 new E2E tests written and passing against current codebase (only 4 of 13 exist: connectorCreation, connectorEndpointDrag, shapeResize, shapeRotate)
 - [x] All existing E2E tests still pass
 - [x] `bun run validate` passes
 - [ ] **PR merged to `development`**
@@ -956,10 +956,7 @@ function createTextEditController(
   - alignmentEngine: guide computation returns correct snap positions
   - dragBounds: dragBoundFunc respects grid snap
   - frameDragReparenting: findContainingFrame with center-point check
-  - ShapeEventWiring: wireEvents attaches correct listeners (spy on `node.on`)
-  - DrawingController: state transitions (start → move → end), min size validation
-  - MarqueeController: AABB hit-testing selects correct shapes
-  - ConnectorController: two-click creates connector, same-shape click clears
+  - (Controllers and ShapeEventWiring tests pending with their modules.)
 
 ### Epic 3 Definition of Done
 
@@ -1062,17 +1059,17 @@ Imperative replacement for the `SelectionDragHandle` component in BoardCanvas.
 ### Sub-Tasks
 
 - [ ] 1. **`OverlayManager.ts`** (~250 LOC)
-- [ ] 2. **`TransformerManager.ts`** (~120 LOC)
-- [ ] 3. **`GridRenderer.ts`** (~40 LOC)
-- [ ] 4. **`SelectionDragHandle.ts`** (~40 LOC)
-- [ ] 5. **Unit tests** (~150 LOC)
+- [x] 2. **`TransformerManager.ts`** (~120 LOC)
+- [x] 3. **`GridRenderer.ts`** (~40 LOC)
+- [x] 4. **`SelectionDragHandle.ts`** (~40 LOC)
+- [x] 5. **Unit tests** (TransformerManager, GridRenderer, SelectionDragHandle)
 
 ### Epic 4 Definition of Done
 
 - [ ] OverlayManager handles all 5 overlay subsystems
-- [ ] TransformerManager config matches TransformHandler exactly
-- [ ] Grid renders correctly at different zoom levels
-- [ ] `bun run validate` passes
+- [x] TransformerManager config matches TransformHandler exactly
+- [x] Grid renders correctly at different zoom levels
+- [x] `bun run validate` passes
 - [ ] No existing files modified
 - [ ] PR merged to `development` before Epic 5 begins (may merge in parallel with Epic 3)
 

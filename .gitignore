@@ -50,8 +50,10 @@ vite.config.ts.timestamp-*
 .cursor/plans
 .lbi
 
-# Usage tracker diagnostic (contains session/conversation ids)
+# Usage tracker (diagnostic and data; fixtures fixture-*.json stay tracked)
 .claude/usage/last-hook-payload.json
+.claude/usage/usage-data.json
+.claude/usage/unified-usage-data.json
 
 # Windows reserved names (redirects like >nul can create these as files)
 nul

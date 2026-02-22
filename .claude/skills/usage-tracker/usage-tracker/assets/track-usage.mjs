@@ -1,13 +1,16 @@
 #!/usr/bin/env node
 
+/** Canonical copy; sync to .claude/skills/usage-tracker/usage-tracker/assets/track-usage.mjs when changing. */
 /**
- * Claude Code Usage Tracker — Stop Hook
+ * Usage Tracker — Stop Hook (Claude Code + Cursor)
  *
- * Fires after every Claude response. Reads the session JSONL transcript,
+ * Fires after each agent response. Reads the session JSONL transcript,
  * aggregates token usage by model, estimates cost, and appends a summary
- * to USAGE.md in the project root.
+ * to USAGE.md in the project root. Deduplicates by session/conversation ID
+ * so the same conversation is never counted twice (update-in-place).
  *
- * Install: add to .claude/settings.local.json under hooks.Stop
+ * Claude: add to .claude/settings.local.json under hooks.Stop
+ * Cursor: add to .cursor/hooks.json under hooks.stop
  */
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
@@ -40,12 +43,13 @@ const PRICING = {
 // Fallback pricing for unknown models
 const DEFAULT_PRICING = { input: 3.0, output: 15.0, cache_read: 0.3, cache_create: 3.75 };
 
-// ── Read hook input from stdin ──────────────────────────────────────
+// ── Read hook input from stdin (cross-platform: Node fd 0) ───────────
 function readStdin() {
   try {
-    return JSON.parse(readFileSync("/dev/stdin", "utf8"));
+    const raw = readFileSync(0, "utf8");
+    return raw ? JSON.parse(raw) : null;
   } catch {
-    process.exit(0); // silent fail — don't block Claude
+    process.exit(0); // silent fail — don't block agent
   }
 }
 
@@ -213,70 +217,6 @@ function buildCostChart(sessions) {
   ].join("\n");
 }
 
-function detectUsageSource(input) {
-  if (input?.conversation_id) {
-    return "cursor";
-  }
-  if (input?.session_id) {
-    return "claude";
-  }
-  return "unknown";
-}
-
-function getMcpCostPerCall() {
-  const parsed = Number(process.env.AI_USAGE_MCP_COST_PER_CALL_USD ?? "0.0005");
-  if (!Number.isFinite(parsed) || parsed < 0) {
-    return 0;
-  }
-  return parsed;
-}
-
-function aggregateMcpToolUsage(entries) {
-  const byTool = {};
-  let toolCallCount = 0;
-
-  for (const entry of entries) {
-    const directTool = entry?.tool_name;
-    if (typeof directTool === "string" && directTool) {
-      byTool[directTool] = (byTool[directTool] ?? 0) + 1;
-      toolCallCount += 1;
-    }
-    const content = entry?.message?.content;
-    if (!Array.isArray(content)) {
-      continue;
-    }
-    for (const block of content) {
-      if (block?.type !== "tool_use") {
-        continue;
-      }
-      const toolName = typeof block?.name === "string" && block.name ? block.name : "unknown_tool";
-      byTool[toolName] = (byTool[toolName] ?? 0) + 1;
-      toolCallCount += 1;
-    }
-  }
-
-  const costPerCall = getMcpCostPerCall();
-  return {
-    tool_call_count: toolCallCount,
-    estimated_cost: toolCallCount * costPerCall,
-    by_tool: byTool,
-  };
-}
-
-function recordUnifiedEvent(projectDir, payload) {
-  try {
-    const result = spawnSync("bun", ["run", "scripts/record-usage-event.ts"], {
-      cwd: projectDir,
-      input: JSON.stringify(payload),
-      encoding: "utf8",
-      timeout: 30000,
-    });
-    return result.status === 0;
-  } catch {
-    return false;
-  }
-}
-
 // ── Load or initialize tracking data ────────────────────────────────
 function loadTrackingData(dataPath) {
   if (existsSync(dataPath)) {
@@ -310,8 +250,8 @@ function generateMarkdown(data) {
   const t = data.totals;
   const totalTokens = t.input_tokens + t.output_tokens + t.cache_read_input_tokens + t.cache_creation_input_tokens;
 
-  let md = `# Claude Usage Tracker\n\n`;
-  md += `> Auto-updated by Claude Code stop hook\n\n`;
+  let md = `# Usage Tracker\n\n`;
+  md += `> Auto-updated by Claude Code / Cursor stop hook\n\n`;
 
   // ── Totals
   md += `## Totals\n\n`;
@@ -374,9 +314,122 @@ function generateMarkdown(data) {
   return md;
 }
 
+function detectUsageSource(raw) {
+  if (raw?.conversation_id) {
+    return "cursor";
+  }
+  if (raw?.session_id) {
+    return "claude";
+  }
+  // Cursor stop hook often sends workspace_roots but not cwd; Claude Code sends cwd
+  if (
+    Array.isArray(raw?.workspace_roots) &&
+    raw.workspace_roots.length > 0 &&
+    !raw.cwd
+  ) {
+    return "cursor";
+  }
+  return "unknown";
+}
+
+function getMcpCostPerCall() {
+  const parsed = Number(process.env.AI_USAGE_MCP_COST_PER_CALL_USD ?? "0.0005");
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return 0;
+  }
+  return parsed;
+}
+
+function aggregateMcpToolUsage(entries) {
+  const byTool = {};
+  let toolCallCount = 0;
+
+  for (const entry of entries) {
+    const directTool = entry?.tool_name;
+    if (typeof directTool === "string" && directTool) {
+      byTool[directTool] = (byTool[directTool] ?? 0) + 1;
+      toolCallCount += 1;
+    }
+
+    const content = entry?.message?.content;
+    if (!Array.isArray(content)) {
+      continue;
+    }
+    for (const block of content) {
+      if (block?.type !== "tool_use") {
+        continue;
+      }
+      const toolName = typeof block?.name === "string" && block.name ? block.name : "unknown_tool";
+      byTool[toolName] = (byTool[toolName] ?? 0) + 1;
+      toolCallCount += 1;
+    }
+  }
+
+  const costPerCall = getMcpCostPerCall();
+  return {
+    tool_call_count: toolCallCount,
+    estimated_cost: toolCallCount * costPerCall,
+    by_tool: byTool,
+  };
+}
+
+function recordUnifiedEvent(projectDir, payload) {
+  try {
+    const result = spawnSync("bun", ["run", "scripts/record-usage-event.ts"], {
+      cwd: projectDir,
+      input: JSON.stringify(payload),
+      encoding: "utf8",
+      timeout: 30000,
+    });
+    return result.status === 0;
+  } catch {
+    return false;
+  }
+}
+
+// ── Normalize hook payload (Claude vs Cursor) ─────────────────────────
+function normalizeInput(raw) {
+  if (!raw) return null;
+  // Cursor: conversation_id, workspace_roots; Claude: session_id, cwd
+  const sessionId = raw.session_id ?? raw.conversation_id ?? "unknown";
+  const projectDir =
+    raw.cwd ??
+    (Array.isArray(raw.workspace_roots) && raw.workspace_roots[0]
+      ? raw.workspace_roots[0]
+      : process.env.CLAUDE_PROJECT_DIR || process.cwd());
+  return {
+    transcript_path: raw.transcript_path,
+    session_id: sessionId,
+    cwd: projectDir,
+    stop_hook_active: raw.stop_hook_active,
+    source: detectUsageSource(raw),
+  };
+}
+
+// ── Diagnostic: log raw payload for Cursor/Claude detection debugging ─
+function writeLastHookPayload(raw, projectDir) {
+  if (!raw || typeof raw !== "object") return;
+  try {
+    const dir = join(projectDir, ".claude", "usage");
+    mkdirSync(dir, { recursive: true });
+    const path = join(dir, "last-hook-payload.json");
+    writeFileSync(path, JSON.stringify(raw, null, 2), "utf8");
+  } catch {
+    // never break the hook
+  }
+}
+
 // ── Main ────────────────────────────────────────────────────────────
 function main() {
-  const input = readStdin();
+  const raw = readStdin();
+  const projectDirForLog =
+    raw?.cwd ??
+    (Array.isArray(raw?.workspace_roots) && raw.workspace_roots[0]
+      ? raw.workspace_roots[0]
+      : process.env.CLAUDE_PROJECT_DIR || process.cwd());
+  writeLastHookPayload(raw, projectDirForLog);
+
+  const input = normalizeInput(raw);
   if (!input) process.exit(0);
 
   // Prevent infinite loops if stop hook triggers another stop
@@ -385,7 +438,7 @@ function main() {
   const transcriptPath = input.transcript_path;
   if (!transcriptPath) process.exit(0);
 
-  const projectDir = input.cwd || process.env.CLAUDE_PROJECT_DIR || ".";
+  const projectDir = input.cwd;
   const trackingDir = join(projectDir, ".claude", "usage");
   const dataPath = join(trackingDir, "usage-data.json");
   const mdPath = join(projectDir, "USAGE.md");
@@ -402,15 +455,14 @@ function main() {
   if (totalTokens === 0) process.exit(0);
 
   const cost = calculateCost(byModel);
-  const source = detectUsageSource(input);
   const mcpUsage = aggregateMcpToolUsage(entries);
   const timestamp = new Date().toISOString();
 
-  // Build session record
+  // Build session record (one per conversation; dedup by session_id below)
   const sessionRecord = {
-    session_id: input.session_id || "unknown",
+    session_id: input.session_id,
     timestamp,
-    source,
+    source: input.source,
     input_tokens: totalInput,
     output_tokens: totalOutput,
     cache_read: totalCacheRead,
@@ -452,10 +504,10 @@ function main() {
   // Write legacy data (kept for backwards compatibility)
   writeFileSync(dataPath, JSON.stringify(data, null, 2));
 
-  const devRecorded = recordUnifiedEvent(projectDir, {
+  const devPayload = {
     event_type: "dev",
-    source,
-    session_id: sessionRecord.session_id,
+    source: input.source,
+    session_id: input.session_id,
     timestamp,
     provider: "anthropic",
     model: Object.keys(byModel).join(","),
@@ -467,23 +519,28 @@ function main() {
     estimation_method: "best_effort",
     request_count: 1,
     metadata: {
-      hook_source: source,
+      hook_source: input.source,
       by_model_count: Object.keys(byModel).length,
     },
-  });
+  };
 
-  let mcpRecorded = true;
-  if (mcpUsage.tool_call_count > 0) {
-    mcpRecorded = recordUnifiedEvent(projectDir, {
-      event_type: "mcp",
-      source,
-      session_id: sessionRecord.session_id,
-      tool_call_count: mcpUsage.tool_call_count,
-      estimated_cost: mcpUsage.estimated_cost,
-    });
-  }
+  const batch =
+    mcpUsage.tool_call_count > 0
+      ? [
+          devPayload,
+          {
+            event_type: "mcp",
+            source: input.source,
+            session_id: input.session_id,
+            tool_call_count: mcpUsage.tool_call_count,
+            estimated_cost: mcpUsage.estimated_cost,
+          },
+        ]
+      : [devPayload];
 
-  if (!devRecorded || !mcpRecorded) {
+  const unifiedRecorded = recordUnifiedEvent(projectDir, { batch });
+
+  if (!unifiedRecorded) {
     writeFileSync(mdPath, generateMarkdown(data));
   }
 

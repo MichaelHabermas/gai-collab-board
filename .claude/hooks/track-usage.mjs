@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+/** Canonical copy; sync to .claude/skills/usage-tracker/usage-tracker/assets/track-usage.mjs when changing. */
 /**
  * Usage Tracker — Stop Hook (Claude Code + Cursor)
  *

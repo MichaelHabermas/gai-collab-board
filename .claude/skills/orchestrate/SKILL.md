@@ -53,13 +53,17 @@ For any task with user-visible behavior:
 For each independent task (no unresolved dependencies):
 
 1. Create worktree: `bun run scripts/worktree-manager.ts create <task-branch>`
-2. Spawn agent via Task tool:
+2. Spawn agent via Task tool. Include the contents of `.claude/agents/<role>.md` in
+   the Task prompt so the subagent has role instructions (Cursor does not load
+   agent files by role name):
 
    ```
    Task(
-     subagent_type: "<role from task>",  // maps to .claude/agents/<role>.md
+     subagent_type: "<role from task>",  // e.g. generalPurpose or explore
      model: "<tier from task>",          // haiku | sonnet | opus
-     prompt: "Your worktree is at <path>. Use absolute paths for all file operations.
+     prompt: "<paste .claude/agents/<role>.md here>
+
+              Your worktree is at <path>. Use absolute paths for all file operations.
               Read CLAUDE.md for project rules. Read .claude/tasks.md for your task.
               Your task: <TASK-ID> — <description>"
    )
@@ -72,7 +76,9 @@ For each independent task (no unresolved dependencies):
 
 For each task marked `review` in `.claude/tasks.md`:
 
-1. Spawn **reviewer** agent (sonnet) on that branch
+1. Spawn **reviewer** agent (sonnet) on that branch. Pass the contents of
+   `.claude/agents/reviewer.md` in the Task prompt so the reviewer has the
+   review checklist and rejection format.
 2. Reviewer runs `bun run validate` + reads diff
 3. Outcomes:
    - **Approved** → merge worktree, mark `done`

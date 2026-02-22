@@ -12,22 +12,35 @@ description: >
 
 # Usage Tracker
 
-Installs a Claude Code Stop hook into a project that automatically tracks token
-usage and estimated cost after every Claude response. Zero configuration needed
-after install — it just works silently in the background.
+Installs a Claude Code / Cursor Stop hook into a project that automatically tracks
+token usage and estimated cost after every agent response. Zero configuration
+needed after install — it just works silently in the background.
+
+## Prerequisites
+
+For the **full pipeline** (unified ledger and server-generated `USAGE.md`), the
+target project must have `scripts/record-usage-event.ts` and the server
+`ai-usage-tracker` + usageLedger module. Without them, the hook still writes
+`.claude/usage/usage-data.json` and generates `USAGE.md` itself when the unified
+record call fails (fallback).
 
 ## What gets installed
 
 Two files under `.claude/` in the project root:
 
-1. `.claude/hooks/track-usage.mjs` — the hook script (Node.js, zero dependencies)
+1. `.claude/hooks/track-usage.mjs` — the hook script (Node.js, zero dependencies; cross-platform stdin via fd 0, works on Windows)
 2. `.claude/settings.local.json` — wires the hook to the Stop event
 
-These produce three output files that accumulate over time:
+**Outputs:** When the unified pipeline is available, the hook sends a batch to
+`record-usage-event.ts` and updates `.claude/usage/unified-usage-data.json`;
+`USAGE.md` is then produced from that ledger (or by the server). If the script
+fails or is missing, the hook writes legacy `usage-data.json` and generates
+`USAGE.md` as fallback. The hook deduplicates by `session_id` / `conversation_id`
+and uses `workspace_roots` when `cwd` is absent (Cursor).
 
-- `USAGE.md` at project root — unified cumulative report (segmented by source + grand total) with Mermaid charts
-- `.claude/usage/usage-data.json` — legacy per-session dev usage store (backward compatibility)
-- `.claude/usage/unified-usage-data.json` — source-tagged cumulative ledger across dev/runtime/scripts/MCP
+- `USAGE.md` at project root — human-readable report (totals, daily summary, Mermaid charts, recent sessions)
+- `.claude/usage/usage-data.json` — legacy per-session store (used for fallback and in-memory state)
+- `.claude/usage/unified-usage-data.json` — source-tagged cumulative ledger (when pipeline is present)
 
 ## Installation procedure
 
@@ -85,6 +98,11 @@ already contains a track-usage entry. Never overwrite other hooks.
 Use `settings.local.json` (not `settings.json`) so this stays local and
 doesn't get committed to version control.
 
+**Cursor:** For Cursor IDE, ensure `.cursor/hooks.json` has a stop hook that
+runs the same script (e.g. `node .claude/hooks/track-usage.mjs`). The hook
+detects Cursor via `conversation_id` or `workspace_roots` when `cwd` is absent
+and deduplicates by conversation ID.
+
 ### Step 5: Suggest .gitignore additions
 
 If the project uses git, suggest adding `.claude/usage/` to `.gitignore`.
@@ -107,14 +125,22 @@ The hook has a `PRICING` constant near the top of track-usage.mjs with
 per-model rates in USD per 1M tokens. If the user says pricing changed,
 update those values. Unknown models fall back to Sonnet-tier pricing.
 
+## Debugging
+
+- The hook writes `.claude/usage/last-hook-payload.json` with the raw payload it
+  received (for Cursor vs Claude detection). That file is typically gitignored.
+
 ## Troubleshooting
 
-- **Hook not firing**: Verify settings.local.json is valid JSON and the command
-  path is relative to the project root
+- **Hook not firing**: Verify settings.local.json (and for Cursor,
+  .cursor/hooks.json) is valid JSON and the command path is relative to the
+  project root.
 - **USAGE.md not appearing**: The hook only writes when it finds token usage in
-  the transcript — a session with no assistant messages produces nothing
-- **Duplicate sessions**: The hook deduplicates by session_id, updating in place
-  if the same session fires Stop multiple times
+  the transcript — a session with no assistant messages produces nothing.
+- **Duplicate sessions**: The hook deduplicates by session_id / conversation_id,
+  updating in place if the same session fires Stop multiple times.
+- **Windows**: The script reads stdin via Node fd 0 (cross-platform). It does not
+  use `/dev/stdin`, so it works on Windows.
 
 ## Assets
 
