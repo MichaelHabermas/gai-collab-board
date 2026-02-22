@@ -3,6 +3,7 @@ import type { IBoardObject } from '@/types';
 import type { IAlignmentCandidate } from '@/types';
 import { spatialIndex } from '@/stores/objectsStore';
 import type { IDragCoordinator } from '../drag/DragCoordinator';
+import type { ITextEditController } from './TextEditController';
 
 export interface IShapeEventConfig {
   drag: IDragCoordinator;
@@ -12,6 +13,8 @@ export interface IShapeEventConfig {
   getFrames(): IBoardObject[];
   getChildIndex(): Map<string, Set<string>>;
   openTextEdit(objectId: string): void;
+  /** When set, dblclick calls this instead of openTextEdit (Epic 5 orchestration). */
+  textEditController?: ITextEditController;
 }
 
 /**
@@ -43,7 +46,11 @@ export function wireEvents(node: Konva.Node, objectId: string, config: IShapeEve
   });
 
   node.on('dblclick dbltap', () => {
-    config.openTextEdit(objectId);
+    if (config.textEditController) {
+      config.textEditController.open(objectId);
+    } else {
+      config.openTextEdit(objectId);
+    }
   });
 
   node.draggable(config.canEdit());

@@ -135,6 +135,27 @@ describe('ShapeEventWiring', () => {
     expect(openTextEdit).toHaveBeenCalledWith(objectId);
   });
 
+  it('calls textEditController.open on dblclick when provided', () => {
+    const textEditOpen = vi.fn();
+    const textEditController = { open: textEditOpen, close: vi.fn() };
+    const node2 = new MockNode();
+    wireEvents(node2 as unknown as Konva.Node, objectId, {
+      drag,
+      canEdit: () => true,
+      getGuideCandidates: () => guideCandidates,
+      getObjectsRecord: () => objectsRecord,
+      getFrames: () => frames,
+      getChildIndex: () => childIndex,
+      openTextEdit,
+      textEditController,
+    });
+
+    node2.trigger('dblclick dbltap');
+
+    expect(textEditOpen).toHaveBeenCalledWith(objectId);
+    expect(openTextEdit).not.toHaveBeenCalled();
+  });
+
   it('sets draggable and drag bound function during wiring', () => {
     expect(node.draggable).toHaveBeenCalledWith(true);
     expect(drag.createDragBoundFunc).toHaveBeenCalledWith(objectId);

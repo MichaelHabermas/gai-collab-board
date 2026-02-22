@@ -384,13 +384,13 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ## IK18 — TextEditController
 
-- **Status:** reject
+- **Status:** done
 - **Tier:** sonnet
 - **Role:** architect
 - **Worktree name:** epic3-text-edit
 - **Description:** Task T18: Create TextEditController.ts reusing existing text edit overlay.
 - **Dependencies:** IK11
-- **Notes:** Files/folder missing. TextEditController.ts not present in repo.
+- **Notes:** TextEditController.ts and unit tests present. dblclick wired in ShapeEventWiring via config.openTextEdit and optional config.textEditController (integration at orchestration in Epic 5). Reconciliation: continue-dblclick-wire-ik18 run; `bun run validate` passes.
 
 ---
 
