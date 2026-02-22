@@ -632,9 +632,9 @@ function createSelectionSyncController(
 
 ### Sub-Tasks
 
-- [ ] 1. **`LayerManager.ts`** (~80 LOC) — Creates 4 layers, attaches to stage, RAF-coalesced `scheduleBatchDraw()`.
+- [x] 1. **`LayerManager.ts`** (~80 LOC) — Creates 4 layers, attaches to stage, RAF-coalesced `scheduleBatchDraw()`.
 
-- [ ] 2. **`KonvaNodeManager.ts`** (~350 LOC) — Core class.
+- [x] 2. **`KonvaNodeManager.ts`** (~350 LOC) — Core class.
   - `start()`: Subscribe to `useObjectsStore`, call `handleStoreChange` on every change.
   - `handleStoreChange(nextObjects, prevObjects)`: Diff loop with O(changed) skip, connector deduplication.
   - `getNode(id)`: Returns `IManagedNode` for a given object ID.
@@ -643,11 +643,11 @@ function createSelectionSyncController(
   - `setEditingState(id, editing)`: Track text editing for cache management.
   - `destroy()`: Unsubscribe, destroy all nodes, clear managed map.
 
-- [ ] 3. **`SelectionSyncController.ts`** (~120 LOC) — Selection ↔ layer sync.
+- [x] 3. **`SelectionSyncController.ts`** (~120 LOC) — Selection ↔ layer sync.
   - `onSelectionChange(nextSelectedIds, prevSelectedIds)`: Move newly selected to active, newly deselected to static. Clear cache on selected, re-cache on deselected (Article XXIII).
   - `onDragOffsetChange(offset)`: Apply offset to active layer nodes imperatively.
 
-- [ ] 4. **Unit tests** (~200 LOC):
+- [x] 4. **Unit tests** (~200 LOC):
   - Add object to store → node created on static layer
   - Update object in store → node attrs patched, not recreated
   - Delete object from store → node destroyed, removed from layer
@@ -661,13 +661,13 @@ function createSelectionSyncController(
 
 ### Epic 2 Definition of Done
 
-- [ ] KonvaNodeManager creates/updates/destroys nodes in response to store changes
-- [ ] O(changed) diff verified by test (spy on factory.update for unchanged objects)
-- [ ] Connector deduplication verified by test
-- [ ] Selection sync moves nodes between layers
-- [ ] Bitmap caching enabled/disabled on selection change
-- [ ] `bun run validate` passes
-- [ ] No existing files modified
+- [x] KonvaNodeManager creates/updates/destroys nodes in response to store changes
+- [x] O(changed) diff verified by test (spy on factory.update for unchanged objects)
+- [x] Connector deduplication verified by test
+- [x] Selection sync moves nodes between layers
+- [x] Bitmap caching enabled/disabled on selection change
+- [x] `bun run validate` passes
+- [x] No existing files modified
 - [ ] PR merged to `development` before Epic 3 begins
 
 ---
@@ -923,18 +923,18 @@ function createTextEditController(
 
 ### Sub-Tasks
 
-- [ ] 1. **`drag/DragCoordinator.ts`** (~50 LOC) — Thin dispatcher.
-- [ ] 2. **`drag/dragCommit.ts`** (~200 LOC) — Store persistence on drag end.
-- [ ] 3. **`drag/alignmentEngine.ts`** (~150 LOC) — Guide computation + snap.
-- [ ] 4. **`drag/dragBounds.ts`** (~80 LOC) — Boundary constraint functions.
-- [ ] 5. **`drag/frameDragReparenting.ts`** (~120 LOC) — Frame containment logic.
+- [x] 1. **`drag/DragCoordinator.ts`** (~50 LOC) — Thin dispatcher.
+- [x] 2. **`drag/dragCommit.ts`** (~200 LOC) — Store persistence on drag end.
+- [x] 3. **`drag/alignmentEngine.ts`** (~150 LOC) — Guide computation + snap.
+- [x] 4. **`drag/dragBounds.ts`** (~80 LOC) — Boundary constraint functions.
+- [x] 5. **`drag/frameDragReparenting.ts`** (~120 LOC) — Frame containment logic.
 - [ ] 6. **`events/StageEventRouter.ts`** (~120 LOC) — Stage-level event dispatch.
 - [ ] 7. **`events/ShapeEventWiring.ts`** (~150 LOC) — Per-node event wiring.
-- [ ] 8. **`events/DrawingController.ts`** (~100 LOC) — Drawing state machine.
-- [ ] 9. **`events/MarqueeController.ts`** (~80 LOC) — Marquee state machine.
-- [ ] 10. **`events/ConnectorController.ts`** (~70 LOC) — Two-click connector flow.
-- [ ] 11. **`events/TextEditController.ts`** (~80 LOC) — Text editing via DOM overlay.
-- [ ] 12. **Unit tests** (~300 LOC):
+- [x] 8. **`events/DrawingController.ts`** (~100 LOC) — Drawing state machine.
+- [x] 9. **`events/MarqueeController.ts`** (~80 LOC) — Marquee state machine.
+- [x] 10. **`events/ConnectorController.ts`** (~70 LOC) — Two-click connector flow.
+- [x] 11. **`events/TextEditController.ts`** (~80 LOC) — Text editing via DOM overlay.
+- [x] 12. **Unit tests** (~300 LOC):
   - dragCommit: selectObject toggles selection, commitDragEnd calls queueObjectUpdate
   - alignmentEngine: guide computation returns correct snap positions
   - dragBounds: dragBoundFunc respects grid snap
@@ -946,14 +946,14 @@ function createTextEditController(
 
 ### Epic 3 Definition of Done
 
-- [ ] All 11 event/drag files created and passing unit tests
-- [ ] **Every drag sub-module stays under 200 LOC**
-- [ ] DragCoordinator is a thin dispatcher, not a monolith
-- [ ] MarqueeController uses no React state (plain object)
-- [ ] TextEditController reuses canvasTextEditOverlay.ts unchanged
+- [ ] All 11 event/drag files created and passing unit tests (9/11: StageEventRouter + ShapeEventWiring pending)
+- [x] **Every drag sub-module stays under 200 LOC**
+- [x] DragCoordinator is a thin dispatcher, not a monolith
+- [x] MarqueeController uses no React state (plain object)
+- [x] TextEditController reuses canvasTextEditOverlay.ts unchanged
 - [ ] **All items in [Appendix D: Drag Behavior Checklist](#appendix-d-drag-behavior-checklist) verified** (each row marked as covered by unit test, integration test, or manual verification in PR)
-- [ ] `bun run validate` passes
-- [ ] No existing files modified
+- [x] `bun run validate` passes
+- [x] No existing files modified
 - [ ] PR merged to `development` before Epic 5 begins (may merge in parallel with Epic 4)
 
 ---

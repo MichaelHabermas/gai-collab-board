@@ -24,6 +24,6 @@
     "skipLibCheck": true,
     "types": ["vite/client", "vitest/globals"]
   },
-  "include": ["src", "tests","server"],
+  "include": ["src", "tests", "server", "scripts"],
   "exclude": ["node_modules", "dist"]
 }

@@ -63,7 +63,11 @@ function parseDevPayload(raw: Record<string, unknown>): IRecordDevPayload | null
   if (raw.event_type !== 'dev') {
     return null;
   }
-  if (!isSource(raw.source) || typeof raw.session_id !== 'string' || typeof raw.timestamp !== 'string') {
+  if (
+    !isSource(raw.source) ||
+    typeof raw.session_id !== 'string' ||
+    typeof raw.timestamp !== 'string'
+  ) {
     return null;
   }
   const method = raw.estimation_method;

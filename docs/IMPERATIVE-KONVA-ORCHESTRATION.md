@@ -137,6 +137,8 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 
 ## WAVE 3: Epic 2 + Epic 3 Start (3 parallel)
 
+**Status:** Done — LayerManager, KonvaNodeManager, SelectionSyncController, dragCommit/dragBounds/frameDragReparenting, alignmentEngine merged to `spike/react-konva-1`. Unit tests pass. `bun run validate` passes.
+
 | Task | Title | Tier | Role | Deps | Branch | Est LOC | SOLID |
 |------|-------|------|------|------|--------|---------|-------|
 | T10 | LayerManager (4 layers, RAF batchDraw) | sonnet | architect | W2-R | epic2-layer-manager | 130 | SRP |
@@ -180,6 +182,8 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 ---
 
 ## WAVE 4: Epic 3 Remaining + Epic 4 Start (3 parallel)
+
+**Status:** Partial — T15 (DragCoordinator), T17 (DrawingController, MarqueeController, ConnectorController), T18 (TextEditController) done and merged to `spike/react-konva-1`. T16 (StageEventRouter + ShapeEventWiring) and T19 (OverlayManager) pending.
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC | SOLID |
 |------|-------|------|------|------|--------|---------|-------|

@@ -70,9 +70,7 @@ if (
   !appId ||
   !databaseURL
 ) {
-  console.error(
-    'Missing Firebase config. Set VITE_FIREBASE_* in .env (see .env.example).'
-  );
+  console.error('Missing Firebase config. Set VITE_FIREBASE_* in .env (see .env.example).');
   process.exit(1);
 }
 
@@ -104,13 +102,8 @@ async function deleteSubcollectionDocs(
 ): Promise<number> {
   const ref =
     collectionPath.length === 2
-      ? collection(firestore, collectionPath[0], collectionPath[1])
-      : collection(
-          firestore,
-          collectionPath[0],
-          collectionPath[1],
-          collectionPath[2]
-        );
+      ? collection(firestore, collectionPath[0]!, collectionPath[1]!)
+      : collection(firestore, collectionPath[0]!, collectionPath[1]!, collectionPath[2]!);
   const snapshot = await getDocs(ref);
   let count = 0;
   const docs = snapshot.docs;
@@ -176,7 +169,9 @@ async function clearUserPreferences(): Promise<void> {
 
 async function main(): Promise<void> {
   console.log('This script will:');
-  console.log('  1. Delete all documents in the "boards" collection (and each board\'s "objects" subcollection).');
+  console.log(
+    '  1. Delete all documents in the "boards" collection (and each board\'s "objects" subcollection).'
+  );
   console.log('  2. Optionally clear recentBoardIds and favoriteBoardIds for all users.');
   console.log('');
   const ok = await askConfirm('Proceed with clearing all boards?');

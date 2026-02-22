@@ -11,7 +11,7 @@ import { spawnSync } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
-const ROOT = join(import.meta.dir, '..');
+const ROOT = join((import.meta as any).dir, '..');
 const PERF_DIR = join(ROOT, 'docs/performance');
 const HISTORY_PATH = join(PERF_DIR, 'metrics-history.json');
 const LOG_PATH = join(PERF_DIR, 'PERFORMANCE_LOG.md');
@@ -111,7 +111,9 @@ function updatePerformanceLog(history: IMetricsHistory): void {
 
   const startIdx = content.indexOf(markerStart);
   if (startIdx === -1) {
-    process.stderr.write('[perf-check] PERFORMANCE_LOG.md missing "## Metrics over time" section.\n');
+    process.stderr.write(
+      '[perf-check] PERFORMANCE_LOG.md missing "## Metrics over time" section.\n'
+    );
     return;
   }
 
@@ -126,7 +128,7 @@ function updatePerformanceLog(history: IMetricsHistory): void {
   const latestRunLabel =
     latest && (latest.timestamp ?? latest.timestamp_ms !== undefined)
       ? (() => {
-          const ms = latest.timestamp_ms ?? new Date(latest.timestamp).getTime();
+          const ms = latest.timestamp_ms ?? new Date(latest.timestamp || 0).getTime();
           const d = new Date(ms);
           const y = d.getFullYear();
           const mo = String(d.getMonth() + 1).padStart(2, '0');
@@ -135,7 +137,7 @@ function updatePerformanceLog(history: IMetricsHistory): void {
           const min = String(d.getMinutes()).padStart(2, '0');
           return `${y}-${mo}-${day} ${hh}:${min}`;
         })()
-      : latest?.date ?? 'n/a';
+      : (latest?.date ?? 'n/a');
 
   const newSection = [
     '',

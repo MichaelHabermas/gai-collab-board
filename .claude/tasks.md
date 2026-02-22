@@ -221,7 +221,7 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ## IK7 — Simple Factories
 
-- **Status:** pending
+- **Status:** done
 - **Tier:** sonnet
 - **Role:** architect
 - **Worktree name:** epic1-simple-factories
@@ -232,7 +232,7 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ## IK8 — Complex Factories
 
-- **Status:** pending
+- **Status:** done
 - **Tier:** opus
 - **Role:** architect
 - **Worktree name:** epic1-complex-factories
@@ -244,7 +244,7 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ## IK9 — Connector + TextElement Factories
 
-- **Status:** pending
+- **Status:** done
 - **Tier:** sonnet
 - **Role:** architect
 - **Worktree name:** epic1-connector-text
@@ -255,7 +255,7 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ## IK10 — LayerManager
 
-- **Status:** pending
+- **Status:** done
 - **Tier:** sonnet
 - **Role:** architect
 - **Worktree name:** epic2-layer-manager
@@ -289,7 +289,7 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ## IK13 — Drag Sub-Modules
 
-- **Status:** pending
+- **Status:** done
 - **Tier:** opus
 - **Role:** architect
 - **Worktree name:** epic3-drag-modules
@@ -300,9 +300,64 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ## IK14 — Alignment Engine
 
-- **Status:** pending
+- **Status:** done
 - **Tier:** sonnet
 - **Role:** architect
 - **Worktree name:** epic3-alignment
 - **Description:** Task C2: Create alignmentEngine.ts wrapping alignmentGuides.ts.
 - **Dependencies:** IK6
+
+---
+
+## IK15 — DragCoordinator
+
+- **Status:** done
+- **Tier:** haiku
+- **Role:** quick-fixer
+- **Worktree name:** epic3-drag-coordinator
+- **Description:** Task T15: Create src/canvas/drag/DragCoordinator.ts (~50 LOC). Routes to dragCommit, alignmentEngine, dragBounds, frameDragReparenting.
+- **Dependencies:** IK13, IK14
+
+---
+
+## IK16 — StageEventRouter + ShapeEventWiring
+
+- **Status:** pending
+- **Tier:** sonnet
+- **Role:** architect
+- **Worktree name:** epic3-event-wiring
+- **Description:** Task T16: Create StageEventRouter.ts (~120 LOC) and ShapeEventWiring.ts (~150 LOC) with unit tests.
+- **Dependencies:** IK15
+
+---
+
+## IK17 — Controllers (Drawing, Marquee, Connector)
+
+- **Status:** done
+- **Tier:** sonnet
+- **Role:** architect
+- **Worktree name:** epic3-controllers
+- **Description:** Task T17: Create DrawingController.ts, MarqueeController.ts, ConnectorController.ts.
+- **Dependencies:** IK6
+
+---
+
+## IK18 — TextEditController
+
+- **Status:** done
+- **Tier:** sonnet
+- **Role:** architect
+- **Worktree name:** epic3-text-edit
+- **Description:** Task T18: Create TextEditController.ts reusing existing text edit overlay.
+- **Dependencies:** IK11
+
+---
+
+## IK19 — OverlayManager
+
+- **Status:** pending
+- **Tier:** opus
+- **Role:** architect
+- **Worktree name:** epic4-overlay-manager
+- **Description:** Task T19: Create OverlayManager.ts handling 5 subsystems.
+- **Dependencies:** IK10, IK18

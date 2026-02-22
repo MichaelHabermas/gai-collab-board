@@ -101,7 +101,9 @@ const run = async (): Promise<void> => {
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      process.stderr.write(`AI proxy smoke failed (${response.status}): ${responseText.slice(0, 400)}\n`);
+      process.stderr.write(
+        `AI proxy smoke failed (${response.status}): ${responseText.slice(0, 400)}\n`
+      );
       process.exit(1);
     }
 

@@ -1,7 +1,11 @@
 import { spawnSync } from 'child_process';
 
 const getProjectId = (): string => {
-  const projectId = (process.env.FIREBASE_PROJECT_ID ?? process.env.VITE_FIREBASE_PROJECT_ID ?? '').trim();
+  const projectId = (
+    process.env.FIREBASE_PROJECT_ID ??
+    process.env.VITE_FIREBASE_PROJECT_ID ??
+    ''
+  ).trim();
   return projectId;
 };
 
