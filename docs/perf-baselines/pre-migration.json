@@ -1,21 +1,18 @@
 {
-  "timestamp": "2026-02-22T00:00:00Z",
-  "note": "Epic 0: manual capture metrics with placeholders. Automated script is deferred.",
-  "frame_time_100_drag": {
-    "p50": 16.6,
-    "p95": 16.6,
-    "p99": 33.3
+  "capturedAt": "2026-02-22T05:46:50.417Z",
+  "frameTime100Drag": {
+    "p50": 0,
+    "p95": 0,
+    "p99": 0
   },
-  "frame_time_500_pan": {
-    "p50": 16.6,
-    "p95": 33.3,
-    "p99": 50.0
+  "frameTime500Pan": {
+    "p50": 0,
+    "p95": 0,
+    "p99": 0
   },
-  "react_renders_drag": 1,
-  "selector_evals_drag": 100,
-  "bundle_size_gz": 500000,
-  "perf_check_output": {
-    "board_sync_latency_ms": 150
-  },
-  "tti_1000_board": 2000
+  "reactRendersDuringDrag": 0,
+  "selectorEvalsPerDragFrame": 0,
+  "bundleSizeGzipKb": 549.98,
+  "perfCheckOutput": "{\n  \"capturedAt\": \"2026-02-22T05:12:12.531Z\",\n  \"metrics\": [\n    {\n      \"name\": \"cursor_latency\",\n      \"value\": 28,\n      \"unit\": \"ms\"\n    },\n    {\n      \"name\": \"object_update_latency\",\n      \"value\": 23,\n      \"unit\": \"ms\"\n    },\n    {\n      \"name\": \"batch_500_objects\",\n      \"value\": 61,\n      \"unit\": \"ms\"\n    },\n    {\n      \"name\": \"e2e_propagation\",\n      \"value\": 35,\n      \"unit\": \"ms\"\n    },\n    {\n      \"name\": \"batch_1000_objects\",\n      \"value\": 74,\n      \"unit\": \"ms\"\n    }\n  ]\n}",
+  "tti1000ObjectsMs": 0
 }
