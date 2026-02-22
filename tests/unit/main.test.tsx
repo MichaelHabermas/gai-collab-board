@@ -33,6 +33,10 @@ vi.mock('@/lib/writeQueue', () => ({
 
 vi.mock('@/index.css', () => ({}));
 
+vi.mock('@/App', () => ({
+  App: () => null,
+}));
+
 describe('main entry point', () => {
   beforeEach(() => {
     vi.clearAllMocks();

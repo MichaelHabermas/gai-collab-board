@@ -42,7 +42,7 @@
 | **E2** | Done | Done — LayerManager, KonvaNodeManager, SelectionSyncController + unit tests. |
 | **E3** | 10/11 sub-tasks done | **11/11** — drag modules + DragCoordinator + StageEventRouter + ShapeEventWiring + MarqueeController + DrawingController + ConnectorController + **TextEditController** exist; unit tests present. |
 | **E4** | Not started | **Done** — TransformerManager, GridRenderer, SelectionDragHandle + unit tests present. OverlayManager: all 5 subsystems implemented (marquee, guides, drawing preview, cursors, connection anchors); unit tests in OverlayManager.test.ts. |
-| **E5** | Not started | Not started — App still uses BoardCanvas. |
+| **E5** | Not started | **Cutover complete; DoD pending** — CanvasHost + useCanvasSetup implemented; App uses CanvasHost; `bun run validate` passes; LOC within limits. E2E run 2026-02-22: 87 passed, 41 failed (migration-relevant specs failing; investigation needed). DoD items 5–7 (full E2E pass, manual checklist, post-migration baselines) must be satisfied before marking Epic 5 done and merging. |
 | **E6** | Not started | Not started. |
 
 ---
@@ -1256,23 +1256,58 @@ export function CanvasHost({ boardId, ... }: ICanvasHostProps): ReactElement {
 
 ### Sub-Tasks
 
-- [ ] 1. **Create `useCanvasSetup.ts`** (~200 LOC)
-- [ ] 2. **Create `CanvasHost.tsx`** (~250 LOC)
-- [ ] 3. **Wire all surviving hooks** — Verify `useCanvasViewport` works with plain Konva.Stage ref via `IStageRefLike`.
-- [ ] 4. **Replace `<BoardCanvas>` import** — Single import swap in `App` (`src/App.tsx`).
+- [x] 1. **Create `useCanvasSetup.ts`** (~200 LOC)
+- [x] 2. **Create `CanvasHost.tsx`** (~250 LOC)
+- [x] 3. **Wire all surviving hooks** — Verify `useCanvasViewport` works with plain Konva.Stage ref via `IStageRefLike`.
+- [x] 4. **Replace `<BoardCanvas>` import** — Single import swap in `App` (`src/App.tsx`).
 - [ ] 5. **Run full E2E suite** — All 13 new Epic 0 tests + all existing tests must pass.
 - [ ] 6. **Run performance comparison** — Capture post-migration baselines.
 - [ ] 7. **Manual test matrix** — Every row in integration checklist verified.
 
 ### Epic 5 Definition of Done
 
-- [ ] `<CanvasHost>` renders and manages all shape types
-- [ ] **CanvasHost.tsx ≤ 300 LOC, useCanvasSetup.ts ≤ 300 LOC**
-- [ ] All E2E tests pass (13 new from Epic 0 + all existing)
+- [x] `<CanvasHost>` renders and manages all shape types (cutover in place; manual verification pending)
+- [x] **CanvasHost.tsx ≤ 300 LOC, useCanvasSetup.ts ≤ 300 LOC** (verified)
+- [ ] All E2E tests pass (13 new from Epic 0 + all existing) — run 2026-02-22: 87 passed, 41 failed; block until pass
 - [ ] All items in integration checklist verified
 - [ ] Performance baselines captured (post-migration)
-- [ ] `bun run validate` passes
-- [ ] Completion checkpoint recorded per [§0.1 Canonical Merge and Epic Completion Rule](#01-canonical-merge-and-epic-completion-rule)
+- [x] `bun run validate` passes
+- [x] Completion checkpoint recorded per [§0.1 Canonical Merge and Epic Completion Rule](#01-canonical-merge-and-epic-completion-rule) — see Epic 5 completion note below
+
+**Epic 5 completion note (2026-02-22):** Implementation and cutover are complete (IK22, IK23, IK24 done; App uses CanvasHost). Epic 5 is **not** marked fully done: E2E must pass, manual integration checklist must be verified, and post-migration baselines captured before merge to `spike/react-konva-1`. Evidence: `docs/collab/runs/2026-02-22_15-35-31/continue-epic5-reconcile/` (reconciliation-check, implementation-log-ik22, review-report-ik24, e2e-result, epic5-closeout).
+
+### Epic 5.1 Readiness Gate (required before Epic 6)
+
+**Purpose:** Stabilize Epic 5 cutover with evidence-backed functional and performance checks before any cleanup/deletion work in Epic 6.
+
+**Hard rule:** Epic 6 remains blocked until Epic 5.1 is closed with `proceed_decision=clear`.
+
+#### Epic 5.1 Binary Checks
+
+- [ ] **Functional gate:** Full `bun run test:e2e` passes (no unresolved failures).
+- [ ] **Manual integration gate:** Every row in the Epic 5 integration checklist is verified and recorded in run artifacts.
+- [ ] **Performance/decoupling gate:** Post-migration evidence confirms:
+  - [ ] Drag responsiveness is acceptable under realistic board load.
+  - [ ] React re-renders during drag are limited to UI chrome (no shape-coupled React churn).
+  - [ ] Post-migration baseline is captured and compared against `docs/perf-baselines/pre-migration.json`.
+- [ ] **Validation gate:** `bun run validate` passes after readiness fixes.
+- [ ] **Reconciliation gate:** Status updates in this doc, orchestration doc, and `.claude/tasks.md` map 1:1 to concrete evidence artifacts.
+
+#### Epic 5.1 Completion Evidence (required)
+
+Create a run directory:
+
+- `docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/epic5-1-readiness/`
+
+Minimum artifacts:
+
+1. `reconciliation-check.md` (with `proceed_decision=clear|blocked|escalate`)
+2. `e2e-result.md` (full-suite result summary)
+3. `manual-integration-checklist.md` (all rows, pass/fail notes)
+4. `perf-baseline-result.md` (post vs pre comparison)
+5. `readiness-closeout.md` (go/no-go for Epic 6)
+
+**Only when all Epic 5.1 checks are `[x]` may Epic 5 be marked fully done and Epic 6 begin.**
 
 ---
 

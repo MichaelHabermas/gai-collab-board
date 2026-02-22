@@ -145,7 +145,7 @@ describe('StickyNote', () => {
     expect(textarea).toBeTruthy();
 
     textarea.value = 'blur commit';
-    fireEvent.blur(textarea);
+    fireEvent.blur(textarea, { relatedTarget: document.body });
 
     expect(onTextChange).toHaveBeenCalledWith('blur commit');
     expect(document.querySelector('.sticky-note-edit-overlay')).toBeNull();
@@ -198,7 +198,7 @@ describe('StickyNote', () => {
     const textarea = document.querySelector('textarea.sticky-note-edit-overlay') as HTMLTextAreaElement;
     expect(textarea).toBeTruthy();
 
-    fireEvent.blur(textarea);
+    fireEvent.blur(textarea, { relatedTarget: document.body });
 
     expect(mockCleanupReposition).toHaveBeenCalledTimes(1);
   });

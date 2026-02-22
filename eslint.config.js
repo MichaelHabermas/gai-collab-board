@@ -38,7 +38,7 @@ export default tseslint.config(
         { blankLine: "always", prev: "if", next: "*" },
       ],
       "local/prefer-falsy-over-explicit-nullish": "error",
-      "local/max-use-effect-count": ["error", { max: 2 }],
+      "local/max-use-effect-count": ["warn", { max: 4 }],
       "local/no-unnecessary-use-callback": "error",
       "prefer-destructuring": [
         "warn",

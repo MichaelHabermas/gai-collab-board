@@ -17,7 +17,7 @@ import {
   PanelLeft,
   LayoutDashboard,
 } from 'lucide-react';
-import { BoardCanvas } from '@/components/canvas/BoardCanvas';
+import { CanvasHost } from '@/canvas/CanvasHost';
 import { useObjects } from '@/hooks/useObjects';
 import { useAI } from '@/hooks/useAI';
 import { useBoardSubscription } from '@/hooks/useBoardSubscription';
@@ -345,7 +345,7 @@ const BoardView = memo(function BoardView({
       {/* Canvas area and sidebar */}
       <main className='flex-1 flex relative min-w-0 min-h-0 overflow-hidden'>
         <div className='flex-1 relative min-w-0'>
-          <BoardCanvas
+          <CanvasHost
             boardId={boardId}
             boardName={board?.name ?? 'Board'}
             user={user}

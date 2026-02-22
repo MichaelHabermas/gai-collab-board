@@ -23,6 +23,8 @@ import { createConnectorController } from './events/ConnectorController';
 import { createTextEditController } from './events/TextEditController';
 import { createStageEventRouter } from './events/StageEventRouter';
 import { wireEvents } from './events/ShapeEventWiring';
+import { GridRenderer } from './GridRenderer';
+import type { IViewportState } from '@/types';
 
 export interface ICanvasSetupConfig {
   container: HTMLDivElement;
@@ -51,6 +53,7 @@ export interface ICanvasSetupReturn {
   destroy: () => void;
   overlayManager: OverlayManager;
   getConnectorController: () => ReturnType<typeof createConnectorController>;
+  updateGrid: (opts: { viewport: IViewportState; showGrid: boolean; gridColor: string }) => void;
 }
 
 function getCanvasCoords(stage: Konva.Stage, pointer: { x: number; y: number }): IPosition {
@@ -69,6 +72,10 @@ export function setupCanvas(config: ICanvasSetupConfig): ICanvasSetupReturn {
   });
 
   const layerManager = createLayerManager(stage);
+  const gridRenderer = new GridRenderer({
+    layer: layerManager.layers.static,
+    scheduleBatchDraw: layerManager.scheduleBatchDraw,
+  });
   const overlayManager = new OverlayManager(layerManager.layers.overlay);
   const dragCoordinator = createDragCoordinator({
     overlayManager,
@@ -162,6 +169,8 @@ export function setupCanvas(config: ICanvasSetupConfig): ICanvasSetupReturn {
   });
 
   nodeManager.start();
+  const initialObjects = useObjectsStore.getState().objects;
+  nodeManager.handleStoreChange(initialObjects, {});
 
   return {
     stage,
@@ -171,11 +180,13 @@ export function setupCanvas(config: ICanvasSetupConfig): ICanvasSetupReturn {
       selectionSync.destroy();
       nodeManager.destroy();
       overlayManager.destroy();
+      gridRenderer.destroy();
       transformerManager.destroy();
       layerManager.destroy();
       stage.destroy();
     },
     overlayManager,
     getConnectorController: () => connectorController,
+    updateGrid: (opts) => gridRenderer.update(opts),
   };
 }

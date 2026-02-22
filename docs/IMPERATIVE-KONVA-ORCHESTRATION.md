@@ -255,6 +255,8 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 
 ## WAVE 6: Epic 5 — THE CUTOVER (sequential, 1 opus agent)
 
+**Status:** T22, T23, T24 implemented. App uses CanvasHost. E2E run 2026-02-22: 87 passed, 41 failed. Epic 5.1 Readiness Gate is now required before Epic 5 can be marked done or merged.
+
 | Task | Title | Tier | Role | Deps | Branch | Est LOC |
 | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
 | T22 | useCanvasSetup.ts (DI, subscriptions, cleanup) | opus | architect | W5-R | epic5-integration | 200 |
@@ -262,7 +264,8 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 | T24 | Import swap BoardCanvas→CanvasHost + full E2E + manual matrix | opus | architect | T23 | epic5-integration | 60 |
 
 **Scheduling:** T22→T23→T24 strictly sequential.
-**Review gate W6-R (opus reviewer):** All E2E pass. Integration checklist verified. Under 300 LOC each.
+**Review gate W6-R (opus reviewer):** Implementation cutover complete and wiring validated (under 300 LOC each).
+**Follow-up gate W6.1-R (required):** Full E2E pass + manual integration checklist + post-migration perf/decoupling evidence + validate green + reconciliation artifacts.
 
 ### T22 — useCanvasSetup.ts
 
@@ -283,11 +286,11 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 
 ## WAVE 7: Epic 6 — Cleanup (sequential, separate PR)
 
-**Blocked until Epic 5 confirmed stable. If Epic 5 regresses, Epic 6 blocked and Epic 5 reverted (Article XXVII.3).**
+**Blocked until Epic 5.1 Readiness Gate is closed with `proceed_decision=clear`. If Epic 5 regresses, Epic 6 blocked and Epic 5 reverted (Article XXVII.3).**
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC |
 | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
-| T25 | Delete 26 dead files + remove react-konva dep | sonnet | architect | W6-R | epic6-cleanup | -4907 |
+| T25 | Delete 26 dead files + remove react-konva dep | sonnet | architect | W6.1-R | epic6-cleanup | -4907 |
 | T26 | Update shapes/index.ts + CLAUDE.md | haiku | quick-fixer | T25 | epic6-cleanup | 10 |
 | T27 | Performance verification + `bun run release:gate` | sonnet | architect | T26 | epic6-cleanup | 50 |
 

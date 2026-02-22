@@ -439,37 +439,64 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md Wave
 
 ## IK22 — useCanvasSetup.ts (DI, subscriptions, cleanup)
 
-- **Status:** pending
+- **Status:** done
 - **Tier:** opus
 - **Role:** architect
 - **Worktree name:** epic5-integration
 - **Description:** Task T22: Create src/canvas/useCanvasSetup.ts (~200 LOC). Manager instantiation in DI order. Wire Zustand vanilla subscriptions (objectsStore, selectionStore, dragOffsetStore) per Appendix C. Returns { stage, destroy }. Cleanup destroys all managers + unsubscribes.
 - **Dependencies:** IK19, IK20, IK21 (W5-R)
 - **Acceptance criteria:** All managers instantiated. Subscriptions per Appendix C. destroy() cleans everything. Under 300 LOC.
+- **Notes:** Implemented 2026-02-22. src/canvas/useCanvasSetup.ts + OverlayManager.clearHighlight + spatialIndex.getDragging. Returns overlayManager, getConnectorController for CanvasHost. validate passes.
 
 ---
 
 ## IK23 — CanvasHost.tsx (React shell, surviving hooks)
 
-- **Status:** pending
+- **Status:** done
 - **Tier:** opus
 - **Role:** architect
 - **Worktree name:** epic5-integration
 - **Description:** Task T23: Create src/canvas/CanvasHost.tsx (~250 LOC). React shell: tool/color state, surviving hooks (useCanvasViewport, useVisibleShapeIds, useBoardSubscription, useCursors, useCanvasKeyboardShortcuts, useCanvasOperations). Mount effect calls setupCanvas. Renders container div + toolbar + control panel.
 - **Dependencies:** IK22
 - **Acceptance criteria:** All surviving hooks wired. Mount/unmount lifecycle correct. Under 300 LOC.
+- **Notes:** Implemented 2026-02-22. src/canvas/CanvasHost.tsx with useCanvasViewport, useCursors, useBoardSettings, useCanvasOperations, useCanvasKeyboardShortcuts, overlay cursor/connector effects. validate passes.
 
 ---
 
 ## IK24 — Import swap BoardCanvas→CanvasHost + full E2E + manual matrix
 
-- **Status:** pending
+- **Status:** done
 - **Tier:** opus
 - **Role:** architect
 - **Worktree name:** epic5-integration
 - **Description:** Task T24: Replace <BoardCanvas> import with <CanvasHost> in App.tsx. Run full E2E suite (13 new + existing). Verify manual integration checklist (27 items from V5 §11). Capture post-migration baselines.
 - **Dependencies:** IK23
 - **Acceptance criteria:** All E2E pass. Integration checklist verified. Baselines captured. Article XXVII (single atomic cutover).
+- **Notes:** Cutover done 2026-02-22. App.tsx imports CanvasHost, uses <CanvasHost> with same props. validate passes. E2E run 2026-02-22: 87 passed, 41 failed — DoD not met; see docs/collab/runs/2026-02-22_15-35-31/continue-epic5-reconcile/e2e-result.md. Epic 5 implementation is **finished**; Epic 5 is **not** DoD-complete until full E2E pass, manual checklist, and post-migration baselines are done. Do not merge to spike/react-konva-1 until DoD satisfied.
+
+---
+
+## Epic 5 completion checkpoint (2026-02-22)
+
+- **Implementation:** Finished. IK22 (useCanvasSetup), IK23 (CanvasHost), IK24 (App cutover) done. `bun run validate` passes.
+- **DoD remaining:** (1) All E2E tests pass, (2) Manual integration checklist (V5 §11) verified, (3) Post-migration performance baselines captured.
+- **Merge gate:** Do not mark Epic 5 "done" or merge to spike/react-konva-1 until the three items above are satisfied. Evidence dir: `docs/collab/runs/2026-02-22_15-35-31/continue-epic5-reconcile/`.
+
+---
+
+## Epic 5.1 readiness checkpoint (required before Epic 6)
+
+- **Status:** in-progress
+- **Purpose:** Evidence-backed stabilization gate for Epic 5 before any Epic 6 cleanup/deletion work.
+- **Evidence directory:** `docs/collab/runs/<YYYY-MM-DD_HH-mm-ss>/epic5-1-readiness/`
+- **Binary checks (all required):**
+  1. Full `bun run test:e2e` pass (no unresolved failures).
+  2. Manual integration checklist (V5 §11) fully verified with pass/fail notes.
+  3. Post-migration perf baseline captured and compared against `docs/perf-baselines/pre-migration.json`.
+  4. Drag decoupling validated: React re-renders during drag limited to UI chrome only.
+  5. `bun run validate` passes after readiness fixes.
+  6. Reconciliation artifacts updated in V5 doc + orchestration doc + tasks ledger.
+- **Exit rule:** Epic 6 remains blocked until this checkpoint records `proceed_decision=clear`.
 
 ---
 
