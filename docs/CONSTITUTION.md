@@ -4,6 +4,7 @@ This document is the **inviolable** rule set for the state improvement plan. Vio
 
 - **Articles I–VIII** govern Epics 1–3 (original state improvement work).
 - **Articles IX–XIX** govern STATE-MANAGEMENT-PLAN-2.md tasks S1–S7 (state management unification).
+- **Articles XX–XXV and XXVII** govern the Imperative Konva Migration (Epics 1–4).
 
 **Precedence:** This constitution overrides any conflicting rule in CLAUDE.md or `.cursor/rules/`. When in conflict, the constitution wins.
 
@@ -153,6 +154,93 @@ The following articles govern all work in `STATE-MANAGEMENT-PLAN-2.md`. They are
 4. Spatial index and relationship indexes must be rebuilt at most once per `applyChanges` call.
 
 **Verification:** Unit test: subscribe to `useObjectsStore` with a counter; call `applyChanges` with 5 adds, 3 updates, 2 deletes; assert the subscriber fires exactly once.
+
+---
+
+## Amendment — Imperative Konva Migration (Epics 1–4)
+
+The following articles govern the Imperative Konva Migration. They are additive to Articles I–XIX and do not supersede them.
+
+---
+
+## Article XX — Imperative Canvas Rendering Contract
+
+1. `KonvaNodeManager` is a **derived rendering projection** of `useObjectsStore`. Konva nodes are never the source of truth (reinforces Article I).
+2. `KonvaNodeManager` must not hold stale snapshots of `IBoardObject` data. Its internal `lastObj` field is a **diff optimization cache**, not authoritative state. Any detected divergence must be resolved by re-reading the store, not by trusting the cache.
+3. No imperative canvas module may call `useObjectsStore.getState().updateObject()` directly during the render/update cycle. Store mutations happen only in event handlers (drag end, text change, transform end) — never in the subscription callback that processes store changes.
+
+---
+
+## Article XXI — Connector Endpoint Reactivity
+
+1. When a shape moves, `KonvaNodeManager.handleStoreChange()` must update all connectors referencing that shape as an endpoint, using the `connectorsByEndpoint` index.
+2. Connector updates must be **deduplicated** within a single `handleStoreChange` call. If both endpoints of a connector move in the same store change (e.g., multi-select drag), the connector must be updated exactly once, after both endpoint positions are resolved.
+3. Connector endpoint updates must complete within the same `batchDraw()` call as the endpoint shape updates. No visual frame may show a connector lagging behind its endpoint.
+
+---
+
+## Article XXII — Subscription Efficiency
+
+1. The imperative canvas must not regress the subscription efficiency of the current per-shape model:
+   - Store change processing must be O(changed) not O(total). The `handleStoreChange` diff must short-circuit for objects whose reference identity has not changed.
+   - During drag (high-frequency updates to 1–N shapes), only the dragged shapes and their connected connectors may have their Konva nodes updated. All other nodes must remain untouched.
+
+2. **Zustand v5 vanilla subscription API (verified):**
+
+   ```typescript
+   // From node_modules/zustand/esm/vanilla.d.mts:
+   // subscribe: (listener: (state: T, prevState: T) => void) => () => void
+   //
+   // listener receives the FULL store state, not a selector projection.
+   // No subscribeWithSelector middleware is used in this project.
+   ```
+
+   The subscription callback receives `(state, prevState)` where both are the full store state object. To detect object changes:
+
+   ```typescript
+   const unsub = useObjectsStore.subscribe((state, prevState) => {
+     if (state.objects === prevState.objects) return; // early exit
+     nodeManager.handleStoreChange(state.objects, prevState.objects);
+   });
+   ```
+
+   The diff compares `state.objects[id] === prevState.objects[id]` by reference identity. This is O(n) in the worst case but O(changed) in practice because Zustand's `updateObject` only replaces the changed entry in the Record.
+
+---
+
+## Article XXIII — Bitmap Caching Preservation
+
+1. Complex shapes (StickyNote, Frame) must be bitmap-cached when idle; cache cleared when selected, editing, or dragging; re-applied when returning to idle after visual changes.
+2. Cache pixel ratio ≥ device pixel ratio (minimum 2x). Factory `update()` must invalidate cache when any visual property changes.
+
+---
+
+## Article XXIV — Layer Partitioning Invariant
+
+1. Shapes exist on exactly one of two layers: **static** (idle shapes) or **active** (selected/dragging shapes).
+2. When selection changes, shapes must move between layers atomically. No shape may exist on both layers simultaneously.
+3. The active layer redraws at 60Hz during drag. The static layer redraws only when its contents change (shape added/removed/updated while idle).
+4. The overlay layer (marquee, guides, cursors, drawing preview, connection anchors) is independent of both shape layers.
+5. The selection layer (Konva.Transformer) is independent of both shape layers.
+
+---
+
+## Article XXV — Event System Isolation
+
+1. Stage-level events (mousedown/mousemove/mouseup on empty canvas) are handled by `StageEventRouter` and dispatched based on `activeTool`.
+2. Per-shape events (click, drag, dblclick) are wired by `ShapeEventWiring` when a shape node is created.
+3. No event handler may directly create or destroy Konva nodes. Event handlers mutate Zustand stores or call imperative overlay updates. Node creation/destruction is exclusively `KonvaNodeManager`'s responsibility in response to store changes.
+4. Exception: `OverlayManager` may create/destroy transient overlay nodes (marquee rect, guide lines, drawing preview) in response to direct method calls from event handlers. These are not store-backed.
+
+---
+
+## Article XXVII — Migration Safety (extends Article V)
+
+1. Epics 1–4 are purely additive. They create new files alongside the existing system. No existing file is modified or deleted until Epic 5.
+2. Epic 5 is the cut-over. It is a single atomic PR that replaces `<BoardCanvas>` with `<CanvasHost>`. This PR must pass all E2E tests.
+3. Epic 6 deletes dead files. It is a separate PR from Epic 5. If Epic 5 introduces regressions discovered post-merge, Epic 6 is blocked and Epic 5 is reverted.
+4. At no point during the migration may both `BoardCanvas` and `CanvasHost` be active simultaneously in production. Feature flags are acceptable for local testing only.
+5. **Rollback:** Revert the Epic 5 merge (or the BoardCanvas → CanvasHost swap in a follow-up PR); do not merge Epic 6 until Epic 5 is stable.
 
 ---
 
