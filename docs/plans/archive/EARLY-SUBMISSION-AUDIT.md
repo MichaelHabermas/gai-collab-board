@@ -214,7 +214,7 @@ The spec requires a minimum tool schema. Here's the status:
 |-------------|-----------------|--------|-------|
 | GitHub Repository | Setup guide, architecture, deployed link | **PASS** | Comprehensive README, architecture docs, deployed link |
 | Demo Video (3-5 min) | Real-time collab, AI commands, architecture | **PARTIAL** | Covers features but AI failed during recording; rushed pacing. Needs re-recording for final. |
-| Pre-Search Document | Completed Phase 1-3 checklist | **PASS** | `docs/research/PRE-SEARCH-CHECKLIST-MGH.pdf` + `PRE-SEARCH-DOCUMENT.md` |
+| Pre-Search Document | Completed Phase 1-3 checklist | **PASS** | `architecture/archive/PRE-SEARCH-CHECKLIST-MGH.pdf` + `roadmap/archive/PRE-SEARCH-DOCUMENT.md` |
 | AI Development Log | 1-page breakdown | **PASS** | `docs/planning/AI-DEVELOPMENT-LOG.md` |
 | AI Cost Analysis | Dev spend + projections | **PASS** | `docs/planning/AI-COST-ANALYSIS.md` with 4-tier projections |
 | Deployed Application | Public, 5+ users, auth | **PASS** | Live on Render, Firebase Auth, tested with multiple users |

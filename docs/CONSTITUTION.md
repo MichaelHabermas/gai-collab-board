@@ -3,7 +3,7 @@
 This document is the **inviolable** rule set for the state improvement plan. Violations block merge. All agents and developers must read it before starting any task under this plan.
 
 - **Articles I–VIII** govern Epics 1–3 (original state improvement work).
-- **Articles IX–XIX** govern STATE-MANAGEMENT-PLAN-2.md tasks S1–S7 (state management unification).
+- **Articles IX–XIX** govern [STATE-MANAGEMENT-PLAN-2.md](plans/state/STATE-MANAGEMENT-PLAN-2.md) tasks S1–S7 (state management unification).
 - **Articles XX–XXV and XXVII** govern the Imperative Konva Migration (Epics 1–4).
 
 **Precedence:** This constitution overrides any conflicting rule in CLAUDE.md or `.cursor/rules/`. When in conflict, the constitution wins.

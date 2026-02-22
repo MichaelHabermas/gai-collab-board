@@ -1,10 +1,12 @@
 ## Summary
 
-PRD-V1 is the first execution-focused PRD for v2: it ties EPICs, user stories, and features to a git workflow (development branch, feature branches), design principles recap, and feature-branch/commit/subtask mapping. It is the initial "single source of execution" for v2 and shows how high-level scope was first turned into a concrete workflow.
+PRD-V2 expands PRD-V1 with richer execution detail: per-EPIC success criteria, out-of-scope, risks, dependencies, stakeholder value, and optional UX/edge-case notes. Feature-level content (acceptance criteria, commits, test plans) is preserved. This document is the expanded execution spec that supports planning and stakeholder communication while remaining the basis for implementation.
 
 ---
 
-# CollabBoard v2 — Initial PRD (V1)
+# CollabBoard v2 — PRD (V2)
+
+**V2 changelog:** Expanded from PRD-V1: elaborated epics with success criteria, out-of-scope, risks and dependencies, and stakeholder value; added per-epic and cross-cutting mermaid diagrams; optional edge-case and UX notes per feature. All feature-level content (acceptance criteria, commits, test plans) preserved.
 
 **Scope:** 20 features across 8 EPICs; modular, SOLID-aligned design; git workflow with `development` branch and feature branches. This document is the single source for execution: **EPICs → User Stories → Features → Feature Branches → Commits → Subtasks.**
 
@@ -14,7 +16,7 @@ PRD-V1 is the first execution-focused PRD for v2: it ties EPICs, user stories, a
 - [DESIGN-DOCUMENT.md](./DESIGN-DOCUMENT.md) — EPICs and user stories
 - [FEATURES.md](./FEATURES.md) — Feature descriptions, acceptance criteria, technical notes
 - [INITIAL-RESEARCH.md](./INITIAL-RESEARCH.md) — Build order and rationale
-- [PRD](../PRD.md) — Existing scope, tech stack, SOLID, project structure
+- [PRD](../../product/PRD.md) — Existing scope, tech stack, SOLID, project structure
 
 ---
 
@@ -117,6 +119,47 @@ flowchart TB
 
 **Objective:** Improve daily input and navigation with keyboard shortcuts, consistent Escape behavior, and zoom actions so users can work quickly and navigate large boards without relying only on the toolbar.
 
+### Success criteria (epic)
+
+- Keyboard shortcuts (Copy, Paste, Delete, Duplicate, Escape) work when canvas has focus and do not fire when focus is in an input or text-edit field.
+- Zoom to selection, zoom to fit all, and zoom presets share one viewport/zoom state; no conflicting or lost zoom.
+- Escape consistently clears selection and exits text-edit mode without side effects.
+
+### Out of scope
+
+- Custom shortcut remapping or user-defined key bindings in v2.
+- Syncing viewport/pan/zoom across users (viewport remains local per user).
+
+### Risks and dependencies
+
+- Features 3, 4, 5 must share the same viewport/zoom state and Konva stage scale/position; implement or refactor viewport layer first if not already unified.
+- Escape handling must integrate with the same keydown layer as other shortcuts to avoid duplicate or missed handling.
+
+### Stakeholder value
+
+Power users and facilitators benefit from faster navigation and less context switching; zoom and shortcuts reduce reliance on toolbar and mouse.
+
+### User flow (Epic 1)
+
+```mermaid
+flowchart LR
+  User[User]
+  Shortcuts[Keyboard or toolbar]
+  Canvas[Canvas selection or viewport]
+  CopyPaste[Copy or Paste]
+  Escape[Escape]
+  ZoomSel[Zoom to selection]
+  ZoomFit[Zoom to fit all]
+  Presets[Zoom presets]
+  User --> Shortcuts
+  Shortcuts --> Canvas
+  Canvas --> CopyPaste
+  Canvas --> Escape
+  Canvas --> ZoomSel
+  Canvas --> ZoomFit
+  Canvas --> Presets
+```
+
 ### User stories
 
 | ID | User story | Done |
@@ -132,6 +175,11 @@ flowchart TB
 - **Branch:** `feature/keyboard-shortcuts`
 - **PR title:** `feat: keyboard shortcuts (Copy, Paste, Delete, Duplicate, Escape)`
 - **Module:** canvas / board container
+
+**Edge cases / UX notes**
+
+- Paste when clipboard is empty: no-op or show a short toast; do not create empty objects.
+- Duplicate with no selection: no-op or disable shortcut.
 
 **Acceptance criteria**
 
@@ -176,6 +224,10 @@ flowchart TB
 - **PR title:** `feat: Escape clears selection and exits text-edit mode`
 - **Module:** canvas / board container
 
+**Edge cases / UX notes**
+
+- When in text-edit mode, define whether Escape commits or cancels the edit (product decision); document in spec.
+
 **Acceptance criteria**
 
 - [ ] Pressing Escape when one or more objects are selected clears the selection.
@@ -209,6 +261,10 @@ flowchart TB
 - **Branch:** `feature/zoom-to-selection`
 - **PR title:** `feat: zoom to selection`
 - **Module:** canvas (viewport/zoom)
+
+**Edge cases / UX notes**
+
+- Zoom to selection with a single very small (e.g. one-pixel) object: apply a minimum zoom cap to avoid extreme zoom-in.
 
 **Acceptance criteria**
 
@@ -319,6 +375,43 @@ flowchart TB
 
 **Objective:** Provide a single place to edit object properties (fill, stroke, stroke width, font size, opacity) when one or more objects are selected, meeting expectations from tools like Figma and Miro.
 
+### Success criteria (epic)
+
+- Property inspector updates selected object(s) within 2 seconds of a change and syncs to backend; other clients see updates.
+- Multi-selection shows "mixed" for differing values where applicable; applying a value updates all selected objects that support that property.
+- Inspector visibility is tied to selection only; no stale or wrong object data when selection changes.
+
+### Out of scope
+
+- Bulk style presets or style libraries in v2.
+- Per-object or per-layer lock/visibility toggles in the inspector for v2.
+
+### Risks and dependencies
+
+- Feature 7 (Property inspector) is the host for features 6, 8, 9; build the inspector panel first, then add font size, stroke/fill, and opacity controls.
+- Inspector must subscribe to the same selection and update APIs as the canvas to avoid drift.
+
+### Stakeholder value
+
+Designers and facilitators get a single, predictable place to style objects (fill, stroke, font, opacity) without hunting through context menus or AI; aligns with Figma/Miro mental models.
+
+### Data flow (Epic 2)
+
+```mermaid
+flowchart LR
+  SelectionChange[Selection change]
+  InspectorVis[Inspector visibility]
+  Controls[Control values fill stroke font opacity]
+  UpdateObj[updateObject]
+  Sync[Sync]
+  Konva[Konva re-render]
+  SelectionChange --> InspectorVis
+  InspectorVis --> Controls
+  Controls --> UpdateObj
+  UpdateObj --> Sync
+  Sync --> Konva
+```
+
 ### User stories
 
 | ID | User story | Done |
@@ -333,6 +426,10 @@ flowchart TB
 - **Branch:** `feature/font-size-control`
 - **PR title:** `feat: font size control for sticky notes and text`
 - **Module:** ui (toolbar or property inspector)
+
+**Edge cases / UX notes**
+
+- Multi-selection with mixed font sizes: show "mixed" in the control or apply to all; document product choice.
 
 **Acceptance criteria**
 
@@ -479,6 +576,55 @@ flowchart TB
 ## Epic 3: Layout and canvas tools
 
 **Objective:** Enable precise layout via align/distribute toolbar, snap-to-grid, and alignment guides, and allow exporting the board or viewport as an image for sharing.
+
+### Success criteria (epic)
+
+- Align and distribute actions update positions and sync to backend; no desync with multi-user edits.
+- Snap-to-grid and alignment guides do not block or corrupt sync (final positions are written once).
+- Export produces a valid image file (viewport or full board) with no cursors or sensitive UI.
+
+### Out of scope
+
+- Custom grid spacing or grid origin configuration in v2 (fixed spacing e.g. 20 px acceptable).
+- Export to PDF or vector format in v2; PNG/JPEG only.
+
+### Risks and dependencies
+
+- Align toolbar reuses existing AI layout tools (`alignObjects`, `distributeObjects`); ensure same logic and sync path.
+- Alignment guides need a performance strategy (e.g. limit to visible or nearby objects) when many objects exist.
+
+### Stakeholder value
+
+Facilitators and diagrammers can align and distribute objects without AI, snap to grid for neat layouts, and export boards for sharing or documentation.
+
+### Align and snap flow (Epic 3)
+
+```mermaid
+flowchart LR
+  MultiSel[Multi-selection]
+  AlignDist[Align or Distribute]
+  SnapGuides[Snap or Guides]
+  PosUpdate[Position update]
+  Sync[Sync]
+  MultiSel --> AlignDist
+  MultiSel --> SnapGuides
+  AlignDist --> PosUpdate
+  SnapGuides --> PosUpdate
+  PosUpdate --> Sync
+```
+
+### Export flow (Epic 3)
+
+```mermaid
+flowchart LR
+  User[User]
+  ExportAction[Export viewport or full board]
+  StageExport[Stage.toDataURL]
+  Download[Download]
+  User --> ExportAction
+  ExportAction --> StageExport
+  StageExport --> Download
+```
 
 ### User stories
 
@@ -642,6 +788,43 @@ flowchart TB
 
 **Objective:** Help users find and return to boards quickly by adding Recent and Favorites to the board list (or dashboard).
 
+### Success criteria (epic)
+
+- Opening a board updates Recent within one session; Recent section shows last 5–10 boards in last-opened order.
+- Star/unstar updates Favorites immediately and persists per user; Favorites section reflects current user's list.
+- Board list sections (All, Recent, Favorites) navigate to the same board correctly from any section.
+
+### Out of scope
+
+- Shared or team-wide favorites in v2; favorites are per user only.
+- Board sorting or filtering by name/date in the list beyond the three sections.
+
+### Risks and dependencies
+
+- User preferences (Firestore `users/{uid}/preferences`) must be created and secured; extend sync or auth layer.
+- Board list UI must load metadata for recent/favorite board IDs (names, etc.) for display.
+
+### Stakeholder value
+
+Users who work across many boards can quickly return to recent work and pin important boards without scrolling the full list.
+
+### Preferences flow (Epic 4)
+
+```mermaid
+flowchart TB
+  BoardOpen[Board open]
+  UpdateRecent[Update recentBoardIds]
+  StarClick[Star click]
+  UpdateFav[Update favoriteBoardIds]
+  BoardList[Board list]
+  Sections[All Recent Favorites]
+  BoardOpen --> UpdateRecent
+  StarClick --> UpdateFav
+  BoardList --> Sections
+  UpdateRecent --> BoardList
+  UpdateFav --> BoardList
+```
+
 ### User stories
 
 | ID | User story | Done |
@@ -696,6 +879,39 @@ flowchart TB
 ## Epic 5: Connectors and diagramming
 
 **Objective:** Improve diagram clarity by supporting connector arrowheads and dashed (or dotted) stroke style, persisted and synced like other object properties.
+
+### Success criteria (epic)
+
+- Arrowhead and stroke style options persist and sync; all clients render the same connector appearance.
+- Property inspector shows connector-specific controls when a connector is selected; changes apply immediately.
+
+### Out of scope
+
+- Custom arrowhead shapes or curved connector paths in v2.
+- Connector routing (e.g. orthogonal or avoid obstacles) in v2.
+
+### Risks and dependencies
+
+- Features 15 and 16 both extend the connector object type and the Connector component; can be implemented together or in sequence; ensure schema is backward-compatible (optional fields).
+
+### Stakeholder value
+
+Diagrammers and facilitators can indicate direction with arrowheads and distinguish connector types with dashed/dotted lines, improving readability of flowcharts and diagrams.
+
+### Connector styling flow (Epic 5)
+
+```mermaid
+flowchart LR
+  ConnSelected[Connector selected]
+  Inspector[Inspector arrowheads stroke style]
+  ObjUpdate[Object update]
+  Sync[Sync]
+  ReRender[Connector re-render]
+  ConnSelected --> Inspector
+  Inspector --> ObjUpdate
+  ObjUpdate --> Sync
+  Sync --> ReRender
+```
 
 ### User stories
 
@@ -781,6 +997,43 @@ flowchart TB
 
 **Objective:** Enable threaded comments on board objects so that collaborators can discuss specific content in context, with real-time sync and clear indicators.
 
+### Success criteria (epic)
+
+- Adding a comment or reply persists and appears for other users in real time (within normal sync latency).
+- Comment indicator on objects reflects presence of comments; clicking opens the thread for that object.
+- Only authenticated users with board access can read and write comments; RBAC enforced.
+
+### Out of scope
+
+- Per-comment or per-thread resolution status in v2 (e.g. "resolved").
+- @mentions or rich text in comments in v2; plain text only.
+
+### Risks and dependencies
+
+- Comments collection and security rules must align with existing board access; reuse auth/sync patterns.
+- Real-time listeners on comments can increase read load; scope subscriptions to current board or visible threads if needed.
+
+### Stakeholder value
+
+Collaborators can discuss specific objects in context without leaving the board; threaded replies keep discussions organized and discoverable via object indicators.
+
+### Comments sequence (Epic 6)
+
+```mermaid
+sequenceDiagram
+  participant User
+  participant CommentPanel
+  participant CommentService
+  participant Firestore
+  participant Listener
+  User->>CommentPanel: Add comment or reply
+  CommentPanel->>CommentService: createComment objectId text parentId
+  CommentService->>Firestore: Write boards boardId comments
+  Firestore-->>Listener: Real-time update
+  Listener->>CommentPanel: Update thread view
+  CommentPanel-->>User: Show new comment
+```
+
 ### User stories
 
 | ID | User story | Done |
@@ -836,6 +1089,44 @@ flowchart TB
 ## Epic 7: AI board intelligence
 
 **Objective:** Add two AI commands that use existing tools and the LLM: "Explain this board" (board-level summary) and "Summarize selection" (selection-based summary), both shown in the AI chat.
+
+### Success criteria (epic)
+
+- "Explain this board" returns a concise summary reflecting current board content (object types, counts, text if included).
+- "Summarize selection" returns a summary of selected objects' content only; when nothing selected, command is disabled or user is prompted.
+- Both responses appear in the existing AI chat UI; no new tools or parameters required beyond getBoardState and selection.
+
+### Out of scope
+
+- AI-driven layout or auto-arrange in v2 for this epic; only read-only summary commands.
+- Custom prompts or model selection for these two commands in v2.
+
+### Risks and dependencies
+
+- Depends on existing `getBoardState` (and optionally `findObjects`); ensure board and selection state are available to AI layer.
+- Token usage for large boards; consider truncating or sampling content if needed for prompt size.
+
+### Stakeholder value
+
+Users can quickly understand board content or selected content via natural-language summaries without manually reading every sticky or shape; supports onboarding and handoffs.
+
+### AI command flow (Epic 7)
+
+```mermaid
+flowchart LR
+  User[User]
+  Explain[Explain this board]
+  Summarize[Summarize selection]
+  GetBoard[getBoardState filtered]
+  LLM[LLM]
+  Chat[Response in chat]
+  User --> Explain
+  User --> Summarize
+  Explain --> GetBoard
+  Summarize --> GetBoard
+  GetBoard --> LLM
+  LLM --> Chat
+```
 
 ### User stories
 
@@ -920,6 +1211,41 @@ flowchart TB
 
 **Objective:** Provide global undo and redo for object operations (create, delete, move, resize, property changes) so users can correct mistakes and experiment safely, with a defined sync strategy.
 
+### Success criteria (epic)
+
+- Undo reverts the last local operation; redo reapplies the last undone operation; board state and backend stay consistent after undo/redo.
+- All mutation types (create, delete, move, resize, property change) are recorded and undoable; history is bounded (e.g. 50 operations).
+- Shortcuts Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z (or Ctrl/Cmd+Y) work when focus is not in an input field.
+
+### Out of scope
+
+- Cross-user undo (undoing another user's change) in v2; undo is local to the current user's operations.
+- Undo/redo for comments or connector endpoint moves in v2 unless explicitly scoped in; document separately if added later.
+
+### Risks and dependencies
+
+- Feature 20 depends on all object mutation paths (create, delete, move, resize, property); build last so every path can push commands.
+- Sync after undo/redo must use the same update/delete/create APIs so other users eventually see the reverted state (last-write-wins with inverse).
+
+### Stakeholder value
+
+Users can correct mistakes and experiment without fear; undo/redo is expected in creative tools and reduces friction.
+
+### Command stack (Epic 8)
+
+```mermaid
+flowchart TB
+  Op[Operation create delete move resize property]
+  Push[Push command and inverse]
+  Stack[Bounded stack e.g. 50]
+  Undo[Undo pop and apply inverse]
+  Redo[Redo reapply]
+  Op --> Push
+  Push --> Stack
+  Stack --> Undo
+  Undo --> Redo
+```
+
 ### User stories
 
 | ID | User story | Done |
@@ -972,6 +1298,27 @@ flowchart TB
 ---
 
 **Epic 8 completion:** [ ] Epic 8: History and consistency — Done
+
+---
+
+## Cross-cutting behaviors
+
+### Selection and edit state
+
+Selection and text-edit state affect keyboard shortcuts (Escape, Copy/Paste), property inspector visibility, and zoom-to-selection. The following state diagram summarizes the flow:
+
+```mermaid
+stateDiagram-v2
+  direction LR
+  NoSelection: No selection
+  Selected: Selected
+  TextEditing: Text editing
+  NoSelection --> Selected: Select object(s)
+  Selected --> TextEditing: Enter text edit
+  Selected --> NoSelection: Escape
+  TextEditing --> NoSelection: Escape
+  TextEditing --> Selected: Commit edit
+```
 
 ---
 
@@ -1053,4 +1400,4 @@ flowchart LR
 
 ### LBI alignment
 
-When starting implementation for a feature, use **`/lbi.request`** (or lite **`/lbi.lite.request`**) with this PRD as context. The PRD-V1 is the planning artifact that feeds LBI specs (e.g. one request per feature). Optionally run **`/lbi.pm.prd`** or **`/lbi.pm.stories`** to align LBI artifacts with this PRD.
+When starting implementation for a feature, use **`/lbi.request`** (or lite **`/lbi.lite.request`**) with **PRD-V2** as context. This PRD is the planning artifact that feeds LBI specs (e.g. one request per feature). Optionally run **`/lbi.pm.prd`** or **`/lbi.pm.stories`** to align LBI artifacts with this PRD.

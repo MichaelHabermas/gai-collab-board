@@ -165,11 +165,11 @@ class ToastProvider {
 
 ## Related Documents
 
-- [Design Document](../research/DESIGN-DOCUMENT.md) - Architecture overview
-- [PRD](../research/PRD-V2.md) - Product requirements
-- [Tech Stack Options](../research/TECH-STACK-OPTIONS-V2.md) - Stack decisions
-- [Architecture Decisions](../research/RECORD-ARCHITECTURE-DECISIONS-V2.md) - ADRs
-- [Tradeoffs](../research/IDENTIFY-TRADEOFFS-V2.md) - Technology tradeoffs
+- [Design Document](../architecture/DESIGN-DOCUMENT.md) - Architecture overview
+- [PRD](../product/PRD.md) - Product requirements
+- [Tech Stack](../architecture/TECH-STACK.md) - Stack decisions
+- [Architecture Decisions](../architecture/ADR.md) - ADRs
+- [Tradeoffs](../architecture/TRADEOFFS.md) - Technology tradeoffs
 
 ---
 

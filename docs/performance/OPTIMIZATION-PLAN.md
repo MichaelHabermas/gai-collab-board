@@ -878,7 +878,7 @@ Components with three or more `useEffect` calls are refactored so that related e
 
 #### Prevention strategy
 
-Before adding a new `useEffect`, ask: Can this be computed during render? Handled in an event handler? Derived from props/state without a side effect? Use `useEffect` only for true side effects (subscriptions, cleanup, external sync). When a component reaches 2 effects, consider grouping related logic into a custom hook. See `docs/Optimization/USE-EFFECT-CENSUS.md` for the per-file census and `local/max-use-effect-count` ESLint rule (warn at 2+ per file).
+Before adding a new `useEffect`, ask: Can this be computed during render? Handled in an event handler? Derived from props/state without a side effect? Use `useEffect` only for true side effects (subscriptions, cleanup, external sync). When a component reaches 2 effects, consider grouping related logic into a custom hook. See `USE-EFFECT-CENSUS.md` for the per-file census and `local/max-use-effect-count` ESLint rule (warn at 2+ per file).
 
 #### Implementation
 
@@ -1045,8 +1045,8 @@ Stretch:
 
 ## References
 
-- [docs/PRD.md](../PRD.md) — Success metrics, benchmark gates, feature context.
-- [docs/G4 Week 1 - CollabBoard.pdf](../G4%20Week%201%20-%20CollabBoard.pdf) — Performance targets and MVP criteria.
-- [docs/Optimization/OPTIMIZATION-PLAN-1.md](OPTIMIZATION-PLAN-1.md) — Original asset/bundle and architectural ideas (Next.js-oriented).
-- [docs/Optimization/OPTIMIZATION-PLAN-2.md](OPTIMIZATION-PLAN-2.md) — Canvas/viewport and Zustand performance plan.
-- [docs/Optimization/OPTIMIZATION-PLAN-3.md](OPTIMIZATION-PLAN-3.md) — Full UX/product task list and steps.
+- [PRD](../product/PRD.md) — Success metrics, benchmark gates, feature context.
+- [G4 Week 1 - CollabBoard.pdf](../G4%20Week%201%20-%20CollabBoard.pdf) — Performance targets and MVP criteria (if present).
+- [OPTIMIZATION-PLAN-1.md](archive/OPTIMIZATION-PLAN-1.md) — Original asset/bundle and architectural ideas (Next.js-oriented).
+- [OPTIMIZATION-PLAN-2.md](archive/OPTIMIZATION-PLAN-2.md) — Canvas/viewport and Zustand performance plan.
+- [OPTIMIZATION-PLAN-3.md](archive/OPTIMIZATION-PLAN-3.md) — Full UX/product task list and steps.

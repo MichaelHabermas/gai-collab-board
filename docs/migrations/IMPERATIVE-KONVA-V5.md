@@ -191,7 +191,7 @@ See **Appendix B** for the complete manifest with LOC counts.
 
 ## 4. STATE-MANAGEMENT-PLAN-2 Dependency Contract
 
-This section establishes the dependency contract between this migration and STATE-MANAGEMENT-PLAN-2.
+This section establishes the dependency contract between this migration and [STATE-MANAGEMENT-PLAN-2](../plans/state/STATE-MANAGEMENT-PLAN-2.md).
 
 ### Current S-Task Status (as of this plan)
 
@@ -410,7 +410,7 @@ Deferred to [IMPERATIVE-KONVA-MIGRATION-V5-FOLLOW-UP.md](IMPERATIVE-KONVA-MIGRAT
 
 *Check off each item above as completed.*
 
-PRs that modify Zustand stores during this migration should also satisfy [STATE-MGMT-REVIEWER-CHECKLIST.md](docs/STATE-MGMT-REVIEWER-CHECKLIST.md) where applicable.
+PRs that modify Zustand stores during this migration should also satisfy [STATE-MGMT-REVIEWER-CHECKLIST.md](../plans/state/STATE-MGMT-REVIEWER-CHECKLIST.md) where applicable.
 
 ---
 

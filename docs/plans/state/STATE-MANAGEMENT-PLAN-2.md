@@ -21,8 +21,8 @@ This plan implements the ranked improvements from the Firestore/Zustand deep-div
 ### Assumptions
 
 - Existing architecture: React-Konva canvas, Zustand stores, Firebase Firestore persistence, useObjects as subscription + CRUD orchestrator.
-- [docs/CONSTITUTION.md](docs/CONSTITUTION.md) is inviolable: Articles I–VIII (original) plus Articles IX–XIX (state management amendment). See the [reviewer checklist](docs/STATE-MGMT-REVIEWER-CHECKLIST.md) for per-PR compliance.
-- Epic 4 in [STATE-IMPROVEMENT-PLAN](docs/STATE-IMPROVEMENT-PLAN.md) defines pagination/delta and type-guard hardening; this plan aligns with Epic 4 Sub-Tasks 3–4 and extends into state unification.
+- [CONSTITUTION.md](../../CONSTITUTION.md) is inviolable: Articles I–VIII (original) plus Articles IX–XIX (state management amendment). See the [reviewer checklist](STATE-MGMT-REVIEWER-CHECKLIST.md) for per-PR compliance.
+- Epic 4 in [STATE-IMPROVEMENT-PLAN](STATE-IMPROVEMENT-PLAN.md) defines pagination/delta and type-guard hardening; this plan aligns with Epic 4 Sub-Tasks 3–4 and extends into state unification.
 - Existing app uses Konva.js for rendering.
 - Firebase project is set up (Firestore and RTDB enabled).
 - TypeScript is used for implementation.
@@ -43,7 +43,7 @@ This plan implements the ranked improvements from the Firestore/Zustand deep-div
 
 ## Context
 
-This plan follows the [orchestrate skill](.claude/skills/orchestrate/SKILL.md) and [STATE-IMPROVEMENT-PLAN](docs/STATE-IMPROVEMENT-PLAN.md) Epic 4 structure. Tasks are added to [.claude/tasks.md](.claude/tasks.md); execution order respects dependencies between waves.
+This plan follows the [orchestrate skill](.claude/skills/orchestrate/SKILL.md) and [STATE-IMPROVEMENT-PLAN](STATE-IMPROVEMENT-PLAN.md) Epic 4 structure. Tasks are added to [.claude/tasks.md](.claude/tasks.md); execution order respects dependencies between waves.
 
 ---
 

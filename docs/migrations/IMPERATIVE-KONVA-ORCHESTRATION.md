@@ -7,7 +7,7 @@ React-Konva puts React reconciliation in the canvas hot path. Every shape = Reac
 **Base branch:** `spike/react-konva-1`
 **Feature branches:** `spike/react-konva-1/<epic>-<name>`, merged back into `spike/react-konva-1`
 **Governance:** CONSTITUTION.md (Articles I–XIX existing + XX–XXV, XXVII added in Epic 0)
-**Source of truth:** `docs/IMPERATIVE-KONVA-MIGRATION-V5.md`
+**Source of truth:** `docs/migrations/IMPERATIVE-KONVA-V5.md`
 
 ---
 

@@ -8,7 +8,7 @@ This design document translates the v2 feature set into principles and structure
 
 ## Purpose
 
-This document defines design principles, architecture alignment, and an agile breakdown (EPICs and user stories) for CollabBoard v2 scope. The 20 chosen features come from [INITIAL-RESEARCH.md](./INITIAL-RESEARCH.md) and are elaborated in [FEATURES.md](./FEATURES.md). The main [PRD](../PRD.md) remains the source of truth for existing product scope, tech stack, and module layout. This design is modular, SOLID-aligned, and broken down only to the user story level; features will be extracted from these user stories in a later step.
+This document defines design principles, architecture alignment, and an agile breakdown (EPICs and user stories) for CollabBoard v2 scope. The 20 chosen features come from [INITIAL-RESEARCH.md](./INITIAL-RESEARCH.md) and are elaborated in [FEATURES.md](./FEATURES.md). The main [PRD](../product/PRD.md) remains the source of truth for existing product scope, tech stack, and module layout. This design is modular, SOLID-aligned, and broken down only to the user story level; features will be extracted from these user stories in a later step.
 
 ---
 
@@ -16,7 +16,7 @@ This document defines design principles, architecture alignment, and an agile br
 
 - **[INITIAL-RESEARCH.md](./INITIAL-RESEARCH.md)** — Candidate feature list (Section A) and Top 20 ordered by build priority (Section B).
 - **[FEATURES.md](./FEATURES.md)** — Elaborated features with descriptions, acceptance criteria, technical notes, and dependencies.
-- **[PRD](../PRD.md)** — Existing scope, tech stack, SOLID application, and project structure.
+- **[PRD](../product/PRD.md)** — Existing scope, tech stack, SOLID application, and project structure.
 
 ---
 

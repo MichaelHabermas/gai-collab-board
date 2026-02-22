@@ -6,21 +6,21 @@ This is the final v2 Product Requirements Document. It is the single source for 
 
 # CollabBoard v2 — Final PRD
 
-**Purpose:** This document is the **final Product Requirements Document** for CollabBoard version 2. It is the single source for execution: EPICs → User Stories → Features → Feature Branches → Commits → Subtasks. It extends the main product scope, tech stack, and structure defined in the root [PRD](../../PRD.md) and elaborates all v2 specs with SOLID-aligned, modular design.
+**Purpose:** This document is the **final Product Requirements Document** for CollabBoard version 2. It is the single source for execution: EPICs → User Stories → Features → Feature Branches → Commits → Subtasks. It extends the main product scope, tech stack, and structure defined in the root [PRD](../product/PRD.md) and elaborates all v2 specs with SOLID-aligned, modular design.
 
 **Scope:** 20 features across 8 EPICs; modular, SOLID-aligned design; git workflow with `development` branch and feature branches only (never merge to `main`).
 
 ## References
 
 - **Repository:** [https://github.com/MichaelHabermas/CollabBoard](https://github.com/MichaelHabermas/CollabBoard)
-- [PRD](../../PRD.md) — Existing scope, tech stack, SOLID application, project structure, naming, appendices
+- [PRD](../product/PRD.md) — Existing scope, tech stack, SOLID application, project structure, naming, appendices
 - [DESIGN-DOCUMENT.md](./DESIGN-DOCUMENT.md) — EPICs and user stories (agile breakdown), design principles, architecture context
 - [FEATURES.md](./FEATURES.md) — Feature descriptions, acceptance criteria, technical notes, deferred list
 - [INITIAL-RESEARCH.md](./INITIAL-RESEARCH.md) — Build order and rationale
 - [PRD-V2.md](./PRD-V2.md) — Expanded execution spec (source for this document)
-- [AI-DEVELOPMENT-LOG.md](../../AI-DEVELOPMENT-LOG.md) — Tools, MCP usage, effective prompts, learnings
-- [DEPLOYMENT.md](../../DEPLOYMENT.md) — Render and environment variables
-- **Technology guides:** [docs/guides/README.md](../../guides/README.md) — [Firebase](../../guides/FIREBASE-GUIDE.md), [Konva + React](../../guides/KONVA-REACT-GUIDE.md), [Tailwind + Shadcn](../../guides/TAILWIND-SHADCN-GUIDE.md), [AI Integration](../../guides/AI-INTEGRATION-GUIDE.md), [Testing](../../guides/TESTING-GUIDE.md), [Development Environment](../../guides/DEVELOPMENT-ENVIRONMENT-GUIDE.md)
+- [AI-DEVELOPMENT-LOG.md](../planning/AI-DEVELOPMENT-LOG.md) — Tools, MCP usage, effective prompts, learnings
+- [DEPLOYMENT.md](../operations/DEPLOYMENT.md) — Render and environment variables
+- **Technology guides:** [docs/guides/README.md](../guides/README.md) — [Firebase](../guides/FIREBASE-GUIDE.md), [Konva + React](../guides/KONVA-REACT-GUIDE.md), [Tailwind + Shadcn](../guides/TAILWIND-SHADCN-GUIDE.md), [AI Integration](../guides/AI-INTEGRATION-GUIDE.md), [Testing](../guides/TESTING-GUIDE.md), [Development Environment](../guides/DEVELOPMENT-ENVIRONMENT-GUIDE.md)
 
 ---
 
@@ -124,7 +124,7 @@ flowchart TB
 
 **Objective:** Improve daily input and navigation with keyboard shortcuts, consistent Escape behavior, and zoom actions so users can work quickly and navigate large boards without relying only on the toolbar.
 
-**See also:** [KONVA-REACT-GUIDE.md](../../guides/KONVA-REACT-GUIDE.md) for viewport, pan/zoom, and stage scale/position patterns.
+**See also:** [KONVA-REACT-GUIDE.md](../guides/KONVA-REACT-GUIDE.md) for viewport, pan/zoom, and stage scale/position patterns.
 
 ### Success criteria (epic)
 
@@ -382,7 +382,7 @@ flowchart LR
 
 **Objective:** Provide a single place to edit object properties (fill, stroke, stroke width, font size, opacity) when one or more objects are selected, meeting expectations from tools like Figma and Miro.
 
-**See also:** [TAILWIND-SHADCN-GUIDE.md](../../guides/TAILWIND-SHADCN-GUIDE.md) for UI components and theming; [KONVA-REACT-GUIDE.md](../../guides/KONVA-REACT-GUIDE.md) for binding object properties to Konva nodes.
+**See also:** [TAILWIND-SHADCN-GUIDE.md](../guides/TAILWIND-SHADCN-GUIDE.md) for UI components and theming; [KONVA-REACT-GUIDE.md](../guides/KONVA-REACT-GUIDE.md) for binding object properties to Konva nodes.
 
 ### Success criteria (epic)
 
@@ -586,7 +586,7 @@ flowchart LR
 
 **Objective:** Enable precise layout via align/distribute toolbar, snap-to-grid, and alignment guides, and allow exporting the board or viewport as an image for sharing.
 
-**See also:** [KONVA-REACT-GUIDE.md](../../guides/KONVA-REACT-GUIDE.md) for canvas layers, transforms, and stage export (e.g. `toDataURL`); [TESTING-GUIDE.md](../../guides/TESTING-GUIDE.md) for test strategy.
+**See also:** [KONVA-REACT-GUIDE.md](../guides/KONVA-REACT-GUIDE.md) for canvas layers, transforms, and stage export (e.g. `toDataURL`); [TESTING-GUIDE.md](../guides/TESTING-GUIDE.md) for test strategy.
 
 ### Success criteria (epic)
 
@@ -799,7 +799,7 @@ flowchart LR
 
 **Objective:** Help users find and return to boards quickly by adding Recent and Favorites to the board list (or dashboard).
 
-**See also:** [FIREBASE-GUIDE.md](../../guides/FIREBASE-GUIDE.md) for Firestore schema and security rules; user preferences live in `users/{uid}/preferences`.
+**See also:** [FIREBASE-GUIDE.md](../guides/FIREBASE-GUIDE.md) for Firestore schema and security rules; user preferences live in `users/{uid}/preferences`.
 
 ### Success criteria (epic)
 
@@ -893,7 +893,7 @@ flowchart TB
 
 **Objective:** Improve diagram clarity by supporting connector arrowheads and dashed (or dotted) stroke style, persisted and synced like other object properties.
 
-**See also:** [KONVA-REACT-GUIDE.md](../../guides/KONVA-REACT-GUIDE.md) for Konva Line/Arrow and `dash`/pointer options in the Connector component.
+**See also:** [KONVA-REACT-GUIDE.md](../guides/KONVA-REACT-GUIDE.md) for Konva Line/Arrow and `dash`/pointer options in the Connector component.
 
 ### Success criteria (epic)
 
@@ -1012,7 +1012,7 @@ flowchart LR
 
 **Objective:** Enable threaded comments on board objects so that collaborators can discuss specific content in context, with real-time sync and clear indicators.
 
-**See also:** [FIREBASE-GUIDE.md](../../guides/FIREBASE-GUIDE.md) for Firestore collections, security rules, and real-time listeners; align comment structure and RBAC with existing board access.
+**See also:** [FIREBASE-GUIDE.md](../guides/FIREBASE-GUIDE.md) for Firestore collections, security rules, and real-time listeners; align comment structure and RBAC with existing board access.
 
 ### Success criteria (epic)
 
@@ -1107,7 +1107,7 @@ sequenceDiagram
 
 **Objective:** Add two AI commands that use existing tools and the LLM: "Explain this board" (board-level summary) and "Summarize selection" (selection-based summary), both shown in the AI chat.
 
-**See also:** [AI-INTEGRATION-GUIDE.md](../../guides/AI-INTEGRATION-GUIDE.md) for tool schema, getBoardState, and chat flow; [AI-DEVELOPMENT-LOG.md](../../AI-DEVELOPMENT-LOG.md) for effective prompts and MCP usage.
+**See also:** [AI-INTEGRATION-GUIDE.md](../guides/AI-INTEGRATION-GUIDE.md) for tool schema, getBoardState, and chat flow; [AI-DEVELOPMENT-LOG.md](../planning/AI-DEVELOPMENT-LOG.md) for effective prompts and MCP usage.
 
 ### Success criteria (epic)
 
@@ -1230,7 +1230,7 @@ flowchart LR
 
 **Objective:** Provide global undo and redo for object operations (create, delete, move, resize, property changes) so users can correct mistakes and experiment safely, with a defined sync strategy.
 
-**See also:** [TESTING-GUIDE.md](../../guides/TESTING-GUIDE.md) for test strategy; ensure all mutation paths are covered by tests after history is wired.
+**See also:** [TESTING-GUIDE.md](../guides/TESTING-GUIDE.md) for test strategy; ensure all mutation paths are covered by tests after history is wired.
 
 ### Success criteria (epic)
 
@@ -1444,20 +1444,20 @@ Do not jump to implementation without a plan; follow the command chain (e.g. spe
 
 ## References (full list)
 
-- [PRD](../../PRD.md) — Existing scope, tech stack, SOLID, project structure, appendices
+- [PRD](../product/PRD.md) — Existing scope, tech stack, SOLID, project structure, appendices
 - [DESIGN-DOCUMENT.md](./DESIGN-DOCUMENT.md) — EPICs, user stories, design principles
 - [FEATURES.md](./FEATURES.md) — Feature elaboration, deferred list
 - [INITIAL-RESEARCH.md](./INITIAL-RESEARCH.md) — Build order and rationale
 - [PRD-V2.md](./PRD-V2.md) — Expanded execution spec (source for this document)
-- [AI-DEVELOPMENT-LOG.md](../../AI-DEVELOPMENT-LOG.md) — Tools, MCP, prompts, learnings
-- [DEPLOYMENT.md](../../DEPLOYMENT.md) — Render, environment variables
-- [docs/guides/README.md](../../guides/README.md) — Technology guides index
-- [FIREBASE-GUIDE.md](../../guides/FIREBASE-GUIDE.md) — Auth, Firestore, Realtime DB, security
-- [KONVA-REACT-GUIDE.md](../../guides/KONVA-REACT-GUIDE.md) — Canvas, shapes, viewport, export
-- [TAILWIND-SHADCN-GUIDE.md](../../guides/TAILWIND-SHADCN-GUIDE.md) — UI, theming, dark mode
-- [AI-INTEGRATION-GUIDE.md](../../guides/AI-INTEGRATION-GUIDE.md) — AI commands, tools, chat
-- [TESTING-GUIDE.md](../../guides/TESTING-GUIDE.md) — Vitest, Playwright, coverage
-- [DEVELOPMENT-ENVIRONMENT-GUIDE.md](../../guides/DEVELOPMENT-ENVIRONMENT-GUIDE.md) — Vite, Bun, TypeScript, ESLint
+- [AI-DEVELOPMENT-LOG.md](../planning/AI-DEVELOPMENT-LOG.md) — Tools, MCP, prompts, learnings
+- [DEPLOYMENT.md](../operations/DEPLOYMENT.md) — Render, environment variables
+- [docs/guides/README.md](../guides/README.md) — Technology guides index
+- [FIREBASE-GUIDE.md](../guides/FIREBASE-GUIDE.md) — Auth, Firestore, Realtime DB, security
+- [KONVA-REACT-GUIDE.md](../guides/KONVA-REACT-GUIDE.md) — Canvas, shapes, viewport, export
+- [TAILWIND-SHADCN-GUIDE.md](../guides/TAILWIND-SHADCN-GUIDE.md) — UI, theming, dark mode
+- [AI-INTEGRATION-GUIDE.md](../guides/AI-INTEGRATION-GUIDE.md) — AI commands, tools, chat
+- [TESTING-GUIDE.md](../guides/TESTING-GUIDE.md) — Vitest, Playwright, coverage
+- [DEVELOPMENT-ENVIRONMENT-GUIDE.md](../guides/DEVELOPMENT-ENVIRONMENT-GUIDE.md) — Vite, Bun, TypeScript, ESLint
 
 ---
 
@@ -1475,7 +1475,7 @@ Do not jump to implementation without a plan; follow the command chain (e.g. spe
 
 ## Appendix B: Deployment and environment
 
-v2 does not introduce new deployment targets. Continue using Render per [DEPLOYMENT.md](../../DEPLOYMENT.md). Environment variables remain as in the main PRD; if v2 adds server-side or client-side env vars, document them in [DEPLOYMENT.md](../../DEPLOYMENT.md) and in `.env.example`.
+v2 does not introduce new deployment targets. Continue using Render per [DEPLOYMENT.md](../operations/DEPLOYMENT.md). Environment variables remain as in the main PRD; if v2 adds server-side or client-side env vars, document them in [DEPLOYMENT.md](../operations/DEPLOYMENT.md) and in `.env.example`.
 
 ---
 
