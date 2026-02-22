@@ -21,6 +21,7 @@
     "test:e2e": "playwright install && playwright test",
     "test:ai-connection": "bun run scripts/test-ai-connection.ts",
     "perf:check": "bun run scripts/run-performance-check.ts",
+    "perf:baseline": "bun run scripts/capture-perf-baseline.ts",
     "clear-boards": "bun run scripts/clear-boards.ts",
     "seed-guest-board": "bun run scripts/seed-guest-board.ts",
     "proxy": "bun run server/index.ts",

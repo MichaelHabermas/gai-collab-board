@@ -31,7 +31,7 @@ Break down a task and execute it with specialized parallel agents.
 ### Model Tier Matrix
 
 | Signal | Tier |
-|---|---|
+| ------ | ------ |
 | Lint fix, format, simple rename | haiku |
 | Standard feature, bug fix, test writing | sonnet |
 | Multi-file refactor, perf optimization | opus |
@@ -57,7 +57,7 @@ For each independent task (no unresolved dependencies):
    the Task prompt so the subagent has role instructions (Cursor does not load
    agent files by role name):
 
-   ```
+   ```bash
    Task(
      subagent_type: "<role from task>",  // e.g. generalPurpose or explore
      model: "<tier from task>",          // haiku | sonnet | opus

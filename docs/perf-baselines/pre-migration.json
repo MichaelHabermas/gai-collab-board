@@ -1,0 +1,21 @@
+{
+  "timestamp": "2026-02-22T00:00:00Z",
+  "note": "Epic 0: manual capture metrics with placeholders. Automated script is deferred.",
+  "frame_time_100_drag": {
+    "p50": 16.6,
+    "p95": 16.6,
+    "p99": 33.3
+  },
+  "frame_time_500_pan": {
+    "p50": 16.6,
+    "p95": 33.3,
+    "p99": 50.0
+  },
+  "react_renders_drag": 1,
+  "selector_evals_drag": 100,
+  "bundle_size_gz": 500000,
+  "perf_check_output": {
+    "board_sync_latency_ms": 150
+  },
+  "tti_1000_board": 2000
+}

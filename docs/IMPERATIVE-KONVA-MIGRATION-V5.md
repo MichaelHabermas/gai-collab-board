@@ -36,7 +36,7 @@
 *Last verified against codebase.* Checkboxes below can drift from repo state. This section reflects what actually exists.
 
 | Epic | Doc suggests | Reality |
-|------|--------------|---------|
+| ------ | ------ | ------ |
 | **E0** | Constitution, baselines, 13 E2E done | Constitution (Articles XX–XXVII) not in CONSTITUTION.md; `docs/perf-baselines/` missing; only 4 of 13 new E2E specs exist (connectorCreation, connectorEndpointDrag, shapeResize, shapeRotate). |
 | **E1** | Done | Done — all 7 factories, types, registry, unit tests present. |
 | **E2** | Done | Done — LayerManager, KonvaNodeManager, SelectionSyncController + unit tests. |
@@ -146,7 +146,7 @@ See **Appendix C** for the verified Zustand v5 subscription API contract.
 ### Survives Unchanged
 
 | Module | Path | Reason |
-|--------|------|--------|
+| ------ | ------ | ------ |
 | All Zustand stores | `src/stores/*` | Constitution Article V: stores may not be deleted or merged |
 | Spatial index | `src/lib/spatialIndex.ts` | Module-level singleton, no React coupling |
 | Write queue | `src/lib/writeQueue.ts` | Debounced Firestore writes, unchanged API |
@@ -181,7 +181,7 @@ See **Appendix B** for the complete manifest with LOC counts.
 ### Transforms (Logic REWRITTEN, Not Extracted)
 
 | Hook | Current LOC | New Location | Why Rewrite |
-|------|-------------|-------------|-------------|
+| ------ | ------ | ------ | ------ |
 | `useObjectDragHandlers` | 761 | `DragCoordinator` + 4 drag modules (~600 total) + `ShapeEventWiring` (~150) | 27 React hooks. Handler factory maps solve React-specific problem. Direct store reads replace closures. |
 | `useShapeDrawing` | 250 | `DrawingController.ts` (~100) + `OverlayManager.updateDrawingPreview()` (~50) | Returns React-Konva JSX. Must become imperative node creation. |
 | `useMarqueeSelection` | 127 | `MarqueeController.ts` (~80) | `useState` in 60Hz hot path. Must become plain state + direct overlay call. |
@@ -196,7 +196,7 @@ This section establishes the dependency contract between this migration and STAT
 ### Current S-Task Status (as of this plan)
 
 | Task | Status | Relevant to Migration? |
-|------|--------|----------------------|
+| ------ | ------ | ------ |
 | S1: Single source of truth | Merged | Yes — objectsStore is canonical. Migration depends on this. ✅ |
 | S2: queueObjectUpdate | Merged | Yes — DragEngine calls `queueObjectUpdate`. ✅ |
 | S3: Pagination | Partial (cursor-based delta subscription done) | No hard dependency. Pagination affects initial load, not rendering. |
@@ -358,7 +358,7 @@ Add the following to `docs/CONSTITUTION.md` as Articles XX–XXV and XXVII (addi
 Capture BEFORE writing any factory code. Store results in `docs/perf-baselines/pre-migration.json`.
 
 | Metric | How to Measure | Tool |
-|--------|---------------|------|
+| ------ | ------ | ------ |
 | Frame time during 100-object drag | Chrome DevTools Performance tab, drag a selected shape for 3s, record p50/p95/p99 frame times | Chrome DevTools |
 | Frame time during 500-object pan | Same, but pan across a board with 500 objects | Chrome DevTools |
 | React component re-renders during drag | React DevTools Profiler, count StoreShapeRenderer re-renders during a single drag | React DevTools |
@@ -378,7 +378,7 @@ Write Playwright E2E tests for every interaction the migration touches. Tests mu
 All E2E paths use `tests/e2e/`.
 
 | Test | File | What It Verifies |
-|------|------|-----------------|
+| ------ | ------ | ------ |
 | Marquee selection | `tests/e2e/marqueeSelection.spec.ts` | Drag empty canvas → selection rect appears → shapes inside selected → release → rect disappears |
 | Single shape drag | `tests/e2e/shapeDrag.spec.ts` | Click shape → drag → release → shape at new position → Firestore updated |
 | Multi-select drag | `tests/e2e/multiSelectDrag.spec.ts` | Select 3 shapes → drag → all 3 move together → release → all positions committed |
@@ -1433,7 +1433,7 @@ Epic 6: Cleanup + Perf Verification
 ### Components (15 files, ~3,165 LOC)
 
 | File | LOC | Action | Replaced By |
-|------|-----|--------|------------|
+| ------ | ----- | ------ | ------ |
 | `src/components/canvas/BoardCanvas.tsx` | 970 | Delete | CanvasHost.tsx + useCanvasSetup.ts |
 | `src/components/canvas/StoreShapeRenderer.tsx` | 149 | Delete | KonvaNodeManager.ts |
 | `src/components/canvas/CanvasShapeRenderer.tsx` | 290 | Delete | Shape factories |
@@ -1453,7 +1453,7 @@ Epic 6: Cleanup + Perf Verification
 ### Hooks (10 files, ~1,533 LOC)
 
 | File | LOC | Action | Why It Dies |
-|------|-----|--------|------------|
+| ------ | ----- | ------ | ------ |
 | `src/hooks/useObjectDragHandlers.ts` | 761 | Delete | Replaced by DragCoordinator + drag sub-modules |
 | `src/hooks/useShapeDrawing.tsx` | 250 | Delete | Replaced by DrawingController |
 | `src/hooks/useMarqueeSelection.ts` | 127 | Delete | Replaced by MarqueeController |
@@ -1479,7 +1479,7 @@ Epic 6: Cleanup + Perf Verification
 ### Total
 
 | Category | LOC |
-|----------|-----|
+| ------ | ----- |
 | Components | ~3,165 |
 | Hooks | ~1,534 |
 | shapes/index.ts (partial) | ~25 |

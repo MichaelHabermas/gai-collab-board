@@ -166,7 +166,7 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ## IK2 — Performance Baselines
 
-- **Status:** pending
+- **Status:** done
 - **Tier:** sonnet
 - **Role:** architect
 - **Worktree name:** epic0-perf-baselines

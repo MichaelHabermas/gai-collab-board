@@ -2,8 +2,8 @@
 
 > Quick-reference guide for AI agents and LLMs. Use this to locate relevant documentation without loading everything into context. Always check this index FIRST before searching the codebase.
 
-**Last Updated:** 2026-02-21
-**Total Documents:** 47
+**Last Updated:** 2026-02-22
+**Total Documents:** 48
 
 ## How to Use This Index
 
@@ -56,6 +56,7 @@
 
 | File | Summary | Key Topics | Last Modified |
 | --- | ----- | ------ | ----- |
+| `perf-baselines/pre-migration.json` | Pre-migration performance baselines (Epic 0) | `performance`, `baselines`, `Epic 0` | 2026-02-22 |
 | `performance/PERFORMANCE_LOG.md` | Task-level performance reviews, metrics schema (timestamps for graphing), time-based progress chart, optimization history (A.1–A.4); run `bun run perf:check` to record and refresh | `performance`, `cleanup`, `optimization`, `perf:check`, `metrics over time`, `metrics schema`, `timestamps`, `graphing`, `viewport`, `A.4`, `bundle`, `tree-shaking`, `multi-drop` | 2026-02-19 |
 
 ### Phases (version-2)

@@ -14,7 +14,7 @@ React-Konva puts React reconciliation in the canvas hot path. Every shape = Reac
 ## SOLID Principles Enforcement
 
 | Principle | How It's Applied |
-|-----------|-----------------|
+| ------ | ------ |
 | **SRP** | One factory per shape type. One controller per interaction mode. Drag split into 5 modules (commit, alignment, bounds, reparenting, coordinator). |
 | **OCP** | Factory registry (`Map<ShapeType, IShapeFactoryEntry>`) — add shapes without modifying KonvaNodeManager. StageEventRouter dispatches by tool without router changes. |
 | **LSP** | All factories satisfy `IShapeFactoryEntry`. All shape nodes satisfy `IShapeNodes`. Any factory substitutable in registry. |
@@ -25,7 +25,7 @@ React-Konva puts React reconciliation in the canvas hot path. Every shape = Reac
 
 ## Dependency Graph
 
-```text
+```mermaid
 E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
                                               └→ E3 (events/drag) ─┤ parallel
                                                                     E4 (overlays) → E5 (cutover) → E6 (cleanup)
@@ -62,7 +62,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 **Status:** Not done. Constitution (Articles XX–XXVII) missing from CONSTITUTION.md. `docs/perf-baselines/` and pre-migration.json missing. Only 4 of 13 E2E specs exist (connectorCreation, connectorEndpointDrag, shapeResize, shapeRotate). T1, T2, T3, T5 pending; T4 (connector/transform E2E) done.
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC |
-|------|-------|------|------|------|--------|---------|
+| ------ | ------ | ------ | ------ | ------ | ------ | ------ |
 | T1 | Constitutional Amendments (Articles XX–XXV, XXVII) | haiku | quick-fixer | — | epic0-constitution | 120 |
 | T2 | Performance Baselines → `docs/perf-baselines/pre-migration.json` | sonnet | architect | — | epic0-perf-baselines | 50 |
 | T3 | E2E: marquee, single drag, multi-drag, undo/redo (4 specs) | sonnet | tester | — | epic0-e2e-drag | 400 |
@@ -104,7 +104,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 **Status:** Done — all 7 factories, types, registry, and unit tests merged to `spike/react-konva-1`. `bun run validate` passes.
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC | SOLID |
-|------|-------|------|------|------|--------|---------|-------|
+| ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
 | T6 | Factory types.ts + registry index.ts + dir scaffold | sonnet | architect | W1-R | epic1-factory-types | 70 | OCP, ISP, DIP |
 | T7 | createRectangle + createCircle + createLine + tests | sonnet | architect | T6 | epic1-simple-factories | 250 | SRP, LSP |
 | T8 | createStickyNote + createFrame + tests (cacheable=true) | opus | architect | T6 | epic1-complex-factories | 400 | SRP, OCP |
@@ -140,7 +140,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 **Status:** Done — LayerManager, KonvaNodeManager, SelectionSyncController, dragCommit/dragBounds/frameDragReparenting, alignmentEngine merged to `spike/react-konva-1`. Unit tests pass. `bun run validate` passes.
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC | SOLID |
-|------|-------|------|------|------|--------|---------|-------|
+| ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
 | T10 | LayerManager (4 layers, RAF batchDraw) | sonnet | architect | W2-R | epic2-layer-manager | 130 | SRP |
 | T11 | KonvaNodeManager (O(changed) diff, connector dedup) | opus | architect | T10 | epic2-node-manager | 550 | SRP, OCP, DIP |
 | T12 | SelectionSyncController (layer moves, cache lifecycle) | sonnet | architect | T11 | epic2-selection-sync | 250 | SRP |
@@ -186,7 +186,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 **Status:** Partial — only drag sub-modules (T13, T14) merged. T15 (DragCoordinator), T16 (StageEventRouter + ShapeEventWiring), T17 (Drawing, Marquee, Connector controllers), T18 (TextEditController), and T19 (OverlayManager) pending. `events/` folder and DragCoordinator do not exist yet.
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC | SOLID |
-|------|-------|------|------|------|--------|---------|-------|
+| ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
 | T15 | DragCoordinator (thin dispatcher, <50 LOC) | haiku | quick-fixer | T13, T14 | epic3-drag-coordinator | 80 | SRP, DIP |
 | T16 | StageEventRouter + ShapeEventWiring | sonnet | architect | T15 | epic3-event-wiring | 400 | SRP, ISP |
 | T17 | DrawingController + MarqueeController + ConnectorController | sonnet | architect | W3-R | epic3-controllers | 450 | SRP, ISP |
@@ -232,7 +232,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 **Status:** Done — T20 (TransformerManager) and T21 (GridRenderer + SelectionDragHandle) implemented and merged; unit tests present (TransformerManager.test.ts, GridRenderer.test.ts, SelectionDragHandle.test.ts). OverlayManager (T19) still pending.
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC | SOLID |
-|------|-------|------|------|------|--------|---------|-------|
+| ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
 | T20 | TransformerManager (exact TransformHandler config) | sonnet | architect | W4-R | epic4-transformer | 200 | SRP |
 | T21 | GridRenderer + SelectionDragHandle | haiku | quick-fixer | W4-R | epic4-grid-handle | 130 | SRP |
 
@@ -254,7 +254,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 ## WAVE 6: Epic 5 — THE CUTOVER (sequential, 1 opus agent)
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC |
-|------|-------|------|------|------|--------|---------|
+| ------ | ------ | ------ | ------ | ------ | ------ | ------ |
 | T22 | useCanvasSetup.ts (DI, subscriptions, cleanup) | opus | architect | W5-R | epic5-integration | 200 |
 | T23 | CanvasHost.tsx (React shell, surviving hooks) | opus | architect | T22 | epic5-integration | 250 |
 | T24 | Import swap BoardCanvas→CanvasHost + full E2E + manual matrix | opus | architect | T23 | epic5-integration | 60 |
@@ -284,7 +284,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 **Blocked until Epic 5 confirmed stable. If Epic 5 regresses, Epic 6 blocked and Epic 5 reverted (Article XXVII.3).**
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC |
-|------|-------|------|------|------|--------|---------|
+| ------ | ------ | ------ | ------ | ------ | ------ | ------ |
 | T25 | Delete 26 dead files + remove react-konva dep | sonnet | architect | W6-R | epic6-cleanup | -4907 |
 | T26 | Update shapes/index.ts + CLAUDE.md | haiku | quick-fixer | T25 | epic6-cleanup | 10 |
 | T27 | Performance verification + `bun run release:gate` | sonnet | architect | T26 | epic6-cleanup | 50 |
@@ -312,7 +312,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 ## WAVE 8: Final Merge
 
 | Task | Title | Tier | Role | Deps |
-|------|-------|------|------|------|
+| ------ | ------ | ------ | ------ | ------ |
 | T28 | Merge `spike/react-konva-1` → `development` | sonnet | architect | W7-R |
 
 ---
@@ -320,7 +320,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 ## Summary
 
 | Metric | Value |
-|--------|-------|
+| ------ | ------ |
 | Total tasks | 28 (+ 7 review gates) |
 | Total new code | ~3,290 LOC |
 | Total new tests | ~850 LOC |
@@ -334,7 +334,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 ## Risk Mitigations
 
 | Wave | Risk | Mitigation |
-|------|------|------------|
+| ------ | ------ | ------ |
 | W1 | E2E tests flaky against current codebase | Run twice, fix flakes before proceeding |
 | W2 | Factory update() misses visual props | Spy-based tests verify every attr |
 | W3 | KonvaNodeManager O(n) instead of O(changed) | Unit test with 500 objects, spy on factory.update for unchanged |
@@ -349,7 +349,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 ## Critical Files Reference
 
 | File | Role |
-|------|------|
+| ------ | ------ |
 | `docs/IMPERATIVE-KONVA-MIGRATION-V5.md` | Source of truth. Appendix D behavior checklist. |
 | `src/hooks/useObjectDragHandlers.ts` (792 LOC) | Being rewritten → 5 drag modules. Every behavior per Appendix D. |
 | `src/components/canvas/BoardCanvas.tsx` (938 LOC) | Being replaced by CanvasHost. Wiring reference for Epic 5. |
