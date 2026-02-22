@@ -59,9 +59,7 @@ if (
   !appId ||
   !databaseURL
 ) {
-  console.error(
-    'Missing Firebase config. Set VITE_FIREBASE_* in .env (see .env.example).'
-  );
+  console.error('Missing Firebase config. Set VITE_FIREBASE_* in .env (see .env.example).');
   process.exit(1);
 }
 

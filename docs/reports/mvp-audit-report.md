@@ -15,7 +15,7 @@ Mode: Local app + real services, with destructive test data allowed
 Validated against:
 
 - `docs/G4 Week 1 - CollabBoard.pdf`
-- `docs/PRD.md`
+- `docs/product/PRD.md`
 
 Evidence matrix:
 

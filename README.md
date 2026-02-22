@@ -185,7 +185,10 @@ CollabBoard/
 ├── server/               # AI proxy (Render)
 ├── docs/
 │   ├── guides/          # Development, Firebase, testing, AI integration
-│   └── research/        # Design documents and research
+│   ├── architecture/    # ADRs, design, tradeoffs
+│   ├── product/         # PRD and requirements
+│   ├── roadmap/         # v2 plans and status
+│   └── INDEX.md         # Documentation index (start here)
 ├── scripts/             # CLI scripts (e.g. test-ai-connection)
 ├── public/              # Static assets
 └── tests/               # Unit, integration, and E2E tests
@@ -215,7 +218,7 @@ bun run format          # Format with Prettier
 bun run validate        # typecheck + lint + test:run
 
 # Agent transcript report (Cursor; works in any project — auto-detects transcript path)
-bun run report:agent-transcripts -- --days 5 --output docs/agent-transcript-report.md
+bun run report:agent-transcripts -- --days 5 --output docs/reports/agent-transcript-report.md
 ```
 
 E2E tests run automatically on push/PR to `development` or `main` (see [.github/workflows/e2e.yml](.github/workflows/e2e.yml)). Configure Firebase secrets in the repo for overlay/sign-up tests. If `playwright install` fails (e.g. proxy), run it once with network access or set `HTTP_PROXY`/`HTTPS_PROXY`.

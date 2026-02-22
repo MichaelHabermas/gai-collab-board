@@ -232,8 +232,9 @@ class AIService {
 CollabBoard/
 ├── docs/
 │   ├── guides/              # Technology guides
-│   ├── research/            # Design documents
-│   └── PRD.md               # This document
+│   ├── architecture/        # ADRs, design, tradeoffs
+│   ├── product/             # PRD (this document), requirements
+│   └── INDEX.md             # Documentation index
 ├── public/                  # Static assets
 ├── src/
 │   ├── components/          # React components

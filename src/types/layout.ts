@@ -42,4 +42,5 @@ export interface IAlignmentPositions {
 export interface IAlignmentCandidate {
   bounds: IBounds;
   positions: IAlignmentPositions;
+  id?: string;
 }

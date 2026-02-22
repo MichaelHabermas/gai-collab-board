@@ -1,0 +1,5 @@
+{
+  "session_id": "test-session-456",
+  "cwd": "/path/to/project",
+  "transcript_path": "/tmp/transcript.jsonl"
+}

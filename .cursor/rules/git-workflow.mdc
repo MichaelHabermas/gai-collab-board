@@ -1,5 +1,5 @@
 ---
-description: 
+description: Merge only to development; never merge to main
 alwaysApply: true
 ---
 

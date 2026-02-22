@@ -1,120 +1,38 @@
 ---
-description: This is a new rule
+description: CollabBoard tech stack, styling, Konva usage, and file structure — React/TS/quality details live in code-standards and user rules
 alwaysApply: false
 ---
 
-# Tech Stack
+# CollabBoard Conventions
+
+## Tech Stack
 
 - React 19 + Vite + Bun + TypeScript
 - Shadcn UI + Tailwind v4
 - Konva.js for canvas rendering
 
-## React Rules (CRITICAL)
-
-- **TypeScript + React 19 + function components + hooks only**
-- **NEVER use `export default`** → Always named exports: `export const MyComponent = ...`
-- **NEVER use `React.FC<>`, `React.FunctionComponent`, or `React.VFC`**
-  - Return type: `ReactElement` or `JSX.Element` (if no props)
-- **ALWAYS fully destructure React imports**
-
-```typescript
-  // ✅ CORRECT
-  import { useState, useEffect, forwardRef, HTMLAttributes } from 'react';
-  
-  // ❌ WRONG
-  import * as React from 'react';
-  import React, { useState } from 'react';
-```
-
-- **NEVER write `React.useState`, `React.useEffect`, etc.** → Use destructured imports
-- **NEVER use class components, PropTypes, or legacy context**
-
 ## Styling
 
-- **Tailwind preferred** → Never use inline styles or styled-jsx
-- Use Tailwind v4 syntax and utilities
-- Leverage Shadcn UI components when applicable
+- Tailwind preferred. No inline styles or styled-jsx. Use Tailwind v4 syntax. Use Shadcn UI components when applicable.
 
-## TypeScript Rules
+## Konva.js
 
-- **NEVER use `any` type** → Use proper types or `unknown`
-- **NEVER leave `console.log` or any `console.*` in code**
-- Define interfaces for all props and state
-- Use discriminated unions for polymorphic types
-- Prefer `interface` over `type` for object shapes
-- Use `readonly` for immutable data
+- Use `react-konva` for React integration. Keep Konva nodes in separate components. State in React, render to Konva.
+- Use `listening={false}` for static objects; `perfectDrawEnabled={false}` for complex shapes when performance matters.
 
-## Component Design
-
-- **Check for reusable components first** before creating new ones
-- **Limit `useEffect` to max 2 per file** → Extract complex logic into custom hooks. Enforced by `local/max-use-effect-count` (warn).
-- **Question every `useEffect`** before adding one:
-  - Can this be computed during render instead? → Use `useMemo` or derive in render.
-  - Can this be handled in an event handler? → Prefer direct invocation over effect-driven state.
-  - Can this be one-time init? → Use `useState(initializer)` or `useRef` instead.
-  - Only use `useEffect` for true side effects: subscriptions (Firebase, listeners), cleanup (unsubscribe, timers), or syncing with external systems (DOM, storage).
-- **When a file needs more than 2 effects**, extract related effects into named custom hooks (e.g. `useMiddleMousePanListeners`, `useCanvasKeyboardShortcuts`).
-- **Use `memo` for components with stable props** to optimize re-renders
-- Design components to be reusable and composable
-- **Example structure:**
-
-```typescript
-  import { useState, memo, type ReactElement } from 'react'
-  
-  interface IButtonProps {
-    onClick: () => void
-    label: string
-  }
-  
-  export const Button = memo(({ onClick, label }: IButtonProps): ReactElement => {
-    return <button onClick={onClick}>{label}</button>
-  })
-```
-
-## Konva.js Canvas Best Practices
-
-- Use `react-konva` for React integration
-- Keep Konva nodes in separate components for reusability
-- Store state in React state/context, render to Konva
-- Optimize with `listening={false}` for static objects
-- Use `perfectDrawEnabled={false}` for complex shapes when performance matters
-
-## File Structure Conventions
+## File Structure
 
 ```text
 src/
 ├── components/
 │   ├── feature-name/   # Feature-specific components
 │   └── ui/             # Shadcn and shared UI components
-├── hooks/              # Custom React hooks
-├── lib/                # Utility functions and business logic
-├── types/              # TypeScript type definitions
-└── constants/          # Global constants
+├── hooks/
+├── lib/
+├── types/
+└── constants/
 ```
 
-## Code Quality Standards
+## Commit Messages
 
-- **NO `console.log`** statements in final code
-- **NO `any` types** - be explicit
-- **Extract magic numbers** to named constants
-- **Document complex algorithms** with comments
-- **Handle errors gracefully** with try-catch and user feedback
-
-## Git Commit Conventions
-
-- `feat:` new features
-- `fix:` bug fixes
-- `perf:` performance improvements
-- `refactor:` code restructuring
-- `docs:` documentation changes
-- `test:` test additions/changes
-
-Always branch off of and into the development branch. Never into main.
-
-## Before Committing Checklist
-
-1. Remove all `console.*` statements
-2. Check for `any` types
-3. Verify no `export default` used
-4. Confirm React imports are destructured
-5. Run TypeScript compiler (`bun run tsc --noEmit`)
+- `feat:` new features · `fix:` bug fixes · `perf:` performance · `refactor:` restructuring · `docs:` docs · `test:` tests. Branch off and merge into `development` only (see git-workflow).

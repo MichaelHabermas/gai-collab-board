@@ -1,0 +1,4 @@
+{
+  "workspace_roots": ["/path/to/project"],
+  "transcript_path": "/tmp/transcript.jsonl"
+}

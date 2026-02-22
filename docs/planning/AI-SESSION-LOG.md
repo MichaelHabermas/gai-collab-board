@@ -260,7 +260,7 @@
 **Implementation:**
 
 - **BoardCanvas:** [src/components/canvas/BoardCanvas.tsx](../src/components/canvas/BoardCanvas.tsx) — added `snapToGridEnabledRef` kept in sync with `snapToGridEnabled`; in `getDragBoundFunc`'s returned function, after alignment-guide snap, when ref is true apply `snapPositionToGrid(snapped.x, snapped.y, GRID_SIZE)` so during-drag position is grid-aligned. Cache key unchanged (objectId, width, height) so toggling snap does not invalidate cached bound func.
-- **PRD:** [docs/PRD.md](PRD.md) — added "Snap-to-grid behavior" under Story 3.7 with expected behavior and verification checkboxes (unchecked until browser/E2E).
+- **PRD:** [PRD](../product/PRD.md) — added "Snap-to-grid behavior" under Story 3.7 with expected behavior and verification checkboxes (unchecked until browser/E2E).
 - **Tests:** [tests/unit/BoardCanvas.interactions.test.tsx](../tests/unit/BoardCanvas.interactions.test.tsx) — configurable mock `mockSnapToGridEnabled`; new test "returns grid-aligned position from dragBoundFunc when snap to grid is enabled" (calls dragBoundFunc with off-grid position, asserts result is grid-aligned). [tests/e2e/snapToGridDrag.spec.ts](../tests/e2e/snapToGridDrag.spec.ts) — enable snap, create sticky, drag, assert object count and canvas state.
 - **Plan:** Item 5 marked complete in [UI-UX-IMPROVEMENT-PLAN.md](../UI-UX-IMPROVEMENT-PLAN.md).
 
@@ -282,7 +282,7 @@
 
 - **Hook:** [src/hooks/useDebouncedNumberField.ts](../src/hooks/useDebouncedNumberField.ts) — local display state, debounced commit (350 ms), flush on blur, sync from prop when selection or external sync changes; clears pending debounce when propValue changes.
 - **PropertyInspector:** [src/components/canvas/PropertyInspector.tsx](../src/components/canvas/PropertyInspector.tsx) — stroke width and font size use the hook; commit callbacks apply to selected objects.
-- **PRD:** [docs/PRD.md](PRD.md) — added "Property Inspector number inputs (spin box rapid-click)" with expected behaviour and verification checkboxes (unchecked until browser/E2E).
+- **PRD:** [PRD](../product/PRD.md) — added "Property Inspector number inputs (spin box rapid-click)" with expected behaviour and verification checkboxes (unchecked until browser/E2E).
 - **Tests:** [tests/unit/useDebouncedNumberField.test.tsx](../tests/unit/useDebouncedNumberField.test.tsx) (debounce, blur flush, prop sync, validation); [tests/unit/PropertyInspector.test.tsx](../tests/unit/PropertyInspector.test.tsx) updated for commit-on-blur and rapid-change single-commit.
 - **Plan:** [UI-UX-IMPROVEMENT-PLAN.md](../UI-UX-IMPROVEMENT-PLAN.md) item 9 — implementation note added; checkbox remains unchecked until manual or E2E verification.
 
@@ -307,7 +307,7 @@
 - **CanvasShapeRenderer:** [src/components/canvas/CanvasShapeRenderer.tsx](../src/components/canvas/CanvasShapeRenderer.tsx) — `groupDragOffset` prop; selected objects render at `(x+dx, y+dy)` during group drag.
 - **canvasBounds:** [src/lib/canvasBounds.ts](../src/lib/canvasBounds.ts) — `isPointInBounds(px, py, bounds)` for selection-marquee hit test.
 - **Types:** [src/types/canvas.ts](../src/types/canvas.ts) — `IGroupDragOffset`, optional `groupDragOffset` on `ICanvasShapeRendererProps`.
-- **PRD:** [docs/PRD.md](PRD.md) — "Move groups of selected objects" subsection under Story 3.8 with expected behaviour and verification checkboxes (unchecked until browser/E2E).
+- **PRD:** [PRD](../product/PRD.md) — "Move groups of selected objects" subsection under Story 3.8 with expected behaviour and verification checkboxes (unchecked until browser/E2E).
 - **Tests:** [tests/unit/useObjects.test.ts](../tests/unit/useObjects.test.ts) — `updateObjects` batch and rollback; [tests/unit/canvasBounds.test.ts](../tests/unit/canvasBounds.test.ts) — `isPointInBounds`.
 
 **Cost & usage (this session):** Development via Cursor; no external LLM API. Approximate token use: ~25k input / ~10k output (estimate).
@@ -330,7 +330,7 @@
 - **useShapeTransformHandler:** [src/hooks/useShapeTransformHandler.ts](../src/hooks/useShapeTransformHandler.ts) — line branch uses `scaleLinePointsLengthOnly` instead of per-axis scaling.
 - **TransformHandler:** [src/components/canvas/TransformHandler.tsx](../src/components/canvas/TransformHandler.tsx) — Line/Arrow branch uses same helper for length-only points.
 - **BoardCanvas:** [src/components/canvas/BoardCanvas.tsx](../src/components/canvas/BoardCanvas.tsx) — when transform attrs include `points`, compute and persist `width`/`height` from points so drag bounds and selection stay correct.
-- **PRD:** [docs/PRD.md](PRD.md) — "Line resize and rotation" subsection under Story 3.3 with verification checkboxes (unchecked until browser/E2E).
+- **PRD:** [PRD](../product/PRD.md) — "Line resize and rotation" subsection under Story 3.3 with verification checkboxes (unchecked until browser/E2E).
 - **Tests:** [tests/unit/lineTransform.test.ts](../tests/unit/lineTransform.test.ts) (helper); [tests/unit/LineShape.test.tsx](../tests/unit/LineShape.test.tsx), [tests/unit/TransformHandler.test.tsx](../tests/unit/TransformHandler.test.tsx), [tests/unit/Connector.test.tsx](../tests/unit/Connector.test.tsx) updated for length-only expectations; [tests/e2e/lineResizeRotate.spec.ts](../tests/e2e/lineResizeRotate.spec.ts) for line create/select flow.
 
 **Cost & usage (this session):** Development via Cursor; no external LLM API. Approximate token use: ~30k input / ~12k output (estimate).

@@ -107,7 +107,9 @@ const merge = (name: string): void => {
   log(`Merging ${branch} into current branch...`);
   const result = git(['merge', branch, '--no-ff', '-m', `merge: ${branch}`]);
   if (result.status !== 0) {
-    fail(`Merge failed — resolve conflicts manually, then run: bun run scripts/worktree-manager.ts cleanup ${name}`);
+    fail(
+      `Merge failed — resolve conflicts manually, then run: bun run scripts/worktree-manager.ts cleanup ${name}`
+    );
   }
 
   log(`Merged ${branch} successfully`);
@@ -165,7 +167,7 @@ const list = (): void => {
     worktrees.push(current as IWorktreeInfo);
   }
 
-  const agentWorktrees = worktrees.filter(wt => wt.branch.includes(`${BRANCH_PREFIX}/`));
+  const agentWorktrees = worktrees.filter((wt) => wt.branch.includes(`${BRANCH_PREFIX}/`));
 
   if (agentWorktrees.length === 0) {
     log('No agent worktrees found.');
@@ -187,15 +189,15 @@ const [command, name] = process.argv.slice(2);
 switch (command) {
   case 'create':
     if (!name) fail('Usage: create <branch-name>');
-    create(name);
+    create(name!);
     break;
   case 'merge':
     if (!name) fail('Usage: merge <branch-name>');
-    merge(name);
+    merge(name!);
     break;
   case 'cleanup':
     if (!name) fail('Usage: cleanup <branch-name>');
-    cleanup(name);
+    cleanup(name!);
     break;
   case 'list':
     list();

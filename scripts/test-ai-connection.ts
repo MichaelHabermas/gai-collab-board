@@ -54,7 +54,9 @@ function getDirectConfig(): {
   const env = process.env as Record<string, string | undefined>;
   const { baseURL, model, apiKey } = getActiveAIProviderConfig(env);
   if (apiKey) {
-    const url = baseURL.endsWith('/') ? `${baseURL}chat/completions` : `${baseURL}/chat/completions`;
+    const url = baseURL.endsWith('/')
+      ? `${baseURL}chat/completions`
+      : `${baseURL}/chat/completions`;
     return { url, model, apiKey };
   }
   return null;

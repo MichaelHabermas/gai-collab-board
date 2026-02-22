@@ -38,7 +38,9 @@
       "Bash(bunx tsx:*)",
       "Bash(Select-Object Name)",
       "Bash(sort:*)",
-      "Bash(git clean:*)"
+      "Bash(git clean:*)",
+      "mcp__serena__list_dir",
+      "mcp__serena__activate_project"
     ]
   },
   "hooks": {

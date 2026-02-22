@@ -5,7 +5,7 @@
 Sources:
 
 - `docs/G4 Week 1 - CollabBoard.pdf`
-- `docs/PRD.md`
+- `docs/product/PRD.md`
 
 Legend:
 

@@ -23,7 +23,7 @@ import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from '
 import { homedir } from 'os';
 import { join, resolve } from 'path';
 
-const ROOT = join(import.meta.dir, '..');
+const ROOT = join((import.meta as any).dir, '..');
 
 interface ITranscriptLine {
   role?: string;
@@ -42,7 +42,7 @@ function parseArgs(): {
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--transcripts-dir' && args[i + 1]) {
-      transcriptsDir = args[i + 1];
+      transcriptsDir = args[i + 1]!;
       i++;
     } else if (args[i] === '--days' && args[i + 1]) {
       const n = Number(args[i + 1]);
@@ -51,7 +51,7 @@ function parseArgs(): {
       }
       i++;
     } else if (args[i] === '--output' && args[i + 1]) {
-      outputPath = args[i + 1];
+      outputPath = args[i + 1]!;
       i++;
     }
   }
@@ -65,11 +65,7 @@ function parseArgs(): {
  */
 function getDefaultTranscriptsDir(): string | null {
   const cwd = resolve(process.cwd());
-  const projectId = cwd
-    .replace(/\\/g, '-')
-    .replace(/:/g, '')
-    .replace(/^\//, '')
-    .toLowerCase();
+  const projectId = cwd.replace(/\\/g, '-').replace(/:/g, '').replace(/^\//, '').toLowerCase();
   const candidate = join(homedir(), '.cursor', 'projects', projectId, 'agent-transcripts');
   if (existsSync(candidate)) {
     try {
@@ -177,8 +173,7 @@ function main(): void {
     process.exit(1);
   }
 
-  const cutoffMs =
-    days > 0 ? Date.now() - days * 24 * 60 * 60 * 1000 : 0;
+  const cutoffMs = days > 0 ? Date.now() - days * 24 * 60 * 60 * 1000 : 0;
   const paths =
     days > 0
       ? allPaths.filter((p) => {
@@ -228,10 +223,7 @@ function main(): void {
         lastUserStructured = isStructured(text);
       } else if (role === 'assistant' && lastUserText) {
         if (lastUserStructured && hasGoodOutcome(text)) {
-          const preview = lastUserText
-            .replace(/\s+/g, ' ')
-            .slice(0, 120)
-            .trim();
+          const preview = lastUserText.replace(/\s+/g, ' ').slice(0, 120).trim();
           const reason = lastUserText.includes('<code_selection')
             ? 'plan/code attached + summary'
             : 'structured + summary';
@@ -280,8 +272,7 @@ function main(): void {
 
   if (outputPath) {
     const absolute =
-      outputPath.startsWith('/') ||
-      (outputPath.length >= 2 && outputPath[1] === ':')
+      outputPath.startsWith('/') || (outputPath.length >= 2 && outputPath[1] === ':')
         ? outputPath
         : join(ROOT, outputPath);
     writeFileSync(absolute, out, 'utf-8');

@@ -70,4 +70,11 @@ describe('ai usage tracker', () => {
     expect(markdown).toContain('line "Input"');
     expect(markdown).toContain('line "Cost"');
   });
+
+  it('shows Estimation Quality as one sentence when all events use same method', () => {
+    const markdown = generateUnifiedUsageMarkdown(buildLedger());
+    expect(markdown).toContain('## Estimation Quality');
+    expect(markdown).toContain('Cost estimation: all events use **approximate** pricing');
+    expect(markdown).not.toContain('| Source | Exact | Best effort | Unavailable |');
+  });
 });

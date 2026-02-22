@@ -1,0 +1,5 @@
+{
+  "conversation_id": "test-conv-123",
+  "workspace_roots": ["/path/to/project"],
+  "transcript_path": "/tmp/transcript.jsonl"
+}

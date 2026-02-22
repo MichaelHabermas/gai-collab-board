@@ -30,7 +30,11 @@ const run = (): void => {
   const skipProxySmoke = includesArg('--skip-proxy-smoke');
 
   const steps: ICommandStep[] = [
-    { label: 'preflight release configuration', command: 'bun', args: ['run', 'preflight:release'] },
+    {
+      label: 'preflight release configuration',
+      command: 'bun',
+      args: ['run', 'preflight:release'],
+    },
     { label: 'build', command: 'bun', args: ['run', 'build'] },
     { label: 'typecheck', command: 'bun', args: ['run', 'typecheck'] },
     { label: 'lint', command: 'bun', args: ['run', 'lint'] },
@@ -47,7 +51,13 @@ const run = (): void => {
     steps.push({
       label: 'strict e2e benchmark suite',
       command: 'bunx',
-      args: ['playwright', 'test', 'tests/e2e/benchmark.spec.ts', '--project=chromium', '--workers=1'],
+      args: [
+        'playwright',
+        'test',
+        'tests/e2e/benchmark.spec.ts',
+        '--project=chromium',
+        '--workers=1',
+      ],
       env: { BENCHMARK_STRICT: '1' },
     });
   }

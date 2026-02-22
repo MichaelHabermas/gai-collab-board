@@ -105,7 +105,8 @@ bun add -d playwright @playwright/test
 CollabBoard/
 ├── docs/
 │   ├── guides/           # Technology guides
-│   └── research/         # Design documents
+│   ├── architecture/     # ADRs, design, tradeoffs
+│   └── product/          # PRD, requirements
 ├── public/               # Static assets
 ├── src/
 │   ├── components/       # React components
