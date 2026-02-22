@@ -40,7 +40,7 @@
 | **E0** | Constitution, baselines, 13 E2E done | **Done** — Constitution (Articles XX–XXVII) in CONSTITUTION.md; `docs/perf-baselines/pre-migration.json` with automated capture; 13 E2E specs present; connectorCreation and undoRedoDrag pass (chromium+firefox). RL0–RL3 complete on spike/react-konva-1. |
 | **E1** | Done | Done — all 7 factories, types, registry, unit tests present. |
 | **E2** | Done | Done — LayerManager, KonvaNodeManager, SelectionSyncController + unit tests. |
-| **E3** | 10/11 sub-tasks done | **10/11** — drag modules + DragCoordinator + StageEventRouter + ShapeEventWiring + MarqueeController + DrawingController + ConnectorController exist; unit tests present. **Missing:** TextEditController. |
+| **E3** | 10/11 sub-tasks done | **11/11** — drag modules + DragCoordinator + StageEventRouter + ShapeEventWiring + MarqueeController + DrawingController + ConnectorController + **TextEditController** exist; unit tests present. |
 | **E4** | Not started | **Partial** — TransformerManager, GridRenderer, SelectionDragHandle + unit tests present. Missing: OverlayManager. |
 | **E5** | Not started | Not started — App still uses BoardCanvas. |
 | **E6** | Not started | Not started. |
@@ -963,7 +963,7 @@ function createTextEditController(
 - [x] 8. **`events/DrawingController.ts`** (~100 LOC) — Drawing state machine.
 - [x] 9. **`events/MarqueeController.ts`** (~80 LOC) — Marquee state machine.
 - [x] 10. **`events/ConnectorController.ts`** (~70 LOC) — Two-click connector flow.
-- [ ] 11. **`events/TextEditController.ts`** (~80 LOC) — Text editing via DOM overlay.
+- [x] 11. **`events/TextEditController.ts`** (~80 LOC) — Text editing via DOM overlay.
 - [x] 12. **Unit tests** (~300 LOC):
   - dragCommit: selectObject toggles selection, commitDragEnd calls queueObjectUpdate
   - alignmentEngine: guide computation returns correct snap positions
@@ -973,11 +973,11 @@ function createTextEditController(
 
 ### Epic 3 Definition of Done
 
-- [ ] All 11 event/drag files created and passing unit tests (10/11: drag modules + DragCoordinator + StageEventRouter + ShapeEventWiring + MarqueeController + DrawingController + ConnectorController done; pending: TextEditController)
+- [x] All 11 event/drag files created and passing unit tests (11/11: drag modules + DragCoordinator + StageEventRouter + ShapeEventWiring + MarqueeController + DrawingController + ConnectorController + TextEditController done)
 - [x] **Every drag sub-module stays under 200 LOC**
 - [x] DragCoordinator is a thin dispatcher, not a monolith
 - [x] MarqueeController uses no React state (plain object)
-- [ ] TextEditController reuses canvasTextEditOverlay.ts unchanged
+- [x] TextEditController reuses canvasTextEditOverlay.ts unchanged
 - [ ] **All items in [Appendix D: Drag Behavior Checklist](#appendix-d-drag-behavior-checklist) verified** (each row marked as covered by unit test, integration test, or manual verification in PR)
 - [x] `bun run validate` passes
 - [x] No existing files modified
@@ -1083,7 +1083,7 @@ Imperative replacement for the `SelectionDragHandle` component in BoardCanvas.
 - [x] TransformerManager config matches TransformHandler exactly
 - [x] Grid renders correctly at different zoom levels
 - [x] `bun run validate` passes
-- [ ] No existing files modified
+- [x] No existing files modified
 - [ ] Completion checkpoint recorded per [§0.1 Canonical Merge and Epic Completion Rule](#01-canonical-merge-and-epic-completion-rule) before Epic 5 begins (may merge in parallel with Epic 3)
 
 ---

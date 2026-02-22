@@ -185,7 +185,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 
 ## WAVE 4: Epic 3 Remaining + Epic 4 Start (3 parallel)
 
-**Status:** Partial — T13–T16 merged. T17 (Drawing, Marquee, Connector controllers) done; pending: T18 (TextEditController), T19 (OverlayManager).
+**Status:** Partial — T13–T16 merged. T17, T18 done; pending: T19 (OverlayManager).
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC | SOLID |
 | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
