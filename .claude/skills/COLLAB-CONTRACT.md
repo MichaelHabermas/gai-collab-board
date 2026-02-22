@@ -18,6 +18,14 @@ Stop and ask for clarification when any of the following is true:
 - Required environment details (branch, service, dependency, data shape) are missing.
 - A requested action violates repository governance rules.
 
+## Canonical Precedence (Tasks vs Docs vs Code)
+
+When the tasks ledger (e.g. `.claude/tasks.md`) conflicts with project docs (e.g. migration/plan docs) or repository code:
+
+1. **Canonical for execution:** project docs + repository code. Use them to determine actual status and next action.
+2. **Tasks ledger:** must be reconciled to match canonical sources before implementation proceeds. Update task statuses and notes as part of the run; do not treat the ledger as blocking truth.
+3. **Strict block:** do not proceed to PRD or implement until a reconciliation check has been run and either (a) no drift was found, or (b) drift was found and resolution actions were applied (e.g. tasks ledger updated). If drift remains unresolved, halt at research and output a conflict table plus required reconciliation mini-step.
+
 ## Default Output Sections
 
 Unless a command defines stricter formatting, return:

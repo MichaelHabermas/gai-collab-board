@@ -40,7 +40,7 @@
 | **E0** | Constitution, baselines, 13 E2E done | **Done** — Constitution (Articles XX–XXVII) in CONSTITUTION.md; `docs/perf-baselines/pre-migration.json` with automated capture; 13 E2E specs present; connectorCreation and undoRedoDrag pass (chromium+firefox). RL0–RL3 complete on spike/react-konva-1. |
 | **E1** | Done | Done — all 7 factories, types, registry, unit tests present. |
 | **E2** | Done | Done — LayerManager, KonvaNodeManager, SelectionSyncController + unit tests. |
-| **E3** | 9/11 sub-tasks done | **9/11** — drag modules + DragCoordinator + StageEventRouter + ShapeEventWiring exist; DragCoordinator unit test added. **Missing:** DrawingController, MarqueeController, ConnectorController, TextEditController (unit tests for StageEventRouter/ShapeEventWiring pending). |
+| **E3** | 9/11 sub-tasks done | **9/11** — drag modules + DragCoordinator + StageEventRouter + ShapeEventWiring exist; DragCoordinator unit test added. **Missing:** DrawingController, MarqueeController, ConnectorController, TextEditController (unit tests for StageEventRouter/ShapeEventWiring present). |
 | **E4** | Not started | **Partial** — TransformerManager, GridRenderer, SelectionDragHandle + unit tests present. Missing: OverlayManager. |
 | **E5** | Not started | Not started — App still uses BoardCanvas. |
 | **E6** | Not started | Not started. |
@@ -55,6 +55,8 @@ This section is the single source of truth for migration merge targets and Epic 
 2. **Program complete:** after all migration waves pass, merge `spike/react-konva-1` into `development`.
 3. **Validation required at completion checkpoint:** `bun run validate` passes and the Epic-specific gate criteria in this document are satisfied.
 4. **Recording location:** completion is recorded in `.claude/tasks.md` review notes for the wave gate and in the merge/PR record for the target branch.
+5. **Mandatory docs reconciliation in the same completion PR:** when a task or Epic review gate is completed, update this doc's affected checkboxes and status lines in that same PR before merge.
+6. **Reconciliation check (required before marking done):** for each checkbox you flip to `[x]`, link a concrete artifact in the PR notes (`file path`, test run result, or merge commit) so "checked" always maps to verifiable repo state.
 
 ---
 
@@ -412,9 +414,9 @@ Deferred to [IMPERATIVE-KONVA-MIGRATION-V5-FOLLOW-UP.md](IMPERATIVE-KONVA-MIGRAT
 
 ### 6.4 — Epic 0 Definition of Done
 
-- [ ] Constitutional amendments (Articles XX–XXV, XXVII) added to `docs/CONSTITUTION.md`
-- [ ] Performance baselines captured and saved to `docs/perf-baselines/pre-migration.json` (per follow-up doc: manual or script)
-- [ ] All 13 new E2E tests written and passing against current codebase (only 4 of 13 exist: connectorCreation, connectorEndpointDrag, shapeResize, shapeRotate)
+- [x] Constitutional amendments (Articles XX-XXVII) added to `docs/CONSTITUTION.md`
+- [x] Performance baselines captured and saved to `docs/perf-baselines/pre-migration.json` (per follow-up doc: manual or script)
+- [x] All 13 new E2E tests written and passing against current codebase
 - [x] All existing E2E tests still pass
 - [x] `bun run validate` passes
 - [ ] Completion checkpoint recorded per [§0.1 Canonical Merge and Epic Completion Rule](#01-canonical-merge-and-epic-completion-rule)
@@ -951,13 +953,13 @@ function createTextEditController(
 
 ### Sub-Tasks
 
-- [ ] 1. **`drag/DragCoordinator.ts`** (~50 LOC) — Thin dispatcher.
+- [x] 1. **`drag/DragCoordinator.ts`** (~50 LOC) — Thin dispatcher.
 - [x] 2. **`drag/dragCommit.ts`** (~200 LOC) — Store persistence on drag end.
 - [x] 3. **`drag/alignmentEngine.ts`** (~150 LOC) — Guide computation + snap.
 - [x] 4. **`drag/dragBounds.ts`** (~80 LOC) — Boundary constraint functions.
 - [x] 5. **`drag/frameDragReparenting.ts`** (~120 LOC) — Frame containment logic.
-- [ ] 6. **`events/StageEventRouter.ts`** (~120 LOC) — Stage-level event dispatch.
-- [ ] 7. **`events/ShapeEventWiring.ts`** (~150 LOC) — Per-node event wiring.
+- [x] 6. **`events/StageEventRouter.ts`** (~120 LOC) — Stage-level event dispatch.
+- [x] 7. **`events/ShapeEventWiring.ts`** (~150 LOC) — Per-node event wiring.
 - [ ] 8. **`events/DrawingController.ts`** (~100 LOC) — Drawing state machine.
 - [ ] 9. **`events/MarqueeController.ts`** (~80 LOC) — Marquee state machine.
 - [ ] 10. **`events/ConnectorController.ts`** (~70 LOC) — Two-click connector flow.
@@ -971,9 +973,9 @@ function createTextEditController(
 
 ### Epic 3 Definition of Done
 
-- [ ] All 11 event/drag files created and passing unit tests (6/11: drag modules done; DragCoordinator + events/ folder pending)
+- [ ] All 11 event/drag files created and passing unit tests (9/11: drag modules + DragCoordinator + StageEventRouter + ShapeEventWiring done; pending: DrawingController, MarqueeController, ConnectorController, TextEditController)
 - [x] **Every drag sub-module stays under 200 LOC**
-- [ ] DragCoordinator is a thin dispatcher, not a monolith
+- [x] DragCoordinator is a thin dispatcher, not a monolith
 - [ ] MarqueeController uses no React state (plain object)
 - [ ] TextEditController reuses canvasTextEditOverlay.ts unchanged
 - [ ] **All items in [Appendix D: Drag Behavior Checklist](#appendix-d-drag-behavior-checklist) verified** (each row marked as covered by unit test, integration test, or manual verification in PR)

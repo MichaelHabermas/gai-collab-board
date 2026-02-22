@@ -17,6 +17,10 @@ Router command for atomic or chained collaborator workflows.
 - `research->prd->implement->review`
 - `prd->implement->review`
 
+## Reconciliation Gate (strict block)
+
+When chain includes `prd` or `implement`, run a ReconciliationCheck first (canonical_sources, tasks_drift, resolution_actions, proceed_decision). **Docs + code are canonical;** the tasks ledger must be reconciled to match. If proceed_decision is `blocked`, halt at research — do not run PRD or implement until drift is resolved (e.g. tasks ledger updated). Output a conflict table and the required reconciliation mini-step.
+
 ## Conflict-Halting Rule
 
 If objectives, source-of-truth documents, or done criteria conflict, stop and return a conflict table before any execution.

@@ -6,6 +6,39 @@ Base branch: current (development). Source: plan single_source_board_defaults.
 
 ---
 
+## ReconciliationCheck Template (Required on closeout)
+
+Use this block in each wave/epic review before changing status to `done`.
+
+```md
+### ReconciliationCheck — <wave/epic/task id>
+- [ ] Repo artifact exists (file/module): <path(s)>
+- [ ] Tests verified (command + result): <command/output summary>
+- [ ] Docs updated in same PR:
+  - [ ] `docs/IMPERATIVE-KONVA-MIGRATION-V5.md`
+  - [ ] `docs/IMPERATIVE-KONVA-ORCHESTRATION.md` (if wave text/status changed)
+- [ ] Checkbox updates map 1:1 to evidence above (no speculative `[x]`)
+- [ ] `.claude/tasks.md` review note updated with links/commit refs
+- [ ] `bun run validate` result recorded
+```
+
+---
+
+## Anti-Doom-Loop Gate (Required for retry loops)
+
+Apply this whenever a task enters repeated reject/retry cycles.
+
+- **Max retries without strategy change:** 2
+- **On 3rd failure:** stop retrying, mark `status: escalate`, and write:
+  - root cause hypothesis
+  - what evidence is missing
+  - what process/tooling change is required before next attempt
+- **No blind reruns:** each retry must include one concrete change in approach.
+- **Split environment vs product failures:** auth/infrastructure flakes do not count as product fixes; track separately.
+- **Exit criteria must be explicit:** define pass condition before rerun (for example, "3 consecutive green runs on both chromium and firefox").
+
+---
+
 ## T1 — Create src/lib/boardObjectDefaults.ts
 
 - **Status:** done
@@ -315,25 +348,25 @@ Base branch: spike/react-konva-1. Source: IMPERATIVE-KONVA-ORCHESTRATION.md
 
 ## IK15 — DragCoordinator
 
-- **Status:** reject
+- **Status:** done
 - **Tier:** haiku
 - **Role:** quick-fixer
 - **Worktree name:** epic3-drag-coordinator
 - **Description:** Task T15: Create src/canvas/drag/DragCoordinator.ts (~50 LOC). Routes to dragCommit, alignmentEngine, dragBounds, frameDragReparenting.
 - **Dependencies:** IK13, IK14
-- **Notes:** Files/folder missing. DragCoordinator.ts not present in repo.
+- **Notes:** Implemented in repo. Unit tests: DragCoordinator.test.ts.
 
 ---
 
 ## IK16 — StageEventRouter + ShapeEventWiring
 
-- **Status:** reject
+- **Status:** done
 - **Tier:** sonnet
 - **Role:** architect
 - **Worktree name:** epic3-event-wiring
 - **Description:** Task T16: Create StageEventRouter.ts (~120 LOC) and ShapeEventWiring.ts (~150 LOC) with unit tests.
 - **Dependencies:** IK15
-- **Notes:** Files/folder missing. StageEventRouter.ts and ShapeEventWiring.ts not present in repo.
+- **Notes:** Implemented in repo. Unit tests: StageEventRouter.test.ts, ShapeEventWiring.test.ts.
 
 ---
 

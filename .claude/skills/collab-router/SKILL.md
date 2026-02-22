@@ -36,13 +36,29 @@ Supported examples:
 
 Each stage must complete with evidence before the next stage begins.
 
+## Reconciliation Preflight (mandatory before PRD/implement)
+
+Before allowing any PRD or implement stage, run a **ReconciliationCheck**:
+
+1. **canonical_sources:** Identify the project docs and code area that define current status (e.g. migration plan doc, orchestration doc, touched modules).
+2. **tasks_drift:** Compare the tasks ledger (e.g. `.claude/tasks.md`) to canonical sources. List any mismatches (e.g. task marked pending but code exists; doc says done but tasks say in-progress).
+3. **resolution_actions:** If drift exists, list exact updates required (e.g. "Update task IK16 status to done and note ShapeEventWiring.ts + StageEventRouter.ts present").
+4. **proceed_decision:** Set to `blocked` if drift exists and has not been resolved; set to `clear` if no drift or resolution was applied.
+
+If **proceed_decision** is `blocked`:
+
+- Halt at research. Do not run PRD or implement.
+- Output a conflict table: conflicting sources, why it blocks execution, smallest reconciliation mini-step required.
+- Do not continue the chain until the user (or a dedicated reconciliation step) has applied the resolution actions and re-run.
+
 ## Conflict-Halting Logic
 
 Before starting any stage:
 
 1. Validate objective and scope are present.
-2. Check source-of-truth precedence is explicit.
+2. Check source-of-truth precedence is explicit (see COLLAB-CONTRACT: docs + code canonical; tasks ledger reconciled).
 3. Check done criteria are binary and testable.
+4. If chain includes PRD or implement, run Reconciliation Preflight first; if blocked, halt at research.
 
 If a conflict is found:
 
@@ -56,14 +72,16 @@ If a conflict is found:
 ## Router Procedure
 
 1. Parse requested mode and depth (`quick`, `standard`, `deep`).
-2. Run preflight checks and stop on conflicts.
-3. Invoke the matching atomic skill or chain stages.
-4. Return consolidated evidence and next smallest action.
+2. If mode is `chain` and chain includes `prd` or `implement`, run Reconciliation Preflight. If proceed_decision is `blocked`, output conflict table and halt; do not proceed to PRD/implement.
+3. Run remaining preflight checks; stop on conflicts.
+4. Invoke the matching atomic skill or chain stages.
+5. Return consolidated evidence and next smallest action.
 
 ## Output Format
 
 1. Selected Mode
-2. Preflight Result
-3. Stage Output(s)
-4. Evidence
-5. Next Smallest Action
+2. ReconciliationCheck (canonical_sources, tasks_drift, resolution_actions, proceed_decision) — required when chain includes PRD or implement
+3. Preflight Result
+4. Stage Output(s)
+5. Evidence
+6. Next Smallest Action

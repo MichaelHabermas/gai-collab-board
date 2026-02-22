@@ -9,6 +9,7 @@ React-Konva puts React reconciliation in the canvas hot path. Every shape = Reac
 **Governance:** CONSTITUTION.md (Articles I–XIX existing + XX–XXV, XXVII added in Epic 0)
 **Source of truth:** `docs/IMPERATIVE-KONVA-MIGRATION-V5.md`
 **Merge/completion rule:** Canonical policy reference: Merge targets and Epic/program completion semantics for this migration are defined in docs/IMPERATIVE-KONVA-MIGRATION-V5.md §0.1 (single source of truth).
+**Status/checkbox sync rule:** Every completed task/wave merge must include doc reconciliation in the same PR (update Wave status text here and corresponding checkboxes/status in V5).
 
 ---
 
@@ -184,7 +185,7 @@ E0 (rules+baselines+E2E) → E1 (factories) → E2 (NodeManager) ──┐
 
 ## WAVE 4: Epic 3 Remaining + Epic 4 Start (3 parallel)
 
-**Status:** Partial — only drag sub-modules (T13, T14) merged. T15 (DragCoordinator), T16 (StageEventRouter + ShapeEventWiring), T17 (Drawing, Marquee, Connector controllers), T18 (TextEditController), and T19 (OverlayManager) pending. `events/` folder and DragCoordinator do not exist yet.
+**Status:** Partial — T13 (drag sub-modules), T14 (alignmentEngine), T15 (DragCoordinator), and T16 (StageEventRouter + ShapeEventWiring) merged. Pending: T17 (Drawing, Marquee, Connector controllers), T18 (TextEditController), and T19 (OverlayManager).
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC | SOLID |
 | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |

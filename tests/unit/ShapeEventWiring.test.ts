@@ -47,7 +47,7 @@ function createDragMock(): IDragCoordinator {
     selectObject: vi.fn(),
     onDragMove: vi.fn(),
     commitDragEnd: vi.fn(),
-    createDragBoundFunc: vi.fn((pos: Konva.Vector2d) => pos),
+    createDragBoundFunc: vi.fn((_objectId: string) => (pos: Konva.Vector2d) => pos),
     handleSelectionDragStart: vi.fn(),
     handleSelectionDragMove: vi.fn(),
     handleSelectionDragEnd: vi.fn(),
@@ -67,7 +67,10 @@ describe('ShapeEventWiring', () => {
   const frames: IBoardObject[] = [];
   const childIndex = new Map<string, Set<string>>();
   const openTextEdit = vi.fn();
-  const dragBoundFn = (pos: Konva.Vector2d) => ({ ...pos, x: pos.x + 1 });
+  const dragBoundFn: (pos: Konva.Vector2d) => Konva.Vector2d = (pos) => ({
+    x: pos.x + 1,
+    y: pos.y,
+  });
 
   beforeEach(() => {
     node = new MockNode();

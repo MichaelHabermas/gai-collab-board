@@ -78,9 +78,30 @@ Strict: true
 Timebox: 60
 ```
 
+## Fresh Context / Reconciliation-First (recommended for new chat)
+
+When starting in a new context window, run reconciliation before any chain that includes PRD or implement. Use this prompt so tasks and docs are coordinated before proceeding:
+
+```text
+/collab
+Mode: chain
+Chain: research->prd->implement->review
+Objective: Re-establish current state and complete one smallest verified step. Treat docs + code as canonical; reconcile tasks ledger to match before PRD/implement.
+Scope: Source-of-truth docs (e.g. migration/orchestration) + task ledger + touched code area only.
+Constraints: Run ReconciliationCheck first. If tasks_drift exists, output conflict table and resolution_actions; if proceed_decision is blocked, halt at research and do not run PRD or implement until tasks ledger is updated.
+Done Criteria: ReconciliationCheck shows proceed_decision clear; then research output includes done/pending table and one next smallest action; then one implementation step with evidence.
+Depth: standard
+Strict: true
+Timebox: 45
+Output Dir: docs/collab/runs/<YYYY-MM-DD>/continue-<slug>/
+```
+
+Reconciliation mini-step: when blocked, apply the listed resolution_actions (e.g. update `.claude/tasks.md` status/notes to match docs and code), then re-run the same chain or run research only to confirm clear. Record the check using `docs/collab/templates/reconciliation-check-template.md` when saving run artifacts.
+
 ## Router Notes
 
 - Chain mode runs stages sequentially with evidence at each stage.
+- When chain includes PRD or implement, Reconciliation Preflight runs first; if proceed_decision is blocked, the router halts at research and does not run PRD or implement until drift is resolved.
 - If source-of-truth or done criteria conflict, router halts and returns a conflict table.
 - Use `Strict: true` when you want fail-fast behavior.
 
