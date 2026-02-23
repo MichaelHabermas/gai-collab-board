@@ -4,7 +4,7 @@ PRD-V2 expands PRD-V1 with richer execution detail: per-EPIC success criteria, o
 
 ---
 
-# CollabBoard v2 — PRD (V2)
+# CollabBoard — PRD (V2)
 
 **V2 changelog:** Expanded from PRD-V1: elaborated epics with success criteria, out-of-scope, risks and dependencies, and stakeholder value; added per-epic and cross-cutting mermaid diagrams; optional edge-case and UX notes per feature. All feature-level content (acceptance criteria, commits, test plans) preserved.
 

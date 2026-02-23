@@ -4,11 +4,11 @@ This design document translates the v2 feature set into principles and structure
 
 ---
 
-# CollabBoard v2: Design Document
+# CollabBoard: Design Document
 
 ## Purpose
 
-This document defines design principles, architecture alignment, and an agile breakdown (EPICs and user stories) for CollabBoard v2 scope. The 20 chosen features come from [INITIAL-RESEARCH.md](./INITIAL-RESEARCH.md) and are elaborated in [FEATURES.md](./FEATURES.md). The main [PRD](../PRD.md) remains the source of truth for existing product scope, tech stack, and module layout. This design is modular, SOLID-aligned, and broken down only to the user story level; features will be extracted from these user stories in a later step.
+This document defines design principles, architecture alignment, and an agile breakdown (EPICs and user stories) for CollabBoard scope. The 20 chosen features come from [INITIAL-RESEARCH.md](./INITIAL-RESEARCH.md) and are elaborated in [FEATURES.md](./FEATURES.md). The main [PRD](../PRD.md) remains the source of truth for existing product scope, tech stack, and module layout. This design is modular, SOLID-aligned, and broken down only to the user story level; features will be extracted from these user stories in a later step.
 
 ---
 
@@ -194,4 +194,4 @@ v2 scope is limited to the 20 features listed above. Items that were considered 
 
 ## Summary
 
-This design document defines a **modular, SOLID-aligned** approach to CollabBoard v2 and an **agile breakdown** into **8 EPICs** and **user stories** only. The 20 chosen features from INITIAL-RESEARCH and FEATURES are mapped into these EPICs; user stories are written at a level that allows features to be extracted and implemented in a later step. No implementation tasks, sprint breakdowns, or feature-level subtasks are included here—only EPICs and user stories as specified.
+This design document defines a **modular, SOLID-aligned** approach to CollabBoard and an **agile breakdown** into **8 EPICs** and **user stories** only. The 20 chosen features from INITIAL-RESEARCH and FEATURES are mapped into these EPICs; user stories are written at a level that allows features to be extracted and implemented in a later step. No implementation tasks, sprint breakdowns, or feature-level subtasks are included here—only EPICs and user stories as specified.

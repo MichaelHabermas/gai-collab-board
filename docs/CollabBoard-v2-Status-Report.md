@@ -1,4 +1,4 @@
-# CollabBoard v2 — Project Status Report
+# CollabBoard — Project Status Report
 
 **Date:** February 20, 2026 (updated)
 **Prepared for:** Michael Habermas
@@ -8,7 +8,7 @@
 
 ## 1. Executive Summary
 
-CollabBoard v2 defines **20 features across 8 EPICs**. According to the PRD checklist and the git history on `development`, **all 20 features have commits on the development branch**. Epics 1–4 (Features 1–14) are marked complete with all acceptance criteria checked. Epics 5–8 (Features 15–20) each have a single commit on `development` but **their PRD acceptance criteria checkboxes remain unchecked**, suggesting these features were implemented but have not been fully verified against the spec.
+CollabBoard defines **20 features across 8 EPICs**. According to the PRD checklist and the git history on `development`, **all 20 features have commits on the development branch**. Epics 1–4 (Features 1–14) are marked complete with all acceptance criteria checked. Epics 5–8 (Features 15–20) each have a single commit on `development` but **their PRD acceptance criteria checkboxes remain unchecked**, suggesting these features were implemented but have not been fully verified against the spec.
 
 **Bottom line:** The project is **feature-complete**. All 20 features are implemented and verified. Test suite passes (1088/1088 tests). PRD acceptance criteria fully checked off (155/155). Deployed and live on Render.
 

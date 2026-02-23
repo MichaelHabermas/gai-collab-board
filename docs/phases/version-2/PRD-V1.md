@@ -4,7 +4,7 @@ PRD-V1 is the first execution-focused PRD for v2: it ties EPICs, user stories, a
 
 ---
 
-# CollabBoard v2 — Initial PRD (V1)
+# CollabBoard — Initial PRD (V1)
 
 **Scope:** 20 features across 8 EPICs; modular, SOLID-aligned design; git workflow with `development` branch and feature branches. This document is the single source for execution: **EPICs → User Stories → Features → Feature Branches → Commits → Subtasks.**
 

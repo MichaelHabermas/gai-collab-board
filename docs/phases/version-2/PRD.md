@@ -4,7 +4,7 @@ This is the final v2 Product Requirements Document. It is the single source for 
 
 ---
 
-# CollabBoard v2 — Final PRD
+# CollabBoard — Final PRD
 
 **Purpose:** This document is the **final Product Requirements Document** for CollabBoard version 2. It is the single source for execution: EPICs → User Stories → Features → Feature Branches → Commits → Subtasks. It extends the main product scope, tech stack, and structure defined in the root [PRD](../../PRD.md) and elaborates all v2 specs with SOLID-aligned, modular design.
 
