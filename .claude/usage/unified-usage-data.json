@@ -1645,21 +1645,21 @@
     {
       "event_id": "dev:claude:b1e9e67c-2e49-42f0-a3f8-03401f449592",
       "source": "claude",
-      "timestamp": "2026-02-23T02:09:20.939Z",
+      "timestamp": "2026-02-23T02:29:11.674Z",
       "session_id": "b1e9e67c-2e49-42f0-a3f8-03401f449592",
       "provider": "anthropic",
-      "model": "claude-sonnet-4-6",
-      "input_tokens": 3,
-      "output_tokens": 1,
-      "cache_read_tokens": 14339,
-      "cache_create_tokens": 49036,
-      "total_tokens": 63379,
-      "estimated_cost": 0.1882107,
+      "model": "claude-sonnet-4-6,claude-opus-4-6",
+      "input_tokens": 27,
+      "output_tokens": 12,
+      "cache_read_tokens": 425945,
+      "cache_create_tokens": 114931,
+      "total_tokens": 540915,
+      "estimated_cost": 1.62661275,
       "request_count": 1,
       "estimation_method": "best_effort",
       "metadata": {
         "hook_source": "claude",
-        "by_model_count": 1
+        "by_model_count": 2
       }
     }
   ]

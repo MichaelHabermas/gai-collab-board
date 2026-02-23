@@ -3,15 +3,16 @@
  * Consumed by frontend (src/lib/ai.ts), Vite dev proxy (vite.config.ts), server proxy (server/ai-proxy-config.ts), and scripts.
  * All functions accept an env object so they work in browser (import.meta.env) and Node (process.env).
  */
-
+// https://api.anthropic.com
+// https://api.anthropic.com/v1/messages
 export const AI_PROVIDER_GEMINI = 'gemini';
 export const AI_PROVIDER_GROQ = 'groq';
-
+export const AI_PROVIDER_CLAUDE = 'anthropic';
 /** Default model IDs per provider. Change here to switch models. */
 export const AI_MODEL_GEMINI = 'gemini-2.5-flash';
 export const AI_MODEL_GROQ = 'llama-3.3-70b-versatile';
-
-export type AIProviderId = typeof AI_PROVIDER_GEMINI | typeof AI_PROVIDER_GROQ;
+export const AI_MODEL_CLAUDE = 'claude-haiku-4-5';
+export type AIProviderId = typeof AI_PROVIDER_GEMINI | typeof AI_PROVIDER_GROQ | typeof AI_PROVIDER_CLAUDE;
 
 export const AI_PROVIDER_DEFAULTS: Record<
   AIProviderId,
@@ -27,6 +28,11 @@ export const AI_PROVIDER_DEFAULTS: Record<
     model: AI_MODEL_GROQ,
     envKeyNames: ['GROQ_API_KEY', 'VITE_GROQ_API_KEY'],
   },
+  [AI_PROVIDER_CLAUDE]: {
+    baseURL: 'https://api.anthropic.com/v1',
+    model: AI_MODEL_CLAUDE,
+    envKeyNames: ['ANTHROPIC_API_KEY', 'VITE_ANTHROPIC_API_KEY'],
+  },
 };
 
 const DEFAULT_PROVIDER: AIProviderId = AI_PROVIDER_GEMINI;
@@ -34,6 +40,10 @@ const DEFAULT_PROVIDER: AIProviderId = AI_PROVIDER_GEMINI;
 /** Resolve provider from env. Prefer VITE_AI_PROVIDER; then AI_PROVIDER (e.g. Render); else default. */
 export function getProviderFromEnv(env: Record<string, string | undefined>): AIProviderId {
   const raw = (env.VITE_AI_PROVIDER ?? env.AI_PROVIDER ?? '').trim().toLowerCase();
+  if (raw === AI_PROVIDER_CLAUDE) {
+    return AI_PROVIDER_CLAUDE;
+  }
+  
   if (raw === AI_PROVIDER_GROQ) {
     return AI_PROVIDER_GROQ;
   }
