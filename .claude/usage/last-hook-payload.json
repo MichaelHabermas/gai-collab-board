@@ -1,0 +1,9 @@
+{
+  "session_id": "bde5c2c5-bb2b-4bbe-a357-7d8107ec4d15",
+  "transcript_path": "C:\\Users\\haber\\.claude\\projects\\C--Users-haber-repos-Gauntlet-gai-collab-board\\bde5c2c5-bb2b-4bbe-a357-7d8107ec4d15.jsonl",
+  "cwd": "C:\\Users\\haber\\repos\\Gauntlet\\gai-collab-board",
+  "permission_mode": "default",
+  "hook_event_name": "Stop",
+  "stop_hook_active": false,
+  "last_assistant_message": "Done. Restart Claude Code desktop to take effect."
+}

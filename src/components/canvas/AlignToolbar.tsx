@@ -106,7 +106,7 @@ export const AlignToolbar = memo(
           title='Align left'
           data-testid='align-toolbar-left'
         >
-          <AlignStartHorizontal className='h-4 w-4' />
+          <AlignStartVertical className='h-4 w-4' />
         </Button>
         <Button
           variant='ghost'
@@ -116,7 +116,7 @@ export const AlignToolbar = memo(
           title='Align center'
           data-testid='align-toolbar-center'
         >
-          <AlignCenterHorizontal className='h-4 w-4' />
+          <AlignCenterVertical className='h-4 w-4' />
         </Button>
         <Button
           variant='ghost'
@@ -126,7 +126,7 @@ export const AlignToolbar = memo(
           title='Align right'
           data-testid='align-toolbar-right'
         >
-          <AlignEndHorizontal className='h-4 w-4' />
+          <AlignEndVertical className='h-4 w-4' />
         </Button>
         <div className='mx-0.5 w-px bg-slate-600' aria-hidden />
         <Button
@@ -137,7 +137,7 @@ export const AlignToolbar = memo(
           title='Align top'
           data-testid='align-toolbar-top'
         >
-          <AlignStartVertical className='h-4 w-4' />
+          <AlignStartHorizontal className='h-4 w-4' />
         </Button>
         <Button
           variant='ghost'
@@ -147,7 +147,7 @@ export const AlignToolbar = memo(
           title='Align middle'
           data-testid='align-toolbar-middle'
         >
-          <AlignCenterVertical className='h-4 w-4' />
+          <AlignCenterHorizontal className='h-4 w-4' />
         </Button>
         <Button
           variant='ghost'
@@ -157,7 +157,7 @@ export const AlignToolbar = memo(
           title='Align bottom'
           data-testid='align-toolbar-bottom'
         >
-          <AlignEndVertical className='h-4 w-4' />
+          <AlignEndHorizontal className='h-4 w-4' />
         </Button>
         <div className='mx-0.5 w-px bg-slate-600' aria-hidden />
         <Button

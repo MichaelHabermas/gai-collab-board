@@ -125,6 +125,50 @@ describe('AlignToolbar', () => {
     expect(mockOnObjectUpdate).toHaveBeenCalledWith('b', { y: 20 });
   });
 
+  it('calls onObjectUpdate with align right positions (x axis) when align right clicked', () => {
+    const objects = [
+      createMockObject('a', 50, 0, 50, 40),
+      createMockObject('b', 200, 80, 60, 40),
+    ];
+    const selectedObjects = objects.filter((o) => ['a', 'b'].includes(o.id));
+    render(
+      <AlignToolbar
+        selectedObjects={selectedObjects}
+        selectedIds={['a', 'b']}
+        onObjectUpdate={mockOnObjectUpdate}
+        canEdit={true}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId('align-toolbar-right'));
+
+    expect(mockOnObjectUpdate).toHaveBeenCalledTimes(2);
+    expect(mockOnObjectUpdate).toHaveBeenCalledWith('a', { x: 210 });
+    expect(mockOnObjectUpdate).toHaveBeenCalledWith('b', { x: 200 });
+  });
+
+  it('calls onObjectUpdate with align bottom positions (y axis) when align bottom clicked', () => {
+    const objects = [
+      createMockObject('a', 0, 100, 50, 40),
+      createMockObject('b', 80, 20, 50, 40),
+    ];
+    const selectedObjects = objects.filter((o) => ['a', 'b'].includes(o.id));
+    render(
+      <AlignToolbar
+        selectedObjects={selectedObjects}
+        selectedIds={['a', 'b']}
+        onObjectUpdate={mockOnObjectUpdate}
+        canEdit={true}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId('align-toolbar-bottom'));
+
+    expect(mockOnObjectUpdate).toHaveBeenCalledTimes(2);
+    expect(mockOnObjectUpdate).toHaveBeenCalledWith('a', { y: 100 });
+    expect(mockOnObjectUpdate).toHaveBeenCalledWith('b', { y: 100 });
+  });
+
   it('distribute buttons are disabled when only 2 selected', () => {
     const objects = [
       createMockObject('a', 0, 0, 50, 40),
