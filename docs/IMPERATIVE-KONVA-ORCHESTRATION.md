@@ -344,6 +344,8 @@ flowchart TD
 
 ## WAVE 7: Epic 6 — Cleanup (sequential, separate PR)
 
+**Status:** Done (E2E skipped by user choice). T25, T26 complete. T27 (performance verification) deferred. All 28 dead files deleted (15 components + 13 hooks); 21 orphaned test files deleted; react-konva removed; shapes/index.ts slimmed; isDrawingTool extracted to types/tools.ts; CLAUDE.md updated; `bun run validate` and unit tests pass.
+
 **Blocked until Epic 5.1 Readiness Gate is closed with `proceed_decision=clear`. If Epic 5 regresses, Epic 6 blocked and Epic 5 reverted (Article XXVII.3).**
 
 | Task | Title | Tier | Role | Deps | Branch | Est LOC |

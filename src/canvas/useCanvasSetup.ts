@@ -33,7 +33,7 @@ import { createDrawingController } from './events/DrawingController';
 import { createMarqueeController } from './events/MarqueeController';
 import { createConnectorController } from './events/ConnectorController';
 import { createTextEditController } from './events/TextEditController';
-import { createStageEventRouter } from './events/StageEventRouter';
+import { createStageEventRouter, defaultIsEmptyArea } from './events/StageEventRouter';
 import { wireEvents } from './events/ShapeEventWiring';
 import { GridRenderer } from './GridRenderer';
 import type { IViewportState } from '@/types';
@@ -179,6 +179,7 @@ export function setupCanvas(config: ICanvasSetupConfig): ICanvasSetupReturn {
 
   const stageRouter = createStageEventRouter(stage, config.getActiveTool, {
     getCanvasCoords: (s, p) => getCanvasCoords(s, p),
+    isEmptyArea: defaultIsEmptyArea,
     controllers: {
       drawing: drawingController,
       marquee: marqueeController,

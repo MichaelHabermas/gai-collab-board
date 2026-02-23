@@ -78,15 +78,17 @@ Workflow for every task:
 
 ## Architecture
 
-- React-Konva canvas app, Zustand state management, Firebase Firestore persistence
-- Component chain: `BoardCanvas` → `StoreShapeRenderer` → `CanvasShapeRenderer` → shape components
-- BoardCanvas is a thin orchestrator. Logic lives in extracted hooks:
-  - `useShapeDrawing` — drawing state, preview rendering (returns JSX → .tsx)
-  - `useMarqueeSelection` — rubber-band selection rect + AABB hit testing
-  - `useConnectorCreation` — two-click connector flow
-  - `useViewportActions` — zoom/export callbacks + viewport actions store wiring
-  - `useObjectDragHandlers` — all drag/select/transform handlers, handler maps, alignment guides
-- Mouse handlers use **dispatch pattern**: thin wrappers route to hook handlers based on `activeTool`
+- Imperative Konva canvas app, Zustand state management, Firebase Firestore persistence
+- Component chain: `CanvasHost` → `useCanvasSetup` → `KonvaNodeManager` → Shape Factories
+- CanvasHost is a thin React shell. Canvas logic lives in imperative managers:
+  - `KonvaNodeManager` — O(changed) node lifecycle (create/update/destroy)
+  - `LayerManager` — 4 Konva layers + RAF-coalesced batchDraw
+  - `OverlayManager` — marquee, alignment guides, cursors, drawing preview, connection anchors
+  - `TransformerManager` — imperative Konva.Transformer
+  - `SelectionSyncController` — selection ↔ layer sync + drag offset
+  - Event system: `StageEventRouter` + `ShapeEventWiring` + controllers (Drawing, Marquee, Connector, TextEdit)
+  - Drag system: `DragCoordinator` + modules (dragCommit, alignmentEngine, dragBounds, frameDragReparenting)
+- Mouse handlers use **dispatch pattern**: `StageEventRouter` routes stage events to controllers by `activeTool`; `ShapeEventWiring` attaches per-node handlers
 
 ## Code Standards
 

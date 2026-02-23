@@ -6,7 +6,7 @@
 
 import Konva from 'konva';
 import type { ToolMode, IPosition } from '@/types';
-import { isDrawingTool } from '@/hooks/useShapeDrawing';
+import { isDrawingTool } from '@/types/tools';
 
 export interface IStageEventRouterConfig {
   getCanvasCoords: (
@@ -30,7 +30,49 @@ export interface IStageEventRouterConfig {
     };
     cursorBroadcast: (x: number, y: number) => void;
   };
-  isEmptyArea?: (e: Konva.KonvaEventObject<MouseEvent>) => boolean;
+  isEmptyArea?: (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => boolean;
+}
+
+/**
+ * Returns true when the event target is empty canvas (stage, layer, background).
+ * Returns false when the target is a shape or the selection drag handle.
+ */
+interface INodeWithNameAndParent {
+  name(): string;
+  getParent(): INodeWithNameAndParent | null;
+}
+
+function hasNameAndParent(node: unknown): node is INodeWithNameAndParent {
+  return (
+    typeof node === 'object' &&
+    node !== null &&
+    'name' in node &&
+    typeof (node as INodeWithNameAndParent).name === 'function' &&
+    'getParent' in node &&
+    typeof (node as INodeWithNameAndParent).getParent === 'function'
+  );
+}
+
+export function defaultIsEmptyArea(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>): boolean {
+  let node: unknown = e.target;
+  while (node) {
+    if (!hasNameAndParent(node)) {
+      return true;
+    }
+
+    const name = node.name() ?? '';
+    if (name.includes('shape')) {
+      return false;
+    }
+
+    if (name === 'selection-drag-handle') {
+      return false;
+    }
+
+    node = node.getParent();
+  }
+
+  return true;
 }
 
 function isDragDrawingTool(tool: ToolMode): boolean {
@@ -56,7 +98,7 @@ export function createStageEventRouter(
   config: IStageEventRouterConfig
 ): { destroy: () => void } {
   const { controllers } = config;
-  const isEmptyArea = config.isEmptyArea ?? (() => true);
+  const isEmptyArea = config.isEmptyArea ?? defaultIsEmptyArea;
 
   let rafId: number | null = null;
   let pendingCoords: IPosition | null = null;
@@ -113,6 +155,10 @@ export function createStageEventRouter(
 
   const onTouchStart = (e: Konva.KonvaEventObject<TouchEvent>) => {
     if (getActiveTool() === 'pan') {
+      return;
+    }
+
+    if (!isEmptyArea(e)) {
       return;
     }
 

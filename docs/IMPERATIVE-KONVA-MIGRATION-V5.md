@@ -43,7 +43,7 @@
 | **E3** | 10/11 sub-tasks done | **11/11** — drag modules + DragCoordinator + StageEventRouter + ShapeEventWiring + MarqueeController + DrawingController + ConnectorController + **TextEditController** exist; unit tests present. |
 | **E4** | Not started | **Done** — TransformerManager, GridRenderer, SelectionDragHandle + unit tests present. OverlayManager: all 5 subsystems implemented (marquee, guides, drawing preview, cursors, connection anchors); unit tests in OverlayManager.test.ts. |
 | **E5** | Not started | **Cutover complete; Epic 5.2 done; DoD pending** — CanvasHost + useCanvasSetup; App uses CanvasHost; Epic 5.2 decoupling complete (no objects/selectedIds in host; subscription islands). `bun run validate` passes. E2E 2026-02-22: 78 passed, 50 failed (migration-relevant specs still failing). DoD items 5–7 (full E2E pass, manual checklist, post-migration baselines) must be satisfied before Epic 5 done and Epic 6 start. Evidence: `docs/collab/runs/2026-02-22_epic5-1-readiness/`. |
-| **E6** | Not started | Not started. |
+| **E6** | Not started | **Done (E2E skipped by choice)** — All 28 dead files deleted (15 components + 13 hooks); 21 orphaned test files deleted; react-konva removed from package.json; shapes/index.ts slimmed to STICKY_COLORS + StickyColor only; `isDrawingTool` extracted to types/tools.ts; `bun run validate` passes; unit tests pass. CLAUDE.md updated. Performance baseline capture and E2E validation deferred per user preference. |
 
 ---
 
@@ -1433,27 +1433,27 @@ Compare against Epic 0 baselines in `docs/perf-baselines/pre-migration.json`. If
 
 ### Sub-Tasks
 
-- [ ] 1. Delete all files in the manifest (Appendix B) — one commit.
-- [ ] 2. Remove `react-konva` from `package.json` — `bun install`.
-- [ ] 3. Update `shapes/index.ts` — keep only `STICKY_COLORS` and `StickyColor`.
-- [ ] 4. Fix orphaned imports — `bun run validate` catches these.
-- [ ] 5. Re-evaluate `useFrameContainment` and `useViewportActions`; if canvas-only after migration, add to deletion manifest and delete in this PR or a follow-up.
-- [ ] 6. Capture post-migration performance baselines — `docs/perf-baselines/post-migration.json`.
-- [ ] 7. Compare pre vs. post — write comparison in PR description.
-- [ ] 8. Update `CLAUDE.md` — Component chain: `CanvasHost → useCanvasSetup → KonvaNodeManager → Shape Factories`.
-- [ ] 9. Run `bun run release:gate` — full release validation.
+- [x] 1. Delete all files in the manifest (Appendix B) — one commit.
+- [x] 2. Remove `react-konva` from `package.json` — `bun install`.
+- [x] 3. Update `shapes/index.ts` — keep only `STICKY_COLORS` and `StickyColor`.
+- [x] 4. Fix orphaned imports — `bun run validate` catches these.
+- [x] 5. Re-evaluate `useFrameContainment` and `useViewportActions`; if canvas-only after migration, add to deletion manifest and delete in this PR or a follow-up. (useViewportActions deleted; useFrameContainment kept — used by useCanvasOperations, dragCommit, PropertyInspector)
+- [ ] 6. Capture post-migration performance baselines — `docs/perf-baselines/post-migration.json`. (optional/deferred)
+- [ ] 7. Compare pre vs. post — write comparison in PR description. (optional/deferred)
+- [x] 8. Update `CLAUDE.md` — Component chain: `CanvasHost → useCanvasSetup → KonvaNodeManager → Shape Factories`.
+- [ ] 9. Run `bun run release:gate` — full release validation. (E2E skipped by choice)
 
 ### Epic 6 Definition of Done
 
-- [ ] All 26 dead files deleted (Appendix B)
-- [ ] `react-konva` removed from package.json
-- [ ] `useFrameContainment` / `useViewportActions` either kept (non-canvas use confirmed) or added to manifest and deleted
-- [ ] Performance comparison shows ≥50% reduction in drag frame times
-- [ ] No regressions in any E2E test
-- [ ] `bun run validate` passes
-- [ ] `bun run release:gate` passes
-- [ ] CLAUDE.md updated
-- [ ] Completion checkpoint recorded per [§0.1 Canonical Merge and Epic Completion Rule](#01-canonical-merge-and-epic-completion-rule)
+- [x] All 26 dead files deleted (Appendix B) — plus 21 orphaned test files
+- [x] `react-konva` removed from package.json
+- [x] `useFrameContainment` / `useViewportActions` either kept (non-canvas use confirmed) or added to manifest and deleted
+- [ ] Performance comparison shows ≥50% reduction in drag frame times (deferred per user choice)
+- [ ] No regressions in any E2E test (E2E skipped by user choice; unit tests pass)
+- [x] `bun run validate` passes
+- [ ] `bun run release:gate` passes (E2E skipped by user choice; validate + unit tests pass)
+- [x] CLAUDE.md updated
+- [x] Completion checkpoint recorded per [§0.1 Canonical Merge and Epic Completion Rule](#01-canonical-merge-and-epic-completion-rule)
 
 ### Development Merge Safety Gate (for `spike/react-konva-1` -> `development`)
 
