@@ -31,6 +31,8 @@ vi.mock('@/lib/writeQueue', () => ({
   initWriteQueue: vi.fn(),
 }));
 
+vi.mock('@/App', () => ({ App: () => null }));
+
 vi.mock('@/index.css', () => ({}));
 
 describe('main entry point', () => {

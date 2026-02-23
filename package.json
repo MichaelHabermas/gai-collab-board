@@ -12,7 +12,7 @@
     "test:rerun": "vitest run --rerun --reporter=json --outputFile=./.artifacts/vitest-results.json --silent",
     "repair": "tsx scripts/repair.ts",
     "test:watch": "vitest --reporter=json --outputFile=./.artifacts/vitest-results.json --silent",
-    "test:coverage": "vitest run --coverage --reporter=json --outputFile=./.artifacts/vitest-results.json --silent",
+    "test:coverage": "vitest run --coverage",
     "format": "prettier --write src --log-level silent",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",

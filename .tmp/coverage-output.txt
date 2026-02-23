@@ -1,0 +1,553 @@
+$ vitest run --coverage "--exclude=**/appPerformance.test.ts"
+
+ RUN  v4.0.18 C:/Users/haber/repos/Gauntlet/gai-collab-board
+      Coverage enabled with istanbul
+
+ Γ£ô tests/unit/firebase.test.ts (2 tests) 1321ms
+     Γ£ô throws an error if required environment variables are missing  1286ms
+ Γ£ô tests/integration/sync.latency.test.ts (5 tests) 1391ms
+     Γ£ô measures cursor sync write latency under 50ms target envelope  605ms
+     Γ£ô measures object update sync write latency under 100ms target envelope  602ms
+ Γ£ô tests/unit/SelectionLayer.test.tsx (2 tests) 182ms
+ Γ£ô tests/unit/main.test.tsx (1 test) 453ms
+     Γ£ô calls createFirestoreBoardRepo, initRepository, initWriteQueue and createRoot when root exists  450ms
+ Γ£ô tests/unit/WelcomePage.test.tsx (11 tests) 291ms
+ Γ£ô tests/unit/Frame.test.tsx (5 tests) 373ms
+stderr | tests/unit/useAI.test.ts > useAI > updates board state when objects change and supports clear helpers
+An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ Γ£ô tests/unit/App.rightPanelCollapse.test.tsx (5 tests) 539ms
+     Γ£ô renders sidebar expanded by default and collapse button is visible  306ms
+ Γ£ô tests/unit/RightSidebar.test.tsx (15 tests) 580ms
+ Γ£ô tests/unit/LoginForm.test.tsx (5 tests) 607ms
+     Γ£ô renders email and password inputs and submit button  375ms
+ Γ£ô tests/unit/aiService.test.ts (15 tests) 1032ms
+     Γ£ô retries on retryable 500 error and succeeds  1009ms
+ Γ£ô tests/unit/SignupForm.test.tsx (5 tests) 791ms
+     Γ£ô renders email, password, confirm password and submit button  319ms
+ Γ£ô tests/unit/useAI.test.ts (7 tests) 837ms
+     Γ£ô updates board state when objects change and supports clear helpers  761ms
+ Γ£ô tests/unit/AuthPage.test.tsx (4 tests) 744ms
+     Γ£ô renders CollabBoard title and login tab by default  460ms
+ Γ£ô tests/unit/StickyNote.test.tsx (21 tests) 655ms
+ Γ£ô tests/unit/AIChatPanel.aiCommands.test.tsx (26 tests) 910ms
+     Γ£ô shows error and Dismiss calls onClearError  436ms
+ Γ£ô tests/unit/PropertyInspector.test.tsx (59 tests | 1 skipped) 931ms
+ Γ£ô tests/unit/ShareDialog.test.tsx (6 tests) 1525ms
+     Γ£ô owner sees Delete board button; non-owner does not  731ms
+     Γ£ô owner Delete board calls deleteBoard and fires onLeaveBoard with boardId  332ms
+ Γ£ô tests/unit/CommentPanel.test.tsx (8 tests) 202ms
+ Γ£ô tests/unit/BoardListSidebar.test.tsx (19 tests) 2883ms
+     Γ£ô should create new board and add it to list when Create is submitted in dialog  837ms
+ Γ£ô tests/unit/theme-appearance.test.ts (4 tests) 566ms
+     Γ£ô applies light background variable when document does not have dark class  509ms
+ Γ£ô tests/unit/AlignToolbar.test.tsx (7 tests) 292ms
+ Γ£ô tests/unit/Toolbar.test.tsx (2 tests) 314ms
+ Γ£ô tests/unit/useObjectDragHandlers.test.ts (61 tests) 373ms
+ Γ£ô tests/unit/TextElement.test.tsx (27 tests) 409ms
+stdout | tests/unit/writeQueue.test.ts > writeQueue > queues a write and flushes after debounce
+[writeQueue] flushed 1 objects (1 flushes, 0 coalesced total)
+
+stdout | tests/unit/writeQueue.test.ts > writeQueue > coalesces multiple writes for the same object
+[writeQueue] flushed 1 objects (2 flushes, 0 coalesced total)
+
+stdout | tests/unit/writeQueue.test.ts > writeQueue > batches writes for different objects
+[writeQueue] flushed 2 objects (3 flushes, 1 coalesced total)
+
+stdout | tests/unit/writeQueue.test.ts > writeQueue > flush() sends immediately without waiting for debounce
+[writeQueue] flushed 1 objects (4 flushes, 1 coalesced total)
+
+stderr | tests/unit/writeQueue.test.ts > writeQueue > re-queues on failure and retries
+[writeQueue] Batch write failed, re-queued Error: network
+    at C:/Users/haber/repos/Gauntlet/gai-collab-board/tests/unit/writeQueue.test.ts:129:30
+    at file:///C:/Users/haber/repos/Gauntlet/gai-collab-board/node_modules/@vitest/runner/dist/index.js:145:11
+    at file:///C:/Users/haber/repos/Gauntlet/gai-collab-board/node_modules/@vitest/runner/dist/index.js:915:26
+    at file:///C:/Users/haber/repos/Gauntlet/gai-collab-board/node_modules/@vitest/runner/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///C:/Users/haber/repos/Gauntlet/gai-collab-board/node_modules/@vitest/runner/dist/index.js:1209:10)
+    at file:///C:/Users/haber/repos/Gauntlet/gai-collab-board/node_modules/@vitest/runner/dist/index.js:1653:37
+    at Traces.$ (file:///C:/Users/haber/repos/Gauntlet/gai-collab-board/node_modules/vitest/dist/chunks/traces.CCmnQaNT.js:142:27)
+    at trace (file:///C:/Users/haber/repos/Gauntlet/gai-collab-board/node_modules/vitest/dist/chunks/test.B8ej_ZHS.js:239:21)
+    at runTest (file:///C:/Users/haber/repos/Gauntlet/gai-collab-board/node_modules/@vitest/runner/dist/index.js:1653:12)
+
+stdout | tests/unit/writeQueue.test.ts > writeQueue > re-queues on failure and retries
+[writeQueue] flushed 1 objects (6 flushes, 1 coalesced total)
+
+stdout | tests/unit/writeQueue.test.ts > writeQueue > getWriteQueueStats returns correct stats
+[writeQueue] flushed 1 objects (7 flushes, 1 coalesced total)
+
+stdout | tests/unit/writeQueue.test.ts > writeQueue > flushes pending writes when switching boards
+[writeQueue] flushed 1 objects (8 flushes, 1 coalesced total)
+
+stdout | tests/unit/writeQueue.test.ts > queueObjectUpdate > atomically updates Zustand store and enqueues write
+[writeQueue] flushed 1 objects (9 flushes, 1 coalesced total)
+
+stdout | tests/unit/writeQueue.test.ts > queueObjectUpdate > queued write flushes to repo after debounce
+[writeQueue] flushed 1 objects (10 flushes, 1 coalesced total)
+
+stdout | tests/unit/writeQueue.test.ts > queueObjectUpdate > coalesces multiple queueObjectUpdate calls
+[writeQueue] flushed 1 objects (11 flushes, 1 coalesced total)
+
+ Γ£ô tests/unit/writeQueue.test.ts (12 tests) 72ms
+ Γ£ô tests/unit/Connector.test.tsx (13 tests) 156ms
+ Γ£ô tests/unit/useObjects.test.ts (40 tests | 1 skipped) 349ms
+stderr | tests/unit/AlignmentGuidesLayer.test.tsx > AlignmentGuidesLayer > renders a Group with Lines when horizontal and vertical guides are provided
+The tag <line> is unrecognized in this browser. If you meant to render a React component, start its name with an uppercase letter.
+The tag <g> is unrecognized in this browser. If you meant to render a React component, start its name with an uppercase letter.
+
+ Γ£ô tests/unit/ConnectionNodesLayer.test.tsx (2 tests) 479ms
+     Γ£ô renders anchor nodes only for connectable shapes  463ms
+ Γ£ô tests/unit/AlignmentGuidesLayer.test.tsx (5 tests) 544ms
+     Γ£ô returns null when guides is null  499ms
+stderr | tests/unit/BoardCanvas.interactions.test.tsx > BoardCanvas interactions > handles connector creation flow and shape drag updates
+An update to BoardCanvas inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ Γ£ô tests/unit/useShapeDrawing.test.ts (15 tests) 65ms
+ Γ£ô tests/unit/useCanvasOperations.test.ts (37 tests) 174ms
+stdout | tests/unit/BoardCanvas.interactions.test.tsx > BoardCanvas interactions > uses grab/grabbing cursor while hovering and dragging selection handle
+[perf] handleSelectionDragEnd: 0.35ms (selected=2, objects=2)
+
+ Γ£ô tests/unit/PresenceAvatars.test.tsx (9 tests) 125ms
+ Γ£ô tests/unit/BoardCanvas.interactions.test.tsx (18 tests) 1650ms
+       Γ£ô switches tool when pressing shortcut key and focus is not in input  626ms
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+ Γ£ô tests/unit/useExportAsImage.test.ts (9 tests) 67ms
+ Γ£ô tests/unit/App.shareLinkRouting.test.tsx (3 tests) 87ms
+stdout | tests/unit/wave4Performance.test.tsx > Wave 4 Performance ΓÇö Re-render Reduction > PropertyInspector does NOT re-render when an unselected object changes
+[PERF] PropertyInspector renders:
+  Initial: 1
+  After unselected obj-2 mutation: 3 (+2)
+  After selected obj-1 mutation: 4 (+1)
+
+stdout | tests/unit/wave4Performance.test.tsx > Wave 4 Performance ΓÇö Re-render Reduction > PropertyInspector does NOT re-render when a new object is added (not selected)
+[PERF] PropertyInspector ΓÇö add unselected object:
+  Initial: 1, After add: 3 (+2)
+
+stdout | tests/unit/wave4Performance.test.tsx > Wave 4 Performance ΓÇö Re-render Reduction > AIChatPanel hasBoardObjects selector only transitions on emptyΓåönon-empty
+[PERF] AIChatPanel hasBoardObjects selector:
+  Total store notifications: 8
+  Boolean transitions: 2
+  Skipped re-renders: 6 (was 8 re-renders before Wave 4)
+
+stdout | tests/unit/wave4Performance.test.tsx > Wave 4 Performance ΓÇö Re-render Reduction > usePresence primitive extraction: same values = same dependency identity
+[PERF] usePresence dependency narrowing:
+  Before: user object ref change ΓåÆ effect re-fires ΓåÆ RTDB write
+  After: primitive deps stable ΓåÆ effect skipped ΓåÆ 0 RTDB writes
+  Savings: ~24 unnecessary RTDB writes/day per active user (hourly token refresh)
+
+stdout | tests/unit/wave4Performance.test.tsx > Wave 4 Performance ΓÇö Re-render Reduction > PropertyInspector stays stable during 50 rapid mutations to unselected objects
+[PERF] PropertyInspector stress test (50 unselected mutations):
+  Initial renders: 1
+  After 50 mutations: 3 (+2)
+  Before Wave 4: would have been 50+ extra renders
+  After Wave 4: 2 extra renders
+
+stdout | tests/unit/wave4Performance.test.tsx > Re-Render Audit ΓÇö Drag Interactions > multi-select drag: only selected subscribers trigger per frame (10 of 200)
+[AUDIT] Multi-select drag (10 of 200, 60 frames):
+  Selected subscriber triggers: 600 (expect 600 = 10├ù60)
+  Unselected subscriber triggers: 0 (expect 0)
+  Total time: 0.97 ms (0.016 ms/frame)
+
+stdout | tests/unit/wave4Performance.test.tsx > Re-Render Audit ΓÇö Drag Interactions > frame drag: only frame children trigger per frame (20 children of 200)
+[AUDIT] Frame drag (20 children of 200, 60 frames):
+  Child subscriber triggers: 1200 (expect 1200 = 20├ù60)
+  Other subscriber triggers: 0 (expect 0)
+  Frame self triggers: 0 (expect 0 ΓÇö no parentFrameId)
+  Total time: 2.53 ms (0.042 ms/frame)
+
+stdout | tests/unit/wave4Performance.test.tsx > Re-Render Audit ΓÇö Drag Interactions > marquee move: 0 objectsStore subscriber triggers during rect updates
+[AUDIT] Marquee move (200 objects, 60 rect updates):
+  objectsStore subscriber triggers: 0 (expect 0)
+
+stdout | tests/unit/wave4Performance.test.tsx > Re-Render Audit ΓÇö Drag Interactions > marquee release: selection change triggers exactly N isSelected transitions
+[AUDIT] Marquee release (20 of 500 selected):
+  Selected transitions (falseΓåÆtrue): 20 (expect 20)
+  Unselected transitions: 0 (expect 0)
+  Selection time: 0.099 ms
+
+ Γ£ô tests/unit/wave4Performance.test.tsx (9 tests) 149ms
+ Γ£ô tests/unit/compoundExecutor.test.ts (55 tests) 142ms
+ Γ£ô tests/unit/useCursors.test.ts (3 tests) 43ms
+ Γ£ô tests/unit/useBoardSettings.test.ts (5 tests) 105ms
+ Γ£ô tests/unit/useCanvasKeyboardShortcuts.test.ts (19 tests) 103ms
+ Γ£ô tests/unit/App.authRouting.test.tsx (3 tests) 498ms
+     Γ£ô renders AuthPage at /login when user is null  359ms
+ Γ£ô tests/unit/useMarqueeSelection.test.ts (12 tests) 119ms
+ Γ£ô tests/unit/useConnectorCreation.test.ts (14 tests) 207ms
+ Γ£ô tests/unit/useBoardAutoJoin.test.ts (5 tests) 107ms
+ Γ£ô tests/unit/toolExecutor.test.ts (66 tests) 63ms
+ Γ£ô tests/unit/useCanvasViewport.test.ts (19 tests) 129ms
+stderr | tests/unit/useComments.test.ts > useComments > updates state on error
+Comments subscription error: Error: Test Error
+    at C:/Users/haber/repos/Gauntlet/gai-collab-board/tests/unit/useComments.test.ts:56:23
+    at file:///C:/Users/haber/repos/Gauntlet/gai-collab-board/node_modules/@vitest/runner/dist/index.js:145:11
+    at file:///C:/Users/haber/repos/Gauntlet/gai-collab-board/node_modules/@vitest/runner/dist/index.js:915:26
+    at file:///C:/Users/haber/repos/Gauntlet/gai-collab-board/node_modules/@vitest/runner/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///C:/Users/haber/repos/Gauntlet/gai-collab-board/node_modules/@vitest/runner/dist/index.js:1209:10)
+    at file:///C:/Users/haber/repos/Gauntlet/gai-collab-board/node_modules/@vitest/runner/dist/index.js:1653:37
+    at Traces.$ (file:///C:/Users/haber/repos/Gauntlet/gai-collab-board/node_modules/vitest/dist/chunks/traces.CCmnQaNT.js:142:27)
+    at trace (file:///C:/Users/haber/repos/Gauntlet/gai-collab-board/node_modules/vitest/dist/chunks/test.B8ej_ZHS.js:239:21)
+    at runTest (file:///C:/Users/haber/repos/Gauntlet/gai-collab-board/node_modules/@vitest/runner/dist/index.js:1653:12)
+
+ Γ£ô tests/unit/useComments.test.ts (6 tests) 71ms
+ Γ£ô tests/unit/ConnectionStatus.test.tsx (5 tests) 88ms
+ Γ£ô tests/unit/useDebouncedNumberField.test.tsx (9 tests) 141ms
+stderr | tests/unit/useBoardSubscription.test.ts > useBoardSubscription > updates state on error
+Board subscription error: Error: Test Error
+    at C:/Users/haber/repos/Gauntlet/gai-collab-board/tests/unit/useBoardSubscription.test.ts:46:23
+    at file:///C:/Users/haber/repos/Gauntlet/gai-collab-board/node_modules/@vitest/runner/dist/index.js:145:11
+    at file:///C:/Users/haber/repos/Gauntlet/gai-collab-board/node_modules/@vitest/runner/dist/index.js:915:26
+    at file:///C:/Users/haber/repos/Gauntlet/gai-collab-board/node_modules/@vitest/runner/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///C:/Users/haber/repos/Gauntlet/gai-collab-board/node_modules/@vitest/runner/dist/index.js:1209:10)
+    at file:///C:/Users/haber/repos/Gauntlet/gai-collab-board/node_modules/@vitest/runner/dist/index.js:1653:37
+    at Traces.$ (file:///C:/Users/haber/repos/Gauntlet/gai-collab-board/node_modules/vitest/dist/chunks/traces.CCmnQaNT.js:142:27)
+    at trace (file:///C:/Users/haber/repos/Gauntlet/gai-collab-board/node_modules/vitest/dist/chunks/test.B8ej_ZHS.js:239:21)
+    at runTest (file:///C:/Users/haber/repos/Gauntlet/gai-collab-board/node_modules/@vitest/runner/dist/index.js:1653:12)
+
+ Γ£ô tests/unit/useBoardSubscription.test.ts (4 tests) 76ms
+ Γ£ô tests/unit/useTheme.test.ts (9 tests) 63ms
+ Γ£ô tests/unit/LineShape.test.tsx (11 tests) 75ms
+ Γ£ô tests/unit/RectangleShape.test.tsx (3 tests) 53ms
+ Γ£ô tests/unit/useAlignmentGuideCache.test.ts (1 test) 37ms
+ Γ£ô tests/unit/useHistory.test.ts (11 tests) 104ms
+stderr | tests/unit/useResolveActiveBoard.test.ts > useResolveActiveBoard > subscribes and loads preferences when user is provided
+An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ Γ£ô tests/unit/useResolveActiveBoard.test.ts (6 tests) 79ms
+ Γ£ô tests/unit/frameGrouping.test.ts (6 tests) 66ms
+ Γ£ô tests/unit/SelectionProvider.test.tsx (1 test) 85ms
+ Γ£ô tests/unit/boardStateManager.test.ts (20 tests) 29ms
+ Γ£ô tests/unit/CanvasShapeRenderer.test.tsx (10 tests) 84ms
+ Γ£ô tests/unit/useConnectionStatus.test.ts (5 tests) 70ms
+ Γ£ô tests/integration/canvas.test.ts (58 tests) 116ms
+ Γ£ô tests/unit/useViewportActions.test.ts (14 tests) 157ms
+ Γ£ô tests/unit/aiAgent.commands.test.ts (55 tests) 153ms
+ Γ£ô tests/unit/StoreShapeRenderer.test.tsx (5 tests) 89ms
+ Γ£ô tests/unit/useAuth.test.ts (10 tests) 66ms
+ Γ£ô tests/unit/CircleShape.test.tsx (3 tests) 71ms
+ Γ£ô tests/unit/useObjects.pagination.test.ts (14 tests) 106ms
+ Γ£ô tests/unit/usePresence.test.ts (4 tests) 201ms
+ Γ£ô tests/unit/useVisibleShapeIds.test.ts (8 tests) 169ms
+ Γ£ô tests/unit/useShapeDragHandler.test.ts (2 tests) 41ms
+ Γ£ô tests/unit/App.boardRouting.test.tsx (8 tests) 125ms
+ Γ£ô tests/unit/useRecentBoardUpdate.test.ts (4 tests) 86ms
+ Γ£ô tests/unit/boardPrefetch.test.ts (9 tests) 25ms
+ Γ£ô tests/unit/TransformHandler.test.tsx (5 tests) 127ms
+ Γ£ô tests/unit/useKonvaCache.test.ts (10 tests) 85ms
+ Γ£ô tests/unit/useMiddleMousePanListeners.test.ts (9 tests) 183ms
+stdout | tests/unit/interactionPerformance.test.ts > Interaction Performance ΓÇö Simulated Sequences > single-object drag: 60 frames with 200 visible subscribers
+[INTERACTION] Single-object drag (200 objects, 60 frames):
+  Total: 4.42 ms
+  Avg/frame: 0.074 ms | Peak: 1.220 ms
+  Triggers/frame: 1.0 (expect 1)
+
+stdout | tests/unit/interactionPerformance.test.ts > Interaction Performance ΓÇö Simulated Sequences > multi-select drag: 10 of 200, 60 frames via groupDragOffset
+[INTERACTION] Multi-select drag (10 of 200, 60 frames):
+  Total: 1.33 ms
+  Avg/frame: 0.022 ms | Peak: 0.299 ms
+  Triggers/frame: 10.0 (expect 10)
+
+stdout | tests/unit/interactionPerformance.test.ts > Interaction Performance ΓÇö Simulated Sequences > marquee + release: 60 move frames + AABB filter on 500 objects
+[INTERACTION] Marquee + release (500 objects, 60 move frames):
+  Move phase object triggers: 0 (expect 0)
+  Release AABB filter: 0.203 ms (116 matches)
+  setSelectedIds: 0.094 ms
+  Total release cost: 0.297 ms
+
+stdout | tests/unit/interactionPerformance.test.ts > Interaction Performance ΓÇö Simulated Sequences > frame drag with 50 children: 60 frames via frameDragOffset
+[INTERACTION] Frame drag (50 children of 200, 60 frames):
+  Total: 3.72 ms
+  Avg/frame: 0.062 ms | Peak: 0.452 ms
+  Triggers/frame: 50.0 (expect 50 ΓÇö children only)
+
+stdout | tests/unit/interactionPerformance.test.ts
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  INTERACTION PERFORMANCE REPORT
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+  interaction_singleDrag_total: 4.42 ms (200 objects, 60 frames)
+  interaction_singleDrag_avgFrame: 0.0736 ms (200 objects)
+  interaction_singleDrag_peakFrame: 1.22 ms (200 objects)
+  interaction_singleDrag_triggersPerFrame: 1.00 count (200 objects)
+  interaction_multiDrag_total: 1.33 ms (10 of 200, 60 frames)
+  interaction_multiDrag_avgFrame: 0.0221 ms (10 of 200)
+  interaction_multiDrag_peakFrame: 0.2988 ms (10 of 200)
+  interaction_multiDrag_triggersPerFrame: 10.00 count (10 of 200)
+  interaction_marquee_move_objectTriggers: 0.0000 count (500 objects, 60 frames)
+  interaction_marquee_release_aabb: 0.2027 ms (500 objects ΓåÆ 116 selected)
+  interaction_marquee_release_setSelection: 0.0942 ms (116 selected)
+  interaction_frameDrag_total: 3.72 ms (50 children of 200, 60 frames)
+  interaction_frameDrag_avgFrame: 0.0620 ms (50 children of 200)
+  interaction_frameDrag_peakFrame: 0.4519 ms (50 children of 200)
+  interaction_frameDrag_triggersPerFrame: 50.00 count (50 children of 200)
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+
+ Γ£ô tests/unit/interactionPerformance.test.ts (4 tests) 66ms
+ Γ£ô tests/unit/objectsStore.test.ts (39 tests) 41ms
+ Γ£ô tests/unit/alignmentGuides.test.ts (12 tests) 48ms
+ Γ£ô tests/integration/sync.test.ts (10 tests) 56ms
+ Γ£ô tests/unit/useCanEdit.test.ts (5 tests) 125ms
+ Γ£ô tests/unit/useSidebarPrefetch.test.ts (2 tests) 73ms
+ Γ£ô tests/unit/canvasTextEditOverlay.test.ts (5 tests) 42ms
+ Γ£ô tests/unit/historyService.test.ts (16 tests) 14ms
+ Γ£ô tests/unit/commentService.test.ts (5 tests) 26ms
+ Γ£ô tests/unit/useLineLikeShape.test.ts (2 tests) 31ms
+ Γ£ô tests/unit/boardService.test.ts (39 tests) 35ms
+ Γ£ô tests/unit/objectService.test.ts (26 tests) 38ms
+ Γ£ô tests/unit/columnLayout.test.ts (15 tests) 11ms
+ Γ£ô tests/unit/useBatchDraw.test.ts (3 tests) 59ms
+ Γ£ô tests/unit/aiUsageTracker.test.ts (3 tests) 26ms
+ Γ£ô tests/unit/historyStore.test.ts (9 tests) 11ms
+ Γ£ô tests/unit/mindmapLayout.test.ts (17 tests) 19ms
+stdout | tests/integration/repositorySync.test.ts > Repository Sync Integration > Write queue ΓåÆ repository integration > queued writes flush through repository.updateObjectsBatch
+[writeQueue] flushed 2 objects (1 flushes, 1 coalesced total)
+
+stdout | tests/integration/repositorySync.test.ts > Repository Sync Integration > Write queue ΓåÆ repository integration > immediate flush sends writes through repository
+[writeQueue] flushed 1 objects (2 flushes, 1 coalesced total)
+
+ Γ£ô tests/integration/repositorySync.test.ts (6 tests) 25ms
+ Γ£ô tests/unit/spatialIndex.test.ts (11 tests) 16ms
+ Γ£ô tests/integration/aiCommandIntegration.test.ts (6 tests) 14ms
+ Γ£ô tests/unit/usageLedger.test.ts (8 tests) 50ms
+ Γ£ô tests/unit/realtimeSyncRepo.test.ts (7 tests) 48ms
+ Γ£ô tests/unit/applyIncrementalChanges.test.ts (15 tests) 36ms
+ Γ£ô tests/unit/visualStability.test.ts (5 tests) 81ms
+ Γ£ô tests/unit/realtimeService.test.ts (23 tests) 38ms
+ Γ£ô tests/unit/commandValidator.test.ts (24 tests) 29ms
+ Γ£ô tests/unit/layoutUtils.test.ts (16 tests) 19ms
+ Γ£ô tests/unit/quadrantLayout.test.ts (15 tests) 18ms
+ Γ£ô tests/unit/alignDistribute.test.ts (11 tests) 16ms
+ Γ£ô tests/unit/utils.test.ts (7 tests) 21ms
+ Γ£ô tests/unit/compoundHelpers.test.ts (56 tests) 49ms
+ Γ£ô tests/unit/userPreferencesService.test.ts (14 tests) 14ms
+ Γ£ô tests/unit/commandDispatcher.test.ts (13 tests) 17ms
+ Γ£ô tests/unit/firestoreBoardRepo.test.ts (8 tests) 10ms
+ Γ£ô tests/unit/flowchartLayout.test.ts (16 tests) 20ms
+ Γ£ô tests/unit/coordinateUtils.test.ts (33 tests) 12ms
+ Γ£ô tests/unit/useFrameContainment.test.ts (28 tests) 20ms
+ Γ£ô tests/unit/lineTransform.test.ts (9 tests) 9ms
+ Γ£ô tests/unit/snapToGrid.test.ts (17 tests) 15ms
+ Γ£ô tests/unit/guards.test.ts (29 tests) 13ms
+ Γ£ô tests/unit/aiProxyConfig.test.ts (5 tests) 15ms
+ Γ£ô tests/unit/canvasBounds.test.ts (21 tests) 22ms
+ Γ£ô tests/unit/providerConfig.test.ts (15 tests) 16ms
+ Γ£ô tests/unit/guestSession.test.ts (4 tests) 15ms
+ Γ£ô tests/unit/authService.test.ts (8 tests) 17ms
+ Γ£ô tests/unit/connectorAnchors.test.ts (10 tests) 23ms
+ Γ£ô tests/unit/proxyCors.test.ts (9 tests) 16ms
+ Γ£ô tests/unit/aiErrors.test.ts (11 tests) 21ms
+ Γ£ô tests/unit/selectionStore.test.ts (9 tests) 21ms
+ Γ£ô tests/unit/repositoryProvider.test.ts (5 tests) 10ms
+ Γ£ô tests/unit/canvasOverlayPosition.test.ts (3 tests) 12ms
+ Γ£ô tests/unit/ai.test.ts (8 tests) 10ms
+ Γ£ô tests/unit/strokePatterns.test.ts (4 tests) 13ms
+ Γ£ô tests/unit/shareLink.test.ts (3 tests) 6ms
+ Γ£ô tests/unit/setup.test.ts (1 test) 6ms
+ Γ£ô tests/unit/activeBoard.test.ts (6 tests) 8ms
+ Γ£ô tests/unit/BoardCanvas.background.test.ts (5 tests) 13ms
+
+ Test Files  134 passed (134)
+      Tests  1734 passed | 2 skipped (1736)
+   Start at  20:40:44
+   Duration  39.31s (transform 74.76s, setup 50.03s, import 161.49s, tests 28.11s, environment 362.39s)
+
+ % Coverage report from istanbul
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   91.12 |    81.93 |   88.52 |   91.82 |                   
+ src               |   18.51 |     4.54 |    3.84 |   19.41 |                   
+  App.tsx          |   13.86 |     3.48 |    3.84 |   14.58 | ...45,559-564,592 
+  main.tsx         |   85.71 |       50 |     100 |   85.71 | 18                
+ src/components/ai |      90 |    82.81 |     100 |   95.08 |                   
+  AIChatPanel.tsx  |      90 |    82.81 |     100 |   95.08 | 62,81-82          
+ ...omponents/auth |   83.78 |    82.75 |    87.5 |   83.78 |                   
+  AuthPage.tsx     |     100 |      100 |     100 |     100 |                   
+  LoginForm.tsx    |      75 |       75 |      80 |      75 | 32-37             
+  SignupForm.tsx   |   82.85 |    78.57 |   83.33 |   82.85 | 46-51             
+  WelcomePage.tsx  |     100 |      100 |     100 |     100 |                   
+ ...mponents/board |   77.25 |    65.53 |   67.53 |   77.44 |                   
+  ...stSidebar.tsx |    87.5 |    60.71 |   78.04 |   86.86 | ...72,404,445-463 
+  CommentPanel.tsx |   82.97 |    70.45 |   76.92 |   86.36 | ...28,178,191-193 
+  RightSidebar.tsx |   66.66 |    62.96 |      60 |   66.66 | 16,19,45-64       
+  ShareDialog.tsx  |   54.41 |    77.27 |   30.76 |   55.22 | ...08-215,263-283 
+ ...ponents/canvas |   82.53 |    75.36 |   78.92 |   82.78 |                   
+  AlignToolbar.tsx |   83.78 |    70.58 |   61.53 |   83.33 | ...25,146-156,178 
+  ...idesLayer.tsx |     100 |     90.9 |     100 |     100 | 24                
+  BoardCanvas.tsx  |   72.95 |     64.4 |   76.36 |   73.72 | ...60-761,876-934 
+  ...trolPanel.tsx |   66.66 |    81.25 |      50 |   63.63 | 67-92,155         
+  ...eRenderer.tsx |   78.37 |       75 |   28.57 |   77.77 | ...91,261,280-282 
+  ...arWrapper.tsx |   66.66 |      100 |      50 |   66.66 | 57                
+  ...odesLayer.tsx |   95.45 |      100 |      90 |   95.23 | 61                
+  CursorLayer.tsx  |   44.44 |      100 |       0 |   44.44 | 15,61-68          
+  ...Inspector.tsx |   90.36 |    81.25 |   88.76 |   91.04 | ...58,572,599,714 
+  ...tionLayer.tsx |   95.23 |    77.77 |     100 |      95 | 14                
+  ...eRenderer.tsx |     100 |      100 |     100 |     100 |                   
+  Toolbar.tsx      |      76 |    82.75 |   72.72 |      76 | 238-239,258-267   
+  ...rmHandler.tsx |   84.84 |    71.05 |    87.5 |    87.5 | 79-84,144,166-170 
+  ...anvasTheme.ts |     100 |      100 |     100 |     100 |                   
+ .../canvas/shapes |   82.07 |    74.42 |      75 |   82.93 |                   
+  CircleShape.tsx  |     100 |      100 |     100 |     100 |                   
+  Connector.tsx    |     100 |    84.78 |     100 |     100 | 115-120,138-150   
+  Frame.tsx        |    77.2 |    64.78 |   66.66 |   79.68 | ...72,279,287-290 
+  LineShape.tsx    |     100 |      100 |     100 |     100 |                   
+  ...ngleShape.tsx |     100 |      100 |     100 |     100 |                   
+  StickyNote.tsx   |   82.07 |    72.72 |   78.57 |   82.17 | ...18-221,242-252 
+  TextElement.tsx  |   79.41 |       66 |   76.92 |   79.38 | ...83-186,198-211 
+ ...nents/presence |     100 |    90.32 |     100 |     100 |                   
+  ...ceAvatars.tsx |     100 |    90.32 |     100 |     100 | 28,144            
+ src/components/ui |   96.29 |      100 |   87.09 |   96.26 |                   
+  ...ionStatus.tsx |   93.75 |      100 |      75 |   93.33 | 22                
+  badge.tsx        |     100 |      100 |     100 |     100 |                   
+  button.tsx       |     100 |      100 |     100 |     100 |                   
+  card.tsx         |   94.44 |      100 |   83.33 |   94.44 | 49                
+  dialog.tsx       |     100 |      100 |     100 |     100 |                   
+  input.tsx        |     100 |      100 |     100 |     100 |                   
+  label.tsx        |     100 |      100 |     100 |     100 |                   
+  select.tsx       |   91.66 |      100 |   71.42 |   91.66 | 104,142           
+  tabs.tsx         |     100 |      100 |     100 |     100 |                   
+  textarea.tsx     |     100 |      100 |     100 |     100 |                   
+ src/hooks         |    95.6 |    87.63 |   95.09 |    96.6 |                   
+  useAI.ts         |   96.87 |    95.45 |    90.9 |   97.95 | 53                
+  ...GuideCache.ts |     100 |      100 |     100 |     100 |                   
+  useBatchDraw.ts  |     100 |      100 |     100 |     100 |                   
+  ...rdAutoJoin.ts |     100 |      100 |     100 |     100 |                   
+  ...vasRefSync.ts |     100 |      100 |     100 |     100 |                   
+  ...rdSettings.ts |   95.31 |    89.28 |     100 |   95.23 | 41,78,194         
+  ...bscription.ts |     100 |      100 |     100 |     100 |                   
+  ...dShortcuts.ts |   97.87 |       96 |     100 |   97.82 | 75                
+  ...Operations.ts |   99.06 |    91.66 |     100 |     100 | ...92,399,431-433 
+  ...asViewport.ts |   93.93 |     75.6 |   94.11 |   93.93 | ...28,143-149,234 
+  ...ersistence.ts |     100 |      100 |     100 |     100 |                   
+  ...portResize.ts |    62.5 |      100 |      75 |   57.14 | 13-19             
+  ...tleCleanup.ts |      60 |       50 |     100 |      60 | 12-13             
+  useComments.ts   |   93.93 |    86.66 |     100 |     100 | 83-92             
+  ...tionStatus.ts |     100 |      100 |     100 |     100 |                   
+  ...orCreation.ts |     100 |      100 |     100 |     100 |                   
+  useCursors.ts    |     100 |    84.21 |     100 |     100 | 68,77             
+  ...umberField.ts |     100 |     90.9 |     100 |     100 | 42,75             
+  ...ortAsImage.ts |     100 |    81.81 |     100 |     100 | 17,73,89-92       
+  ...ontainment.ts |     100 |       90 |     100 |     100 | 58,97-99          
+  useHistory.ts    |   86.79 |      100 |      65 |   86.36 | 111-113,123-125   
+  ...oryRefSync.ts |     100 |      100 |     100 |     100 |                   
+  useKonvaCache.ts |     100 |    94.44 |     100 |     100 | 72                
+  ...eLikeShape.ts |     100 |       75 |     100 |     100 | 40                
+  ...eSelection.ts |     100 |    94.44 |     100 |     100 | 64                
+  ...nListeners.ts |     100 |      100 |     100 |     100 |                   
+  ...agHandlers.ts |   93.31 |    83.95 |   96.87 |    95.5 | ...88-389,453-465 
+  ...ersRefSync.ts |     100 |      100 |     100 |     100 |                   
+  useObjects.ts    |   92.87 |    84.21 |   89.58 |   95.54 | ...72-283,329-330 
+  usePresence.ts   |   96.42 |      100 |      90 |   96.42 | 72                
+  ...oardUpdate.ts |     100 |      100 |     100 |     100 |                   
+  ...ctiveBoard.ts |     100 |    92.85 |     100 |     100 | 51                
+  ...ragHandler.ts |     100 |      100 |     100 |     100 |                   
+  ...peDrawing.tsx |   88.33 |    69.23 |     100 |   87.93 | 191-237           
+  ...ormHandler.ts |     100 |       90 |     100 |     100 | 80                
+  ...arPrefetch.ts |     100 |      100 |     100 |     100 |                   
+  useTheme.ts      |   93.93 |       75 |     100 |   93.93 | 9,22              
+  ...ortActions.ts |     100 |    91.66 |     100 |     100 | 90                
+  ...leShapeIds.ts |     100 |    88.46 |     100 |     100 | 55-56,86          
+ src/lib           |   96.43 |    81.75 |    96.8 |   96.32 |                   
+  activeBoard.ts   |     100 |      100 |     100 |     100 |                   
+  ai.ts            |   71.42 |       70 |      50 |   71.42 | 40-47,63-75       
+  ...Distribute.ts |   96.96 |    91.66 |     100 |   95.91 | 56,75             
+  ...mentGuides.ts |     100 |       80 |     100 |     100 | 41,115,132-151    
+  ...ctDefaults.ts |     100 |      100 |     100 |     100 |                   
+  boardPrefetch.ts |     100 |     87.5 |   83.33 |     100 | 33                
+  ...ateManager.ts |   83.01 |       75 |     100 |      82 | ...33,137,141,145 
+  canvasBounds.ts  |   97.24 |    80.85 |     100 |   97.14 | 67,72,83          
+  ...ayPosition.ts |     100 |      100 |     100 |     100 |                   
+  canvasShadows.ts |     100 |      100 |     100 |     100 |                   
+  ...ditOverlay.ts |     100 |      100 |     100 |     100 |                   
+  ...torAnchors.ts |     100 |      100 |     100 |     100 |                   
+  constants.ts     |     100 |      100 |     100 |     100 |                   
+  ...inateUtils.ts |     100 |      100 |     100 |     100 |                   
+  firebase.ts      |     100 |      100 |     100 |     100 |                   
+  guestSession.ts  |     100 |      100 |     100 |     100 |                   
+  lineTransform.ts |     100 |    65.21 |     100 |     100 | ...,92-95,104-117 
+  perfTimer.ts     |      90 |       50 |     100 |     100 | 20                
+  ...ryProvider.ts |   88.88 |       75 |     100 |   88.88 | 21                
+  ...hadowProps.ts |     100 |      100 |     100 |     100 |                   
+  shareLink.ts     |     100 |      100 |     100 |     100 |                   
+  snapToGrid.ts    |     100 |      100 |     100 |     100 |                   
+  spatialIndex.ts  |     100 |       90 |     100 |     100 | 66                
+  ...kePatterns.ts |     100 |      100 |     100 |     100 |                   
+  utils.ts         |     100 |      100 |     100 |     100 |                   
+  writeQueue.ts    |   95.34 |    76.92 |    87.5 |   95.34 | 122-123           
+ src/modules/ai    |   96.64 |    91.77 |   98.47 |    97.3 |                   
+  aiService.ts     |   94.44 |    87.17 |   93.33 |   94.11 | 34,119,170,284    
+  ...Dispatcher.ts |     100 |    88.88 |     100 |     100 | 80-99             
+  ...dValidator.ts |   94.44 |    95.08 |     100 |   94.44 | 77,81,184         
+  ...ndExecutor.ts |   98.47 |    92.92 |     100 |   98.33 | 69,382            
+  ...undHelpers.ts |   98.76 |    99.09 |     100 |   98.55 | 116               
+  compoundTools.ts |     100 |      100 |     100 |     100 |                   
+  defaults.ts      |   96.55 |    83.33 |     100 |   96.55 | 233               
+  errors.ts        |   94.11 |    89.36 |     100 |   94.11 | 16,73             
+  ...iderConfig.ts |     100 |      100 |     100 |     100 |                   
+  toolExecutor.ts  |   94.79 |    89.66 |   95.65 |   96.92 | ...16,517,602,640 
+  tools.ts         |     100 |      100 |     100 |     100 |                   
+  usageLedger.ts   |     100 |    79.16 |     100 |     100 | ...74,235,241-244 
+ ...les/ai/layouts |   96.96 |    91.01 |     100 |   99.29 |                   
+  columnLayout.ts  |   94.87 |       75 |     100 |     100 | 116-128           
+  ...hartLayout.ts |   96.29 |    94.11 |     100 |   97.46 | 82,98             
+  layoutUtils.ts   |     100 |      100 |     100 |     100 |                   
+  mindmapLayout.ts |    96.9 |     87.5 |     100 |     100 | 136,164,232       
+  ...rantLayout.ts |   98.14 |    91.66 |     100 |     100 | 261               
+ src/modules/auth  |     100 |    92.85 |     100 |     100 |                   
+  authService.ts   |     100 |      100 |     100 |     100 |                   
+  useAuth.ts       |     100 |      100 |     100 |     100 |                   
+  useCanEdit.ts    |     100 |     87.5 |     100 |     100 | 32                
+ ...odules/history |     100 |      100 |     100 |     100 |                   
+  ...oryService.ts |     100 |      100 |     100 |     100 |                   
+ src/modules/sync  |   91.53 |    82.93 |   93.97 |   92.62 |                   
+  boardService.ts  |   93.91 |    84.61 |      95 |   99.03 | 87                
+  ...entService.ts |     100 |    83.33 |     100 |     100 | 93                
+  ...eBoardRepo.ts |   33.33 |      100 |      50 |   33.33 | 35-37             
+  objectService.ts |   84.65 |    85.04 |      85 |   84.65 | 411-423,471-503   
+  ...imeService.ts |     100 |    83.33 |     100 |     100 | 167               
+  ...meSyncRepo.ts |     100 |    68.75 |     100 |     100 | 23,67-72          
+  ...cesService.ts |   96.29 |    79.16 |     100 |   96.15 | 115-116           
+ src/stores        |    99.5 |    94.18 |   98.27 |   99.45 |                   
+  ...ffsetStore.ts |     100 |      100 |     100 |     100 |                   
+  historyStore.ts  |     100 |      100 |     100 |     100 |                   
+  objectsStore.ts  |    99.3 |    92.42 |   96.87 |   99.24 | 290               
+  ...ctionStore.ts |     100 |      100 |     100 |     100 |                   
+  ...tionsStore.ts |     100 |      100 |     100 |     100 |                   
+ src/types         |     100 |      100 |     100 |     100 |                   
+  guards.ts        |     100 |      100 |     100 |     100 |                   
+-------------------|---------|----------|---------|---------|-------------------

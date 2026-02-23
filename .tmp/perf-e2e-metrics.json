@@ -1,0 +1,15 @@
+{
+  "frameTime100Drag": {
+    "p50": 16.7,
+    "p95": 16.7,
+    "p99": 16.8
+  },
+  "frameTime500Pan": {
+    "p50": 16.7,
+    "p95": 16.7,
+    "p99": 16.8
+  },
+  "reactRendersDuringDrag": 0,
+  "selectorEvalsPerDragFrame": 0,
+  "tti1000ObjectsMs": 27
+}

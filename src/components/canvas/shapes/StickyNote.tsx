@@ -192,11 +192,17 @@ export const StickyNote = memo(
 
           const handleBlur = (e: FocusEvent) => {
             const rt = e.relatedTarget as HTMLElement;
-            if (rt && (rt.closest('.toolbar') || rt.closest('[data-testid^="tool-"]') || rt.closest('[data-testid^="zoom-"]'))) {
+            if (
+              rt &&
+              (rt.closest('.toolbar') ||
+                rt.closest('[data-testid^="tool-"]') ||
+                rt.closest('[data-testid^="zoom-"]'))
+            ) {
               e.preventDefault();
               textarea.focus();
               return;
             }
+
             onTextChange(textarea.value);
             removeTextarea();
           };
