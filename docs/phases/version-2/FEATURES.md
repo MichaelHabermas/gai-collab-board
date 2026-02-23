@@ -1,8 +1,8 @@
-## Summary
+<!-- ## Summary
 
 This document elaborates the Top 20 v2 features chosen from initial research. For each feature it provides a short description, rationale, acceptance criteria, technical notes, and dependencies. It is the detailed spec for what "done" means for each feature and how it fits with others; it supports planning, implementation, and verification without locking in low-level tasks.
 
----
+--- -->
 
 # CollabBoard: Chosen Features (Elaborated)
 

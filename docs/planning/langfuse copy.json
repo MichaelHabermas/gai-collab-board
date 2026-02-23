@@ -1,0 +1,1984 @@
+[
+    {
+        "id": "c009fd2e-99ed-4e85-ae70-e5a37f6a2754",
+        "traceId": "2b9cadaf-aea4-4d97-82b9-0b7e2bfcdb00",
+        "startTime": "2026-02-20T22:10:42.554Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-20T22:10:53.000Z",
+        "updatedAt": "2026-02-20T22:10:57.744Z",
+        "input": {
+            "model": "gemini-2.5-flash",
+            "tool_choice": "auto",
+            "max_tokens": 4096,
+            "temperature": 0.3,
+            "top_p": 0.9
+        },
+        "output": {
+            "choices": [],
+            "created": 1771625442,
+            "id": "4duYabDtIKG5mtkPvsXvoAg",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 15,
+                "prompt_tokens": 2502,
+                "total_tokens": 2585
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 2502,
+            "output": 15,
+            "total": 2585
+        },
+        "costDetails": {
+            "input": 0.0007506,
+            "output": 3.75e-05,
+            "total": 0.0007881
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0007506,
+        "outputCost": 3.75e-05,
+        "totalCost": 0.0007881,
+        "inputUsage": 2502,
+        "outputUsage": 15,
+        "totalUsage": 2585,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-20 22:10:42.553",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "8739bac9-865b-4cbd-b3a0-4030fa590367",
+        "traceId": "321d781d-785d-465b-ac0e-133d9edab733",
+        "startTime": "2026-02-21T00:11:55.305Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-21T00:12:04.000Z",
+        "updatedAt": "2026-02-21T00:12:18.729Z",
+        "input": {
+            "model": "gemini-2.5-flash",
+            "max_tokens": 4096,
+            "temperature": 0.3
+        },
+        "output": {
+            "choices": [],
+            "created": 1771632715,
+            "id": "SfiYab6VNa2xqtsP_NPt4Q4",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 43,
+                "prompt_tokens": 208,
+                "total_tokens": 431
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 208,
+            "output": 43,
+            "total": 431
+        },
+        "costDetails": {
+            "input": 6.24e-05,
+            "output": 0.0001075,
+            "total": 0.0001699
+        },
+        "providedCostDetails": {},
+        "inputCost": 6.24e-05,
+        "outputCost": 0.0001075,
+        "totalCost": 0.0001699,
+        "inputUsage": 208,
+        "outputUsage": 43,
+        "totalUsage": 431,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-21 00:11:55.305",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "1b8f6ab8-d7a5-4ace-8652-6761e3f52fbe",
+        "traceId": "46ecbf19-67c7-4ada-8bb9-21082ee3c105",
+        "startTime": "2026-02-20T22:14:51.531Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-20T22:15:02.000Z",
+        "updatedAt": "2026-02-20T22:15:06.621Z",
+        "input": {
+            "model": "gemini-2.5-flash",
+            "tool_choice": "auto",
+            "max_tokens": 4096,
+            "temperature": 0.3,
+            "top_p": 0.9
+        },
+        "output": {
+            "choices": [],
+            "created": 1771625691,
+            "id": "2dyYabrzPPmnqtsPxobZuA4",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 129,
+                "prompt_tokens": 15317,
+                "prompt_tokens_details": {
+                    "cached_tokens": 14923
+                },
+                "total_tokens": 15513
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 15317,
+            "output": 129,
+            "total": 15513
+        },
+        "costDetails": {
+            "input": 0.0045951,
+            "output": 0.0003225,
+            "total": 0.0049176
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0045951,
+        "outputCost": 0.0003225,
+        "totalCost": 0.0049176,
+        "inputUsage": 15317,
+        "outputUsage": 129,
+        "totalUsage": 15513,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-20 22:14:51.531",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "44be8ae8-4caf-4305-9f7a-9f7f08e267fd",
+        "traceId": "7babe88c-2721-4787-b8c7-0e1c4c0c2a0d",
+        "startTime": "2026-02-20T22:10:48.137Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-20T22:10:53.000Z",
+        "updatedAt": "2026-02-20T22:10:57.725Z",
+        "output": {
+            "choices": [],
+            "created": 1771625448,
+            "id": "4tuYafDVLcWyqtsP9ZixsAc",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 212,
+                "prompt_tokens": 12393,
+                "total_tokens": 13505
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 12393,
+            "output": 212,
+            "total": 13505
+        },
+        "costDetails": {
+            "input": 0.0037179,
+            "output": 0.00053,
+            "total": 0.0042479
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0037179,
+        "outputCost": 0.00053,
+        "totalCost": 0.0042479,
+        "inputUsage": 12393,
+        "outputUsage": 212,
+        "totalUsage": 13505,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-20 22:10:48.137",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "9ea11b49-a5c9-4669-a9bf-8a8d80790ec1",
+        "traceId": "88cd4105-8d9d-48d7-ac35-09fcf42b19e3",
+        "startTime": "2026-02-21T00:11:53.582Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-21T00:12:04.000Z",
+        "updatedAt": "2026-02-21T00:12:18.717Z",
+        "input": {
+            "model": "gemini-2.5-flash",
+            "tool_choice": "auto",
+            "max_tokens": 4096,
+            "temperature": 0.3,
+            "top_p": 0.9
+        },
+        "output": {
+            "choices": [],
+            "created": 1771632713,
+            "id": "SPiYaeazFuK4qtsP34q3uQg",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 15,
+                "prompt_tokens": 5023,
+                "total_tokens": 5105
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 5023,
+            "output": 15,
+            "total": 5105
+        },
+        "costDetails": {
+            "input": 0.0015069,
+            "output": 3.75e-05,
+            "total": 0.0015444
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0015069,
+        "outputCost": 3.75e-05,
+        "totalCost": 0.0015444,
+        "inputUsage": 5023,
+        "outputUsage": 15,
+        "totalUsage": 5105,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-21 00:11:53.581",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "ebd81cf0-a084-4d45-b4a7-2a4809a36d5d",
+        "traceId": "8c70aeab-f40e-49f6-9b32-e5e4e5e9a886",
+        "startTime": "2026-02-20T22:14:01.452Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-20T22:14:12.000Z",
+        "updatedAt": "2026-02-20T22:14:16.558Z",
+        "input": {
+            "model": "gemini-2.5-flash",
+            "tool_choice": "auto",
+            "max_tokens": 4096,
+            "temperature": 0.3,
+            "top_p": 0.9
+        },
+        "output": {
+            "choices": [],
+            "created": 1771625641,
+            "id": "qNyYae-7Ie66qtsPj8qvkAg",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 15,
+                "prompt_tokens": 2502,
+                "total_tokens": 2568
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 2502,
+            "output": 15,
+            "total": 2568
+        },
+        "costDetails": {
+            "input": 0.0007506,
+            "output": 3.75e-05,
+            "total": 0.0007881
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0007506,
+        "outputCost": 3.75e-05,
+        "totalCost": 0.0007881,
+        "inputUsage": 2502,
+        "outputUsage": 15,
+        "totalUsage": 2568,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-20 22:14:01.451",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "98ba4857-2277-4662-85a4-da2400f18a6a",
+        "traceId": "af2ca759-9c3d-4652-bd5f-f865379ea6ed",
+        "startTime": "2026-02-20T22:15:02.877Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-20T22:15:13.000Z",
+        "updatedAt": "2026-02-20T22:15:17.975Z",
+        "input": {
+            "model": "gemini-2.5-flash",
+            "tool_choice": "auto",
+            "max_tokens": 4096,
+            "temperature": 0.3,
+            "top_p": 0.9
+        },
+        "output": {
+            "choices": [],
+            "created": 1771625702,
+            "id": "5dyYaYKRK5HwqtsP68TToAg",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 67,
+                "prompt_tokens": 15476,
+                "prompt_tokens_details": {
+                    "cached_tokens": 14920
+                },
+                "total_tokens": 15587
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 15476,
+            "output": 67,
+            "total": 15587
+        },
+        "costDetails": {
+            "input": 0.0046428,
+            "output": 0.0001675,
+            "total": 0.0048103
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0046428,
+        "outputCost": 0.0001675,
+        "totalCost": 0.0048103,
+        "inputUsage": 15476,
+        "outputUsage": 67,
+        "totalUsage": 15587,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-20 22:15:02.877",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "74e1ca06-630b-45b4-8289-3bf56b85bee2",
+        "traceId": "b6c5bbb0-7082-4b31-8e27-c734394e2e14",
+        "startTime": "2026-02-20T22:20:00.273Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-20T22:20:11.000Z",
+        "updatedAt": "2026-02-20T22:20:15.388Z",
+        "input": {
+            "model": "gemini-2.5-flash",
+            "max_tokens": 4096,
+            "temperature": 0.3
+        },
+        "output": {
+            "choices": [],
+            "created": 1771626000,
+            "id": "Bd6YacvhH9mxqtsP3Z746AY",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 360,
+                "prompt_tokens": 12424,
+                "total_tokens": 14990
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 12424,
+            "output": 360,
+            "total": 14990
+        },
+        "costDetails": {
+            "input": 0.0037272,
+            "output": 0.0009,
+            "total": 0.0046272
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0037272,
+        "outputCost": 0.0009,
+        "totalCost": 0.0046272,
+        "inputUsage": 12424,
+        "outputUsage": 360,
+        "totalUsage": 14990,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-20 22:20:00.273",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "c13c47e0-433a-4751-a1a4-646aa239903d",
+        "traceId": "c957d83a-d56e-4b47-be1f-6e8d62880266",
+        "startTime": "2026-02-20T22:14:15.609Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-20T22:14:26.000Z",
+        "updatedAt": "2026-02-20T22:14:30.723Z",
+        "input": {
+            "model": "gemini-2.5-flash",
+            "tool_choice": "auto",
+            "max_tokens": 4096,
+            "temperature": 0.3,
+            "top_p": 0.9
+        },
+        "output": {
+            "choices": [],
+            "created": 1771625655,
+            "id": "ttyYaZewHsWyqtsP9ZixsAc",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 38,
+                "prompt_tokens": 15274,
+                "total_tokens": 15376
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 15274,
+            "output": 38,
+            "total": 15376
+        },
+        "costDetails": {
+            "input": 0.0045822,
+            "output": 9.5e-05,
+            "total": 0.004677199999
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0045822,
+        "outputCost": 9.5e-05,
+        "totalCost": 0.004677199999,
+        "inputUsage": 15274,
+        "outputUsage": 38,
+        "totalUsage": 15376,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-20 22:14:15.609",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "ef8c0372-5a54-490d-b30f-c811cbc4d19e",
+        "traceId": "ef881a30-39ac-4f78-99f4-767cee7a5ca3",
+        "startTime": "2026-02-20T22:14:06.832Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-20T22:14:12.000Z",
+        "updatedAt": "2026-02-20T22:14:16.559Z",
+        "output": {
+            "choices": [],
+            "created": 1771625646,
+            "id": "qdyYadCSLMKmmtkPuMD8uAg",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 371,
+                "prompt_tokens": 12424,
+                "total_tokens": 13364
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 12424,
+            "output": 371,
+            "total": 13364
+        },
+        "costDetails": {
+            "input": 0.0037272,
+            "output": 0.0009275,
+            "total": 0.0046547
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0037272,
+        "outputCost": 0.0009275,
+        "totalCost": 0.0046547,
+        "inputUsage": 12424,
+        "outputUsage": 371,
+        "totalUsage": 13364,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-20 22:14:06.832",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "f868f682-b297-46bf-a1c9-d48667e56aa8",
+        "traceId": "f524b41d-2702-4a0a-9d6d-b785b62d6a1d",
+        "startTime": "2026-02-20T22:19:48.946Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-20T22:19:59.000Z",
+        "updatedAt": "2026-02-20T22:20:04.046Z",
+        "input": {
+            "model": "gemini-2.5-flash",
+            "tool_choice": "auto",
+            "max_tokens": 4096,
+            "temperature": 0.3,
+            "top_p": 0.9
+        },
+        "output": {
+            "choices": [],
+            "created": 1771625988,
+            "id": "BN6YadfRAZfnqtsPiNHdkAg",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 15,
+                "prompt_tokens": 2502,
+                "total_tokens": 2582
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 2502,
+            "output": 15,
+            "total": 2582
+        },
+        "costDetails": {
+            "input": 0.0007506,
+            "output": 3.75e-05,
+            "total": 0.0007881
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0007506,
+        "outputCost": 3.75e-05,
+        "totalCost": 0.0007881,
+        "inputUsage": 2502,
+        "outputUsage": 15,
+        "totalUsage": 2582,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-20 22:19:48.946",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "56c19644-d695-4064-a4a3-bf8dee3031f7",
+        "traceId": "0e3380d5-a874-4658-9d07-d81efb2db517",
+        "startTime": "2026-02-22T23:41:56.220Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-22T23:42:05.000Z",
+        "updatedAt": "2026-02-22T23:42:09.738Z",
+        "output": {
+            "choices": [],
+            "created": 1771803716,
+            "id": "Q5SbaaWzC9aEz7IPsN63mQY",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 193,
+                "prompt_tokens": 2006,
+                "total_tokens": 2199
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 2006,
+            "output": 193,
+            "total": 2199
+        },
+        "costDetails": {
+            "input": 0.0006018,
+            "output": 0.0004825,
+            "total": 0.0010843
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0006018,
+        "outputCost": 0.0004825,
+        "totalCost": 0.0010843,
+        "inputUsage": 2006,
+        "outputUsage": 193,
+        "totalUsage": 2199,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-22 23:41:56.219",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "3f09e4de-6f72-47bf-864d-3163f05000cb",
+        "traceId": "1c8af8d4-131e-4545-8077-7bf79433f6dd",
+        "startTime": "2026-02-22T23:40:54.816Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-22T23:41:05.000Z",
+        "updatedAt": "2026-02-22T23:41:10.107Z",
+        "input": {
+            "model": "gemini-2.5-flash",
+            "tool_choice": "auto",
+            "max_tokens": 4096,
+            "temperature": 0.3,
+            "top_p": 0.9
+        },
+        "output": {
+            "choices": [],
+            "created": 1771803654,
+            "id": "ApSbad_aC6jmz7IPjJK4iQg",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 373,
+                "prompt_tokens": 6143,
+                "total_tokens": 7160
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 6143,
+            "output": 373,
+            "total": 7160
+        },
+        "costDetails": {
+            "input": 0.0018429,
+            "output": 0.0009325,
+            "total": 0.0027754
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0018429,
+        "outputCost": 0.0009325,
+        "totalCost": 0.0027754,
+        "inputUsage": 6143,
+        "outputUsage": 373,
+        "totalUsage": 7160,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-22 23:40:54.816",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "3f11372e-6081-4856-9eed-79b4dcc08558",
+        "traceId": "65886af2-dd6a-44fe-a2ff-cd71c31fbc4f",
+        "startTime": "2026-02-22T23:41:40.747Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-22T23:41:51.000Z",
+        "updatedAt": "2026-02-22T23:42:06.941Z",
+        "input": {
+            "model": "gemini-2.5-flash",
+            "tool_choice": "auto",
+            "max_tokens": 4096,
+            "temperature": 0.3,
+            "top_p": 0.9
+        },
+        "output": {
+            "choices": [],
+            "created": 1771803700,
+            "id": "NJSbaeykCpLqz7IPktLXoAQ",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 9,
+                "prompt_tokens": 6519,
+                "total_tokens": 6528
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 6519,
+            "output": 9,
+            "total": 6528
+        },
+        "costDetails": {
+            "input": 0.0019557,
+            "output": 2.25e-05,
+            "total": 0.0019782
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0019557,
+        "outputCost": 2.25e-05,
+        "totalCost": 0.0019782,
+        "inputUsage": 6519,
+        "outputUsage": 9,
+        "totalUsage": 6528,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-22 23:41:40.747",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "40288c34-111d-4d3e-87aa-74778c0a60b2",
+        "traceId": "907d38d9-4cd3-4b8b-9a44-71bb1d47b92a",
+        "startTime": "2026-02-22T23:38:08.378Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-22T23:38:19.000Z",
+        "updatedAt": "2026-02-22T23:38:23.598Z",
+        "output": {
+            "choices": [],
+            "created": 1771803488,
+            "id": "XpObaeP9IciIz7IPktDJoAU",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 151,
+                "prompt_tokens": 5149,
+                "total_tokens": 5427
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 5149,
+            "output": 151,
+            "total": 5427
+        },
+        "costDetails": {
+            "input": 0.0015447,
+            "output": 0.0003775,
+            "total": 0.0019222
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0015447,
+        "outputCost": 0.0003775,
+        "totalCost": 0.0019222,
+        "inputUsage": 5149,
+        "outputUsage": 151,
+        "totalUsage": 5427,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-22 23:38:08.377",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "1ea524a8-96d1-4988-bf5e-2d99cb520bea",
+        "traceId": "a11210ef-0ec5-4afd-81b3-2ebe18c9db57",
+        "startTime": "2026-02-22T23:41:54.509Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-22T23:42:05.000Z",
+        "updatedAt": "2026-02-22T23:42:10.128Z",
+        "input": {
+            "model": "gemini-2.5-flash",
+            "tool_choice": "auto",
+            "max_tokens": 4096,
+            "temperature": 0.3,
+            "top_p": 0.9
+        },
+        "output": {
+            "choices": [],
+            "created": 1771803714,
+            "id": "P5SbaaLLM7vSz7IPpL_nuQU",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 186,
+                "prompt_tokens": 6540,
+                "total_tokens": 7055
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 6540,
+            "output": 186,
+            "total": 7055
+        },
+        "costDetails": {
+            "input": 0.001962,
+            "output": 0.000465,
+            "total": 0.002427
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.001962,
+        "outputCost": 0.000465,
+        "totalCost": 0.002427,
+        "inputUsage": 6540,
+        "outputUsage": 186,
+        "totalUsage": 7055,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-22 23:41:54.509",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "24691c9c-6884-4a0c-97a6-e7ec49d2f872",
+        "traceId": "c2de9c43-e78e-4352-ab28-df2c1f382fb6",
+        "startTime": "2026-02-22T23:38:12.245Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-22T23:38:19.000Z",
+        "updatedAt": "2026-02-22T23:38:23.603Z",
+        "output": {
+            "choices": [],
+            "created": 1771803492,
+            "id": "YJObaZv1ONPoz7IPyLqtkAY",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 333,
+                "prompt_tokens": 552,
+                "total_tokens": 1275
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 552,
+            "output": 333,
+            "total": 1275
+        },
+        "costDetails": {
+            "input": 0.0001656,
+            "output": 0.0008325,
+            "total": 0.0009981
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0001656,
+        "outputCost": 0.0008325,
+        "totalCost": 0.0009981,
+        "inputUsage": 552,
+        "outputUsage": 333,
+        "totalUsage": 1275,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-22 23:38:12.245",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "e7698e6b-69c5-4c75-998a-b1fe7e442139",
+        "traceId": "148ab1bc-64fc-450a-baa2-e6a3bd83c0b4",
+        "startTime": "2026-02-21T17:51:35.143Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-21T17:51:46.000Z",
+        "updatedAt": "2026-02-21T17:51:50.258Z",
+        "output": {
+            "choices": [],
+            "created": 1771696295,
+            "id": "pfCZaf2fOsGtz7IPoJif6QU",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 43,
+                "prompt_tokens": 4997,
+                "total_tokens": 5150
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 4997,
+            "output": 43,
+            "total": 5150
+        },
+        "costDetails": {
+            "input": 0.0014991,
+            "output": 0.0001075,
+            "total": 0.0016066
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0014991,
+        "outputCost": 0.0001075,
+        "totalCost": 0.0016066,
+        "inputUsage": 4997,
+        "outputUsage": 43,
+        "totalUsage": 5150,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-21 17:51:35.143",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "65abb524-eaef-4a0b-bbbe-365923ef0abf",
+        "traceId": "3715ec6c-5011-49cc-ae6b-245a49573d44",
+        "startTime": "2026-02-21T17:49:43.981Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-21T17:49:54.000Z",
+        "updatedAt": "2026-02-21T17:49:59.111Z",
+        "output": {
+            "choices": [],
+            "created": 1771696183,
+            "id": "NvCZae_qHIjVz7IPl5C2qQU",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 70,
+                "prompt_tokens": 5281,
+                "total_tokens": 5521
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 5281,
+            "output": 70,
+            "total": 5521
+        },
+        "costDetails": {
+            "input": 0.0015843,
+            "output": 0.000175,
+            "total": 0.0017593
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0015843,
+        "outputCost": 0.000175,
+        "totalCost": 0.0017593,
+        "inputUsage": 5281,
+        "outputUsage": 70,
+        "totalUsage": 5521,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-21 17:49:43.981",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "73e3b470-5436-4ebd-be75-21afd3f0ec93",
+        "traceId": "548797cc-1cc7-4ee9-ac99-ddd5ffeeb270",
+        "startTime": "2026-02-21T17:50:38.833Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-21T17:50:49.000Z",
+        "updatedAt": "2026-02-21T17:50:53.951Z",
+        "output": {
+            "choices": [],
+            "created": 1771696238,
+            "id": "bvCZaavRCqbnz7IP57DIeQ",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 34,
+                "prompt_tokens": 5258,
+                "total_tokens": 5292
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 5258,
+            "output": 34,
+            "total": 5292
+        },
+        "costDetails": {
+            "input": 0.0015774,
+            "output": 8.5e-05,
+            "total": 0.0016624
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0015774,
+        "outputCost": 8.5e-05,
+        "totalCost": 0.0016624,
+        "inputUsage": 5258,
+        "outputUsage": 34,
+        "totalUsage": 5292,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-21 17:50:38.833",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "13500359-13cc-41b6-8b07-ff6e6b239ede",
+        "traceId": "721249d7-2d9e-478b-b090-a3397d2768c6",
+        "startTime": "2026-02-21T17:05:16.164Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-21T17:05:27.000Z",
+        "updatedAt": "2026-02-21T17:05:31.309Z",
+        "output": {
+            "choices": [],
+            "created": 1771693516,
+            "id": "yuWZaaS0Ndnrz7IP8MDuiQM",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 68,
+                "prompt_tokens": 561,
+                "total_tokens": 717
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 561,
+            "output": 68,
+            "total": 717
+        },
+        "costDetails": {
+            "input": 0.0001683,
+            "output": 0.00017,
+            "total": 0.0003383
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0001683,
+        "outputCost": 0.00017,
+        "totalCost": 0.0003383,
+        "inputUsage": 561,
+        "outputUsage": 68,
+        "totalUsage": 717,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-21 17:05:16.164",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "8733fc0e-1a1e-470a-beeb-6cc8891f04b3",
+        "traceId": "7e56d785-d2f6-4afc-a7e9-83b5acbabd0c",
+        "startTime": "2026-02-21T18:00:49.746Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-21T18:01:00.000Z",
+        "updatedAt": "2026-02-21T18:01:06.295Z",
+        "output": {
+            "choices": [],
+            "created": 1771696849,
+            "id": "zPKZabu6KojkqtsPk_TRwAE",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 21,
+                "prompt_tokens": 5023,
+                "total_tokens": 5973
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 5023,
+            "output": 21,
+            "total": 5973
+        },
+        "costDetails": {
+            "input": 0.0015069,
+            "output": 5.25e-05,
+            "total": 0.0015594
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0015069,
+        "outputCost": 5.25e-05,
+        "totalCost": 0.0015594,
+        "inputUsage": 5023,
+        "outputUsage": 21,
+        "totalUsage": 5973,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-21 18:00:49.746",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "88d61167-a4f2-4c5d-9206-75d0bb4e1f66",
+        "traceId": "9040b5d1-890f-490e-a67e-5381cd0dec3f",
+        "startTime": "2026-02-21T17:49:25.462Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-21T17:49:34.000Z",
+        "updatedAt": "2026-02-21T17:49:38.423Z",
+        "output": {
+            "choices": [],
+            "created": 1771696165,
+            "id": "I_CZaeSAHaPlz7IPv-6S-QU",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 54,
+                "prompt_tokens": 240,
+                "total_tokens": 572
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 240,
+            "output": 54,
+            "total": 572
+        },
+        "costDetails": {
+            "input": 7.2e-05,
+            "output": 0.000135,
+            "total": 0.000207
+        },
+        "providedCostDetails": {},
+        "inputCost": 7.2e-05,
+        "outputCost": 0.000135,
+        "totalCost": 0.000207,
+        "inputUsage": 240,
+        "outputUsage": 54,
+        "totalUsage": 572,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-21 17:49:25.462",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "5c6f6abe-c849-4a79-94ed-d60980eeca70",
+        "traceId": "912c2cc7-c976-44aa-b1bf-ebd1789036d6",
+        "startTime": "2026-02-21T17:05:05.271Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-21T17:05:16.000Z",
+        "updatedAt": "2026-02-21T17:05:20.378Z",
+        "output": {
+            "choices": [],
+            "created": 1771693505,
+            "id": "wOWZaZGXLMXXz7IP17GM2AU",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 25,
+                "prompt_tokens": 4998,
+                "total_tokens": 5023
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 4998,
+            "output": 25,
+            "total": 5023
+        },
+        "costDetails": {
+            "input": 0.0014994,
+            "output": 6.25e-05,
+            "total": 0.0015619
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0014994,
+        "outputCost": 6.25e-05,
+        "totalCost": 0.0015619,
+        "inputUsage": 4998,
+        "outputUsage": 25,
+        "totalUsage": 5023,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-21 17:05:05.270",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "e4ab8eeb-13fe-46c5-8de8-54caaf39a6c9",
+        "traceId": "a10a11fa-0b0c-4a0c-90cf-00dc2d0b4c5b",
+        "startTime": "2026-02-21T18:18:41.326Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-21T18:18:52.000Z",
+        "updatedAt": "2026-02-21T18:18:56.429Z",
+        "output": {
+            "choices": [],
+            "created": 1771697921,
+            "id": "APeZacXWJ5_pz7IP2-2ggQw",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 28,
+                "prompt_tokens": 4998,
+                "total_tokens": 5026
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 4998,
+            "output": 28,
+            "total": 5026
+        },
+        "costDetails": {
+            "input": 0.0014994,
+            "output": 7e-05,
+            "total": 0.001569399999
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0014994,
+        "outputCost": 7e-05,
+        "totalCost": 0.001569399999,
+        "inputUsage": 4998,
+        "outputUsage": 28,
+        "totalUsage": 5026,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-21 18:18:41.324",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "5461836e-25c5-453b-8965-e9e2e3717b14",
+        "traceId": "a82cedfb-0d17-4336-9938-68c4e8e35908",
+        "startTime": "2026-02-21T17:50:27.584Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-21T17:50:35.000Z",
+        "updatedAt": "2026-02-21T17:50:40.019Z",
+        "output": {
+            "choices": [],
+            "created": 1771696227,
+            "id": "YfCZaYTaAo3Vz7IPvefKwAE",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 40,
+                "prompt_tokens": 240,
+                "total_tokens": 747
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 240,
+            "output": 40,
+            "total": 747
+        },
+        "costDetails": {
+            "input": 7.2e-05,
+            "output": 0.0001,
+            "total": 0.000172
+        },
+        "providedCostDetails": {},
+        "inputCost": 7.2e-05,
+        "outputCost": 0.0001,
+        "totalCost": 0.000172,
+        "inputUsage": 240,
+        "outputUsage": 40,
+        "totalUsage": 747,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-21 17:50:27.584",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "7cb903ba-84a6-4262-8167-fe6d38d390c1",
+        "traceId": "adb47a9b-ac4e-43d3-a776-075222479368",
+        "startTime": "2026-02-21T17:50:24.862Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-21T17:50:35.000Z",
+        "updatedAt": "2026-02-21T17:50:40.046Z",
+        "output": {
+            "choices": [],
+            "created": 1771696224,
+            "id": "X_CZaefqOd3pz7IP5NaGsQc",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 15,
+                "prompt_tokens": 5023,
+                "prompt_tokens_details": {
+                    "cached_tokens": 4721
+                },
+                "total_tokens": 5108
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 5023,
+            "output": 15,
+            "total": 5108
+        },
+        "costDetails": {
+            "input": 0.0015069,
+            "output": 3.75e-05,
+            "total": 0.0015444
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0015069,
+        "outputCost": 3.75e-05,
+        "totalCost": 0.0015444,
+        "inputUsage": 5023,
+        "outputUsage": 15,
+        "totalUsage": 5108,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-21 17:50:24.862",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "4fd19472-a9cf-4d1d-9725-a2bca30020f5",
+        "traceId": "af6f115f-cfad-4dd5-a50d-880a642781dd",
+        "startTime": "2026-02-21T17:05:14.062Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-21T17:05:16.000Z",
+        "updatedAt": "2026-02-21T17:05:20.378Z",
+        "output": {
+            "choices": [],
+            "created": 1771693514,
+            "id": "yOWZaZLeEojVz7IPl5C2qQU",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 95,
+                "prompt_tokens": 4997,
+                "total_tokens": 5240
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 4997,
+            "output": 95,
+            "total": 5240
+        },
+        "costDetails": {
+            "input": 0.0014991,
+            "output": 0.0002375,
+            "total": 0.0017366
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0014991,
+        "outputCost": 0.0002375,
+        "totalCost": 0.0017366,
+        "inputUsage": 4997,
+        "outputUsage": 95,
+        "totalUsage": 5240,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-21 17:05:14.062",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "0614f6a3-40e8-4449-b2b3-e2b036a840ec",
+        "traceId": "bb461751-60d5-4449-b97b-a0ac83fdd7a1",
+        "startTime": "2026-02-21T17:49:23.296Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-21T17:49:34.000Z",
+        "updatedAt": "2026-02-21T17:49:38.427Z",
+        "output": {
+            "choices": [],
+            "created": 1771696163,
+            "id": "IvCZacLhErzhz7IPpLfW8Ac",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 15,
+                "prompt_tokens": 5023,
+                "total_tokens": 5105
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 5023,
+            "output": 15,
+            "total": 5105
+        },
+        "costDetails": {
+            "input": 0.0015069,
+            "output": 3.75e-05,
+            "total": 0.0015444
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0015069,
+        "outputCost": 3.75e-05,
+        "totalCost": 0.0015444,
+        "inputUsage": 5023,
+        "outputUsage": 15,
+        "totalUsage": 5105,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-21 17:49:23.296",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "adcd3768-9a03-4020-8c19-a8cedd0ebf99",
+        "traceId": "c5c3d25e-928c-4810-8715-b9fca62a6e73",
+        "startTime": "2026-02-21T18:18:52.796Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-21T18:19:03.000Z",
+        "updatedAt": "2026-02-21T18:19:07.887Z",
+        "output": {
+            "choices": [],
+            "created": 1771697932,
+            "id": "DPeZadCcD82vqtsPxvWPiAs",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 30,
+                "prompt_tokens": 4999,
+                "total_tokens": 5029
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 4999,
+            "output": 30,
+            "total": 5029
+        },
+        "costDetails": {
+            "input": 0.0014997,
+            "output": 7.5e-05,
+            "total": 0.0015747
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0014997,
+        "outputCost": 7.5e-05,
+        "totalCost": 0.0015747,
+        "inputUsage": 4999,
+        "outputUsage": 30,
+        "totalUsage": 5029,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-21 18:18:52.796",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "c6927122-f9cb-4357-84ab-561d766c0086",
+        "traceId": "e1d4dae6-01dd-4b08-8b1b-dec38cd1ccbf",
+        "startTime": "2026-02-21T17:49:44.841Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-21T17:49:54.000Z",
+        "updatedAt": "2026-02-21T17:49:59.087Z",
+        "output": {
+            "choices": [],
+            "created": 1771696184,
+            "id": "OPCZaar2FLWHz7IPpIrA0Qc",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 14,
+                "prompt_tokens": 443,
+                "total_tokens": 457
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 443,
+            "output": 14,
+            "total": 457
+        },
+        "costDetails": {
+            "input": 0.0001329,
+            "output": 3.5e-05,
+            "total": 0.0001679
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0001329,
+        "outputCost": 3.5e-05,
+        "totalCost": 0.0001679,
+        "inputUsage": 443,
+        "outputUsage": 14,
+        "totalUsage": 457,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-21 17:49:44.841",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "af1d80bb-50c4-40cc-929d-4944a6052c47",
+        "traceId": "f806a628-52e8-442d-a038-c6394a774632",
+        "startTime": "2026-02-21T17:50:40.024Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-21T17:50:49.000Z",
+        "updatedAt": "2026-02-21T17:50:53.924Z",
+        "output": {
+            "choices": [],
+            "created": 1771696239,
+            "id": "b_CZadCkFJLqz7IPktLXoAQ",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 12,
+                "prompt_tokens": 348,
+                "total_tokens": 411
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 348,
+            "output": 12,
+            "total": 411
+        },
+        "costDetails": {
+            "input": 0.0001044,
+            "output": 3e-05,
+            "total": 0.0001344
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0001044,
+        "outputCost": 3e-05,
+        "totalCost": 0.0001344,
+        "inputUsage": 348,
+        "outputUsage": 12,
+        "totalUsage": 411,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-21 17:50:40.023",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "402badbc-9a18-4884-8f99-235b3b604b1e",
+        "traceId": "570f642d-dc9a-4e1f-9bc5-b1cd7ff7ab10",
+        "startTime": "2026-02-21T05:08:35.631Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-21T05:08:46.000Z",
+        "updatedAt": "2026-02-21T05:08:50.740Z",
+        "output": {
+            "choices": [],
+            "created": 1771650515,
+            "id": "0j2ZafzYJd7hz7IPjujL4QU",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 110,
+                "prompt_tokens": 4996,
+                "prompt_tokens_details": {
+                    "cached_tokens": 4719
+                },
+                "total_tokens": 5106
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 4996,
+            "output": 110,
+            "total": 5106
+        },
+        "costDetails": {
+            "input": 0.0014988,
+            "output": 0.000275,
+            "total": 0.0017738
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0014988,
+        "outputCost": 0.000275,
+        "totalCost": 0.0017738,
+        "inputUsage": 4996,
+        "outputUsage": 110,
+        "totalUsage": 5106,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-21 05:08:35.631",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "90f218be-3d55-46fd-9b22-cfa3be493647",
+        "traceId": "85a33142-c0d5-4fbe-ac02-420ffe50a2f2",
+        "startTime": "2026-02-21T04:56:35.399Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-21T04:56:46.000Z",
+        "updatedAt": "2026-02-21T04:56:50.506Z",
+        "output": {
+            "choices": [],
+            "created": 1771649795,
+            "id": "_DqZaeXzG8iIz7IPktDJoAU",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 0,
+                "prompt_tokens": 5039,
+                "total_tokens": 5039
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 5039,
+            "output": 0,
+            "total": 5039
+        },
+        "costDetails": {
+            "input": 0.0015117,
+            "output": 0,
+            "total": 0.0015117
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0015117,
+        "outputCost": 0,
+        "totalCost": 0.0015117,
+        "inputUsage": 5039,
+        "outputUsage": 0,
+        "totalUsage": 5039,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-21 04:56:35.399",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    },
+    {
+        "id": "0c5fd01e-b29d-4e5d-845b-b7107f5c946a",
+        "traceId": "a4a75d5d-9506-45a6-be87-d40254362399",
+        "startTime": "2026-02-21T04:56:24.013Z",
+        "projectId": "cmlvdm3zn0270ad0740zri888",
+        "type": "GENERATION",
+        "environment": "default",
+        "name": "gemini-2.5-flash",
+        "level": "DEFAULT",
+        "createdAt": "2026-02-21T04:56:35.000Z",
+        "updatedAt": "2026-02-21T04:56:39.132Z",
+        "output": {
+            "choices": [],
+            "created": 1771649783,
+            "id": "7jqZaYOUErzhz7IPs7fW8Ac",
+            "model": "gemini-2.5-flash",
+            "object": "chat.completion",
+            "usage": {
+                "completion_tokens": 0,
+                "prompt_tokens": 5009,
+                "total_tokens": 5009
+            }
+        },
+        "metadata": {},
+        "model": "gemini-2.5-flash",
+        "internalModelId": "cmcnjkfwn000107l43bf5e8ax",
+        "usageDetails": {
+            "input": 5009,
+            "output": 0,
+            "total": 5009
+        },
+        "costDetails": {
+            "input": 0.0015027,
+            "output": 0,
+            "total": 0.0015027
+        },
+        "providedCostDetails": {},
+        "inputCost": 0.0015027,
+        "outputCost": 0,
+        "totalCost": 0.0015027,
+        "inputUsage": 5009,
+        "outputUsage": 0,
+        "totalUsage": 5009,
+        "traceName": "ai-board-command",
+        "traceTags": [
+            "collabboard",
+            "proxy"
+        ],
+        "traceTimestamp": "2026-02-21 04:56:24.011",
+        "modelId": "cmcnjkfwn000107l43bf5e8ax",
+        "inputPrice": "3e-7",
+        "outputPrice": "0.0000025",
+        "comments": []
+    }
+]

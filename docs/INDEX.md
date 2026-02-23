@@ -2,8 +2,8 @@
 
 > Quick-reference guide for AI agents and LLMs. Use this to locate relevant documentation without loading everything into context. Always check this index FIRST before searching the codebase.
 
-**Last Updated:** 2026-02-21
-**Total Documents:** 47
+**Last Updated:** 2026-02-23
+**Total Documents:** 49
 
 ## How to Use This Index
 
@@ -75,8 +75,10 @@
 | File | Summary | Key Topics | Last Modified |
 | --- | ----- | ------ | ----- |
 | `planning/AI-COST-ANALYSIS.md` | AI cost at scale: dev costs, production projections (100–100K users), Groq assumptions | `AI cost`, `Groq`, `scaling`, `LLM` | 2026-02-19 |
+| `planning/AI-COST-ANALYSIS-F.md` | Final G4 AI cost analysis: dev spend (Anthropic + Cursor $400), tokens/calls, production table 100/1K/10K/100K users | `AI cost`, `G4`, `dev spend`, `production projections`, `Groq` | 2026-02-23 |
 | `planning/AI-DEVELOPMENT-LOG.md` | 1-page AI dev log: tools, MCP usage, prompts, code split, strengths/limitations, learnings, cost | `AI-first`, `Cursor`, `MCP`, `workflow`, `learnings` | 2026-02-19 |
 | `planning/AI-SESSION-LOG.md` | Detailed per-session development notes (20+ sessions): scope, implementation, cost, running totals | `sessions`, `cost`, `running totals`, `implementation` | 2026-02-19 |
+| `planning/LINKEDIN-PROFILE-CONTENT-DRAFTS.md` | Ready-to-use LinkedIn headline, about, experience bullets, banner, featured, skills, visibility checklist | `LinkedIn`, `profile`, `optimization`, `headline`, `summary`, `career` | 2026-02-22 |
 | `planning/UI-UX-IMPROVEMENT-PLAN.md` | Prioritized UX improvements: share links, theme, panel collapse, balanced scoring, delivery plan | `UX`, `share links`, `theme`, `prioritization`, `P0/P1` | 2026-02-18 |
 | `TOOL_EXPANSION_PLAN.md` | AI tool expansion: batch ops, compound templates (SWOT, kanban, flowchart, mind map), layout engines | `AI`, `tools`, `compound`, `batch`, `layout engines` | 2026-02-21 |
 
@@ -137,6 +139,7 @@
 | `governance` | `CONSTITUTION.md` |
 | `FPS` | `optimization/OPTIMIZATION-PLAN.md`, `optimization/OPTIMIZATION-PLAN-2.md`, `performance/PERFORMANCE_LOG.md` |
 | `Konva` | `guides/KONVA-REACT-GUIDE.md`, `research/IDENTIFY-TRADEOFFS-V2.md` |
+| `LinkedIn` | `planning/LINKEDIN-PROFILE-CONTENT-DRAFTS.md` |
 | `MVP` | `product/PRD.md`, `reports/mvp-audit-report.md`, `reports/mvp-audit-matrix.md`, `research/DESIGN-DOCUMENT.md` |
 | `state improvement` | `CONSTITUTION.md`, `STATE-IMPROVEMENT-PLAN.md` |
 | `tool expansion` | `TOOL_EXPANSION_PLAN.md` |
