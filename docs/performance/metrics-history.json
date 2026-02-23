@@ -1843,6 +1843,14 @@
       "cursor_latency_ms": 15,
       "object_update_latency_ms": 29,
       "batch_500_objects_ms": 62
+    },
+    {
+      "date": "2026-02-23",
+      "timestamp": "2026-02-23T04:47:51.243Z",
+      "timestamp_ms": 1771822071243,
+      "cursor_latency_ms": 16,
+      "object_update_latency_ms": 24,
+      "batch_500_objects_ms": 62
     }
   ]
 }

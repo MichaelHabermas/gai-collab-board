@@ -2,8 +2,8 @@
 
 > Quick-reference guide for AI agents and LLMs. Use this to locate relevant documentation without loading everything into context. Always check this index FIRST before searching the codebase.
 
-**Last Updated:** 2026-02-23
-**Total Documents:** 49
+**Last Updated:** 2026-02-22
+**Total Documents:** 50
 
 ## How to Use This Index
 
@@ -81,6 +81,7 @@
 | `planning/LINKEDIN-PROFILE-CONTENT-DRAFTS.md` | Ready-to-use LinkedIn headline, about, experience bullets, banner, featured, skills, visibility checklist | `LinkedIn`, `profile`, `optimization`, `headline`, `summary`, `career` | 2026-02-22 |
 | `planning/UI-UX-IMPROVEMENT-PLAN.md` | Prioritized UX improvements: share links, theme, panel collapse, balanced scoring, delivery plan | `UX`, `share links`, `theme`, `prioritization`, `P0/P1` | 2026-02-18 |
 | `TOOL_EXPANSION_PLAN.md` | AI tool expansion: batch ops, compound templates (SWOT, kanban, flowchart, mind map), layout engines | `AI`, `tools`, `compound`, `batch`, `layout engines` | 2026-02-21 |
+| `DEMO-VIDEO-SCRIPT.md` | 3–5 min G4 demo script: real-time collaboration, AI commands, architecture; human, technical-light tone | `G4`, `demo`, `submission`, `video script`, `collaboration`, `AI` | 2026-02-22 |
 
 ### Product
 
@@ -134,14 +135,17 @@
 | `canvas` | `guides/KONVA-REACT-GUIDE.md`, `product/PRD.md` |
 | `constitution` | `CONSTITUTION.md` |
 | `Cursor` | `agent-transcript-report.md`, `planning/AI-DEVELOPMENT-LOG.md` |
+| `demo` | `DEMO-VIDEO-SCRIPT.md` |
 | `deployment` | `operations/DEPLOYMENT.md`, `operations/RELEASE-AUTOMATION.md` |
 | `Firebase` | `guides/FIREBASE-GUIDE.md`, `research/RECORD-ARCHITECTURE-DECISIONS-V2.md`, `research/TECH-STACK-OPTIONS-V2.md` |
+| `G4` | `DEMO-VIDEO-SCRIPT.md`, `planning/AI-COST-ANALYSIS-F.md` |
 | `governance` | `CONSTITUTION.md` |
 | `FPS` | `optimization/OPTIMIZATION-PLAN.md`, `optimization/OPTIMIZATION-PLAN-2.md`, `performance/PERFORMANCE_LOG.md` |
 | `Konva` | `guides/KONVA-REACT-GUIDE.md`, `research/IDENTIFY-TRADEOFFS-V2.md` |
 | `LinkedIn` | `planning/LINKEDIN-PROFILE-CONTENT-DRAFTS.md` |
 | `MVP` | `product/PRD.md`, `reports/mvp-audit-report.md`, `reports/mvp-audit-matrix.md`, `research/DESIGN-DOCUMENT.md` |
 | `state improvement` | `CONSTITUTION.md`, `STATE-IMPROVEMENT-PLAN.md` |
+| `submission` | `DEMO-VIDEO-SCRIPT.md` |
 | `tool expansion` | `TOOL_EXPANSION_PLAN.md` |
 | `performance` | `performance/PERFORMANCE_LOG.md`, `optimization/OPTIMIZATION-PLAN.md` |
 | `PRD` | `product/PRD.md`, `product/PRD-UNCHECKED-TRACKER.md`, `phases/version-2/PRD.md`, `research/PRD-V1.md`, `research/PRD-V2.md` |

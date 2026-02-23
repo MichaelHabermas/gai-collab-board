@@ -12,7 +12,10 @@ export const AI_PROVIDER_CLAUDE = 'anthropic';
 export const AI_MODEL_GEMINI = 'gemini-2.5-flash';
 export const AI_MODEL_GROQ = 'llama-3.3-70b-versatile';
 export const AI_MODEL_CLAUDE = 'claude-haiku-4-5';
-export type AIProviderId = typeof AI_PROVIDER_GEMINI | typeof AI_PROVIDER_GROQ | typeof AI_PROVIDER_CLAUDE;
+export type AIProviderId =
+  | typeof AI_PROVIDER_GEMINI
+  | typeof AI_PROVIDER_GROQ
+  | typeof AI_PROVIDER_CLAUDE;
 
 export const AI_PROVIDER_DEFAULTS: Record<
   AIProviderId,
@@ -43,7 +46,7 @@ export function getProviderFromEnv(env: Record<string, string | undefined>): AIP
   if (raw === AI_PROVIDER_CLAUDE) {
     return AI_PROVIDER_CLAUDE;
   }
-  
+
   if (raw === AI_PROVIDER_GROQ) {
     return AI_PROVIDER_GROQ;
   }
